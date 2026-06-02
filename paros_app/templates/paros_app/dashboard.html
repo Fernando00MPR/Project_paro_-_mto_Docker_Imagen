@@ -1,0 +1,278 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+{% trans "Total de paros" as lbl_total %}
+{% trans "Minutos perdidos" as lbl_minutos %}
+{% trans "Promedio por paro" as lbl_promedio %}
+{% trans "Sin revisar" as lbl_sin_revisar %}
+{% trans "Pendiente" as lbl_pendiente %}
+{% trans "Revisado" as lbl_revisado %}
+{% trans "Sin asignar" as lbl_sin_asignar %}
+{% trans "Sin falla" as lbl_sin_falla %}
+{% trans "Sin equipo" as lbl_sin_equipo %}
+
+<!-- ── Cabecera y filtros ── -->
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+    <div>
+        <div class="card-title">{% trans "Dashboard de paros" %}</div>
+        <div class="card-subtitle">
+            {{ fecha_ini|date:"d/m/Y" }} — {{ fecha_fin|date:"d/m/Y" }}
+            {% if area_actual %} · {{ area_actual.nombre }}{% endif %}
+        </div>
+    </div>
+
+    <div style="display:flex; flex-direction:row; align-items:center; gap:20px;">
+        
+        <form method="get" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Área" %}</label>
+                <select name="area" onchange="this.form.submit()"
+                        style="padding:7px 10px; border:1px solid var(--border); border-radius:6px;
+                               font-family:inherit; font-size:13px; background:var(--white); color:var(--text);">
+                    <option value="">{% trans "Todas las áreas" %}</option>
+                    {% for area in areas %}
+                    <option value="{{ area.id }}" {% if area_id == area.id|stringformat:"s" %}selected{% endif %}>
+                        {{ area.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Período" %}</label>
+                <select name="rango" id="rango-select" onchange="toggleCustom(this.value)"
+                        style="padding:7px 10px; border:1px solid var(--border); border-radius:6px;
+                               font-family:inherit; font-size:13px; background:var(--white); color:var(--text);">
+                    <option value="1"          {% if rango == '1'          %}selected{% endif %}>{% trans "Hoy" %}</option>
+                    <option value="7"          {% if rango == '7'          %}selected{% endif %}>{% trans "Últimos 7 días" %}</option>
+                    <option value="30"         {% if rango == '30'         %}selected{% endif %}>{% trans "Últimos 30 días" %}</option>
+                    <option value="semana_num" {% if rango == 'semana_num' %}selected{% endif %}>{% trans "Por número de semana" %}</option>
+                    <option value="semanas"    {% if rango == 'semanas'    %}selected{% endif %}>{% trans "Por semana (año actual)" %}</option>
+                    <option value="custom"     {% if rango == 'custom'     %}selected{% endif %}>{% trans "Rango personalizado" %}</option>
+                </select>
+            </div>
+
+            <div id="wrap-semana" style="display:{% if rango == 'semana_num' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
+                <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;">{% trans "Semana" %}</label>
+                <input type="number" name="semana_num" value="{{ semana_num|default:semana_actual }}" min="1" max="53"
+                       style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--white);color:var(--text);width:80px;">
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Responsable" %}</label>
+                <select name="responsable" onchange="this.form.submit()"
+                        style="padding:7px 10px; border:1px solid var(--border); border-radius:6px;
+                               font-family:inherit; font-size:13px; background:var(--white); color:var(--text);">
+                    <option value="">{% trans "Todos" %}</option>
+                    {% for resp in responsables_disponibles %}
+                    <option value="{{ resp }}" {% if responsable_filtro == resp %}selected{% endif %}>{{ resp }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="wrap-desde" style="display:{% if rango == 'custom' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
+                <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{% trans "Desde" %}</label>
+                <input type="date" name="fecha_ini" value="{{ fecha_ini|date:'Y-m-d' }}"
+                       style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--white);color:var(--text);">
+            </div>
+
+            <div id="wrap-hasta" style="display:{% if rango == 'custom' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
+                <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{% trans "Hasta" %}</label>
+                <input type="date" name="fecha_fin" value="{{ fecha_fin|date:'Y-m-d' }}"
+                       style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--white);color:var(--text);">
+            </div>
+
+            <button type="submit" id="btn-aplicar-custom" class="btn btn-primary"
+                    style="align-self:flex-end;display:{% if rango == 'custom' %}flex{% else %}none{% endif %};">
+                {% trans "Aplicar" %}
+            </button>
+            <button type="submit" id="btn-aplicar-semana" class="btn btn-primary"
+                    style="align-self:flex-end;display:{% if rango == 'semana_num' %}flex{% else %}none{% endif %};">
+                {% trans "Aplicar" %}
+            </button>
+        </form>
+        <div style="padding-top:20px;">
+            {% include 'menu_app/_language_selector.html' %}
+        </div>
+    </div>
+
+</div>
+
+<!-- ── KPIs ── -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px;">
+    {% include 'paros_app/_kpi.html' with valor=total_paros label=lbl_total color="var(--indigo)" icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" %}
+    {% include 'paros_app/_kpi.html' with valor=total_minutos label=lbl_minutos color="#D97706" icon="M13 10V3L4 14h7v7l9-11h-7z" sufijo="min" %}
+    {% include 'paros_app/_kpi.html' with valor=promedio_min label=lbl_promedio color="#10B981" icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" sufijo="min" %}
+    {% include 'paros_app/_kpi.html' with valor=sin_revisar label=lbl_sin_revisar color="#EF4444" icon="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% include 'paros_app/_kpi.html' with valor=pendiente label=lbl_pendiente color="#F59E0B" icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% include 'paros_app/_kpi.html' with valor=revisado label=lbl_revisado color="#10B981" icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" %}
+</div>
+
+
+
+{% if total_paros == 0 %}
+<div class="card" style="text-align:center; padding:60px 20px; color:var(--text-3);">
+    <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin:0 auto 12px; display:block; opacity:.4;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+    </svg>
+    <div style="font-size:15px; font-weight:500;">{% trans "Sin paros en el período seleccionado" %}</div>
+    <div style="font-size:13px; margin-top:6px;">{% trans "Ajusta el rango de fechas o cambia el área." %}</div>
+</div>
+{% else %}
+
+<!-- ── Tendencia de paros (gráfica de línea) ── -->
+<div class="card" style="margin-bottom:16px;">
+    <div style="font-weight:600; font-size:14px; margin-bottom:4px; color:var(--text);">{% trans "Tendencia diaria de paros" %}</div>
+    <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">{% trans "Número de minutos perdidos por día" %}</div>
+    <div style="position:relative; width:100%; height:280px;">
+        <canvas id="chartTendencia"></canvas>
+    </div>
+</div>
+
+<!-- ── Paros por turno ── -->
+<div class="card" style="margin-bottom:16px;">
+    <div style="font-weight:600; font-size:14px; margin-bottom:14px; color:var(--text);">{% trans "Paros por turno" %}</div>
+    <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+            {% with total_turnos=turno1|add:turno2 %}
+            <!-- Turno 1 -->
+            <div style="margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span style="font-size:13px; font-weight:500;">{% trans "Turno 1" %}</span>
+                    <span style="font-size:13px; color:var(--text-2);">
+                        {% blocktrans count count=turno1 %}
+                            {{ count }} paro
+                        {% plural %}
+                            {{ count }} paros
+                        {% endblocktrans %}
+                    </span>
+                </div>
+                <div style="height:10px; background:var(--border); border-radius:5px; overflow:hidden;">
+                    <div style="height:100%; background:var(--indigo); border-radius:5px;
+                                width:{% if total_turnos > 0 %}{% widthratio turno1 total_turnos 100 %}{% else %}0{% endif %}%;
+                                transition:width .5s;"></div>
+                </div>
+            </div>
+            <!-- Turno 2 -->
+            <div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span style="font-size:13px; font-weight:500;">{% trans "Turno 2" %}</span>
+                    <span style="font-size:13px; color:var(--text-2);">
+                        {% blocktrans count count=turno2 %}
+                            {{ count }} paro
+                        {% plural %}
+                            {{ count }} paros
+                        {% endblocktrans %}
+                    </span>
+                </div>
+                <div style="height:10px; background:var(--border); border-radius:5px; overflow:hidden;">
+                    <div style="height:100%; background:#D97706; border-radius:5px;
+                                width:{% if total_turnos > 0 %}{% widthratio turno2 total_turnos 100 %}{% else %}0{% endif %}%;
+                                transition:width .5s;"></div>
+                </div>
+            </div>
+            {% endwith %}
+        </div>
+        <!-- Donut visual simple -->
+        <div style="display:flex; gap:16px;">
+            <div style="text-align:center;">
+                <div style="font-size:28px; font-weight:700; color:var(--indigo);">{{ turno1 }}</div>
+                <div style="font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.06em;">{% trans "Turno 1" %}</div>
+            </div>
+            <div style="width:1px; background:var(--border);"></div>
+            <div style="text-align:center;">
+                <div style="font-size:28px; font-weight:700; color:#D97706;">{{ turno2 }}</div>
+                <div style="font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.06em;">{% trans "Turno 2" %}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Rankings ── -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-bottom:16px;">
+
+    <!-- Top Responsables -->
+    <div class="card">
+        <div style="font-weight:600; font-size:14px; margin-bottom:14px; color:var(--text);">{% trans "Top responsables" %}</div>
+        {% for r in top_responsables %}
+        <div style="margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;">{{ r.responsable|default:lbl_sin_asignar }}</span>
+                <span style="font-size:12px; color:var(--text-2); flex-shrink:0;">{{ r.total }} · {{ r.minutos }}min</span>
+            </div>
+            <div style="height:7px; background:var(--border); border-radius:4px; overflow:hidden;">
+                <div style="height:100%; background:var(--indigo); border-radius:4px;
+                            width:{% widthratio r.total max_resp 100 %}%;"></div>
+            </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--text-3); font-size:13px;">{% trans "Sin datos" %}</p>
+        {% endfor %}
+    </div>
+
+    <!-- Top Fallas -->
+    <div class="card">
+        <div style="font-weight:600; font-size:14px; margin-bottom:14px; color:var(--text);">{% trans "Top fallas" %}</div>
+        {% for f in top_fallas %}
+        <div style="margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;">{{ f.falla|default:lbl_sin_falla }}</span>
+                <span style="font-size:12px; color:var(--text-2); flex-shrink:0;">{{ f.total }} · {{ f.minutos }}min</span>
+            </div>
+            <div style="height:7px; background:var(--border); border-radius:4px; overflow:hidden;">
+                <div style="height:100%; background:#EF4444; border-radius:4px;
+                            width:{% widthratio f.total max_falla 100 %}%;"></div>
+            </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--text-3); font-size:13px;">{% trans "Sin datos" %}</p>
+        {% endfor %}
+    </div>
+
+    <!-- Top Equipos -->
+    <div class="card">
+        <div style="font-weight:600; font-size:14px; margin-bottom:14px; color:var(--text);">{% trans "Top equipos" %}</div>
+        {% for e in top_equipos %}
+        <div style="margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;">{{ e.equipo|default:lbl_sin_equipo }}</span>
+                <span style="font-size:12px; color:var(--text-2); flex-shrink:0;">{{ e.total }} · {{ e.minutos }}min</span>
+            </div>
+            <div style="height:7px; background:var(--border); border-radius:4px; overflow:hidden;">
+                <div style="height:100%; background:#10B981; border-radius:4px;
+                            width:{% widthratio e.total max_equipo 100 %}%;"></div>
+            </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--text-3); font-size:13px;">{% trans "Sin datos" %}</p>
+        {% endfor %}
+    </div>
+
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="{% static 'paros_app/js/dashboard.js' %}"></script>
+<script>
+(function () {
+    {% if es_hoy %}
+    const labels = [{% for h in paros_por_hora %}"{{ h.hora }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const data   = [{% for h in paros_por_hora %}{{ h.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 11, maxRotation: 0 });
+    {% elif es_semanas %}
+    const labels = [{% for s in paros_por_semana %}"Sem {{ s.semana }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const data   = [{% for s in paros_por_semana %}{{ s.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 10, maxRotation: 45 });
+    {% else %}
+    const labels = [{% for d in tendencia %}"{{ d.fecha|slice:'5:' }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const data   = [{% for d in tendencia %}{{ d.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 11, maxRotation: 45, autoSkip: {{ tendencia|length }} > 20 });
+    {% endif %}
+})();
+</script>
+{% endblock %}

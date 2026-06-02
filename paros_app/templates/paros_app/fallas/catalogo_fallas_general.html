@@ -1,0 +1,301 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'paros_app/css/paros.css' %}">
+{% endblock %}
+
+{% block title %}{% trans "Catálogo de fallas" %}{% endblock %}
+{% block content %}
+
+<div class="card-header" style="margin-bottom:16px;">
+    <div>
+        <div class="card-title">{% trans "Catálogo de fallas" %}</div>
+        <div class="card-subtitle">{% trans "Fallas registradas por área" %}</div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+        <a href="{% url 'paros:exportar_fallas' %}" class="btn btn-ghost">↓ {% trans "Exportar todo" %}</a>
+        <a href="{% url 'paros:importar_fallas' %}" class="btn btn-primary">↑ {% trans "Importar multi-área" %}</a>
+        {% include 'menu_app/_language_selector.html' %}
+    </div>
+</div>
+
+{% if messages %}
+{% for msg in messages %}
+<div style="padding:10px 16px; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:12px;
+            {% if msg.tags == 'error' %}background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;
+            {% else %}background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;{% endif %}">
+    {{ msg }}
+</div>
+{% endfor %}
+{% endif %}
+
+{% for area in areas %}
+<div class="card" style="margin-bottom:12px; padding:0; overflow:hidden;">
+
+    <div style="padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--border);
+                display:flex; align-items:center; gap:10px;">
+        <span style="font-weight:600; font-size:14px; color:var(--text); white-space:nowrap; cursor:pointer;"
+              onclick="toggleArea('area-{{ area.id }}')">{{ area.nombre }}</span>
+
+        <!-- Buscador inline -->
+        <div style="position:relative; flex:1; max-width:260px;">
+            <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none;"
+                 width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="text" placeholder="{% trans 'Buscar código o falla…' %}"
+                   oninput="filtrarFallas('{{ area.id }}', this.value)"
+                   onclick="event.stopPropagation()"
+                   style="width:100%;height:32px;border:1px solid var(--border);border-radius:8px;
+                          padding:0 10px 0 30px;font-size:13px;color:var(--text);
+                          background:var(--white);font-family:inherit;outline:none;">
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; margin-left:auto;" onclick="event.stopPropagation()">
+            <span id="cnt-{{ area.id }}" style="font-size:12px; color:var(--text-3); white-space:nowrap;">
+                {% blocktrans count count=area.catalogo_fallas.count %}
+                    {{ count }} falla
+                {% plural %}
+                    {{ count }} fallas
+                {% endblocktrans %}
+            </span>
+            <a href="{% url 'paros:exportar_fallas_area' area.id %}" class="btn btn-ghost btn-sm">↓ {% trans "Exportar" %}</a>
+            {% if puede_gestionar %}
+            <a href="{% url 'paros:importar_fallas_por_area' area.id %}" class="btn btn-primary btn-sm">↑ {% trans "Importar" %}</a>
+            {% if area.catalogo_fallas.count > 0 %}
+            <button type="button" class="btn btn-sm"
+                    style="border-color:var(--red); color:var(--red); background:transparent;"
+                    onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'fallas')">
+                🗑 {% trans "Limpiar" %}
+            </button>
+            {% endif %}
+            <button type="button" class="btn btn-primary btn-sm"
+                    onclick="abrirModalAgregar('{{ area.id }}', '{{ area.nombre }}', '/catalogos/fallas/agregar/{{ area.id }}/')">
+                + {% trans "Agregar" %}
+            </button>
+            {% endif %}
+            <svg id="chev-area-{{ area.id }}" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                 style="transition:transform .25s; color:var(--text-3); cursor:pointer; flex-shrink:0;"
+                 onclick="toggleArea('area-{{ area.id }}')">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+    </div>
+
+    <div id="area-{{ area.id }}" class="area-content">
+        {% if area.catalogo_fallas.all %}
+        <div class="table-wrap">
+            <table>
+                <thead><tr>
+                    <th style="width:40px; ">{% trans "Código" %}</th>
+                    <th style="width:200px;">{% trans "Falla" %}</th>
+                    <th style="width:120px;">{% trans "Tipo de falla" %}</th>
+                    <th style="width:80px; ">{% trans "Área de origen" %}</th>
+                    {% if puede_gestionar %}
+                    <th style="width:90px;">{% trans "Acción" %}</th>
+                    {% endif %}
+                </tr></thead>
+                <tbody id="tbody-{{ area.id }}">
+                    {% for f in area.catalogo_fallas.all %}
+                    <tr data-busqueda="{{ f.codigo|lower }} {{ f.nombre|lower }} {{ f.tipo_falla|lower }}">
+                        <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--indigo);">{{ f.codigo }}</td>
+                        <td style="font-weight:500;">{{ f.nombre }}</td>
+                        <td style="color:var(--text-2);font-size:13px;">{{ f.tipo_falla|default:"—" }}</td>
+                        <td style="color:var(--text-2);font-size:13px;">{{ f.area_origen|default:"—" }}</td>
+                        {% if puede_gestionar %}
+                        <td>
+                            <div style="display:flex; gap:6px;">
+                                <button type="button" class="btn btn-ghost btn-sm" style="min-width:80px;"
+                                        onclick="abrirModalEditar('{{ f.id }}', '{{ f.codigo }}', '{{ f.nombre|escapejs }}', '/catalogos/fallas/editar/{{ f.id }}/', '{{ f.area_origen|escapejs }}', '{{ f.nombre_es|escapejs }}', '{{ f.nombre_en|escapejs }}', '', '', '{{ f.tipo_falla_es|escapejs }}', '{{ f.tipo_falla_en|escapejs }}')">
+                                    ✏️ {% trans "Editar" %}
+                                </button>
+                                <button type="button" class="btn btn-sm" style="min-width:80px; border-color:var(--red); color:var(--red); background:transparent;"
+                                        onclick="confirmarEliminar('{{ f.id }}', '{{ f.nombre }}', '/catalogos/fallas/eliminar/{{ f.id }}/')">
+                                    🗑  {% trans "Eliminar" %}
+                                </button>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tbody id="nores-{{ area.id }}" style="display:none;">
+                    <tr><td colspan="{% if puede_gestionar %}5{% else %}4{% endif %}" style="text-align:center;padding:18px;color:var(--text-3);font-size:13px;">{% trans "Sin resultados para esta búsqueda." %}</td></tr>
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="padding:20px; color:var(--text-3); font-size:13px;">{% trans "Sin fallas registradas" %}.</p>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<div class="card"><p style="color:var(--text-3);">{% trans "No hay áreas registradas." %}</p></div>
+{% endfor %}
+
+<!-- Modal confirmación limpiar -->
+<div id="modal-limpiar" class="modal-backdrop" style="display:none;">
+    <div class="modal-box">
+        <p id="modal-limpiar-msg" style="margin-bottom:4px;">{% trans "¿Eliminar todas las fallas?" %}</p>
+        <small style="color:var(--text-3);font-weight:400;">{% trans "Esta acción no se puede deshacer." %}</small>
+        <div class="modal-actions" style="margin-top:16px;">
+            <form id="form-limpiar" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary"
+                        style="background:var(--red);border-color:var(--red);">
+                    {% trans "Sí, eliminar todo" %}
+                </button>
+            </form>
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-limpiar').style.display='none'">
+                    {% trans "Cancelar" %}
+                </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal agregar falla -->
+<div id="modal-agregar" class="modal-backdrop" style="display:none;">
+    <div class="modal-box">
+        <div style="font-weight:600; font-size:14px; margin-bottom:16px;" id="modal-agregar-titulo">
+            {% trans "Agregar falla" %}
+        </div>
+        <form id="form-agregar" method="post" action="">
+            {% csrf_token %}
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Código" %} <span style="color:var(--red)">*</span></label>
+                <input type="text" name="codigo" id="agregar-codigo" required
+                       placeholder="ej. AWH-F016"
+                       style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Falla (ES)" %} <span style="color:var(--red)">*</span></label>
+                <input type="text" name="nombre_es" id="agregar-nombre-es" required
+                    placeholder="Nombre de la falla en español…"
+                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Falla (EN)" %}</label>
+                <input type="text" name="nombre_en" id="agregar-nombre-en"
+                    placeholder="Failure name in english…"
+                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Tipo de falla (ES)" %}</label>
+                <input type="text" name="tipo_falla_es" id="agregar-tipofalla-es"
+                    placeholder="Tipo de falla en español…"
+                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Tipo de falla (EN)" %}</label>
+                <input type="text" name="tipo_falla_en" id="agregar-tipofalla-en"
+                    placeholder="Failure type in english…"
+                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:16px;">
+                <label>{% trans "Área de origen" %}</label>
+                <select name="area_origen" id="agregar-area-origen"
+                        style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+                    <option value="">— {% trans "Cargando áreas…" %} —</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% trans "Guardar falla" %}
+                </button>
+                <button type="button" class="btn btn-ghost"
+                        onclick="document.getElementById('modal-agregar').style.display='none'">
+                    {% trans "Cancelar" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal editar falla -->
+<div id="modal-editar" class="modal-backdrop" style="display:none;">
+    <div class="modal-box" style="overflow-y:auto; max-height:90vh;">
+        <div style="font-weight:600; font-size:14px; margin-bottom:16px;">{% trans "Editar falla" %}</div>
+        <form id="form-editar" method="post" action="">
+            {% csrf_token %}
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Código" %} <span style="color:var(--red)">*</span></label>
+                <input type="text" name="codigo" id="editar-codigo" required
+                       style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Falla (ES)" %} <span style="color:var(--red)">*</span></label>
+                <input type="text" name="nombre_es" id="editar-nombre-es" required
+                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Falla (EN)" %}</label>
+                <input type="text" name="nombre_en" id="editar-nombre-en"
+                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Tipo de falla (ES)" %}</label>
+                <input type="text" name="tipo_falla_es" id="editar-tipofalla-es"
+                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:12px;">
+                <label>{% trans "Tipo de falla (EN)" %}</label>
+                <input type="text" name="tipo_falla_en" id="editar-tipofalla-en"
+                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="form-field" style="margin-bottom:16px;">
+                <label>{% trans "Área de origen" %}</label>
+                <input type="text" name="area_origen" id="editar-area-origen"
+                       style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% trans "Guardar cambios" %}
+                </button>
+                <button type="button" class="btn btn-ghost"
+                        onclick="document.getElementById('modal-editar').style.display='none'">
+                    {% trans "Cancelar" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal confirmar eliminar -->
+<div id="modal-eliminar" class="modal-backdrop" style="display:none;">
+    <div class="modal-box">
+        <p id="modal-eliminar-msg" style="margin-bottom:4px;">{% trans "¿Eliminar este registro?" %}</p>
+        <small style="color:var(--text-3);font-weight:400;">{% trans "Esta acción no se puede deshacer." %}</small>
+        <div class="modal-actions" style="margin-top:16px;">
+            <form id="form-eliminar" method="post" action="">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary"
+                        style="background:var(--red);border-color:var(--red);">
+                    {% trans "Sí, eliminar" %}
+                </button>
+            </form>
+                <button type="button" class="btn btn-ghost"
+                        onclick="document.getElementById('modal-eliminar').style.display='none'">
+                    {% trans "Cancelar" %}
+                </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script>
+    const i18n = {
+        eliminar: "{% trans '¿Eliminar' %}",
+        pregunta: "{% trans '¿Eliminar este registro?' %}",
+        sinResponsables: "{% trans 'Sin responsables registrados' %}",
+        errorCargar: "{% trans 'Error al cargar' %}",
+        cargando: "{% trans 'Cargando…' %}",
+        seleccionaResponsable: "{% trans 'Selecciona responsable' %}",
+        agregar: "{% trans 'Agregar' %}",
+    };
+</script>
+<script src="{% static 'paros_app/js/catalogos.js' %}"></script>
+{% endblock %}

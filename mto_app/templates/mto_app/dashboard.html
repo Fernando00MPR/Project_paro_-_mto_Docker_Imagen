@@ -1,0 +1,232 @@
+{% extends "menu_app/base_menu.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block extra_head %}
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='14' width='8' height='16' rx='2' fill='%234F46E5'/><rect x='12' y='8' width='8' height='22' rx='2' fill='%234F46E5' opacity='.7'/><rect x='22' y='2' width='8' height='28' rx='2' fill='%234F46E5' opacity='.4'/></svg>">
+{% endblock %}
+{% block content %}
+
+<!-- Título -->
+<div style="margin-bottom:20px;">
+    <div class="card-title">
+        Dashboard
+        {% if filtro_area %}
+            —
+            {% for a in areas %}{% if a.pk|stringformat:"s" == filtro_area %}{{ a.nombre }}{% endif %}{% endfor %}
+        {% endif %}
+    </div>
+    <div class="card-subtitle">
+        Semana {{ filtro_semana }} &middot; {{ lunes_filtro|date:"d M" }} – {{ domingo_filtro|date:"d M Y" }}
+    </div>
+</div>
+
+<!-- ── Filtros ── -->
+<form method="get" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;
+                          padding:14px; background:var(--white); border:1px solid var(--border);
+                          border-radius:var(--radius); align-items:flex-end;">
+    <div class="filter-group">
+        <label>Área</label>
+        <select name="area">
+            <option value="">Todas las áreas</option>
+            {% for a in areas %}
+            <option value="{{ a.pk }}" {% if filtro_area == a.pk|stringformat:"s" %}selected{% endif %}>
+                {{ a.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Semana</label>
+        <input type="number" name="semana" min="1" max="52"
+               value="{{ filtro_semana }}" style="width:90px;">
+    </div>
+    <div class="filter-group">
+        <label>Año</label>
+        <input type="number" name="anio" min="2020" max="2099"
+               value="{{ anio }}" style="width:90px;">
+    </div>
+    <div class="filter-actions">
+        <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+        <a href="{% url 'mto:dashboard' %}" class="btn btn-ghost btn-sm">Limpiar</a>
+    </div>
+</form>
+
+<!-- ── Métricas ── -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:24px;">
+
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">Planes activos</div>
+        <div style="font-size:26px; font-weight:500; line-height:1; color:var(--text);">{{ total_planes }}</div>
+        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{{ total_semana }} tocan esta semana</div>
+    </div>
+
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">Sin registrar (vencidas)</div>
+        <div style="font-size:26px; font-weight:500; line-height:1;
+                    color:{% if total_vencidos > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
+            {{ total_vencidos }}
+        </div>
+        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">semanas anteriores a Semana {{ filtro_semana }}</div>
+    </div>
+
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">Sin responsable</div>
+        <div style="font-size:26px; font-weight:500; line-height:1;
+                    color:{% if sin_responsable > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
+            {{ sin_responsable }}
+        </div>
+        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">en semana {{ filtro_semana }}</div>
+    </div>
+
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">Cumplimiento semana {{ filtro_semana }}</div>
+        <div style="font-size:26px; font-weight:500; line-height:1;
+                    color:{% if cumplimiento_pct >= 90 %}#1D9E75{% elif cumplimiento_pct >= 50 %}#854F0B{% else %}#E24B4A{% endif %};">
+            {{ cumplimiento_pct }}%
+        </div>
+        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">
+            {{ completadas }} de {{ total_semana }} completadas
+        </div>
+    </div>
+
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">Pendientes</div>
+        <div style="font-size:22px; font-weight:500; line-height:1;
+                    color:{% if pendientes > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
+            {{ pendientes }}<span style="font-size:14px; color:{% if pendientes > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">/{{ total_semana }}</span>
+        </div>
+        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">de {{ total_semana }} en semana {{ filtro_semana }}</div>
+    </div>
+
+</div>
+
+<!-- ── Gráfico cumplimiento por semana ── -->
+<div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+        <div>
+            <div style="font-size:13px; font-weight:500;">Cumplimiento por semana — {{ anio }}</div>
+            <div style="font-size:11px; color:var(--text-3); margin-top:2px;">
+                {% if filtro_area %}{% for a in areas %}{% if a.pk|stringformat:"s" == filtro_area %}{{ a.nombre }}{% endif %}{% endfor %}{% else %}Todas las áreas{% endif %}
+            </div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <div style="display:flex; gap:10px; font-size:11px; color:var(--text-2);">
+                <span style="display:flex; align-items:center; gap:4px;">
+                    <span style="width:10px; height:10px; border-radius:2px; background:#1D9E75; display:inline-block;"></span>Mayor o igual que 90%
+                </span>
+                <span style="display:flex; align-items:center; gap:4px;">
+                    <span style="width:10px; height:10px; border-radius:2px; background:#E24B4A; display:inline-block;"></span>Menor que 90%
+                </span>
+            </div>
+            <button onclick="descargarGrafico()" class="btn btn-ghost btn-sm"
+                    style="display:flex; align-items:center; gap:4px; font-size:11px;">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Descargar
+            </button>
+        </div>
+    </div>
+    <div style="position:relative; width:100%; height:280px;">
+        <canvas id="chartCumplimiento" role="img" aria-label="Gráfico de cumplimiento por semana">Cumplimiento semanal.</canvas>
+    </div>
+</div>
+
+<!-- ── Segunda fila ── -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+    <!-- Planes vencidos sin registro -->
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <div style="font-size:13px; font-weight:500;">Ordenes de trabajo vencidas sin registro</div>
+            {% if total_vencidos > 6 %}
+            <span style="font-size:11px; color:var(--text-3);">+{{ total_vencidos|add:"-6" }} más</span>
+            {% endif %}
+        </div>
+        <div style="max-height:320px; overflow-y:auto;">
+            {% for v in vencidos %}
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;
+                        padding:8px 0; border-bottom:1px solid var(--border); font-size:12px;">
+                <div style="min-width:0;">
+                    <div style="font-weight:500; color:var(--text);">{{ v.plan.codigo }}</div>
+                    <div style="color:var(--text-2); font-size:11px; margin-top:1px; white-space:normal;">
+                        {{ v.plan.actividad }}
+                    </div>
+                    <div style="color:var(--text-3); font-size:11px; margin-top:2px;">
+                        {{ v.plan.area.nombre }} &middot; {{ v.plan.get_frecuencia_display }} &middot; S{{ v.semana }} &middot; {{ v.lunes|date:"d M" }}
+                    </div>
+                </div>
+                <span style="display:inline-block; font-size:11px; font-weight:500; padding:2px 8px;
+                             border-radius:20px; flex-shrink:0; margin-left:8px;
+                             {% if v.atraso >= 3 %}background:#FCEBEB; color:#A32D2D;
+                             {% else %}background:#FAEEDA; color:#854F0B;{% endif %}">
+                    {{ v.atraso }} semana
+                </span>
+            </div>
+            {% empty %}
+            <div style="color:var(--text-3); font-size:13px; padding:8px 0;">
+                Sin vencidos antes de la semana {{ filtro_semana }}. ✓
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Detalle semana -->
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
+        <div style="font-size:13px; font-weight:500; margin-bottom:14px;">
+            Detalles de la semana {{ filtro_semana }}
+            <span style="font-size:11px; font-weight:400; color:var(--text-3);">
+                ({{ lunes_filtro|date:"d M" }} – {{ domingo_filtro|date:"d M" }})
+            </span>
+        </div>
+        <div style="max-height:320px; overflow-y:auto;">
+            {% for item in semana_detalle %}
+            <div style="display:flex; justify-content:space-between; align-items:center;
+                        padding:7px 0; border-bottom:1px solid var(--border); font-size:12px;">
+                <div style="min-width:0; flex:1;">
+                    <div style="font-weight:500; color:var(--text);">{{ item.plan.codigo }}</div>
+                    <div style="color:var(--text-2); font-size:11px; margin-top:1px; white-space:normal;">
+                        {{ item.plan.actividad }}
+                    </div>
+                    <div style="color:var(--text-3); font-size:11px; margin-top:1px;">
+                        {% if item.responsable %}{{ item.responsable.nombre }} {{ item.responsable.apellidos }}{% else %}Sin responsable{% endif %}
+                    </div>
+                </div>
+                {% if item.estado == 'completada' %}
+                    <span style="font-size:10px; font-weight:600; color:#065F46; background:#D1FAE5; padding:2px 8px; border-radius:20px; flex-shrink:0;">Completada</span>
+                {% elif item.estado == 'pendiente' %}
+                    <span style="font-size:10px; font-weight:600; color:#92400E; background:#FEF3C7; padding:2px 8px; border-radius:20px; flex-shrink:0;">Pendiente</span>
+                {% elif item.estado == 'reagendada' %}
+                    <span style="font-size:10px; font-weight:600; color:#3730A3; background:#E0E7FF; padding:2px 8px; border-radius:20px; flex-shrink:0;">Reagendada</span>
+                {% elif item.estado == 'cancelada' %}
+                    <span style="font-size:10px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px; flex-shrink:0;">Cancelada</span>
+                {% else %}
+                    <span style="font-size:10px; font-weight:600; color:var(--text-3); background:var(--surface); padding:2px 8px; border-radius:20px; flex-shrink:0;">Sin registro</span>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div style="color:var(--text-3); font-size:13px; padding:8px 0;">
+                Ningún plan toca en S{{ filtro_semana }}.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+window.DASHBOARD_CONFIG = {
+    semanas:     {{ cumplimiento_semanas|safe }},
+    valores:     {{ cumplimiento_valores|safe }},
+    totales:     {{ cumplimiento_totales|safe }},
+    completadas: {{ cumplimiento_completadas|safe }},
+    anio:        {{ anio }},
+};
+</script>
+{% load static %}
+<script src="{% static 'mto_app/js/dashboard.js' %}"></script>
+{% endblock %}

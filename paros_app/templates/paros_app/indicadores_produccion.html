@@ -1,0 +1,382 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Indicadores de producción" %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'paros_app/css/indicadores_produccion.css' %}">
+{% endblock %}
+{% block content %}
+
+<div class="card-title">{% trans "Indicadores de producción" %}</div>
+<div class="card-subtitle">{% trans "Análisis histórico de downtime, disponibilidad, MTTR y MTBF por área" %}</div>
+
+<!-- Filtros -->
+<div class="card p-16" style="margin-bottom:16px;">
+    <form method="get" id="form-filtros">
+        <div class="flex-row">
+            <div class="filter-group">
+                <label class="filter-label">{% trans "Área" %}</label>
+                <select name="area" class="filter-select">
+                    {% for a in areas %}
+                    <option value="{{ a.id }}" {% if area_id == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">{% trans "Período" %}</label>
+                <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value)" class="filter-select">
+                    <option value="semana"     {% if periodo == 'semana'     %}selected{% endif %}>{% trans "Esta semana" %}</option>
+                    <option value="mes"        {% if periodo == 'mes'        %}selected{% endif %}>{% trans "Este mes" %}</option>
+                    <option value="semana_num" {% if periodo == 'semana_num' %}selected{% endif %}>{% trans "Por número de semana" %}</option>
+                    <option value="custom"     {% if periodo == 'custom'     %}selected{% endif %}>{% trans "Rango personalizado" %}</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">{% trans "Equipo" %}</label>
+                <select name="equipo" class="filter-select">
+                    <option value="" {% if not equipo_sel %}selected{% endif %}>— {% trans "Indicador general" %} —</option>
+                    {% for eq in equipos_periodo %}
+                    <option value="{{ eq }}" {% if equipo_sel == eq %}selected{% endif %}>{{ eq }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="wrap-semana-num" style="display:none;" class="filter-group">
+                <label class="filter-label">{% trans "Semana" %}</label>
+                <input type="number" name="semana_num" value="{{ semana_num|default:semana_actual }}" min="1" max="53" class="filter-input filter-input-number">
+            </div>
+
+            <div id="wrap-desde" style="display:none;" class="filter-group">
+                <label class="filter-label">{% trans "Desde" %}</label>
+                <input type="date" name="fecha_desde" value="{{ fecha_desde }}" class="filter-input filter-input-date">
+            </div>
+
+            <div id="wrap-hasta" style="display:none;" class="filter-group">
+                <label class="filter-label">{% trans "Hasta" %}</label>
+                <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" class="filter-input filter-input-date">
+            </div>
+
+            <input type="hidden" name="indicador" id="input-indicador" value="{{ indicador }}">
+            <button type="submit" class="btn btn-primary" style="height:33px; padding:0 18px; font-size:13px;">{% trans "Aplicar" %}</button>
+        </div>
+
+        <!-- Pills de indicador -->
+        <div class="flex-between gap-8 mt-14 pt-14 border-top">
+            <div class="filter-label" style="margin-bottom:8px;">{% trans "Indicador en gráfica" %}</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                {% for val, lbl in indicadores %}
+                <label style="display:flex; align-items:center; gap:6px; padding:5px 12px;
+                              border:1px solid {% if indicador == val %}var(--indigo){% else %}var(--border){% endif %};
+                              border-radius:20px; font-size:12px; cursor:pointer;
+                              background:{% if indicador == val %}var(--indigo-lt){% else %}var(--white){% endif %};
+                              color:{% if indicador == val %}var(--indigo){% else %}var(--text){% endif %};
+                              font-weight:{% if indicador == val %}600{% else %}400{% endif %};"
+                       onclick="seleccionarIndicador('{{ val }}')">
+                    <input type="radio" name="ind_radio" value="{{ val }}" {% if indicador == val %}checked{% endif %}
+                           style="accent-color:var(--indigo); width:13px; height:13px;">
+                    {{ lbl }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if datos_dias %}
+<!-- Gráfica -->
+<div class="card p-16" style="margin-bottom:16px;">
+    <div class="flex-between">
+        <div style="font-size:13px; font-weight:600; color:var(--text);">
+            {{ indicador_label }} — {{ area_sel.nombre }}
+        </div>
+        <div class="flex-row gap-8">
+            <!-- Toggle tipo de gráfica -->
+            <div class="btn-icon-group">
+                <button id="btn-tipo-bar" onclick="cambiarTipo('bar')" class="btn-icon active">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="6" width="3" height="9" rx="1"/><rect x="6" y="3" width="3" height="12" rx="1"/><rect x="11" y="8" width="3" height="7" rx="1"/></svg>
+                    {% trans "Barras" %}
+                </button>
+                <button id="btn-tipo-line" onclick="cambiarTipo('line')" class="btn-icon inactive">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,13 5,7 9,10 13,3 15,5"/></svg>
+                    {% trans "Línea" %}
+                </button>
+                <button id="btn-tipo-area" onclick="cambiarTipo('area')" class="btn-icon inactive">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" opacity=".4"><polygon points="1,15 1,9 5,5 9,8 13,2 15,4 15,15"/></svg>
+                    {% trans "Área" %}
+                </button>
+            </div>
+            {% if indicador != 't_muerto_mant' %}
+            <button onclick="abrirModalTarget()" class="btn-outline">
+                <svg width="12" height="12" viewBox="0 0 16 16"><line x1="1" y1="8" x2="15" y2="8" stroke="#F59E0B" stroke-width="2" stroke-dasharray="3 2"/></svg>
+                {% if target_valor is not None %}Target: {{ target_valor }}{% if indicador == 'downtime' or indicador == 'disponibilidad' %}%{% elif indicador == 'mttr' %} min{% else %} h{% endif %}{% else %}{% trans "Agregar target" %}{% endif %}
+            </button>
+            {% endif %}
+            <button onclick="descargarGrafica()" class="btn-outline">⬇ {% trans "Descargar" %}</button>
+        </div>
+    </div>
+    <div class="mb-14" style="font-size:11px; color:var(--text-3);">{{ periodo_label }}</div>
+    <div style="height:320px;">
+        <canvas id="chartIndicador" style="height:320px;"></canvas>
+    </div>
+</div>
+
+{% if indicador != 'disponibilidad' and indicador != 't_muerto_mant' %}
+    <!-- Tabla -->
+    <div class="card p-0">
+        <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border);">
+            <div style="font-size:13px; font-weight:600; color:var(--text);">{% trans "Detalle por día" %}</div>
+                <span id="badge-indicador"
+                    style="font-size:11px; font-weight:600; padding:2px 10px; border-radius:20px;
+                            background:var(--indigo-lt); color:var(--indigo); border:1px solid var(--indigo);">
+                    {{ indicador_label }}
+                </span>
+            <div class="flex-row gap-8">
+                <button id="btn-filtrar" onclick="toggleSinRegistros()" class="btn-outline">{% trans "Ocultar sin registro" %}</button>
+                <button onclick="exportarExcel()" class="btn-outline">⬇ {% trans "Excel" %}</button>
+                <div class="col-panel-wrap">
+                   
+                    <button onclick="toggleColPanel()" class="btn-outline">⚙ {% trans "Columnas" %}</button>
+                    <div class="col-panel" id="col-panel">
+                        <div class="col-panel-title">{% trans "Mostrar / ocultar" %}</div>
+                        <label class="col-item"><input type="checkbox" checked onchange="toggleCol('col-problema')"> {% trans "Problema" %}</label>
+                        <label class="col-item"><input type="checkbox" checked onchange="toggleCol('col-equipo')">   {% trans "Equipo" %}</label>
+                        <hr>
+                        <label class="col-item"><input type="checkbox" onchange="toggleCol('col-planeado')">   {% trans "Planeado" %}</label>
+                        <label class="col-item"><input type="checkbox" onchange="toggleCol('col-tmuerto')">    {% trans "T. muerto" %}</label>
+                        <label class="col-item"><input type="checkbox" onchange="toggleCol('col-tperdido')">   {% trans "T. perdido mant." %}</label>
+                        <label class="col-item"><input type="checkbox" onchange="toggleCol('col-nparos')">     {% trans "No. paros mant." %}</label>
+                        <label class="col-item"><input type="checkbox" onchange="toggleCol('col-equipos')">    {% trans "Equipos" %}</label>
+                        <hr>
+                        <label class="col-item"><input type="checkbox" checked onchange="toggleCol('col-dt')">   {% trans "Downtime %" %}</label>
+                        <label class="col-item"><input type="checkbox" checked onchange="toggleCol('col-mttr')"> {% trans "MTTR (min)" %}</label>
+                        <label class="col-item"><input type="checkbox" checked onchange="toggleCol('col-mtbf')"> {% trans "MTBF (h)" %}</label>
+                        <hr>
+                        <label class="col-item"><input type="checkbox" checked onchange="toggleCol('col-cont')">  {% trans "Contención" %}</label>
+                        <label class="col-item"><input type="checkbox" checked onchange="toggleCol('col-corr')">  {% trans "Correctiva" %}</label>
+                        <label class="col-item"><input type="checkbox" checked onchange="toggleCol('col-prev')">  {% trans "Preventiva" %}</label>
+                        <label class="col-item"><input type="checkbox" checked onchange="toggleCol('col-resp')">  {% trans "Responsable" %}</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table style="border-collapse:collapse; font-size:11px; white-space:nowrap; width:max-content; min-width:100%;">
+                <thead>
+                    <tr style="background:var(--surface);">
+                        <th rowspan="2" style="padding:7px 12px; text-align:left; border-bottom:1px solid var(--border); border-right:2px solid var(--border); position:sticky; left:0; z-index:4; background:var(--surface); min-width:88px;">{% trans "Fecha" %}</th>
+                        <th rowspan="2" class="col-problema" style="padding:7px 12px; min-width:190px; text-align:left; border-bottom:1px solid var(--border);">{% trans "Problema" %}</th>
+                        <th rowspan="2" class="col-equipo"   style="padding:7px 12px; min-width:90px;  text-align:left; border-bottom:1px solid var(--border);">{% trans "Equipo" %}</th>
+                        <th rowspan="2" class="col-planeado" style="padding:7px 12px; min-width:85px;  text-align:center; border-bottom:1px solid var(--border); display:none;">{% trans "Planeado" %}</th>
+                        <th rowspan="2" class="col-tmuerto"  style="padding:7px 12px; min-width:85px;  text-align:center; border-bottom:1px solid var(--border); display:none;">{% trans "T. muerto" %}</th>
+                        <th rowspan="2" class="col-tperdido" style="padding:7px 12px; min-width:110px; text-align:center; border-bottom:1px solid var(--border); display:none;">{% trans "T. perdido mant." %}</th>
+                        <th rowspan="2" class="col-nparos"   style="padding:7px 12px; min-width:95px;  text-align:center; border-bottom:1px solid var(--border); display:none;">{% trans "No. paros mant." %}</th>
+                        <th rowspan="2" class="col-equipos"  style="padding:7px 12px; min-width:70px;  text-align:center; border-bottom:1px solid var(--border); display:none;">{% trans "Equipos" %}</th>
+                        <th rowspan="2" class="col-dt th-ind"  style="padding:7px 12px; min-width:95px; text-align:center; border-bottom:1px solid var(--border);">{% trans "Downtime %" %}</th>
+                        <th rowspan="2" class="col-mttr th-ind" style="padding:7px 12px; min-width:95px; text-align:center; border-bottom:1px solid var(--border);">{% trans "MTTR (min)" %}</th>
+                        <th rowspan="2" class="col-mtbf th-ind" style="padding:7px 12px; min-width:95px; text-align:center; border-bottom:1px solid var(--border);">{% trans "MTBF (h)" %}</th>
+                        <th colspan="4" class="col-cont th-cont sep-cont" style="border-bottom:1px solid var(--border); text-align:center;">{% trans "Contención" %}</th>
+                        <th colspan="4" class="col-corr th-corr sep-corr" style="border-bottom:1px solid var(--border); text-align:center;">{% trans "Correctiva" %}</th>
+                        <th colspan="4" class="col-prev th-prev sep-prev" style="border-bottom:1px solid var(--border); text-align:center;">{% trans "Preventiva" %}</th>
+                        <th rowspan="2" class="col-resp" style="padding:7px 12px; min-width:160px; text-align:left; border-bottom:1px solid var(--border);">{% trans "Responsable" %}</th>
+                    </tr>
+                    <tr style="background:var(--surface);">
+                        <th class="col-cont bg-cont sep-cont" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:150px;">{% trans "Acción" %}</th>
+                        <th class="col-cont bg-cont" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. inicio" %}</th>
+                        <th class="col-cont bg-cont" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. cierre" %}</th>
+                        <th class="col-cont bg-cont" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:85px;">{% trans "Estatus" %}</th>
+                        <th class="col-corr bg-corr sep-corr" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:150px;">{% trans "Acción" %}</th>
+                        <th class="col-corr bg-corr" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. inicio" %}</th>
+                        <th class="col-corr bg-corr" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. cierre" %}</th>
+                        <th class="col-corr bg-corr" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:85px;">{% trans "Estatus" %}</th>
+                        <th class="col-prev bg-prev sep-prev" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:150px;">{% trans "Acción" %}</th>
+                        <th class="col-prev bg-prev" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. inicio" %}</th>
+                        <th class="col-prev bg-prev" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. cierre" %}</th>
+                        <th class="col-prev bg-prev" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:85px;">{% trans "Estatus" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in datos_dias %}
+                    <tr class="{% if not d.tiene_registros %}sin-registro{% endif %}" style="background:var(--white);" data-fecha="{{ d.fecha }}" data-idx="{{ forloop.counter }}">
+                        <td class="cell-sticky" style="border-right:2px solid var(--border);">
+                            <div class="fecha-dia">{{ d.fecha }}</div>
+                            <div class="fecha-dia-nombre">{{ d.dia_semana|capfirst }}</div>
+                        </td>
+                        <td class="col-problema" style="padding:8px 10px;">
+                            {% if d.tiene_registros %}
+                                <div>
+                                    <textarea class="accion-input problema-input" rows="2" maxlength="200" placeholder="{% trans 'Describir problema…' %}">{% if d.accion %}{{ d.accion.problema }}{% endif %}</textarea>
+                                    <div class="char-counter">0/200</div>
+                                </div>
+                            {% else %}<span style="color:var(--text-3);">—</span>{% endif %}   
+                        </td>
+                        <td class="col-equipo" style="color:var(--text-2);">{% if equipo_sel %}{{ equipo_sel }}{% else %}{% trans "Indicador General" %}{% endif %}</td>
+                        
+                        <td class="col-planeado" style="text-align:center; color:var(--text-2); display:none;">{% if d.tiene_registros %}{{ d.planeado }} min{% else %}—{% endif %}</td>
+                        <td class="col-tmuerto"  style="text-align:center; color:#EF4444; font-weight:500; display:none;">{% if d.tiene_registros %}{{ d.muerto }} min{% else %}—{% endif %}</td>
+                        <td class="col-tperdido" style="text-align:center; color:#EF4444; display:none;">{% if d.tiene_registros %}{{ d.t_muerto_mant|default:0 }} min{% else %}—{% endif %}</td>
+                        <td class="col-nparos"   style="text-align:center; color:var(--text-2); display:none;">{% if d.tiene_registros %}{{ d.n_paros_mant }}{% else %}—{% endif %}</td>
+                        <td class="col-equipos"  style="text-align:center; color:var(--text-2); display:none;">{% if d.tiene_registros %}{{ d.equipos_unicos }}{% else %}—{% endif %}</td>
+                        <td class="col-dt"   style="text-align:center;" id="tdt-{{ forloop.counter }}">
+                            {% if d.tiene_registros %}<span class="val-na">—</span>{% else %}—{% endif %}
+                        </td>
+                        <td class="col-mttr" style="text-align:center;" id="tmttr-{{ forloop.counter }}">
+                            {% if d.tiene_registros %}<span class="val-na">—</span>{% else %}—{% endif %}
+                        </td>
+                        <td class="col-mtbf" style="text-align:center;" id="tmtbf-{{ forloop.counter }}">
+                            {% if d.tiene_registros %}<span class="val-na">—</span>{% else %}—{% endif %}
+                        </td>
+                        <!-- Contención -->
+                        <td class="col-cont bg-cont sep-cont" style="padding:8px 10px; vertical-align:middle;">
+                            
+                            {% if d.tiene_registros %}
+                            <div>
+                                <textarea class="accion-input cont-accion" rows="2" maxlength="100" placeholder="{% trans 'Describir acción…' %}">{% if d.accion %}{{ d.accion.cont_accion }}{% endif %}</textarea>
+                                <div class="char-counter">0/100</div>
+                            </div>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="col-cont bg-cont" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc cont-fi">{% else %}—{% endif %}</td>
+                        <td class="col-cont bg-cont" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc cont-ff">{% else %}—{% endif %}</td>
+                        <td class="col-cont bg-cont" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}{% if d.accion.cont_estatus == 'e' %}<button class="btn-est est-e cont-est" onclick="ciclarEst(this)">{% trans "En proceso" %}</button>{% elif d.accion.cont_estatus == 'c' %}<button class="btn-est est-c cont-est" onclick="ciclarEst(this)">{% trans "Cerrada" %}</button>{% else %}<button class="btn-est est-p cont-est" onclick="ciclarEst(this)">{% trans "Pendiente" %}</button>{% endif %}{% else %}—{% endif %}</td>
+                        <!-- Correctiva -->
+                        <td class="col-corr bg-corr sep-corr" style="padding:8px 10px;">
+                            {% if d.tiene_registros %}
+                            <div>
+                                <textarea class="accion-input corr-accion" rows="2" maxlength="100" placeholder="{% trans 'Describir acción…' %}">{% if d.accion %}{{ d.accion.corr_accion }}{% endif %}</textarea>
+                                <div class="char-counter">0/100</div>
+                            </div>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="col-corr bg-corr" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc corr-fi">{% else %}—{% endif %}</td>
+                        <td class="col-corr bg-corr" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc corr-ff">{% else %}—{% endif %}</td>
+                        <td class="col-corr bg-corr" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}{% if d.accion.corr_estatus == 'e' %}<button class="btn-est est-e corr-est" onclick="ciclarEst(this)">{% trans "En proceso" %}</button>{% elif d.accion.corr_estatus == 'c' %}<button class="btn-est est-c corr-est" onclick="ciclarEst(this)">{% trans "Cerrada" %}</button>{% else %}<button class="btn-est est-p corr-est" onclick="ciclarEst(this)">{% trans "Pendiente" %}</button>{% endif %}{% else %}—{% endif %}</td>
+                        <!-- Preventiva -->
+                        <td class="col-prev bg-prev sep-prev" style="padding:8px 10px;">
+                            {% if d.tiene_registros %}
+                            <div>
+                                <textarea class="accion-input prev-accion" rows="2" maxlength="100" placeholder="{% trans 'Describir acción…' %}">{% if d.accion %}{{ d.accion.prev_accion }}{% endif %}</textarea>
+                                <div class="char-counter">0/100</div>
+                            </div>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="col-prev bg-prev" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc prev-fi">{% else %}—{% endif %}</td>
+                        <td class="col-prev bg-prev" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc prev-ff">{% else %}—{% endif %}</td>
+                        <td class="col-prev bg-prev" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}{% if d.accion.prev_estatus == 'e' %}<button class="btn-est est-e prev-est" onclick="ciclarEst(this)">{% trans "En proceso" %}</button>{% elif d.accion.prev_estatus == 'c' %}<button class="btn-est est-c prev-est" onclick="ciclarEst(this)">{% trans "Cerrada" %}</button>{% else %}<button class="btn-est est-p prev-est" onclick="ciclarEst(this)">{% trans "Pendiente" %}</button>{% endif %}{% else %}—{% endif %}</td>
+                        <td class="col-resp" style="color:var(--text-2); ">
+                            {% if d.tiene_registros %}
+                            <select class="fecha-acc resp-input" style="width:100%;">
+                                <option value="">— {% trans "Responsable" %} —</option>
+                                {% for u in usuarios %}
+                                <option value="{{ u.get_full_name }}"
+                                    {% if d.accion.responsable == u.get_full_name %}selected{% endif %}>
+                                    {{ u.get_full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="card" style="text-align:center; padding:40px; color:var(--text-3);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+            stroke-width="1.5" style="margin-bottom:10px; opacity:.4;">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div style="font-size:13px; font-weight:600; margin-bottom:4px;">{% trans "Sin detalle disponible" %}</div>
+        <div style="font-size:12px;">{% trans "El indicador" %} <strong>{{ indicador_label }}</strong>{% trans " no cuenta con registro de acciones por día." %}</div>
+    </div>
+{% endif %}
+
+{% else %}
+<div class="card" style="text-align:center; padding:40px; color:var(--text-3);">
+    {% trans "No hay registros de producción para el período seleccionado." %}
+</div>
+{% endif %}
+
+
+{% if indicador != 't_muerto_mant' %}
+<!-- Modal target -->
+<div id="modal-target" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:12px; padding:24px; width:320px;">
+        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;">{% trans "Configurar target" %}</div>
+        <div style="font-size:12px; color:var(--text-3); margin-bottom:16px;">{{ area_sel.nombre }} — {{ indicador_label }}</div>
+
+        <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
+            <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Valor objetivo" %}</label>
+            <input type="number" id="input-target" value="{{ target_valor|default:'' }}" step="any" min="0"
+                   placeholder="Ej. 5"
+                   style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text); width:100%; box-sizing:border-box;">
+            <div style="font-size:11px; color:var(--text-3);">{% trans "Deja vacío para eliminar el target" %}</div>
+        </div>
+
+        <div id="target-error" style="display:none; font-size:12px; color:#EF4444; margin-bottom:10px;"></div>
+
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="cerrarModalTarget()" style="padding:6px 14px; border:1px solid var(--border); border-radius:7px; font-size:12px; background:var(--white); color:var(--text); cursor:pointer; font-family:inherit;">
+                {% trans "Cancelar" %}
+            </button>
+            <button onclick="guardarTarget()" style="padding:6px 14px; border:none; border-radius:7px; font-size:12px; background:#4F46E5; color:#fff; cursor:pointer; font-family:inherit; font-weight:600;">
+                {% trans "Guardar" %}
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<script>
+    // Variables de la gráfica
+    const LABELS  = {{ labels|safe }};
+    const VALORES = {{ valores|safe }};
+    const IND_LBL = "{{ indicador_label }}";
+    const TARGET = {% if target_valor is not None %}{{ target_valor|stringformat:"g" }}{% else %}null{% endif %};
+    window.TARGET_MES  = {{ d_desde.month }};  
+    window.TARGET_ANIO = {{ d_desde.year }};    
+
+    // Datos de la tabla (acciones)
+    const DATOS_DIAS = [
+        {% for d in datos_dias %}
+        {
+            dt:      {% if d.downtime is not None %}{{ d.downtime|stringformat:"g" }}{% else %}null{% endif %},
+            mttr:    {% if d.mttr is not None %}{{ d.mttr|stringformat:"g" }}{% else %}null{% endif %},
+            mtbf:    {% if d.mtbf is not None %}{{ d.mtbf|stringformat:"g" }}{% else %}null{% endif %},
+            disp:    {% if d.disponibilidad is not None %}{{ d.disponibilidad|stringformat:"g" }}{% else %}null{% endif %},
+            tmuerto: {% if d.t_muerto_mant is not None %}{{ d.t_muerto_mant|stringformat:"g" }}{% else %}null{% endif %},
+            tiene:   {{ d.tiene_registros|yesno:"true,false" }},
+        },
+        {% endfor %}
+    ];
+
+    // Configuración de URLs y CSRF
+    window.URLS = {
+        guardarAccion: "{% url 'paros:guardar_accion_dia' %}",
+        obtenerAccion: "{% url 'paros:get_accion_dia' %}",
+        guardarTarget: "{% url 'paros:guardar_target' %}"
+    };
+    window.CSRF_TOKEN = "{{ csrf_token }}";
+    window.AREA_ID = "{{ area_sel.id }}";
+    window.EQUIPO_SEL = "{{ equipo_sel }}";
+    window.INDICADOR_ACTUAL = "{{ indicador }}";
+    window.INDICADOR_LABEL = "{{ indicador_label }}";
+    window.AREA_NOMBRE = "{{ area_sel.nombre }}";
+    window.SEMANA_ACTUAL = {{ semana_actual|default:"null" }};
+    window.TARGET_VALOR = {% if target_valor is not None %}{{ target_valor|stringformat:"g" }}{% else %}null{% endif %};
+</script>
+
+<script src="{% static 'paros_app/js/indicadores_produccion.js' %}"></script>
+
+{% endblock %}

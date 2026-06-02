@@ -1,0 +1,299 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% block title %}{{ accion }} usuario{% endblock %}
+{% block content %}
+<div style="max-width:780px;">
+
+    <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+            <div class="card-title">{{ accion }} {% trans "usuario" %}{% if usuario %}: <span style="color:var(--indigo);">{{ usuario.username }}</span>{% endif %}</div>
+            <div class="card-subtitle">{% trans "Configura los datos de acceso y permisos del usuario" %}</div>
+        </div>
+        <a href="{% url 'lista_usuarios' %}" class="btn btn-ghost btn-sm">← {% trans "Volver" %}</a>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- ── Datos básicos ── -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:16px; color:var(--text);">
+                {% trans "Datos del usuario" %}
+            </div>
+            <div class="form-grid">
+
+                <div class="form-field">
+                    <label>{% trans "Usuario" %} <span style="color:var(--red)">*</span></label>
+                    {% if usuario %}
+                        <input type="text" value="{{ usuario.username }}" disabled
+                               style="background:var(--surface); color:var(--text-3);">
+                    {% else %}
+                        <input type="text" name="username"
+                               value="{{ post.username|default:'' }}" required
+                               placeholder="ej. jperez">
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Correo electrónico" %}</label>
+                    <input type="email" name="email"
+                           value="{% if usuario %}{{ usuario.email }}{% endif %}"
+                           placeholder="{% trans 'correo@empresa.com' %}">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Nombre" %} <span style="color:var(--red)">*</span></label>
+                    <input type="text" name="first_name" required
+                           value="{% if usuario %}{{ usuario.first_name }}{% endif %}">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Apellido" %} <span style="color:var(--red)">*</span></label>
+                    <input type="text" name="last_name" required
+                           value="{% if usuario %}{{ usuario.last_name }}{% endif %}">
+                </div>
+
+                <div class="form-field">
+                    <label>
+                        {% trans "Contraseña" %}
+                        {% if usuario %}
+                            <span style="color:var(--text-3); font-weight:400; font-size:11px;">
+                                {% trans "(dejar vacío para no cambiar)" %}
+                            </span>
+                        {% else %}
+                            <span style="color:var(--red)">*</span>
+                        {% endif %}
+                    </label>
+                    <div style="position:relative;">
+                        <input type="password" name="password" id="id_password1"
+                            {% if not usuario %}required{% endif %}
+                            placeholder="{% if usuario %}••••••••{% else %}{% trans 'Mínimo 8 caracteres' %}{% endif %}"
+                            style="padding-right:42px; width:100%; box-sizing:border-box;">
+                        <button type="button" onclick="togglePwd('id_password1', 'eye1-on', 'eye1-off')"
+                                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:#9CA3AF;display:flex;align-items:center;">
+                            <svg id="eye1-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg id="eye1-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Confirmar contraseña" %}</label>
+                    <div style="position:relative;">
+                        <input type="password" name="password2" id="id_password2"
+                            placeholder="{% trans 'Repite la contraseña' %}"
+                            style="padding-right:42px; width:100%; box-sizing:border-box;">
+                        <button type="button" onclick="togglePwd('id_password2', 'eye2-on', 'eye2-off')"
+                                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:#9CA3AF;display:flex;align-items:center;">
+                            <svg id="eye2-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg id="eye2-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Rol ── -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:14px; color:var(--text);">{% trans "Rol" %}</div>
+            <label class="perm-row" style="max-width:420px;">
+                <input type="checkbox" name="es_admin"
+                       {% if perfil.es_admin %}checked{% endif %}
+                       style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                <div>
+                    <div style="font-weight:600; font-size:13px;">{% trans "Administrador" %}</div>
+                    <div style="font-size:12px; color:var(--text-3);">
+                        {% trans "Acceso total al sistema: puede gestionar usuarios y todos los módulos sin restricciones" %}
+                    </div>
+                </div>
+            </label>
+        </div>
+
+        <!-- Permisos — Área -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Área" %}</div>
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
+                {% trans "Selecciona las áreas que este usuario puede visualizar. Aplica a paros y catálogos. Si no seleccionas ninguna, no tendrá acceso a ningún área." %}
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                {% for area in areas %}
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 14px; border:1px solid var(--border); border-radius:20px; font-size:13px; transition:all .15s;"
+                       onmouseover="this.style.background='var(--indigo-lt)';this.style.borderColor='var(--indigo)'"
+                       onmouseout="this.style.background='';this.style.borderColor='var(--border)'">
+                    <input type="checkbox" name="areas_permitidas" value="{{ area.id }}"
+                           {% if area.id in areas_permitidas_ids %}checked{% endif %}
+                           style="width:14px; height:14px; accent-color:var(--indigo);">
+                    {{ area.nombre }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Permisos de dashboard ── -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Dashboard" %}</div>
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
+                {% trans "Controla si el usuario puede ver los indicadores y gráficas." %}
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                {% for campo, label, desc, marcado in permisos_dashboard %}
+                <label class="perm-row">
+                    <input type="checkbox" name="{{ campo }}"
+                           {% if marcado %}checked{% endif %}
+                           style="width:15px; height:15px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-size:13px; font-weight:500;">{{ label }}</div>
+                        <div style="font-size:11px; color:var(--text-3);">{{ desc }}</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Permisos de paros ── -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Paros" %}</div>
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
+                {% trans "Si el usuario es Admin estos permisos se ignoran y tiene acceso total." %}
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                {% for campo, label, desc, marcado in permisos_paros %}
+                <label class="perm-row">
+                    <input type="checkbox" name="{{ campo }}"
+                           {% if marcado %}checked{% endif %}
+                           style="width:15px; height:15px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-size:13px; font-weight:500;">{{ label }}</div>
+                        <div style="font-size:11px; color:var(--text-3);">{{ desc }}</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Permisos — Catálogos -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Catálogos" %}</div>
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">{% trans "Controla el acceso a fallas, equipos y responsables." %}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                {% for campo, label, desc, marcado in permisos_catalogos %}
+                <label class="perm-row">
+                    <input type="checkbox" name="{{ campo }}" {% if marcado %}checked{% endif %} style="width:15px; height:15px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-size:13px; font-weight:500;">{{ label }}</div>
+                        <div style="font-size:11px; color:var(--text-3);">{{ desc }}</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Permisos — Tiempo de producción -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Tiempo de producción" %}</div>
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
+                {% trans "Selecciona las áreas que este usuario puede registrar en tiempo de producción. Si no seleccionas ninguna, no verá la sección." %}
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                {% for area in areas %}
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 14px; border:1px solid var(--border); border-radius:20px; font-size:13px; transition:all .15s;"
+                       onmouseover="this.style.background='var(--indigo-lt)';this.style.borderColor='var(--indigo)'"
+                       onmouseout="this.style.background='';this.style.borderColor='var(--border)'">
+                    <input type="checkbox" name="areas_produccion" value="{{ area.id }}"
+                           {% if area.id in areas_produccion_ids %}checked{% endif %}
+                           style="width:14px; height:14px; accent-color:var(--indigo);">
+                    {{ area.nombre }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Permisos — Gestión de Mantenimiento -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Gestión de Mantenimiento" %}</div>
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
+                {% trans "Controla si el usuario puede acceder al módulo de mantenimiento y qué áreas puede ver." %}
+            </div>
+
+            <label class="perm-row" style="max-width:420px; margin-bottom:14px;">
+                <input type="checkbox" name="acceso_mto"
+                    {% if acceso_mto %}checked{% endif %}
+                    style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                <div>
+                    <div style="font-weight:600; font-size:13px;">{% trans "Acceso a Gestión de Mantenimiento" %}</div>
+                    <div style="font-size:12px; color:var(--text-3);">
+                        {% trans "El usuario puede ingresar al módulo de mantenimiento" %}
+                    </div>
+                </div>
+            </label>
+
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:10px;">{% trans "Áreas permitidas en mantenimiento:" %}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                {% for area in areas_mto %}
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 14px; border:1px solid var(--border); border-radius:20px; font-size:13px; transition:all .15s;"
+                    onmouseover="this.style.background='var(--indigo-lt)';this.style.borderColor='var(--indigo)'"
+                    onmouseout="this.style.background='';this.style.borderColor='var(--border)'">
+                    <input type="checkbox" name="areas_mto" value="{{ area.id }}"
+                        {% if area.id in areas_mto_ids %}checked{% endif %}
+                        style="width:14px; height:14px; accent-color:var(--indigo);">
+                    {{ area.nombre }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if accion == 'Crear' %}{% trans "Crear usuario" %}{% else %}{% trans "Guardar cambios" %}{% endif %}
+            </button>
+            <a href="{% url 'lista_usuarios' %}" class="btn btn-ghost">{% trans "Cancelar" %}</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.perm-row {
+    display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+    transition: background .15s, border-color .15s;
+}
+.perm-row:hover { background: var(--indigo-lt); border-color: var(--indigo); }
+.area-chip {
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+    padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px;
+    font-size: 13px; transition: all .15s;
+}
+.area-chip:hover { background: var(--indigo-lt); border-color: var(--indigo); }
+</style>
+
+<script>
+function togglePwd(inputId, eyeOnId, eyeOffId) {
+    var input  = document.getElementById(inputId);
+    var eyeOn  = document.getElementById(eyeOnId);
+    var eyeOff = document.getElementById(eyeOffId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        eyeOn.style.display  = 'block';
+        eyeOff.style.display = 'none';
+    } else {
+        input.type = 'password';
+        eyeOn.style.display  = 'none';
+        eyeOff.style.display = 'block';
+    }
+}
+</script>
+
+{% endblock %}

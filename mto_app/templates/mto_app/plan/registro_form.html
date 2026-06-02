@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'DM Sans',sans-serif; font-size:14px; background:#fff; color:#1E1B4B; }
+    .field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .field label { font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase; letter-spacing:.04em; }
+    .field input, .field select, .field textarea {
+        padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px;
+        font-family:inherit; font-size:14px; color:#1E1B4B; outline:none;
+        transition:border-color .15s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:#4F46E5; }
+    .field textarea { resize:vertical; min-height:70px; }
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+           border-radius:7px; font-size:13px; font-weight:600; font-family:inherit;
+           cursor:pointer; border:1px solid transparent; transition:all .15s; }
+    .btn-primary { background:#4F46E5; color:#fff; }
+    .btn-primary:hover { background:#3730A3; }
+    .btn-ghost { background:transparent; color:#6B7280; border-color:#E5E4F0; }
+    .btn-ghost:hover { background:#F8F7FF; }
+    .btn-danger { background:transparent; color:#EF4444; border-color:#FECACA; }
+    .btn-danger:hover { background:#FEE2E2; }
+</style>
+</head>
+<body>
+<div style="padding:20px 24px;">
+
+    <!-- Encabezado -->
+    <div style="margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid #E5E4F0;">
+        <div style="font-size:15px; font-weight:600; color:#1E1B4B;">
+            Registrar ejecucion
+        </div>
+        <div style="font-size:12px; color:#9CA3AF; margin-top:3px;">
+            {{ plan.equipo }} &middot; S{{ semana }}/{{ anio }} &middot;
+            {{ lunes|date:"d M" }} – {{ domingo|date:"d M Y" }}
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="field" style="margin-bottom:0;">
+                <label>Responsable</label>
+                <select name="responsable" id="responsable">
+                    <option value="">-- Sin asignar --</option>
+                    {% for r in responsables %}
+                    <option value="{{ r.pk }}"
+                        {% if registro and registro.responsable_id == r.pk %}selected{% endif %}>
+                        {{ r.numero_nomina }} — {{ r.nombre }} {{ r.apellidos }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field" style="margin-bottom:0;">
+                <label>Estado *</label>
+                <select name="estado" required>
+                    <option value="">-- Seleccionar estado --</option>
+                    {% for val, label in estados %}
+                    <option value="{{ val }}"
+                        {% if registro and registro.estado == val %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div style="margin-bottom:14px;"></div>
+
+        <div class="field">
+            <label>Fecha de ejecucion</label>
+            <input type="date" name="fecha_ejecucion"
+                   value="{{ registro.fecha_ejecucion|date:'Y-m-d'|default:'' }}">
+        </div>
+
+        <div class="field">
+            <label>Observaciones</label>
+            <textarea name="observaciones"
+                      placeholder="Describe lo realizado, materiales, anomalias...">{{ registro.observaciones|default:'' }}</textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; justify-content:space-between; margin-top:16px;">
+            <button type="button" id="btn-guardar" onclick="guardarRegistro()" class="btn btn-primary">Guardar</button>
+            <div style="display:flex; gap:8px;">
+                {% if registro %}
+                <button type="button" class="btn btn-danger"
+                        onclick="document.getElementById('modal-confirm').style.display='flex'">Eliminar</button>
+                {% endif %}
+                <button type="button" class="btn btn-ghost"
+                        onclick="window.parent.postMessage('cerrar_form_registro', '*')">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal confirmacion — fuera del form -->
+<div id="modal-confirm"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
+            z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:24px 28px;
+                min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div style="font-size:15px; font-weight:600; color:#1E1B4B; margin-bottom:8px;">
+            Eliminar registro
+        </div>
+        <div style="font-size:13px; color:#6B7280; margin-bottom:20px;">
+            Esta accion no se puede deshacer.
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="document.getElementById('modal-confirm').style.display='none'"
+                    class="btn btn-ghost">Cancelar</button>
+            <button onclick="confirmarEliminar()" class="btn btn-danger"
+                    style="background:#EF4444; color:#fff; border-color:#EF4444;">
+                Si, eliminar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de confirmación -->
+<div id="toast-ok"
+     style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+            background:#065F46; color:#fff; padding:10px 20px; border-radius:8px;
+            font-size:13px; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.2);
+            align-items:center; gap:8px; z-index:9999; white-space:nowrap;">
+    ✓ Registro guardado
+</div>
+
+<script>
+window.REGISTRO_CONFIG = {
+    plan_pk: {{ plan.pk }},
+    anio:    {{ anio }},
+    semana:  {{ semana }},
+};
+</script>
+<script src="{% static 'mto_app/js/registro_form.js' %}"></script>
+</body>
+</html>

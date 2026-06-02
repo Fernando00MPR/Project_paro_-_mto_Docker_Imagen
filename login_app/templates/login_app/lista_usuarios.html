@@ -1,0 +1,191 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% block title %}Gestión de usuarios{% endblock %}
+{% block content %}
+
+<div class="card-header" style="margin-bottom:16px;">
+    <div>
+        <div class="card-title">{% trans "Gestión de usuarios" %}</div>
+        <div class="card-subtitle">
+            {% blocktrans count count=usuarios.count %}
+                {{ count }} usuario registrado
+            {% plural %}
+                {{ count }} usuarios registrados
+            {% endblocktrans %}
+        </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+        <a href="{% url 'crear_usuario' %}" class="btn btn-primary">+ {% trans "Nuevo usuario" %}</a>
+        {% include 'menu_app/_language_selector.html' %}
+    </div>
+</div>
+
+<div class="card" style="padding:0; overflow:hidden;">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:120px;">{% trans "Usuario" %}</th>
+                    <th style="width:160px;">{% trans "Nombre completo" %}</th>
+                    <th style="width:130px; text-align: center;">{% trans "Rol" %}</th>
+                    <th style="width:100px; text-align: center;">{% trans "Dashboard y" %}<br>{% trans "Análisis" %}</th>
+                    <th style="width:200px; text-align: center;">{% trans "Áreas de Paros" %}</th>
+                    <th style="width:130px; text-align: center;">{% trans "Permisos" %}<br>{% trans "de paros" %}</th>
+                    <th style="width:140px; text-align: center;">{% trans "Catálogos" %}</th>
+                    <th style="width:100px; text-align: center;">{% trans "Producción" %}</th>
+                    <th style="width:200px; text-align: center;">{% trans "Gestión de MTO" %}</th>
+                    <th style="width:180px;">{% trans "Acciones" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <!-- Usuario -->
+                    <td style="font-weight:600; font-family:'DM Mono',monospace; font-size:13px;">
+                        {{ u.username }}
+                        {% if u == request.user %}
+                        <span style="font-size:10px; color:var(--text-3); font-family:'DM Sans',sans-serif;">{% trans "(tú)" %}</span>
+                        {% endif %}
+                    </td>
+                    <!-- Nombre Completo -->
+                    <td style="color:var(--text-2);">{{ u.get_full_name|default:"—" }}</td>
+                    <!-- Rol -->
+                    <td>
+                        {% if u.is_superuser %}
+                            <span class="badge" style="background:#FEF3C7;color:#92400E;">{% trans "Super usuario" %}</span>
+                        {% elif u.perfil.es_admin %}
+                            <span class="badge badge-t1">{% trans "Administrador" %}</span>
+                        {% else %}
+                            <span class="badge" style="background:var(--surface);color:var(--text-3);border:1px solid var(--border);">{% trans "Rol Especifico" %}</span>
+                        {% endif %}
+                    </td>
+                    <!-- Dashboard y Análisis -->
+                    <td style="font-size:12px; text-align: center;">
+                        {% if u.is_superuser or u.perfil.es_admin %}
+                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
+                        {% elif u.perfil.ver_dashboard and u.perfil.ver_analisis %}
+                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
+                                <span class="perm-tag">{% trans "Dashboard" %}</span>
+                                <span class="perm-tag">{% trans "Análisis" %}</span>
+                            </div>
+                        {% elif u.perfil.ver_dashboard %}
+                            <span class="perm-tag">{% trans "Dashboard" %}</span>
+                        {% elif u.perfil.ver_analisis %}
+                            <span class="perm-tag">{% trans "Análisis" %}</span>
+                        {% else %}
+                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
+                        {% endif %}
+                    </td>
+                    <!-- Areas de Paros -->
+                    <td style="font-size:12px; text-align: center;">
+                        {% if u.is_superuser or u.perfil.es_admin %}
+                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
+                        {% elif u.perfil.areas_permitidas.exists %}
+                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
+                                {% for area in u.perfil.areas_permitidas.all %}
+                                    <span class="perm-tag">{{ area.nombre }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
+                        {% endif %}
+                    </td>
+                    <!-- Permisos de Paros -->
+                    <td style="font-size:12px; text-align: center;">
+                        {% if u.is_superuser or u.perfil.es_admin %}
+                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
+                        {% elif u.perfil.ver_todos_paros or u.perfil.crear_paro or u.perfil.editar_paro or u.perfil.editar_eliminar_paro %}
+                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
+                                {% if u.perfil.ver_todos_paros %}      <span class="perm-tag">{% trans "Ver" %}</span>{% endif %}
+                                {% if u.perfil.crear_paro %}            <span class="perm-tag">{% trans "Crear" %}</span>{% endif %}
+                                {% if u.perfil.editar_paro %}           <span class="perm-tag">{% trans "Editar" %}</span>{% endif %}
+                                {% if u.perfil.editar_eliminar_paro %}  <span class="perm-tag">{% trans "Eliminar" %}</span>{% endif %}
+                            </div>
+                        {% else %}
+                            <span style="color:var(--red);">{% trans "Sin permisos" %}</span>
+                        {% endif %}
+                    </td>
+                    <!-- Catalogos -->
+                    <td style="font-size:12px; text-align: center;">
+                        {% if u.is_superuser or u.perfil.es_admin %}
+                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
+                        {% elif u.perfil.ver_catalogos or u.perfil.gestionar_catalogos %}
+                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
+                                {% if u.perfil.ver_catalogos %}      <span class="perm-tag">{% trans "Ver catalogos" %}</span>{% endif %}
+                                {% if u.perfil.gestionar_catalogos %}<span class="perm-tag">{% trans "Importar y Exportar" %}</span>{% endif %}
+                            </div>
+                        {% else %}
+                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
+                        {% endif %}
+                    </td>
+                    <!-- Producción -->
+                    <td style="font-size:12px; text-align: center;">
+                        {% if u.is_superuser or u.perfil.es_admin %}
+                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
+                        {% elif u.perfil.areas_produccion.exists %}
+                            <div>
+                                <span class="perm-tag">{% trans "Indicadores" %}</span>
+                            </div>
+                        {% else %}
+                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
+                        {% endif %}
+                    </td>
+                    <!-- MTO -->
+                    <td style="font-size:12px; text-align: center;">
+                        {% if u.is_superuser or u.perfil.es_admin %}
+                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
+                        {% elif u.acceso_mto.pk and u.acceso_mto.activo %}
+                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
+                                {% for area in u.acceso_mto.areas.all %}
+                                    <span class="perm-tag">{{ area.nombre }}</span>
+                                {% empty %}
+                                    <span class="perm-tag">{% trans "Acceso a MTO" %}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
+                        {% endif %}
+                    </td>
+                    <!-- Acciones -->
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <a href="{% url 'editar_usuario' u.id %}" class="btn btn-ghost btn-sm">{% trans "Editar" %}</a>
+                            {% if u != request.user %}
+                            <form method="post" action="{% url 'eliminar_usuario' u.id %}"
+                                onsubmit="return confirm(this.dataset.msg);"
+                                data-msg="{% blocktrans with username=u.username %}¿Eliminar al usuario {{ username }}? Esta acción no se puede deshacer.{% endblocktrans %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">{% trans "Eliminar" %}</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:40px; color:var(--text-3);">
+                        {% trans "No hay usuarios registrados." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.perm-tag {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--indigo-lt);
+    color: var(--indigo);
+}
+.perm-tag.perm-red {
+    background: var(--red-lt);
+    color: var(--red);
+}
+</style>
+{% endblock %}

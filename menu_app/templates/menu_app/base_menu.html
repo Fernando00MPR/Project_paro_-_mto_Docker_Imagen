@@ -1,0 +1,945 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+// Aplicar tema ANTES de que el navegador pinte — evita flash blanco
+(function() {
+    var saved = localStorage.getItem('app_theme');
+    var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+    // Forzar background inmediato para evitar el flash
+    if (theme === 'dark') {
+        document.documentElement.style.background = '#0F0F1A';
+    }
+})();
+</script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Gestión de Paros{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ── Variables modo claro ── */
+        :root {
+            --indigo:     #4F46E5;
+            --indigo-dk:  #3730A3;
+            --indigo-lt:  #EEF2FF;
+            --surface:    #F8F7FF;
+            --white:      #FFFFFF;
+            --border:     #E5E4F0;
+            --text:       #1E1B4B;
+            --text-2:     #6B7280;
+            --text-3:     #9CA3AF;
+            --red:        #EF4444;
+            --red-lt:     #FEE2E2;
+            --green:      #10B981;
+            --amber-lt:   #FEF3C7;
+            --sidebar-w:  240px;
+            --sidebar-collapsed-w: 56px;
+            --radius:     10px;
+            --shadow:     0 1px 3px rgba(79,70,229,.08), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-md:  0 4px 16px rgba(79,70,229,.12);
+            --tr: .22s cubic-bezier(.4,0,.2,1);
+        }
+
+        /* ── Variables modo oscuro ── */
+        [data-theme="dark"] {
+            --indigo:     #818CF8;
+            --indigo-dk:  #A5B4FC;
+            --indigo-lt:  #1E1B4B;
+            --surface:    #0F0F1A;
+            --white:      #1A1A2E;
+            --border:     #2D2D4A;
+            --text:       #E2E0FF;
+            --text-2:     #9492B8;
+            --text-3:     #6B6890;
+            --red:        #F87171;
+            --red-lt:     #2D1515;
+            --green:      #34D399;
+            --amber-lt:   #2D2210;
+            --shadow:     0 1px 3px rgba(0,0,0,.3);
+            --shadow-md:  0 4px 16px rgba(0,0,0,.4);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.6;
+            transition: background var(--tr), color var(--tr);
+        }
+
+        /* ── Layout ── */
+        .app-shell { display: flex; min-height: 100vh; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: width var(--tr), background var(--tr), border-color var(--tr);
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed-w); }
+        /* Pre-collapsed: aplicado antes del primer paint para evitar flash */
+        .sidebar-pre-collapsed .sidebar {
+            width: var(--sidebar-collapsed-w) !important;
+            transition: none !important;
+        }
+        .sidebar-pre-collapsed .sidebar .nav-label,
+        .sidebar-pre-collapsed .sidebar .sidebar-section,
+        .sidebar-pre-collapsed .sidebar .brand-text,
+        .sidebar-pre-collapsed .sidebar .brand-label,
+        .sidebar-pre-collapsed .sidebar .logout-label,
+        .sidebar-pre-collapsed .sidebar .theme-label { display: none !important; }
+        .sidebar-pre-collapsed .sidebar .brand-icon { margin: 0 auto; }
+        .sidebar-pre-collapsed .sidebar .btn-collapse svg { transform: rotate(180deg); }
+
+        /* ── Brand ── */
+        .sidebar-brand {
+            padding: 0 8px;
+            height: 58px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: border-color var(--tr);
+        }
+        /* Auto-colapsar en pantallas angostas */
+        @media (max-width: 768px) {
+            .sidebar:not(.collapsed) {
+                width: var(--sidebar-collapsed-w) !important;
+            }
+            .sidebar:not(.collapsed) .brand-text,
+            .sidebar:not(.collapsed) .nav-label,
+            .sidebar:not(.collapsed) .sidebar-section,
+            .sidebar:not(.collapsed) .brand-label,
+            .sidebar:not(.collapsed) .logout-label,
+            .sidebar:not(.collapsed) .theme-label { display: none !important; }
+            .sidebar:not(.collapsed) .brand-icon { margin: 0 auto; }
+            .sidebar:not(.collapsed) .btn-collapse svg { transform: rotate(180deg); }
+        }
+        .brand-text {
+            display: flex; align-items: center; gap: 8px;
+            overflow: hidden; white-space: nowrap; flex: 1; min-width: 0;
+        }
+        .sidebar-brand-dot {
+            width: 8px; height: 8px; background: var(--indigo);
+            border-radius: 50%; flex-shrink: 0;
+            transition: background var(--tr);
+        }
+        .brand-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: var(--indigo-lt); display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0;
+            transition: background var(--tr);
+        }
+        .sidebar.collapsed .brand-icon { margin: 0 auto; }
+        .sidebar.collapsed .brand-text { display: none; }
+        .sidebar.collapsed .sidebar-brand {
+            flex-direction: column; justify-content: center;
+            align-items: center; padding: 8px 0; height: auto; gap: 6px;
+        }
+        .sidebar.collapsed .btn-collapse { margin: 0 auto; }
+        .brand-label {
+            font-weight: 600; font-size: 13px; letter-spacing: .02em;
+            color: var(--text); white-space: nowrap;
+            opacity: 1; transition: opacity var(--tr), color var(--tr);
+        }
+        .sidebar.collapsed .brand-label { opacity: 0; pointer-events: none; }
+
+        /* Botón colapsar */
+        .btn-collapse {
+            width: 32px; height: 32px; border-radius: 7px;
+            border: 1px solid var(--border); background: transparent;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; color: var(--text-2);
+            transition: background .15s, color .15s, border-color var(--tr);
+        }
+        .btn-collapse:hover { background: var(--indigo-lt); color: var(--indigo); }
+        .btn-collapse svg { transition: transform var(--tr); }
+        .sidebar.collapsed .btn-collapse svg { transform: rotate(180deg); }
+
+        /* ── Nav ── */
+        .sidebar-nav {
+            padding: 6px 8px; flex: 1;
+            overflow-y: auto; overflow-x: hidden;
+        }
+        .sidebar-section {
+            padding: 14px 8px 6px;
+            font-size: 10px; font-weight: 600;
+            letter-spacing: .1em; text-transform: uppercase;
+            color: var(--text-3); white-space: nowrap;
+            opacity: 1; transition: opacity var(--tr), color var(--tr), height var(--tr);
+        }
+        .sidebar.collapsed .sidebar-section {
+            opacity: 0; height: 8px; padding: 4px 0 0;
+        }
+        .sidebar-nav a {
+            display: flex; align-items: center; gap: 9px;
+            padding: 8px 12px; border-radius: 7px;
+            color: var(--text-2); text-decoration: none;
+            font-size: 13.5px; font-weight: 500;
+            transition: background .15s, color .15s;
+            margin-bottom: 2px; white-space: nowrap; overflow: hidden;
+            position: relative;
+        }
+        .sidebar-nav a:hover { background: var(--indigo-lt); color: var(--indigo); }
+        .sidebar-nav a.active { background: var(--indigo-lt); color: var(--indigo); font-weight: 600; }
+        .nav-icon { width: 16px; height: 16px; opacity: .65; flex-shrink: 0; transition: opacity .15s; }
+        .sidebar-nav a:hover .nav-icon,
+        .sidebar-nav a.active .nav-icon { opacity: 1; }
+        .nav-label { opacity: 1; transition: opacity var(--tr); overflow: hidden; }
+        .sidebar.collapsed .nav-label { opacity: 0; }
+
+        /* Tooltips en modo colapsado */
+        .sidebar.collapsed .sidebar-nav a::after {
+            content: attr(data-tooltip);
+            position: fixed;
+            left: calc(var(--sidebar-collapsed-w) + 8px);
+            background: var(--text);
+            color: var(--white);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px; font-weight: 500;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity .15s; z-index: 9999;
+        }
+        .sidebar.collapsed .sidebar-nav a:hover::after { opacity: 1; }
+
+        /* ── Footer ── */
+        .sidebar-footer {
+            padding: 10px 8px;
+            border-top: 1px solid var(--border); flex-shrink: 0;
+            transition: border-color var(--tr);
+        }
+        .footer-row {
+            display: flex; align-items: center; gap: 6px;
+            padding: 0 4px; margin-bottom: 6px;
+        }
+        .btn-theme {
+            width: 32px; height: 32px; border-radius: 7px;
+            border: 1px solid var(--border); background: transparent;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; color: var(--text-2);
+            transition: background .15s, color .15s, border-color var(--tr);
+        }
+        .btn-theme:hover { background: var(--indigo-lt); color: var(--indigo); }
+        .theme-label {
+            font-size: 13px; font-weight: 500; color: var(--text-2);
+            white-space: nowrap; opacity: 1;
+            transition: opacity var(--tr), color var(--tr);
+        }
+        .sidebar.collapsed .theme-label { opacity: 0; pointer-events: none; }
+
+        .logout-btn {
+            display: flex; align-items: center; gap: 9px;
+            width: 100%; padding: 8px 12px; border-radius: 7px;
+            background: transparent; border: none; cursor: pointer;
+            font-family: inherit; font-size: 13px; font-weight: 500;
+            color: var(--text-2); transition: background .15s, color .15s;
+            text-align: left; white-space: nowrap; overflow: hidden;
+        }
+        .logout-btn:hover { background: var(--red-lt); color: var(--red); }
+        .logout-label { opacity: 1; transition: opacity var(--tr); overflow: hidden; }
+        .sidebar.collapsed .logout-label { opacity: 0; }
+
+        /* ── Main ── */
+        .main { flex: 1; min-width: 0; padding: 28px 32px; transition: background var(--tr); }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            transition: background var(--tr), border-color var(--tr);
+        }
+        .card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; color: var(--text); transition: color var(--tr); }
+        .card-subtitle { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+        /* ── Botones ── */
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 7px;
+            font-size: 13px; font-weight: 600; font-family: inherit;
+            cursor: pointer; border: 1px solid transparent;
+            text-decoration: none; transition: all .15s; line-height: 1;
+        }
+        .btn-primary { background: var(--indigo); color: #fff; }
+        .btn-primary:hover { background: var(--indigo-dk); }
+        .btn-ghost { background: transparent; color: var(--text-2); border-color: var(--border); }
+        .btn-ghost:hover { background: var(--surface); color: var(--text); }
+        .btn-danger { background: transparent; color: var(--red); border-color: #FECACA; padding: 5px 10px; font-size: 12px; }
+        .btn-danger:hover { background: var(--red-lt); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        /* ── Tabla — table-layout:fixed mantiene anchos estables al editar ── */
+        .table-wrap { overflow-x: auto; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+
+        /* Anchos fijos por columna */
+        #tabla-paros th:nth-child(1)  { width: 200px; }
+        #tabla-paros th:nth-child(2)  { width: 110px; }
+        #tabla-paros th:nth-child(3)  { width: 115px; }
+        #tabla-paros th:nth-child(4)  { width: 200px; }
+        #tabla-paros th:nth-child(5)  { width: 120px; }
+        #tabla-paros th:nth-child(6)  { width: 120px; }
+        #tabla-paros th:nth-child(7)  { width: 72px;  }
+        #tabla-paros th:nth-child(8)  { width: 80px;  }
+        #tabla-paros th:nth-child(9)  { width: auto;  }
+        #tabla-paros th:nth-child(10) { width: 100px; }
+
+        thead th {
+            background: var(--surface); color: var(--text-3);
+            font-size: 11px; font-weight: 600; letter-spacing: .06em;
+            text-transform: uppercase; padding: 10px 14px;
+            text-align: left; border-bottom: 1px solid var(--border);
+            white-space: nowrap; overflow: hidden;
+            transition: background var(--tr), color var(--tr), border-color var(--tr);
+        }
+        tbody td {
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text); vertical-align: middle;
+            overflow: visible; white-space: normal; word-break: break-word;
+            transition: background var(--tr), color var(--tr), border-color var(--tr);
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: var(--indigo-lt); }
+
+        /* Celdas editables */
+        .editable, .editable-fecha, .editable-hora {
+            cursor: pointer; transition: background .15s;
+        }
+        .editable:hover,
+        .editable-fecha:hover,
+        .editable-hora:hover { background: var(--indigo-lt) !important; }
+
+        /* Input dentro de celda: altura fija = sin salto de layout */
+        .edit-input, .edit-select {
+            width: 100%; box-sizing: border-box;
+            height: 28px; padding: 0 6px;
+            border: 1.5px solid var(--indigo); border-radius: 4px;
+            font-family: 'DM Mono', monospace; font-size: 12px;
+            background: var(--white); color: var(--text); outline: none;
+            line-height: 26px;
+        }
+
+        /* Badge turno */
+        .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-t1 { background: var(--indigo-lt); color: var(--indigo-dk); }
+        .badge-t2 { background: var(--amber-lt); color: #92400E; }
+        [data-theme="dark"] .badge-t2 { color: #FCD34D; }
+
+        /* ── Filtros ── */
+        .filters {
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
+            margin-bottom: 16px; padding: 16px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius);
+            transition: background var(--tr), border-color var(--tr);
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-group label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
+        .filter-group input, .filter-group select {
+            padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px;
+            font-family: inherit; font-size: 13px;
+            background: var(--white); color: var(--text); outline: none; min-width: 130px;
+            transition: background var(--tr), color var(--tr), border-color var(--tr);
+        }
+        .filter-group input:focus, .filter-group select:focus { border-color: var(--indigo); }
+        .filter-group input[type="date"],
+        .filter-group input[type="number"],
+        .filter-group input[type="text"] {
+            color-scheme: light;
+        }
+        [data-theme="dark"] .filter-group input[type="date"],
+        [data-theme="dark"] .filter-group input[type="number"],
+        [data-theme="dark"] .filter-group input[type="text"],
+        [data-theme="dark"] .filter-group input {
+            color-scheme: dark;
+            color: var(--text) !important;
+            background: var(--white) !important;
+        }
+        [data-theme="dark"] .filter-group input::placeholder {
+            color: var(--text-3) !important;
+        }
+        [data-theme="dark"] .filter-group select {
+            color: var(--text) !important;
+            background: var(--white) !important;
+        }
+        .filter-actions { display: flex; gap: 8px; align-items: flex-end; }
+
+        /* Stat bar */
+        .stat-bar { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+        .stat-item {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 18px; font-size: 13px;
+            transition: background var(--tr), border-color var(--tr);
+        }
+        .stat-item b { color: var(--indigo); font-size: 18px; margin-right: 4px; }
+
+        /* ── Paginación ── */
+        .pagination { display: flex; align-items: center; gap: 4px; margin-top: 20px; justify-content: center; }
+        .pagination a, .pagination span {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 34px; height: 34px; border-radius: 7px;
+            font-size: 13px; font-weight: 500; text-decoration: none;
+            color: var(--text-2); border: 1px solid var(--border);
+            background: var(--white); transition: all .15s;
+        }
+        .pagination a:hover { background: var(--indigo-lt); color: var(--indigo); border-color: var(--indigo); }
+        .pagination .current { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+        .pagination .disabled { opacity: .4; pointer-events: none; }
+
+        /* ── Modal ── */
+        .modal-backdrop {
+            display: none; position: fixed; inset: 0;
+            background: rgba(30,27,75,.45); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: var(--white); border-radius: 12px;
+            padding: 28px 32px; text-align: center; min-width: 300px;
+            box-shadow: var(--shadow-md); transition: background var(--tr);
+        }
+        .modal-box p { font-size: 15px; font-weight: 500; margin-bottom: 20px; color: var(--text); }
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+
+        /* ── Toast ── */
+        #toast-container {
+            position: fixed; bottom: 24px; right: 24px; z-index: 2000;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .toast {
+            padding: 12px 18px; border-radius: 8px; font-size: 13px;
+            font-weight: 500; color: #fff; box-shadow: var(--shadow-md);
+            animation: slide-in .25s ease; max-width: 300px;
+        }
+        .toast-success { background: var(--green); }
+        .toast-error   { background: var(--red); }
+        .toast-warning { background: #D97706; }
+        @keyframes slide-in {
+            from { transform: translateX(80px); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+
+        /* ── Formularios ── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; }
+        .form-grid.cols-1 { grid-template-columns: 1fr; }
+        .form-field { display: flex; flex-direction: column; gap: 5px; }
+        .form-field.full { grid-column: 1 / -1; }
+        .form-field label { font-size: 12px; font-weight: 600; color: var(--text-2); letter-spacing: .03em; }
+        .form-field input, .form-field select, .form-field textarea {
+            padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px;
+            font-family: inherit; font-size: 14px;
+            background: var(--white); color: var(--text); outline: none;
+            transition: border-color .15s, box-shadow .15s, background var(--tr), color var(--tr);
+        }
+        .form-field input:focus, .form-field select:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+        .form-field .help { font-size: 11px; color: var(--text-3); }
+        .form-field .errorlist { list-style: none; color: var(--red); font-size: 12px; margin-top: 2px; }
+        .form-actions { display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .sidebar { width: var(--sidebar-collapsed-w) !important; }
+            .brand-label, .nav-label, .logout-label, .theme-label, .sidebar-section { opacity: 0 !important; }
+            .main { padding: 16px; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+        /* Catálogos: colapsar áreas */
+        .area-header:hover { background: var(--indigo-lt) !important; }
+        .area-content.collapsed { display: none; }
+
+        /* Scrollbar global */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-3);
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: var(--surface);
+        }
+    </style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="app-shell">
+
+    <!-- ── Sidebar ── -->
+    <script>
+        // Aplicar collapsed ANTES de pintar para evitar flash
+        if (localStorage.getItem('sidebar_collapsed') === '1') {
+            document.documentElement.classList.add('sidebar-pre-collapsed');
+        }
+    </script>
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+            <button class="brand-icon btn-collapse" id="btn-collapse"
+                    title="Clic para colapsar/expandir menú" aria-label="Colapsar menú"
+                    style="cursor:pointer; border:1px solid rgba(99,102,241,0.3); flex-shrink:0;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--indigo)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                </svg>
+            </button>
+            <div class="brand-text">
+                <button id="btn-modulo" onclick="toggleModulo()"
+                        style="background:none; border:none; cursor:pointer; padding:0;
+                               display:flex; align-items:center; gap:5px; overflow:hidden;">
+                    <span class="brand-label" id="brand-label-text">{% trans "Gestión de Mantenimiento" %}</span>
+                    <svg id="brand-chevron" width="12" height="12" fill="none" stroke="var(--text-2)"
+                         viewBox="0 0 24 24" style="flex-shrink:0; transition:transform .2s;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dropdown módulos -->
+        {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.activo %}
+        <div id="modulo-dropdown"
+             style="display:none; margin:4px 8px; background:var(--surface);
+                    border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+            <button onclick="setModulo('mto')" id="mod-mto"
+                    style="width:100%; padding:8px 12px; text-align:left; background:none;
+                           border:none; cursor:pointer; font-family:inherit; font-size:13px;
+                           font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px;">
+                <span style="width:6px; height:6px; border-radius:50%; background:var(--indigo); flex-shrink:0;"></span>
+                {% trans "Gestión de Mantenimiento" %}
+            </button>
+            <button onclick="setModulo('paros')" id="mod-paros"
+                    style="width:100%; padding:8px 12px; text-align:left; background:none;
+                           border:none; cursor:pointer; font-family:inherit; font-size:13px;
+                           font-weight:500; color:var(--text); display:flex; align-items:center; gap:8px;">
+                <span style="width:6px; height:6px; border-radius:50%; background:var(--red); flex-shrink:0;"></span>
+                {% trans "Paros de Producción" %}
+            </button>
+        </div>
+        {% endif %}
+
+        <nav class="sidebar-nav">
+            {% with perfil=request.user.perfil %}
+
+            <!-- ── Módulo Mantenimiento ── -->
+            <div id="nav-mto" style="display:none;">
+
+            <a href="{% url 'mto:dashboard' %}"
+            class="{% if 'mto:dashboard' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="nav-label">Dashboard</span>
+            </a>
+
+            <!-- ── Sidebar - Plan de Mantenimiento ── -->
+
+            <div class="sidebar-section" style="margin-top:4px;">{% trans "Mantenimiento" %}</div>
+
+            {% for area in areas_menu %}
+            <a href="{% url 'mto:lista_plan' %}?area={{ area.pk }}" data-tooltip="{{ area.nombre }}"
+            class="{% if request.GET.area == area.pk|stringformat:'s' and 'plan' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span class="nav-label">{{ area.nombre }}</span>
+            </a>
+            {% endfor %}
+
+            <!-- ── Sidebar - Pasos rutinas ── -->
+
+            <div class="sidebar-section" style="margin-top:4px;">Rutinas de Mantenimiento</div>
+
+            {% for area in areas_menu %}
+            <a href="{% url 'mto:lista_pasos' %}?area={{ area.pk }}" data-tooltip="Pasos {{ area.nombre }}"
+            class="{% if request.GET.area == area.pk|stringformat:'s' and 'paso' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
+                </svg>
+                <span class="nav-label">{{ area.nombre }}</span>
+            </a>
+            {% endfor %}
+
+            <!-- ── Sidebar - Responsables ── -->
+
+            <div class="sidebar-section" style="margin-top:4px;">Responsables</div>
+
+            {% for area in areas_menu %}
+            <a href="{% url 'mto:lista_responsables' %}?area={{ area.pk }}"
+            data-tooltip="Responsables {{ area.nombre }}"
+            class="{% if request.GET.area == area.pk|stringformat:'s' and 'responsable' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="nav-label">{{ area.nombre }}</span>
+            </a>
+            {% endfor %}
+            
+            {% if request.user.is_superuser or perfil.es_admin %}
+            <div class="sidebar-section" style="margin-top:4px;">Administración</div>
+            <a href="{% url 'lista_usuarios' %}" data-tooltip="Usuarios"
+            class="{% if 'usuario' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <span class="nav-label">Usuarios</span>
+            </a>
+            {% endif %}
+
+            {% endwith %}
+
+            </div><!-- /nav-mto -->
+
+            <!-- ── Módulo Paros ── -->
+            <div id="nav-paros">
+            {% with perfil=request.user.perfil %}
+            
+        <!-- ── General ── -->
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_dashboard %}
+            <div class="sidebar-section">{% trans "General" %}</div>
+            <a href="{% url 'paros:dashboard' %}" data-tooltip="Dashboard"
+               class="{% if request.resolver_match.url_name == 'paros:dashboard' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="nav-label">Dashboard</span>
+            </a>
+            {% endif %}
+
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_analisis %}
+            <a href="{% url 'paros:analisis_paros' %}" data-tooltip="Análisis de paros"
+               class="{% if request.resolver_match.url_name == 'paros:analisis_paros' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 20V10M12 20V4M6 20v-6"/>
+                </svg>
+                <span class="nav-label">{% trans "Análisis de paros" %}</span>
+            </a>
+            {% endif %}
+
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_todos_paros %}
+            <a href="{% url 'paros:lista_paros' %}" data-tooltip="Todos los paros"
+               class="{% if request.resolver_match.url_name == 'paros:lista_paros' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
+                </svg>
+                <span class="nav-label">{% trans "Todos los paros" %}</span>
+            </a>
+            {% endif %}
+
+            {% if request.user.is_superuser or perfil.es_admin or perfil.crear_paro %}
+            <a href="{% url 'paros:crear_paro' %}" data-tooltip="Nuevo paro"
+               class="{% if request.resolver_match.url_name == 'paros:crear_paro' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span class="nav-label">{% trans "Nuevo paro" %}</span>
+            </a>
+            {% endif %}
+
+        <!-- ── Areas Paros ── -->
+            {% if request.user.is_superuser or perfil.es_admin or perfil.areas_permitidas.exists %}
+            {% load paros_extras %}
+            {% get_areas as areas_paros %}
+            <div class="sidebar-section" style="margin-top:4px;">{% trans "Áreas" %}</div>
+            {% for area in areas_paros %}
+            <a href="{% url 'paros:lista_paros_por_area' area.id %}" data-tooltip="{{ area.nombre }}"
+               class="{% if request.resolver_match.kwargs.area_id == area.id %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <span class="nav-label">{{ area.nombre }}</span>
+            </a>
+            {% endfor %}
+            {% endif %}
+
+        <!-- ── Catalogos ── -->
+            {% if request.user.is_superuser or perfil.es_admin or perfil.gestionar_catalogos %}
+            <div class="sidebar-section" style="margin-top:4px;">{% trans "Catálogos" %}</div>
+            <a href="{% url 'paros:catalogo_fallas_general' %}" data-tooltip="Catálogo de fallas"
+               class="{% if 'falla' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span class="nav-label">{% trans "Catálogo de fallas" %}</span>
+            </a>
+            <a href="{% url 'paros:catalogo_equipos' %}" data-tooltip="Catálogo de equipos"
+               class="{% if 'equipo' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Catálogo de equipos" %}</span>
+            </a>
+            <a href="{% url 'paros:catalogo_responsables' %}" data-tooltip="Catálogo de responsables"
+               class="{% if 'responsable' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Catálogo de responsables" %}</span>
+            </a>
+            {% endif %}
+
+        <!-- ── Producción ── -->
+
+            {% if request.user.is_superuser or perfil.es_admin or perfil.areas_produccion.exists %}
+            <div class="sidebar-section" style="margin-top:4px;">{% trans "Producción" %}</div>
+            <a href="{% url 'paros:registro_produccion' %}" data-tooltip="Tiempo de producción"
+               class="{% if request.resolver_match.url_name == 'registro_produccion' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Tiempo de producción" %}</span>
+            </a>
+            <a href="{% url 'paros:indicadores_produccion' %}" data-tooltip="Indicadores"
+               class="{% if request.resolver_match.url_name == 'indicadores_produccion' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="nav-label">{% trans "Indicadores" %}</span>
+            </a>
+            {% endif %}
+
+            {% if request.user.is_superuser or perfil.es_admin %}
+            <div class="sidebar-section" style="margin-top:4px;">{% trans "Usuarios" %}</div>
+            <a href="{% url 'lista_usuarios' %}" data-tooltip="Gestión de usuarios"
+               class="{% if request.resolver_match.url_name in 'lista_usuarios,crear_usuario,editar_usuario' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Gestión de usuarios" %}</span>
+            </a>
+            {% endif %}
+            {% endwith %}
+            </div><!-- /nav-paros -->
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <!-- Usuario actual -->
+            <div style="padding:8px 12px 4px; display:flex; align-items:center; gap:8px; overflow:hidden;">
+                <div style="width:28px; height:28px; border-radius:50%; background:var(--indigo);
+                            display:flex; align-items:center; justify-content:center;
+                            font-size:12px; font-weight:700; color:#fff; flex-shrink:0;">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div style="overflow:hidden; opacity:1; transition:opacity var(--tr);" class="nav-label">
+                    <div style="font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        {% if request.user.get_full_name %}{{ request.user.get_full_name }}{% else %}{{ request.user.username }}{% endif %}
+                    </div>
+                    <div style="font-size:11px; color:var(--text-3);">
+                        {% if request.user.is_superuser %}Superusuario
+                        {% elif request.user.perfil.es_admin %}Administrador
+                        {% else %}Operador{% endif %}
+                    </div>
+                </div>
+            </div>
+            <hr style="border:none; border-top:1px solid var(--border); margin:6px 8px;">
+
+            <!-- Dark mode toggle -->
+            <div class="footer-row">
+                <button class="btn-theme" id="btn-theme" title="Cambiar tema" aria-label="Cambiar tema">
+                    <svg id="icon-sun" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+                    </svg>
+                    <svg id="icon-moon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+                <span class="theme-label" id="theme-label">{% trans "Modo oscuro" %}</span>
+            </div>
+
+            <!-- Logout -->
+            <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn" onclick="localStorage.removeItem('app_modulo')">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    <span class="logout-label">{% trans "Cerrar sesión" %}</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<div id="toast-container"></div>
+
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% for message in messages %}
+    showToast(
+        "{{ message|escapejs }}",
+        "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
+    );
+    {% endfor %}
+});
+</script>
+{% endif %}
+
+<script>
+/* ── Toast ── */
+function showToast(msg, type='success') {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(() => t.remove(), 5000);
+}
+
+/* ── Sidebar collapse ── */
+const sidebar     = document.getElementById('sidebar');
+const btnCollapse = document.getElementById('btn-collapse');
+
+// El estado ya fue aplicado via CSS antes del paint
+// Solo sincronizar la clase collapsed en el aside
+if (localStorage.getItem('sidebar_collapsed') === '1') {
+    sidebar.classList.add('collapsed');
+}
+// Quitar clase temporal del html
+document.documentElement.classList.remove('sidebar-pre-collapsed');
+
+btnCollapse.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+    localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+});
+
+/* ── Dark mode ── */
+const html       = document.documentElement;
+const btnTheme   = document.getElementById('btn-theme');
+const iconSun    = document.getElementById('icon-sun');
+const iconMoon   = document.getElementById('icon-moon');
+const themeLabel = document.getElementById('theme-label');
+
+function applyTheme(theme) {
+    html.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+        iconSun.style.display  = 'none';
+        iconMoon.style.display = '';
+        themeLabel.textContent = 'Modo claro';
+    } else {
+        iconSun.style.display  = '';
+        iconMoon.style.display = 'none';
+        themeLabel.textContent = 'Modo oscuro';
+    }
+}
+
+const savedTheme = localStorage.getItem('app_theme');
+if (savedTheme) {
+    applyTheme(savedTheme);
+} else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    applyTheme('dark');
+}
+
+btnTheme.addEventListener('click', () => {
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('app_theme', next);
+});
+</script>
+<script>
+/* ── Toggle módulo MTO / Paros ── */
+const MODULO_KEY = 'app_modulo';
+
+function toggleModulo() {
+    const dd      = document.getElementById('modulo-dropdown');
+    const chevron = document.getElementById('brand-chevron');
+    const visible = dd.style.display !== 'none';
+    dd.style.display      = visible ? 'none' : 'block';
+    chevron.style.transform = visible ? '' : 'rotate(180deg)';
+}
+
+function setModulo(modulo) {
+    localStorage.setItem(MODULO_KEY, modulo);
+    document.getElementById('modulo-dropdown').style.display = 'none';
+    document.getElementById('brand-chevron').style.transform = '';
+    aplicarModulo(modulo);
+}
+
+function aplicarModulo(modulo) {
+    const esMto = modulo === 'mto';
+    document.getElementById('nav-mto').style.display        = esMto ? 'block' : 'none';
+    document.getElementById('nav-paros').style.display      = esMto ? 'none'  : 'block';
+    document.getElementById('brand-label-text').textContent = esMto ? '{% trans "Gestión de Mantenimiento" %}' : '{% trans "Paros de Producción" %}';
+    document.getElementById('mod-mto').style.fontWeight     = esMto ? '900' : '100';
+    document.getElementById('mod-paros').style.fontWeight   = esMto ? '100' : '900';
+}
+
+(function() {
+    const path   = window.location.pathname;
+    const modulo = path.startsWith('/mto/')   ? 'mto'
+                 : path.startsWith('/paros/') ? 'paros'
+                 : localStorage.getItem(MODULO_KEY) || 'paros';
+
+    aplicarModulo(modulo);
+    localStorage.setItem(MODULO_KEY, modulo);
+})();
+
+// Cerrar dropdown al hacer click fuera
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#btn-modulo') && !e.target.closest('#modulo-dropdown')) {
+        const dd = document.getElementById('modulo-dropdown');
+        if (dd) {
+            dd.style.display = 'none';
+            document.getElementById('brand-chevron').style.transform = '';
+        }
+    }
+});
+</script>
+{% block extra_js %}
+{% endblock %}
+</body>
+</html>

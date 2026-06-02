@@ -1,0 +1,136 @@
+/* =============================================================================
+   paros.css — Estilos de paros_app
+   Cubre: base_paros, lista_paros, crear_paro, editar_paro,
+          form_usuario, catalogo_equipos, catalogo_fallas_general,
+          catalogo_responsables
+   ============================================================================= */
+
+
+/* base_paros.html tiene su propio <style> interno — no se incluye aquí */
+
+
+/* ── lista_paros ───────────────────────────────────────────────────────────── */
+#tabla-paros {
+    table-layout: fixed;
+    width: 100%;
+}
+#tabla-paros th,
+#tabla-paros td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+#tabla-paros td[data-campo="area"],
+#tabla-paros td[data-campo="falla"],
+#tabla-paros td[data-campo="equipo"],
+#tabla-paros td[data-campo="responsable"],
+#tabla-paros td[data-campo="comentarios"] {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.35;
+}
+.table-wrap { overflow-x: auto; }
+
+/* Colores de estatus */
+.btn-estatus-rojo     { background: #EF4444 !important; }
+.btn-estatus-amarillo { background: #F59E0B !important; }
+.btn-estatus-verde    { background: #10B981 !important; }
+
+/* Botones de acciones */
+.acciones-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+.btn-accion {
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    transition: opacity .15s;
+}
+.btn-accion:hover  { opacity: .85; }
+.btn-accion-est    { background: #10B981; color: #fff; }
+.btn-accion-edit   { background: #4F46E5; color: #fff; }
+.btn-accion-del    { background: #EF4444; color: #fff; }
+
+
+/* ── crear_paro / editar_paro — autocomplete de fallas ────────────────────── */
+.falla-item {
+    padding: 9px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    transition: background .1s;
+}
+.falla-item:last-child { border-bottom: none; }
+.falla-item:hover,
+.falla-item.selected   { background: var(--indigo-lt); }
+.falla-item .fi-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--indigo);
+    margin-right: 8px;
+}
+.falla-item .fi-desc {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 1px;
+}
+.falla-empty {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-3);
+    text-align: center;
+}
+
+
+/* ── editar_paro — colores de estatus en el select ────────────────────────── */
+#id_estatus.estatus-rojo     { background: #FEE2E2 !important; color: #991B1B !important; border-color: #FECACA !important; }
+#id_estatus.estatus-amarillo { background: #FEF3C7 !important; color: #92400E !important; border-color: #FDE68A !important; }
+#id_estatus.estatus-verde    { background: #D1FAE5 !important; color: #065F46 !important; border-color: #6EE7B7 !important; }
+
+@media (max-width: 768px) {
+    .editar-grid { grid-template-columns: 1fr !important; }
+}
+
+
+/* ── form_usuario ──────────────────────────────────────────────────────────── */
+.perm-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: background .15s, border-color .15s;
+}
+.perm-row:hover { background: var(--indigo-lt); border-color: var(--indigo); }
+
+.area-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    transition: all .15s;
+}
+.area-chip:hover { background: var(--indigo-lt); border-color: var(--indigo); }
+
+
+/* ── catálogos (equipos, fallas_general, responsables) ────────────────────── */
+.area-header:hover          { background: var(--indigo-lt) !important; }
+.area-content.collapsed     { display: none; }

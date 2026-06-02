@@ -1,0 +1,368 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% load paros_extras %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'paros_app/css/paros.css' %}">
+{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div style="margin-bottom:12px;">
+    {% for msg in messages %}
+    <div style="padding:10px 16px; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:6px;
+                background:{% if msg.tags == 'error' %}var(--red-lt){% else %}#D1FAE5{% endif %};
+                color:{% if msg.tags == 'error' %}var(--red){% else %}#065F46{% endif %};
+                border:1px solid {% if msg.tags == 'error' %}var(--red){% else %}#6EE7B7{% endif %};">
+        {{ msg }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card-header" style="margin-bottom:0; padding-bottom:16px; border-bottom:1px solid var(--border);">
+    <div>
+        <div class="card-title">
+            {% if area_actual %}{% trans "Paros" %} — {{ area_actual.nombre }}{% else %}{% trans "Todos los paros" %}{% endif %}
+        </div>
+        <div class="card-subtitle">{% trans "Doble clic en celda para editar · Clic en estatus para cambiar" %}</div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        {% if puede_importar %}
+        <a href="{% url 'paros:importar_paros' %}{% if area_actual %}?area_id={{ area_actual.id }}{% endif %}" class="btn btn-ghost btn-sm">↑ {% trans "Importar" %}</a>
+        {% endif %}
+        {% if puede_exportar %}
+        <div style="position:relative; display:inline-block;" id="export-wrap">
+            <button onclick="toggleExportMenu()" class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:5px;">
+                ↓ {% trans "Exportar" %}
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div id="export-menu" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:200;
+                                          background:var(--white);border:1px solid var(--border);border-radius:8px;
+                                          box-shadow:0 4px 16px rgba(0,0,0,.10);min-width:130px;overflow:hidden;">
+                <a href="{% url 'paros:exportar_excel' %}?{% if area_actual %}area_id={{ area_actual.id }}&{% endif %}{% if request.GET %}{{ request.GET.urlencode }}{% endif %}"
+                   style="display:block;padding:9px 14px;font-size:13px;color:var(--text);text-decoration:none;white-space:nowrap;"
+                   onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                    📊 Excel (.xlsx)
+                </a>
+                <a href="{% url 'paros:exportar_csv' %}?{% if area_actual %}area_id={{ area_actual.id }}&{% endif %}{% if request.GET %}{{ request.GET.urlencode }}{% endif %}"
+                   style="display:block;padding:9px 14px;font-size:13px;color:var(--text);text-decoration:none;white-space:nowrap;border-top:1px solid var(--border);"
+                   onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                    📄 CSV (.csv)
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        {% if puede_crear %}
+        <a href="{% url 'paros:crear_paro' %}" class="btn btn-primary btn-sm">+ {% trans "Nuevo paro" %}</a>
+        {% endif %}
+        {% include 'menu_app/_language_selector.html' %}
+    </div>
+</div>
+
+<!-- ── Filtros ── -->
+<form method="get" id="form-filtros">
+    <div class="filters" style="margin-top:16px;">
+        {% if not area_actual %}
+        <div class="filter-group">
+            <label>{% trans "Área" %}</label>
+            <select name="area">
+                <option value="">{% trans "Todas" %}</option>
+                {% for a in areas %}
+                <option value="{{ a.id }}" {% if filtros.area == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div class="filter-group">
+            <label>{% trans "Semana" %}</label>
+            <input type="number" name="semana" min="1" max="53"
+                   value="{{ filtros.semana }}" placeholder="ej. 16"
+                   style="width:80px;">
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Turno" %}</label>
+            <select name="turno">
+                <option value="">{% trans "Ambos" %}</option>
+                <option value="1" {% if filtros.turno == "1" %}selected{% endif %}>{% trans "Turno 1" %}</option>
+                <option value="2" {% if filtros.turno == "2" %}selected{% endif %}>{% trans "Turno 2" %}</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Desde" %}</label>
+            <input type="date" name="fecha_desde" value="{{ filtros.fecha_desde }}">
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Hasta" %}</label>
+            <input type="date" name="fecha_hasta" value="{{ filtros.fecha_hasta }}">
+        </div>
+
+        <div class="filter-group">
+            <label>{% trans "Falla" %}</label>
+            <input type="text" name="q" value="{{ filtros.q }}" placeholder="{% trans 'Buscar falla…' %}">
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Responsable" %}</label>
+            <input type="text" name="resp" value="{{ filtros.resp }}" placeholder="{% trans 'Buscar responsable…' %}">
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Equipo" %}</label>
+            <input type="text" name="equipo" value="{{ filtros.equipo }}" placeholder="{% trans 'Buscar equipo…' %}">
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
+            <a href="{% if area_actual %}{% url 'paros:lista_paros_por_area' area_actual.id %}{% else %}{% url 'paros:lista_paros' %}{% endif %}"
+               class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
+        </div>
+    </div>
+</form>
+
+<!-- ── Stats + selector paginación ── -->
+<div class="stat-bar">
+    <div style="display:flex;gap:16px;">
+        <div class="stat-item">
+            <b>{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ paros|length }}{% endif %}</b>{% trans " paros encontrados" %}
+        </div>
+        <div class="stat-item"><b>{{ total_minutos }}</b> min {% trans "totales" %}</div>
+        {% if promedio_min %}
+            <div class="stat-item">
+                <b>{{ promedio_min }}</b> min {% trans "promedio" %}
+            </div>
+        {% endif %}
+        {% if paro_mayor %}
+        <div class="stat-item">
+            <b>{{ paro_mayor.tiempo_minutos }}</b> min - <span style="font-size:12px; color:var(--text-2);">{{ paro_mayor.falla }}</span>
+        </div>
+        {% endif %}
+    </div>
+    <!-- ── Filtro Columnas ── -->
+    <div style="position:relative; margin-left:auto;">
+        <button id="btn-columnas" onclick="toggleDropdownColumnas()"
+                style="display:flex; align-items:center; gap:6px; padding:6px 12px;
+                    border:1px solid var(--border); border-radius:7px;
+                    background:var(--white); color:var(--text); font-size:12px;
+                    cursor:pointer; font-family:inherit;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+            </svg>
+            {% trans "Columnas" %}
+        </button>
+        <div id="dropdown-columnas" style="display:none; position:absolute; right:0; top:36px;
+                                        background:var(--white); border:1px solid var(--border);
+                                        border-radius:10px; padding:8px 0; width:180px; z-index:100;">
+            <div style="font-size:11px; font-weight:600; color:var(--text-3); padding:4px 14px 8px;
+                        text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border);
+                        margin-bottom:4px;">{% trans "Mostrar columnas" %}</div>
+            <label class="col-toggle-item"><input type="checkbox" checked disabled>{% trans "Área" %}</label>
+            <label class="col-toggle-item"><input type="checkbox" checked data-col="2" onchange="toggleColumna(this)"> {% trans "Fecha" %}</label>
+            <label class="col-toggle-item"><input type="checkbox" checked data-col="3" onchange="toggleColumna(this)"> {% trans "Semana" %}</label>
+            <label class="col-toggle-item"><input type="checkbox" checked data-col="4" onchange="toggleColumna(this)"> {% trans "Turno" %}</label>
+            <label class="col-toggle-item"><input type="checkbox" checked data-col="5" onchange="toggleColumna(this)"> {% trans "Falla" %}</label>
+            <label class="col-toggle-item"><input type="checkbox" checked data-col="6" onchange="toggleColumna(this)"> {% trans "Responsable" %}</label>
+            <label class="col-toggle-item"><input type="checkbox" checked data-col="7" onchange="toggleColumna(this)"> {% trans "Equipo" %}</label>
+            <label class="col-toggle-item"><input type="checkbox" checked data-col="8" onchange="toggleColumna(this)"> {% trans "Hora" %}</label>
+            <label class="col-toggle-item"><input type="checkbox" checked data-col="9" onchange="toggleColumna(this)"> {% trans "Tiempo" %}</label>
+            <label class="col-toggle-item"><input type="checkbox" checked data-col="10" onchange="toggleColumna(this)">{% trans "Comentarios" %}</label>
+        </div>
+    </div>
+    <!-- ── Filtro Columnas ── -->
+</div>
+
+<!-- ── Tabla ── -->
+<div class="card" style="padding:0; overflow:hidden;">
+    <div class="table-wrap">
+        <table id="tabla-paros">
+            <colgroup>
+                <col style="width:4px">
+                <col style="width:90px">
+                <col style="width:70px">
+                <col style="width:55px">
+                <col style="width:80px">
+                <col style="width:150px">
+                <col style="width:120px">
+                <col style="width:130px">
+                <col style="width:58px">
+                <col style="width:55px">
+                <col style="width:120px">
+                <col style="width:160px">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th style="padding:0;width:4px;"></th>
+                    <th>{% trans "Área" %}</th>
+                    <th style="text-align:center;">{% trans "Fecha" %}</th>
+                    <th style="text-align:center;">{% trans "Sem." %}</th>
+                    <th>{% trans "Turno" %}</th>
+                    <th>{% trans "Falla" %}</th>
+                    <th>{% trans "Responsable" %}</th>
+                    <th>{% trans "Equipo" %}</th>
+                    <th style="text-align:center;">{% trans "Hora" %}</th>
+                    <th style="text-align:center;">{% trans "Tiempo" %}</th>
+                    <th>{% trans "Comentarios" %}</th>
+                    <th>{% trans "Acciones" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for paro in paros %}
+                <tr data-id="{{ paro.id }}">
+                    <td style="padding:0;width:4px;background:{% if paro.estatus == 'rojo' %}#EF4444{% elif paro.estatus == 'amarillo' %}#F59E0B{% else %}#10B981{% endif %};"></td>
+                    <td class="area" data-campo="area">{{ paro.area.nombre }}</td>
+                    <td class="{% if puede_editar %}editable-fecha{% endif %}" data-campo="fecha" data-iso="{{ paro.fecha|date:'Y-m-d' }}" style="text-align:center;font-family:'DM Mono',monospace;font-size:12.5px;">{{ paro.fecha|date:"d/m/y" }}</td>
+                    <td data-semana style="text-align:center;font-family:'DM Mono',monospace;font-size:12.5px;color:var(--text-2);">{{ paro.fecha|semana_iso }}</td>
+                    <td data-campo="turno" data-valor="{{ paro.turno }}">
+                        <span class="badge {% if paro.turno == 1 %}badge-t1{% else %}badge-t2{% endif %} turno-badge"
+                              style="cursor:{% if puede_editar %}pointer{% else %}default{% endif %}"
+                              title="{% if puede_editar %}Doble clic para editar{% endif %}">
+                            {{ paro.get_turno_display }}
+                        </span>
+                    </td>
+
+                    <td data-campo="falla">{{ paro.falla }}</td>
+                    <td data-campo="responsable">{{ paro.responsable }}</td>
+                    <td data-campo="equipo">{{ paro.equipo }}</td>
+
+                    <td class="{% if puede_editar %}editable-hora{% endif %}" data-campo="hora" style="font-family:'DM Mono',monospace;font-size:12.5px;text-align:center;">{{ paro.hora|time:"H:i" }}</td>
+                    <td class="{% if puede_editar %}editable{% endif %}" data-campo="tiempo_minutos" style="font-family:'DM Mono',monospace;font-size:12.5px;text-align:center;">{{ paro.tiempo_minutos }}</td>
+                    <td class="{% if puede_editar or puede_editar_comentarios %}editable{% endif %}" data-campo="comentarios" style="color:var(--text-2);">{{ paro.comentarios }}</td>
+                    <td style="padding:6px 12px;">
+                        <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">
+                            <!-- Estatus -->
+                            {% if puede_estatus %}
+                            <button onclick="cambiarEstatus({{ paro.id }}, this)"
+                                    data-estatus="{{ paro.estatus }}"
+                                    title="{% if paro.estatus == 'rojo' %}{% trans 'Sin revisar → Pendiente' %}{% elif paro.estatus == 'amarillo' %}{% trans 'Pendiente → Revisado' %}{% else %}{% trans 'Revisado → Sin revisar' %}{% endif %}"
+                                    style="height:32px;padding:0 8px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:#fff;white-space:nowrap;width:90px;text-align:center;display:inline-flex;align-items:center;justify-content:center;
+                                           background:{% if paro.estatus == 'rojo' %}#EF4444{% elif paro.estatus == 'amarillo' %}#F59E0B{% else %}#10B981{% endif %};">
+                                {% if paro.estatus == 'rojo' %}{% trans "Sin revisar" %}{% elif paro.estatus == 'amarillo' %}{% trans "Pendiente" %}{% else %}{% trans "Revisado" %}{% endif %}
+                            </button>
+                            {% else %}
+                            <span style="height:32px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:500;color:#fff;white-space:nowrap;width:90px;text-align:center;display:inline-flex;align-items:center;justify-content:center;
+                                         background:{% if paro.estatus == 'rojo' %}#EF4444{% elif paro.estatus == 'amarillo' %}#F59E0B{% else %}#10B981{% endif %};">
+                                {% if paro.estatus == 'rojo' %}{% trans "Sin revisar" %}{% elif paro.estatus == 'amarillo' %}{% trans "Pendiente" %}{% else %}{% trans "Revisado" %}{% endif %}
+                            </span>
+                            {% endif %}
+                            <!-- Editar -->
+                            {% if puede_editar %}
+                            <a href="{% url 'paros:editar_paro' paro.id %}"
+                               title="{% trans 'Editar' %}"
+                               style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;border:none;background:#4F46E5;cursor:pointer;text-decoration:none;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </a>
+                            {% endif %}
+                            <!-- Eliminar -->
+                            {% if puede_eliminar %}
+                            <button type="button" class="btn-eliminar-icono"
+                                    data-id="{{ paro.id }}"
+                                    data-url="{% url 'paros:eliminar_paro' paro.id %}"
+                                    title="{% trans 'Eliminar' %}"
+                                    style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;border:none;background:#EF4444;cursor:pointer;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6l-1 14H6L5 6"/>
+                                    <path d="M10 11v6M14 11v6"/>
+                                    <path d="M9 6V4h6v2"/>
+                                </svg>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" style="text-align:center; padding:40px; color:var(--text-3);">
+                        {% trans "No hay paros registrados con los filtros actuales." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ── Paginación + Mostrar en mismo renglón ── -->
+<div style="display:flex; align-items:center; justify-content:space-between; margin-top:20px; flex-wrap:wrap; gap:8px;">
+    <div>
+    {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    <div class="pagination" style="margin-top:0;">
+        {% if page_obj.has_previous %}
+            <a href="?{% for k,v in filtros.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">&lsaquo;</a>
+        {% else %}
+            <span class="disabled">&lsaquo;</span>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="current">{{ num }}</span>
+            {% elif num >= page_obj.number|add:"-3" and num <= page_obj.number|add:"3" %}
+                <a href="?{% for k,v in filtros.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+            <a href="?{% for k,v in filtros.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">&rsaquo;</a>
+        {% else %}
+            <span class="disabled">&rsaquo;</span>
+        {% endif %}
+    </div>
+    {% endif %}
+    </div>
+    <div style="display:flex; align-items:center; gap:4px;">
+        <span style="font-size:13px; font-weight:500; color:var(--text-2); margin-right:4px;">{% trans "Mostrar" %}</span>
+        <a onclick="cambiarPorPagina('8')" style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:7px;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;border:1px solid var(--border);background:{% if por_pagina == '8' %}var(--indigo){% else %}var(--white){% endif %};color:{% if por_pagina == '8' %}#fff{% else %}var(--text-2){% endif %};">8</a>
+        <a onclick="cambiarPorPagina('10')" style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:7px;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;border:1px solid var(--border);background:{% if por_pagina == '10' %}var(--indigo){% else %}var(--white){% endif %};color:{% if por_pagina == '10' %}#fff{% else %}var(--text-2){% endif %};">10</a>
+        <a onclick="cambiarPorPagina('20')" style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:7px;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;border:1px solid var(--border);background:{% if por_pagina == '20' %}var(--indigo){% else %}var(--white){% endif %};color:{% if por_pagina == '20' %}#fff{% else %}var(--text-2){% endif %};">20</a>
+    </div>
+</div>
+
+<!-- ── Modal eliminar ── -->
+<div id="modal-eliminar" class="modal-backdrop">
+    <div class="modal-box">
+        <p>{% trans "¿Eliminar este paro?" %}<br><small style="color:var(--text-3);font-weight:400;">{% trans "Esta acción no se puede deshacer." %}</small></p>
+        <div class="modal-actions">
+            <form id="form-eliminar" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="background:var(--red);border-color:var(--red);">
+                    {% trans "Sí, eliminar" %}
+                </button>
+            </form>
+                <button type="button" class="btn btn-ghost" id="btn-cancelar-modal">
+                    {% trans "Cancelar" %}
+                </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+{% load static %}
+<script>
+    const i18n = {
+        turno1: "{% trans 'Turno 1' %}",
+        turno2: "{% trans 'Turno 2' %}",
+        sinRevisar: "{% trans 'Sin revisar' %}",
+        pendiente: "{% trans 'Pendiente' %}",
+        revisado: "{% trans 'Revisado' %}",
+        sinRevisarTitulo: "{% trans 'Sin revisar → Pendiente' %}",
+        pendienteTitulo: "{% trans 'Pendiente → Revisado' %}",
+        revisadoTitulo: "{% trans 'Revisado → Sin revisar' %}",
+        estatusActualizado: "{% trans 'Estatus actualizado' %}",
+        errorEstatus: "{% trans 'Error al cambiar estatus' %}",
+    };
+</script>
+<script src="{% static 'paros_app/js/lista_paros.js' %}" defer></script>
+<style>
+.col-toggle-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px; cursor: pointer; font-size: 12px;
+    color: var(--text);
+}
+.col-toggle-item:hover { background: var(--surface); }
+.col-toggle-item input { accent-color: var(--indigo); width:14px; height:14px; flex-shrink:0; }
+</style>
+
+{% endblock %}

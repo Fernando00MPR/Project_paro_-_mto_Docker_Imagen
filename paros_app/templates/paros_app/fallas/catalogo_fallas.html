@@ -1,0 +1,62 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% block title %}{% trans "Catálogo" %} — {{ area.nombre }}{% endblock %}
+
+{% block content %}
+<div class="card-header" style="margin-bottom:16px;">
+    <div>
+        <div class="card-title">{% trans "Catálogo de fallas" %} — {{ area.nombre }}</div>
+        <div class="card-subtitle">
+            {% blocktrans count count=fallas.count %}
+                {{ count }} falla registrada
+            {% plural %}
+                {{ count }} fallas registradas
+            {% endblocktrans %}
+        </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+        <a href="{% url 'paros:importar_fallas' %}" class="btn btn-primary btn-sm">↑ {% trans "Importar más" %}</a>
+        <a href="{% url 'paros:lista_paros_por_area' area.id %}" class="btn btn-ghost btn-sm">← {% trans "Paros del área" %}</a>
+        {% include 'menu_app/_language_selector.html' %}
+    </div>
+</div>
+
+<div class="card" style="padding:0; overflow:hidden;">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:140px;">{% trans "Código" %}</th>
+                    <th>{% trans "Falla" %}</th>
+                    <th style="width:120px;">{% trans "Tipo de falla" %}</th>
+                    <th style="width:90px;">{% trans "Acción" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in fallas %}
+                <tr>
+                    <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--indigo);">{{ f.codigo }}</td>
+                    <td style="font-weight:500;">{{ f.nombre }}</td>
+                    <td style="color:var(--text-2);font-size:13px;">{{ f.tipo_falla_es|default:f.tipo_falla|default:"—" }}</td>
+                    <td>
+                        <form method="post" action="{% url 'paros:eliminar_falla' f.id %}"
+                              onsubmit="return confirm(this.dataset.msg);"
+                              data-msg="{% blocktrans with codigo=f.codigo %}¿Eliminar falla {{ codigo }}?{% endblocktrans %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">{% trans "Eliminar" %}</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align:center; padding:40px; color:var(--text-3);">
+                        {% trans "No hay fallas en el catálogo de este área." %}
+                        <a href="{% url 'paros:importar_fallas' %}" style="color:var(--indigo);">{% trans "Importar ahora" %}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

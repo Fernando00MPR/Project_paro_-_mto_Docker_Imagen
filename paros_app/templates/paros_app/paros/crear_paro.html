@@ -1,0 +1,178 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'paros_app/css/paros.css' %}">
+{% endblock %}
+
+{% block title %}{% trans "Nuevo paro — Gestión de Paros" %}{% endblock %}
+
+{% block content %}
+<div style="max-width:700px;">
+
+    <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+            <div class="card-title">{% trans "Registrar nuevo paro" %}</div>
+            <div class="card-subtitle">{% trans "Completa todos los campos obligatorios" %}</div>
+        </div>
+        {% include 'menu_app/_language_selector.html' %}
+    </div>
+
+    <div class="card">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-grid">
+
+                <!-- Área -->
+                <div class="form-field">
+                    <label for="id_area">{% trans "Área" %} <span style="color:var(--red)">*</span></label>
+                    <select name="area" id="id_area" required>
+                        <option value="">— {% trans "Selecciona un área" %} —</option>
+                        {% for choice in form.area.field.choices %}
+                            {% if choice.0 %}
+                            <option value="{{ choice.0 }}"
+                                {% if form.area.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                {{ choice.1 }}
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.area.errors %}
+                    <ul class="errorlist">{% for e in form.area.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Turno -->
+                <div class="form-field">
+                    <label for="id_turno">{% trans "Turno" %} <span style="color:var(--red)">*</span></label>
+                    <select name="turno" id="id_turno" required>
+                        <option value="">— {% trans "Selecciona" %} —</option>
+                        {% for val, label in form.turno.field.choices %}
+                        {% if val %}
+                        <option value="{{ val }}"
+                            {% if form.turno.value|stringformat:"s" == val|stringformat:"s" %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.turno.errors %}
+                    <ul class="errorlist">{% for e in form.turno.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Fecha -->
+                <div class="form-field">
+                    <label for="id_fecha_picker">{% trans "Fecha" %}  <span style="color:var(--red)">*</span></label>
+                    <input type="date" id="id_fecha_picker" required>
+                    <input type="hidden" name="fecha" id="id_fecha" value="{{ form.fecha.value|default:'' }}">
+                    {% if form.fecha.errors %}
+                    <ul class="errorlist">{% for e in form.fecha.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Hora -->
+                <div class="form-field">
+                    <label for="id_hora_picker">{% trans "Hora" %}<span style="color:var(--red)">*</span></label>
+                    <input type="time" id="id_hora_picker" required>
+                    <input type="hidden" name="hora" id="id_hora" value="{{ form.hora.value|default:'' }}">
+                    {% if form.hora.errors %}
+                    <ul class="errorlist">{% for e in form.hora.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- ── Falla con autocomplete ── -->
+                <div class="form-field full" style="position:relative;">
+                    <label for="id_falla">{% trans "Falla" %}<span style="color:var(--red)">*</span></label>
+                    <input type="text" name="falla" id="id_falla" autocomplete="off"
+                           value="{{ form.falla.value|default:'' }}"
+                           placeholder="{% trans 'Escribe para buscar en el catálogo…' %}" required>
+                    <span class="help" id="falla-help">
+                        {% trans "Selecciona un área primero para filtrar el catálogo de fallas." %}
+                    </span>
+                    <!-- Dropdown sugerencias -->
+                    <div id="falla-dropdown" style="
+                        display:none; position:absolute; left:0; right:0; top:100%;
+                        background:var(--white); border:1px solid var(--indigo);
+                        border-top:none; border-radius:0 0 7px 7px;
+                        box-shadow:var(--shadow-md); z-index:500;
+                        max-height:220px; overflow-y:auto;">
+                    </div>
+                    {% if form.falla.errors %}
+                    <ul class="errorlist">{% for e in form.falla.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Responsable con autocomplete -->
+                <div class="form-field" style="position:relative;">
+                    <label for="id_responsable">{% trans "Responsable" %}<span style="color:var(--red)">*</span></label>
+                    <input type="text" name="responsable" id="id_responsable" autocomplete="off"
+                           value="{{ form.responsable.value|default:'' }}" required
+                           placeholder="{% trans 'Escribe para buscar en el catálogo…' %}">
+                    <span class="help" id="responsable-help">{% trans "Selecciona un área primero para filtrar." %}</span>
+                    <div id="responsable-dropdown" style="
+                        display:none; position:absolute; left:0; right:0; top:100%;
+                        background:var(--white); border:1px solid var(--indigo);
+                        border-top:none; border-radius:0 0 7px 7px;
+                        box-shadow:var(--shadow-md); z-index:500;
+                        max-height:220px; overflow-y:auto;"></div>
+                    {% if form.responsable.errors %}
+                    <ul class="errorlist">{% for e in form.responsable.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Equipo con autocomplete -->
+                <div class="form-field" style="position:relative;">
+                    <label for="id_equipo">{% trans "Equipo" %}<span style="color:var(--red)">*</span></label>
+                    <input type="text" name="equipo" id="id_equipo" autocomplete="off"
+                           value="{{ form.equipo.value|default:'' }}" required
+                           placeholder="{% trans 'Escribe para buscar en el catálogo…' %}">
+                    <span class="help" id="equipo-help">{% trans "Selecciona un área primero para filtrar." %}</span>
+                    <div id="equipo-dropdown" style="
+                        display:none; position:absolute; left:0; right:0; top:100%;
+                        background:var(--white); border:1px solid var(--indigo);
+                        border-top:none; border-radius:0 0 7px 7px;
+                        box-shadow:var(--shadow-md); z-index:500;
+                        max-height:220px; overflow-y:auto;"></div>
+                    {% if form.equipo.errors %}
+                    <ul class="errorlist">{% for e in form.equipo.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Tiempo real -->
+                <div class="form-field">
+                    <label for="id_tiempo_minutos">{% trans "Tiempo perdido (minutos)" %}<span style="color:var(--red)">*</span></label>
+                    <input type="number" name="tiempo_minutos" id="id_tiempo_minutos"
+                           value="{{ form.tiempo_minutos.value|default:'' }}" min="0" required>
+                    {% if form.tiempo_minutos.errors %}
+                    <ul class="errorlist">{% for e in form.tiempo_minutos.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Comentarios -->
+                <div class="form-field full">
+                    <label for="id_comentarios">{% trans "Comentarios" %}</label>
+                    <input type="text" name="comentarios" id="id_comentarios"
+                           value="{{ form.comentarios.value|default:'' }}"
+                           maxlength="100" placeholder="{% trans 'Opcional…' %}">
+                    {% if form.comentarios.errors %}
+                    <ul class="errorlist">{% for e in form.comentarios.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{% trans "Guardar paro" %}</button>
+                <a href="{% url 'paros:lista_paros' %}" class="btn btn-ghost">{% trans "Cancelar" %}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'paros_app/js/autocomplete.js' %}"></script>
+<script src="{% static 'paros_app/js/crear_paro.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'paros_app/css/paros.css' %}">
+{% endblock %}
+
+{% block title %}{% trans "Edición e historial de paro" %}{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-start;">
+    <div>
+        <div class="card-title">{% trans "Edición e historial de paro" %} #{{ paro.id }}</div>
+        <div class="card-subtitle">{{ paro.area.nombre }} · {{ paro.falla }} · {{ paro.fecha|date:"d/m/Y" }}</div>
+    </div>
+    {% include 'menu_app/_language_selector.html' %}
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;" class="editar-grid">
+
+    <!-- ── Formulario de edición ── -->
+    <div class="card">
+        <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border);">
+            {% trans "Editar paro" %}
+        </div>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-grid">
+
+                <div class="form-field">
+                    <label for="id_area">{% trans "Área" %}<span style="color:var(--red)">*</span></label>
+                    <select name="area" id="id_area" required>
+                        <option value="">— {% trans "Selecciona un área" %} —</option>
+                        {% for choice in form.area.field.choices %}
+                            {% if choice.0 %}
+                            <option value="{{ choice.0 }}" {% if form.area.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>{{ choice.1 }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.area.errors %}<ul class="errorlist">{% for e in form.area.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_turno">{% trans "Turno" %}<span style="color:var(--red)">*</span></label>
+                    <select name="turno" id="id_turno" required>
+                        {% for val, label in form.turno.field.choices %}{% if val %}
+                        <option value="{{ val }}" {% if form.turno.value|stringformat:"s" == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+                        {% endif %}{% endfor %}
+                    </select>
+                    {% if form.turno.errors %}<ul class="errorlist">{% for e in form.turno.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_fecha_picker">{% trans "Fecha" %}<span style="color:var(--red)">*</span></label>
+                    <input type="date" id="id_fecha_picker" required>
+                    <input type="hidden" name="fecha" id="id_fecha" value="{{ form.fecha.value|default:'' }}">
+                    {% if form.fecha.errors %}<ul class="errorlist">{% for e in form.fecha.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_hora_picker">{% trans "Hora" %}<span style="color:var(--red)">*</span></label>
+                    <input type="time" id="id_hora_picker" required>
+                    <input type="hidden" name="hora" id="id_hora" value="{{ form.hora.value|default:'' }}">
+                    {% if form.hora.errors %}<ul class="errorlist">{% for e in form.hora.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+                <div class="form-field full" style="position:relative;">
+                    <label for="id_falla">{% trans "Falla" %}<span style="color:var(--red)">*</span></label>
+                    <input type="text" name="falla" id="id_falla" autocomplete="off"
+                           value="{{ form.falla.value|default:'' }}" placeholder="{% trans 'Escribe para buscar en el catálogo…' %}" required>
+                    <span class="help" id="falla-help">{% trans "Busca en el catálogo del área seleccionada o escribe libremente." %}</span>
+                    <div id="falla-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--white);border:1px solid var(--indigo);border-top:none;border-radius:0 0 7px 7px;box-shadow:var(--shadow-md);z-index:500;max-height:220px;overflow-y:auto;"></div>
+                    {% if form.falla.errors %}<ul class="errorlist">{% for e in form.falla.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+                <div class="form-field" style="position:relative;">
+                    <label for="id_responsable">{% trans "Responsable" %}<span style="color:var(--red)">*</span></label>
+                    <input type="text" name="responsable" id="id_responsable" autocomplete="off"
+                           value="{{ form.responsable.value|default:'' }}" maxlength="100" required
+                           placeholder="{% trans 'Escribe para buscar en el catálogo…' %}">
+                    <span class="help" id="responsable-help">{% trans "Selecciona un área primero para filtrar." %}</span>
+                    <div id="responsable-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--white);border:1px solid var(--indigo);border-top:none;border-radius:0 0 7px 7px;box-shadow:var(--shadow-md);z-index:500;max-height:220px;overflow-y:auto;"></div>
+                    {% if form.responsable.errors %}<ul class="errorlist">{% for e in form.responsable.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+                <div class="form-field" style="position:relative;">
+                    <label for="id_equipo">{% trans "Equipo" %}<span style="color:var(--red)">*</span></label>
+                    <input type="text" name="equipo" id="id_equipo" autocomplete="off"
+                           value="{{ form.equipo.value|default:'' }}" maxlength="100" required
+                           placeholder="{% trans 'Escribe para buscar en el catálogo…' %}">
+                    <span class="help" id="equipo-help">{% trans "Selecciona un área primero para filtrar." %}</span>
+                    <div id="equipo-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--white);border:1px solid var(--indigo);border-top:none;border-radius:0 0 7px 7px;box-shadow:var(--shadow-md);z-index:500;max-height:220px;overflow-y:auto;"></div>
+                    {% if form.equipo.errors %}<ul class="errorlist">{% for e in form.equipo.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_tiempo_minutos">{% trans "Tiempo (minutos)" %}<span style="color:var(--red)">*</span></label>
+                    <input type="number" name="tiempo_minutos" id="id_tiempo_minutos" value="{{ form.tiempo_minutos.value|default:'' }}" min="0" required>
+                    {% if form.tiempo_minutos.errors %}<ul class="errorlist">{% for e in form.tiempo_minutos.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_estatus">{% trans "Estatus" %}</label>
+                    <select name="estatus" id="id_estatus" onchange="actualizarColorEstatus(this)"
+                            style="transition:background .2s,color .2s,border-color .2s;">
+                        <option value="rojo"     {% if form.instance.estatus == 'rojo'     %}selected{% endif %}>{% trans "Sin revisar" %}</option>
+                        <option value="amarillo" {% if form.instance.estatus == 'amarillo' %}selected{% endif %}>{% trans "Pendiente" %}</option>
+                        <option value="verde"    {% if form.instance.estatus == 'verde'    %}selected{% endif %}>{% trans "Revisado" %}</option>
+                    </select>
+                </div>
+
+                <div class="form-field full">
+                    <label for="id_comentarios">{% trans "Comentarios" %}</label>
+                    <input type="text" name="comentarios" id="id_comentarios" value="{{ form.comentarios.value|default:'' }}" maxlength="100">
+                    {% if form.comentarios.errors %}<ul class="errorlist">{% for e in form.comentarios.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{% trans "Guardar cambios" %}</button>
+                <a href="{% url 'paros:lista_paros_por_area' paro.area.id %}" class="btn btn-ghost">{% trans "Cancelar" %}</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── Historial ── -->
+    <div class="card" style="padding:16px 18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border);">
+            <div style="font-size:13px; font-weight:700; color:var(--text);">{% trans "Historial de cambios" %}</div>
+            <div style="font-size:11px; color:var(--text-3);">
+                {% blocktrans count count=bitacora|length %}
+                    {{ count }} evento
+                {% plural %}
+                    {{ count }} eventos
+                {% endblocktrans %}
+            </div>
+        </div>
+
+        {% if bitacora %}
+        <div style="display:flex; flex-direction:column;">
+            {% for b in bitacora %}
+            {% with es_ultimo=forloop.last color=b.estatus_color %}
+            <div style="display:flex; gap:10px; padding-bottom:{% if not es_ultimo %}14px{% else %}0{% endif %};">
+                <!-- Dot + línea -->
+                <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0; width:10px;">
+                    <div style="width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:3px;
+                        background:{% if color == 'green' %}#10B981{% elif color == 'amber' %}#F59E0B{% elif color == 'red' %}#EF4444{% elif color == 'gray' %}#D1D5DB{% else %}#4F46E5{% endif %};"></div>
+                    {% if not es_ultimo %}
+                    <div style="width:1.5px; background:var(--border); flex:1; margin-top:3px;"></div>
+                    {% endif %}
+                </div>
+                <!-- Contenido -->
+                <div style="flex:1; padding-bottom:2px;">
+                    <div style="font-size:11px; font-weight:600; color:var(--text);">
+                        {% if b.usuario %}{{ b.usuario.get_full_name|default:b.usuario.username }}{% else %}{% trans "Sistema" %}{% endif %}
+                    </div>
+                    <div style="font-size:10px; color:var(--text-3); margin-bottom:5px;">
+                        {{ b.fecha_hora|date:"d/m/Y" }} · {{ b.fecha_hora|time:"H:i" }}
+                    </div>
+
+                    {% if b.campo == 'creado' %}
+                    <div style="background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:6px 10px;">
+                        <div style="font-size:11px; color:var(--text-3);">{% trans "Paro creado" %}</div>
+                    </div>
+                    {% elif b.campo == 'estatus' %}
+                    <div style="font-size:11px; color:var(--text-2); margin-bottom:3px; font-weight:500;">{% trans "Estatus" %}</div>
+                    <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                        <span style="padding:2px 7px; border-radius:20px; font-size:10px; font-weight:500;
+                            background:{% if b.valor_anterior == 'Sin revisar' or b.valor_anterior == 'rojo' %}#FEE2E2; color:#991B1B{% elif b.valor_anterior == 'Pendiente' or b.valor_anterior == 'amarillo' %}#FEF3C7; color:#92400E{% else %}#D1FAE5; color:#065F46{% endif %};">
+                            {{ b.valor_anterior_display }}
+                        </span>
+                        <span style="color:var(--text-3); font-size:10px;">→</span>
+                        <span style="padding:2px 7px; border-radius:20px; font-size:10px; font-weight:500;
+                            background:{% if b.valor_nuevo == 'Sin revisar' or b.valor_nuevo == 'rojo' %}#FEE2E2; color:#991B1B{% elif b.valor_nuevo == 'Pendiente' or b.valor_nuevo == 'amarillo' %}#FEF3C7; color:#92400E{% else %}#D1FAE5; color:#065F46{% endif %};">
+                            {{ b.valor_nuevo_display }}
+                        </span>
+                    </div>
+                    {% else %}
+                    <div style="font-size:11px; color:var(--text-2); margin-bottom:2px; font-weight:500;">{{ b.campo_label }}</div>
+                    <div style="font-size:11px; color:var(--text-3);">
+                        {% if b.valor_anterior %}
+                            <span style="font-style:italic;">"{{ b.valor_anterior_display }}"</span>
+                            <span style="color:var(--text-3);">→</span>
+                        {% endif %}
+                        <span style="font-style:italic; color:var(--text);">"{{ b.valor_nuevo_display }}"</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:20px 0; color:var(--text-3); font-size:12px;">
+            {% trans "Sin cambios registrados aún" %}
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+{% load static %}
+<script src="{% static 'paros_app/js/autocomplete.js' %}" defer></script>
+<script src="{% static 'paros_app/js/editar_paro.js' %}" defer></script>
+<script src="{% static 'paros_app/js/crear_paro.js' %}" defer></script>
+{% endblock %}

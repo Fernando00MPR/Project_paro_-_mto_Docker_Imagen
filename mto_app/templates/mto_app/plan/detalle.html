@@ -1,0 +1,184 @@
+{% extends "menu_app/base_menu.html" %}
+{% block title %}Detalle — {{ plan.equipo }}{% endblock %}
+{% block content %}
+
+<!-- Encabezado -->
+<div style="display:flex; gap:12px; align-items:center; margin-bottom:20px;">
+    <a href="{% url 'lista_plan' %}" class="btn btn-ghost btn-sm">&#8592; Volver</a>
+    <div>
+        <h2 style="font-size:18px; font-weight:600; color:var(--text); margin:0;">{{ plan.equipo }}</h2>
+        <span style="font-size:12px; color:var(--text-3);">{{ plan.codigo }} &middot; {{ plan.area }}</span>
+    </div>
+</div>
+
+<!-- Info del plan -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">Informacion del plan</div>
+        <a href="{% url 'editar_plan' plan.pk %}" class="btn btn-ghost btn-sm">Editar</a>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px;">
+        <div class="stat-item">
+            <div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">CODIGO</div>
+            <strong>{{ plan.codigo }}</strong>
+        </div>
+        <div class="stat-item">
+            <div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">RUTINA</div>
+            <strong>{{ plan.rutina }}</strong>
+        </div>
+        <div class="stat-item">
+            <div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">FRECUENCIA</div>
+            <strong>{{ plan.get_frecuencia_display }}</strong>
+        </div>
+        <div class="stat-item">
+            <div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">DURACION</div>
+            <strong>
+                {% if plan.duracion_minutos < 60 %}
+                    {{ plan.duracion_minutos }} min
+                {% else %}
+                    {% widthratio plan.duracion_minutos 60 1 %} h
+                {% endif %}
+            </strong>
+        </div>
+        <div class="stat-item">
+            <div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">N° PLAN</div>
+            <strong>{{ plan.plan_trabajo }}</strong>
+        </div>
+        <div class="stat-item">
+            <div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">SEMANA DE INICIO</div>
+            <strong>
+                {% if plan.semana_inicio %}
+                    S{{ plan.semana_inicio }}/{{ plan.anio_inicio }}
+                {% else %}
+                    No definida
+                {% endif %}
+            </strong>
+        </div>
+        <div class="stat-item">
+            <div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">PROXIMA FECHA</div>
+            <strong style="color:var(--indigo);">
+                {% if proxima %}
+                    {{ proxima.fecha|date:"d M Y" }} (S{{ proxima.semana }})
+                {% else %}
+                    Sin fechas pendientes
+                {% endif %}
+            </strong>
+        </div>
+    </div>
+</div>
+
+<!-- Navegacion de anio -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <div class="card-title">Calendario de mantenimiento {{ anio }}</div>
+            <div class="card-subtitle">{{ fechas|length }} ocurrencia(s) en el anio</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <a href="?anio={{ anio_anterior }}" class="btn btn-ghost btn-sm">&#8592; {{ anio_anterior }}</a>
+            <span style="font-size:14px; font-weight:600; color:var(--text);">{{ anio }}</span>
+            <a href="?anio={{ anio_siguiente }}" class="btn btn-ghost btn-sm">{{ anio_siguiente }} &#8594;</a>
+        </div>
+    </div>
+
+    <!-- Leyenda -->
+    <div style="display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-2);">
+            <div style="width:12px; height:12px; border-radius:3px; background:#D1FAE5;"></div> Completada
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-2);">
+            <div style="width:12px; height:12px; border-radius:3px; background:#FEF3C7;"></div> Pendiente / En proceso
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-2);">
+            <div style="width:12px; height:12px; border-radius:3px; background:#E0E7FF;"></div> Reagendada
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-2);">
+            <div style="width:12px; height:12px; border-radius:3px; background:var(--border);"></div> Sin orden generada
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-2);">
+            <div style="width:12px; height:12px; border-radius:3px; border:2px solid var(--indigo);"></div> Semana actual
+        </div>
+    </div>
+
+    <!-- Grid de fechas -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
+        {% for item in fechas %}
+
+        {% if item.orden %}
+            {% if item.orden.estado == 'completada' %}
+                {% with bg="#D1FAE5" color="#065F46" %}
+                <a href="{% url 'detalle_orden' item.orden.pk %}"
+                   style="display:block; padding:12px 14px; border-radius:8px;
+                          background:{{ bg }}; border:1px solid #6EE7B7;
+                          text-decoration:none;
+                          {% if not item.pasada %}border:2px solid var(--indigo);{% endif %}">
+                    <div style="font-size:11px; font-weight:700; color:{{ color }}; letter-spacing:.05em;">
+                        SEMANA {{ item.semana }}
+                    </div>
+                    <div style="font-size:13px; font-weight:600; color:{{ color }}; margin-top:2px;">
+                        {{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}
+                    </div>
+                    <div style="font-size:11px; color:{{ color }}; margin-top:4px; opacity:.8;">
+                        Completada
+                    </div>
+                </a>
+                {% endwith %}
+            {% elif item.orden.estado == 'reagendada' %}
+                <a href="{% url 'detalle_orden' item.orden.pk %}"
+                   style="display:block; padding:12px 14px; border-radius:8px;
+                          background:#E0E7FF; border:1px solid #A5B4FC;
+                          text-decoration:none;">
+                    <div style="font-size:11px; font-weight:700; color:#3730A3; letter-spacing:.05em;">
+                        SEMANA {{ item.semana }}
+                    </div>
+                    <div style="font-size:13px; font-weight:600; color:#3730A3; margin-top:2px;">
+                        {{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}
+                    </div>
+                    <div style="font-size:11px; color:#3730A3; margin-top:4px; opacity:.8;">
+                        Reagendada
+                    </div>
+                </a>
+            {% else %}
+                <a href="{% url 'detalle_orden' item.orden.pk %}"
+                   style="display:block; padding:12px 14px; border-radius:8px;
+                          background:#FEF3C7; border:1px solid #FCD34D;
+                          text-decoration:none;">
+                    <div style="font-size:11px; font-weight:700; color:#92400E; letter-spacing:.05em;">
+                        SEMANA {{ item.semana }}
+                    </div>
+                    <div style="font-size:13px; font-weight:600; color:#92400E; margin-top:2px;">
+                        {{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}
+                    </div>
+                    <div style="font-size:11px; color:#92400E; margin-top:4px; opacity:.8;">
+                        {{ item.orden.get_estado_display }}
+                    </div>
+                </a>
+            {% endif %}
+        {% else %}
+            <!-- Sin orden generada -->
+            <div style="padding:12px 14px; border-radius:8px;
+                        background:var(--surface);
+                        border:{% if not item.pasada and proxima and item.fecha == proxima.fecha %}2px solid var(--indigo){% else %}1px solid var(--border){% endif %};">
+                <div style="font-size:11px; font-weight:700; color:var(--text-3); letter-spacing:.05em;">
+                    SEMANA {{ item.semana }}
+                </div>
+                <div style="font-size:13px; font-weight:600;
+                            color:{% if item.pasada %}var(--text-3){% else %}var(--text){% endif %};
+                            margin-top:2px;">
+                    {{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}
+                </div>
+                <div style="font-size:11px; color:var(--text-3); margin-top:4px;">
+                    {% if item.pasada %}Sin registro{% else %}Pendiente de generar{% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% empty %}
+        <div style="grid-column:1/-1; text-align:center; color:var(--text-3); padding:32px;">
+            No hay fechas programadas para este anio.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

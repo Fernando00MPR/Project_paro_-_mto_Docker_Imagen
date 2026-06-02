@@ -1,0 +1,417 @@
+{% extends "menu_app/base_menu.html" %}
+{% load static %}
+{% block title %}Pasos de rutina{% endblock %}
+{% block content %}
+
+<div class="card">
+
+    <div class="card-header" style="gap:16px;">
+        <div style="min-width:0; flex:1;">
+            <div class="card-title">
+                Rutinas de mantenimiento
+                {% if filtro_area %}
+                    {% for a in areas %}
+                        {% if a.pk|stringformat:"s" == filtro_area %}
+                            — {{ a.nombre }}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        <a href="{% url 'mto:importar_pasos' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm" style="flex-shrink:0; white-space:nowrap;">
+            + Agregar Rutina de mantenimiento
+        </a>
+    </div>
+
+<!-- Filtro por plan -->
+<div style="margin-bottom:16px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);">
+    <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+        
+        <input type="hidden" name="area" value="{{ filtro_area }}">
+        <div class="filter-group">
+            <label>N° Plan de trabajo</label>
+            <select name="pt" style="width:160px; appearance:none; -webkit-appearance:none;
+                background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");
+                background-repeat:no-repeat; background-position:right 10px center; background-color:var(--white);">
+                <option value="">Seleccione un plan</option>
+                {% for pt in planes_con_pasos %}
+                <option value="{{ pt.plan_trabajo }}" {% if filtro_pt == pt.plan_trabajo %}selected{% endif %}>
+                    Plan {{ pt.plan_trabajo }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if not filtro_pt %}
+        <div class="filter-group">
+            <label>Código del Plan</label>
+            <input type="text" name="codigo" value="{{ filtro_codigo|default:'' }}" 
+                placeholder="Buscar código…"
+                style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+        </div>
+
+        <div class="filter-group">
+            <label>Nombre del Plan</label>
+            <input type="text" name="nombre" value="{{ filtro_nombre|default:'' }}"
+                placeholder="Buscar nombre…"
+                style="height:33px; width:500px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+        </div>
+        {% endif %}
+        
+        <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+        <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-sm">Limpiar</a>
+
+        <!-- Nombre y Codigo del plan -->
+        {% if filtro_pt and primer_paso %}
+        {% if primer_paso.codigo_plan or primer_paso.nombre_plan %}
+        <div style="display:flex; flex-direction:column; justify-content:center; margin-left:8px;">
+            <span style="font-size:17px; font-weight:600; color:var(--text);">{{ primer_paso.codigo_plan }}</span>
+            <span style="font-size:16px; color:var(--text-2);">{{ primer_paso.nombre_plan }}</span>
+        </div>
+        {% endif %}
+        {% endif %}
+
+
+        <!-- Boton Eliminar -->
+        {% if filtro_pt and filtro_area %}
+        <div style="margin-left:auto;">
+            <button type="button" class="btn btn-ghost btn-sm"
+                style="color:var(--danger, #DC2626); border-color:var(--danger, #DC2626);"
+                onclick="document.getElementById('modal-eliminar-pasos').style.display='flex';">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Eliminar Plan {{ filtro_pt }}
+            </button>
+        </div>
+        {% endif %}
+
+    </form>
+</div>
+
+{% if filtro_pt and filtro_area %}
+<form id="form-eliminar-pasos" method="post" action="{% url 'mto:eliminar_pasos_plan' %}" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="plan_trabajo" value="{{ filtro_pt }}">
+    <input type="hidden" name="area_id" value="{{ filtro_area }}">
+    <input type="hidden" name="motivo" id="motivo-eliminar-hidden">
+</form>
+{% endif %}
+
+</div>
+
+<div class="card" style="overflow:hidden;">
+
+    <div class="table-wrap">
+        <table>
+            {% if filtro_pt and planes_con_pasos %}
+            <thead>
+                <tr>
+                    <th style="width:220px;">Area</th>
+                    <th style="width:80px;">N° Plan</th>
+                    <th style="width:60px;">Seq</th>
+                    <th style="width:200px;">Descripcion</th>
+                    <th>Detalles</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for paso in pasos %}
+                <tr>
+                    <td>{{ paso.area.nombre|default:"--" }}</td>
+                    <td style="text-align:center;"><strong>{{ paso.plan_trabajo }}</strong></td>
+                    <td style="text-align:center;">{{ paso.secuencia }}</td>
+                    <td>{{ paso.descripcion }}</td>
+                    <td style="font-size:12px; color:var(--text-2); text-align:justify; text-align-last: left;">
+                        {{ paso.detalles}}
+                    </td>
+                    
+                </tr>
+                {% endfor %}
+            </tbody>
+
+            {% else %}
+            <thead>
+                <tr>
+                    <th style="width:100px; text-align:center;">N° Plan</th>
+                    <th style="width:250px;">Codigo del Plan de Trabajo</th>
+                    <th style="width:600px;">Nombre del Plan de Trabajo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plan in planes_con_pasos %}
+                <tr style="border-bottom:1px solid var(--border); cursor:pointer;"
+                    onclick="window.location='{% url 'mto:lista_pasos' %}?area={{ filtro_area }}&pt={{ plan.plan_trabajo }}'">
+                    <td style="padding:10px; text-align:center;"><strong>{{ plan.plan_trabajo|default:"--" }}</strong></td>
+                    <td style="padding:10px;">{{ plan.codigo_plan|default:"--" }}</td>
+                    <td style="padding:10px;">{{ plan.nombre_plan|default:"--" }}</td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+            {% endif %}
+        </table>
+
+        <!-- ── Paginación ── -->
+        {% if pasos.has_other_pages or pasos.paginator.num_pages > 1 %}
+        <div style="display:flex; justify-content:space-between; align-items:center;
+                    padding:14px 0; margin-top:4px;">
+
+            <!-- Páginas -->
+            <div style="display:flex; align-items:center; gap:4px;">
+                {% if pasos.has_previous %}
+                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_pt %}pt={{ filtro_pt }}&{% endif %}per_page={{ per_page }}&page={{ pasos.previous_page_number }}"
+                style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                        border:1px solid var(--border); border-radius:6px; color:var(--text-2);
+                        text-decoration:none; font-size:13px;">‹</a>
+                {% endif %}
+
+                {% for num in pasos.paginator.page_range %}
+                    {% if pasos.number == num %}
+                    <span style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                                background:var(--indigo); color:#fff; border-radius:6px; font-size:13px; font-weight:600;">
+                        {{ num }}
+                    </span>
+                    {% elif num > pasos.number|add:'-3' and num < pasos.number|add:'3' %}
+                    <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_pt %}pt={{ filtro_pt }}&{% endif %}per_page={{ per_page }}&page={{ num }}"
+                    style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                            border:1px solid var(--border); border-radius:6px; color:var(--text-2);
+                            text-decoration:none; font-size:13px;">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pasos.has_next %}
+                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_pt %}pt={{ filtro_pt }}&{% endif %}per_page={{ per_page }}&page={{ pasos.next_page_number }}"
+                style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                        border:1px solid var(--border); border-radius:6px; color:var(--text-2);
+                        text-decoration:none; font-size:13px;">›</a>
+                {% endif %}
+            </div>
+
+            <!-- Selector de cantidad -->
+            <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2); flex-shrink:0;">
+                <span>Mostrar</span>
+                {% for n in perpage_opts %}
+                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_pt %}pt={{ filtro_pt }}&{% endif %}per_page={{ n }}&page=1"
+                style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                        border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;
+                        {% if per_page == n %}background:var(--indigo); color:#fff;{% else %}border:1px solid var(--border); color:var(--text-2);{% endif %}">
+                    {{ n }}
+                </a>
+                {% endfor %}
+            </div>
+
+        </div>
+        {% endif %}
+
+    </div>
+    
+</div>
+
+<!-- Historial de acciones -->
+<div class="card" style="margin-top:20px;">
+    <div class="card-header" style="margin-bottom:16px;">
+        <div>
+            <div class="card-title" style="font-size:15px;">Historial de acciones</div>
+            <div class="card-subtitle">Importaciones y eliminaciones de rutinas</div>
+        </div>
+    </div>
+
+    <!-- Filtros del historial -->
+    <div style="margin-bottom:16px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);">
+        <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            <input type="hidden" name="area" value="{{ filtro_area }}">
+            {% if filtro_pt %}<input type="hidden" name="pt" value="{{ filtro_pt }}">{% endif %}
+
+            <div class="filter-group">
+                <label>N° Plan</label>
+                <input type="text" name="h_plan" value="{{ h_plan }}"
+                    placeholder="Buscar N° plan…"
+                    style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+
+            <div class="filter-group">
+                <label>Código</label>
+                <input type="text" name="h_codigo" value="{{ h_codigo }}"
+                    placeholder="Buscar código…"
+                    style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+
+            <div class="filter-group">
+                <label>Nombre del plan</label>
+                <input type="text" name="h_nombre" value="{{ h_nombre }}"
+                    placeholder="Buscar nombre de la rutina…"
+                    style="height:33px; width:600px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+                <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-sm">Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    {% if historial %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:140px;">Fecha y hora</th>
+                    <th style="width:100px; text-align:center;">Acción</th>
+                    <th style="width:140px;">Usuario</th>
+                    <th style="width:160px;">Área</th>
+                    <th style="width:80px; text-align:center;">N° Plan</th>
+                    <th style="width:120px;">Código</th>
+                    <th>Nombre del plan</th>
+                    <th style="width:80px; text-align:center;">Pasos</th>
+                    <th>Motivo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in historial %}
+                <tr>
+                    <td style="font-size:12px; color:var(--text-2); white-space:nowrap;">
+                        {{ h.fecha|date:"d/m/Y" }}<br>
+                       <span style="color:var(--text-3);">{{ h.fecha|date:"g:i A" }}</span>
+                    </td>
+                    <td style="text-align:center;">
+                        {% if h.accion == 'importar' %}
+                            <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#ECFDF5;color:#065F46;">
+                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                                Importar
+                            </span>
+                        {% else %}
+                            <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#FEF2F2;color:#991B1B;">
+                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                                Eliminar
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:13px;">
+                        <span style="font-weight:600;">{{ h.usuario.get_full_name|default:h.usuario.username|default:"—" }}</span><br>
+                        <span style="font-size:11px; color:var(--text-3); font-family:'DM Mono',monospace;">{{ h.usuario.username|default:"" }}</span>
+                    </td>
+                    <td style="font-size:12px; color:var(--text-2);">{{ h.area.nombre|default:"—" }}</td>
+                    <td style="text-align:center; font-weight:600; font-family:'DM Mono',monospace; font-size:13px;">{{ h.plan_trabajo|default:"—" }}</td>
+                    <td style="font-size:12px; color:var(--text-2); font-family:'DM Mono',monospace;">{{ h.codigo_plan|default:"—" }}</td>
+                    <td style="font-size:12px; color:var(--text-2);">{{ h.nombre_plan|default:"—" }}</td>
+                    <td style="text-align:center;">
+                        <span style="font-size:13px; font-weight:600;
+                            color:{% if h.accion == 'eliminar' %}var(--red,#DC2626){% else %}var(--green,#059669){% endif %};">
+                            {{ h.pasos_afectados }}
+                        </span>
+                    </td>
+                    <td style="font-size:12px; color:var(--text-2);">{{ h.motivo|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:32px; color:var(--text-3); font-size:13px;">
+        Aún no hay acciones registradas.
+    </div>
+    {% endif %}
+
+    <!-- Paginación historial -->
+    {% if historial.paginator.num_pages >= 1 %}
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px; flex-wrap:wrap; gap:8px;">
+
+        <div style="display:flex; align-items:center; gap:4px;">
+            {% if historial.has_previous %}
+            <a href="?area={{ filtro_area }}&h_plan={{ h_plan }}&h_codigo={{ h_codigo }}&h_nombre={{ h_nombre }}&h_per_page={{ h_per_page }}&h_page={{ historial.previous_page_number }}"
+               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                      border:1px solid var(--border); border-radius:6px; color:var(--text-2);
+                      text-decoration:none; font-size:13px;">‹</a>
+            {% endif %}
+
+            {% for num in historial.paginator.page_range %}
+                {% if historial.number == num %}
+                <span style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                             background:var(--indigo); color:#fff; border-radius:6px; font-size:13px; font-weight:600;">
+                    {{ num }}
+                </span>
+                {% elif num > historial.number|add:'-3' and num < historial.number|add:'3' %}
+                <a href="?area={{ filtro_area }}&h_plan={{ h_plan }}&h_codigo={{ h_codigo }}&h_nombre={{ h_nombre }}&h_per_page={{ h_per_page }}&h_page={{ num }}"
+                   style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                          border:1px solid var(--border); border-radius:6px; color:var(--text-2);
+                          text-decoration:none; font-size:13px;">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if historial.has_next %}
+            <a href="?area={{ filtro_area }}&h_plan={{ h_plan }}&h_codigo={{ h_codigo }}&h_nombre={{ h_nombre }}&h_per_page={{ h_per_page }}&h_page={{ historial.next_page_number }}"
+               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                      border:1px solid var(--border); border-radius:6px; color:var(--text-2);
+                      text-decoration:none; font-size:13px;">›</a>
+            {% endif %}
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
+            <span>Mostrar</span>
+            {% for n in h_perpage_opts %}
+            <a href="?area={{ filtro_area }}&h_plan={{ h_plan }}&h_codigo={{ h_codigo }}&h_nombre={{ h_nombre }}&h_per_page={{ n }}&h_page=1"
+               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+                      border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;
+                      {% if h_per_page == n %}background:var(--indigo); color:#fff;{% else %}border:1px solid var(--border); color:var(--text-2);{% endif %}">
+                {{ n }}
+            </a>
+            {% endfor %}
+        </div>
+
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Modal eliminar pasos -->
+<div id="modal-eliminar-pasos"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+                min-width:360px; max-width:460px; width:100%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">
+        ¿Eliminar este plan?
+    </div>
+    <div style="font-size:13px; color:var(--text-2); margin-bottom:16px;">
+        Esta acción no se puede deshacer.
+    </div>
+    <div style="margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:6px;">
+            Motivo de eliminación <span style="color:#EF4444;">*</span>
+        </label>
+        <textarea id="motivo-eliminar" rows="3" placeholder="Ej. Plan obsoleto, reemplazado por nueva versión..."
+            style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+                   font-family:inherit; font-size:13px; color:var(--text); resize:vertical;
+                   background:var(--white); outline:none; box-sizing:border-box;"></textarea>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-start;">
+        <button onclick="confirmarEliminar()" class="btn btn-danger"
+                style="background:#EF4444; color:#fff; border-color:#EF4444;">
+            Sí, eliminar
+        </button>
+        <button onclick="document.getElementById('modal-eliminar-pasos').style.display='none';"
+                class="btn btn-ghost">
+            Cancelar
+        </button>
+    </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'mto_app/js/rutinas_lista.js' %}"></script>
+<script>
+function confirmarEliminar() {
+    const motivo = document.getElementById('motivo-eliminar').value.trim();
+    if (!motivo) {
+        document.getElementById('motivo-eliminar').style.borderColor = '#EF4444';
+        document.getElementById('motivo-eliminar').placeholder = 'El motivo es obligatorio...';
+        return;
+    }
+    document.getElementById('motivo-eliminar-hidden').value = motivo;
+    document.getElementById('form-eliminar-pasos').submit();
+}
+</script>
+{% endblock %}
