@@ -140,7 +140,35 @@ def exportar_semana_excel(request):
             img        = Image(logo_path)
             img.anchor = AbsoluteAnchor(
                 pos=XDRPoint2D(x=px(1200), y=px(0)),
-                ext=XDRPositiveSize2D(cx=px(122), cy=px(78))
+                ext=XDRPositiveSize2D(cx=px(120), cy=px(77))
+            )
+            ws.add_image(img)
+
+        # ── Version en portada ───────────────────────────────────────────────
+        version_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            '..', 'static', 'mto_app', 'Portada_Version.png'
+        )
+        if os.path.exists(version_path):
+            px = lambda n: n * 9525
+            img        = Image(version_path)
+            img.anchor = AbsoluteAnchor(
+                pos=XDRPoint2D(x=px(10), y=px(10)),
+                ext=XDRPositiveSize2D(cx=px(100), cy=px(55))
+            )
+            ws.add_image(img)
+
+        # ── Titulo en portada ───────────────────────────────────────────────
+        Titulo_Plan_Mantenimiento_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            '..', 'static', 'mto_app', 'Portada_Titulo_Plan_Mantenimiento.png'
+        )
+        if os.path.exists(Titulo_Plan_Mantenimiento_path):
+            px = lambda n: n * 9525
+            img        = Image(Titulo_Plan_Mantenimiento_path)
+            img.anchor = AbsoluteAnchor(
+                pos=XDRPoint2D(x=px(350), y=px(5)),
+                ext=XDRPositiveSize2D(cx=px(633), cy=px(65))
             )
             ws.add_image(img)
 
@@ -180,7 +208,7 @@ def exportar_semana_excel(request):
                 ws.row_dimensions[fila_p].hidden = True
                 ws.row_dimensions[fila_s].hidden = True
 
-        ws.print_area = 'A1:J93' if portada_idx == 0 else 'A1:J177'
+        ws.print_area = 'A1:I93' if portada_idx == 0 else 'A1:I177'
         ws.page_setup.paperSize   = ws.PAPERSIZE_LETTER
         ws.page_setup.orientation = 'portrait'
         ws.page_setup.fitToWidth  = 1
@@ -258,6 +286,7 @@ def exportar_semana_excel(request):
         ws['G13'] = plan.codigo
         ws['H13'] = plan.nombre_equipo or plan.actividad
 
+        # ── Logo en OT ───────────────────────────────────────────────
         logo_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             '..', 'static', 'mto_app', 'logo.png'
@@ -268,7 +297,7 @@ def exportar_semana_excel(request):
             img        = Image(logo_path)
             img.anchor = AbsoluteAnchor(
                 pos=XDRPoint2D(x=px(940), y=px(0)),
-                ext=XDRPositiveSize2D(cx=px(122), cy=px(78))
+                ext=XDRPositiveSize2D(cx=px(120), cy=px(76))
             )
             ws.add_image(img)
 
