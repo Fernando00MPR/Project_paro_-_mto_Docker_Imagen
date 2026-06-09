@@ -69,6 +69,7 @@
                     <label for="id_falla">{% trans "Falla" %}<span style="color:var(--red)">*</span></label>
                     <input type="text" name="falla" id="id_falla" autocomplete="off"
                            value="{{ form.falla.value|default:'' }}" placeholder="{% trans 'Escribe para buscar en el catálogo…' %}" required>
+                    <input type="hidden" name="falla_pk" id="id_falla_pk" value="">
                     <span class="help" id="falla-help">{% trans "Busca en el catálogo del área seleccionada o escribe libremente." %}</span>
                     <div id="falla-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--white);border:1px solid var(--indigo);border-top:none;border-radius:0 0 7px 7px;box-shadow:var(--shadow-md);z-index:500;max-height:220px;overflow-y:auto;"></div>
                     {% if form.falla.errors %}<ul class="errorlist">{% for e in form.falla.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
@@ -79,6 +80,7 @@
                     <input type="text" name="responsable" id="id_responsable" autocomplete="off"
                            value="{{ form.responsable.value|default:'' }}" maxlength="100" required
                            placeholder="{% trans 'Escribe para buscar en el catálogo…' %}">
+                    <input type="hidden" name="responsable_pk" id="id_responsable_pk" value="">
                     <span class="help" id="responsable-help">{% trans "Selecciona un área primero para filtrar." %}</span>
                     <div id="responsable-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--white);border:1px solid var(--indigo);border-top:none;border-radius:0 0 7px 7px;box-shadow:var(--shadow-md);z-index:500;max-height:220px;overflow-y:auto;"></div>
                     {% if form.responsable.errors %}<ul class="errorlist">{% for e in form.responsable.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
@@ -89,6 +91,7 @@
                     <input type="text" name="equipo" id="id_equipo" autocomplete="off"
                            value="{{ form.equipo.value|default:'' }}" maxlength="100" required
                            placeholder="{% trans 'Escribe para buscar en el catálogo…' %}">
+                    <input type="hidden" name="equipo_pk" id="id_equipo_pk" value="">
                     <span class="help" id="equipo-help">{% trans "Selecciona un área primero para filtrar." %}</span>
                     <div id="equipo-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--white);border:1px solid var(--indigo);border-top:none;border-radius:0 0 7px 7px;box-shadow:var(--shadow-md);z-index:500;max-height:220px;overflow-y:auto;"></div>
                     {% if form.equipo.errors %}<ul class="errorlist">{% for e in form.equipo.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
@@ -100,13 +103,24 @@
                     {% if form.tiempo_minutos.errors %}<ul class="errorlist">{% for e in form.tiempo_minutos.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
                 </div>
 
+                <div class="form-field" style="position:relative;">
+                    <label for="id_atendio">{% trans "Atendió la falla" %}</label>
+                    <input type="text" name="atendio" id="id_atendio" autocomplete="off"
+                        value="{{ form.atendio.value|default:'' }}"
+                        maxlength="100" placeholder="{% trans 'Opcional…' %}">
+                    <div id="atendio-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;
+                        background:var(--white);border:1px solid var(--indigo);border-top:none;
+                        border-radius:0 0 7px 7px;box-shadow:var(--shadow-md);z-index:500;
+                        max-height:220px;overflow-y:auto;"></div>
+                </div>
+
                 <div class="form-field">
                     <label for="id_estatus">{% trans "Estatus" %}</label>
                     <select name="estatus" id="id_estatus" onchange="actualizarColorEstatus(this)"
                             style="transition:background .2s,color .2s,border-color .2s;">
-                        <option value="rojo"     {% if form.instance.estatus == 'rojo'     %}selected{% endif %}>{% trans "Sin revisar" %}</option>
+                        <option value="rojo"     {% if form.instance.estatus == 'rojo'     %}selected{% endif %}>{% trans "Rechazado" %}</option>
                         <option value="amarillo" {% if form.instance.estatus == 'amarillo' %}selected{% endif %}>{% trans "Pendiente" %}</option>
-                        <option value="verde"    {% if form.instance.estatus == 'verde'    %}selected{% endif %}>{% trans "Revisado" %}</option>
+                        <option value="verde"    {% if form.instance.estatus == 'verde'    %}selected{% endif %}>{% trans "Aceptado" %}</option>
                     </select>
                 </div>
 
@@ -167,12 +181,12 @@
                     <div style="font-size:11px; color:var(--text-2); margin-bottom:3px; font-weight:500;">{% trans "Estatus" %}</div>
                     <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                         <span style="padding:2px 7px; border-radius:20px; font-size:10px; font-weight:500;
-                            background:{% if b.valor_anterior == 'Sin revisar' or b.valor_anterior == 'rojo' %}#FEE2E2; color:#991B1B{% elif b.valor_anterior == 'Pendiente' or b.valor_anterior == 'amarillo' %}#FEF3C7; color:#92400E{% else %}#D1FAE5; color:#065F46{% endif %};">
+                            background:{% if b.valor_anterior == 'Rechazado' or b.valor_anterior == 'rojo' %}#FEE2E2; color:#991B1B{% elif b.valor_anterior == 'Pendiente' or b.valor_anterior == 'amarillo' %}#FEF3C7; color:#92400E{% else %}#D1FAE5; color:#065F46{% endif %};">
                             {{ b.valor_anterior_display }}
                         </span>
                         <span style="color:var(--text-3); font-size:10px;">→</span>
                         <span style="padding:2px 7px; border-radius:20px; font-size:10px; font-weight:500;
-                            background:{% if b.valor_nuevo == 'Sin revisar' or b.valor_nuevo == 'rojo' %}#FEE2E2; color:#991B1B{% elif b.valor_nuevo == 'Pendiente' or b.valor_nuevo == 'amarillo' %}#FEF3C7; color:#92400E{% else %}#D1FAE5; color:#065F46{% endif %};">
+                            background:{% if b.valor_nuevo == 'Rechazado' or b.valor_nuevo == 'rojo' %}#FEE2E2; color:#991B1B{% elif b.valor_nuevo == 'Pendiente' or b.valor_nuevo == 'amarillo' %}#FEF3C7; color:#92400E{% else %}#D1FAE5; color:#065F46{% endif %};">
                             {{ b.valor_nuevo_display }}
                         </span>
                     </div>

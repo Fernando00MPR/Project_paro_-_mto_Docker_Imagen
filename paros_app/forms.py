@@ -15,7 +15,7 @@ class ParoForm(forms.ModelForm):
     class Meta:
         model  = Paro
         fields = ['area', 'fecha', 'turno', 'falla', 'responsable',
-                  'equipo', 'hora', 'tiempo_minutos', 'comentarios']
+            'equipo', 'hora', 'tiempo_minutos', 'atendio', 'comentarios']
 
     def clean_fecha(self):
         fecha_str = self.cleaned_data['fecha']

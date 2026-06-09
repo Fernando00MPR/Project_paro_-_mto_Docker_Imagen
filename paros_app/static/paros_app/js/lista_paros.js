@@ -14,9 +14,9 @@ function cambiarEstatus(paroId, btn) {
     .then(r => r.json())
     .then(data => {
         if (data.estatus) {
-            const textos  = {rojo: i18n.sinRevisar, amarillo: i18n.pendiente, verde: i18n.revisado};
+            const textos  = {rojo: i18n.Rechazado, amarillo: i18n.Pendiente, verde: i18n.Aceptado};
             const colores = {rojo:'#EF4444', amarillo:'#F59E0B', verde:'#10B981'};
-            const titulos = {rojo: i18n.sinRevisarTitulo, amarillo: i18n.pendienteTitulo, verde: i18n.revisadoTitulo};
+            const titulos = {rojo: i18n.RechazadoTitulo, amarillo: i18n.PendienteTitulo, verde: i18n.AceptadoTitulo};
             btn.style.background = colores[data.estatus];
             btn.textContent      = textos[data.estatus];
             btn.title            = titulos[data.estatus];
@@ -184,6 +184,7 @@ document.querySelectorAll('.editable-fecha').forEach(cell => {
 
 // ── Edición inline — hora ─────────────────────────────────────────────────────
 document.querySelectorAll('.editable-hora').forEach(cell => {
+    cell.title = 'Doble clic para editar';
     cell.addEventListener('dblclick', function(e) {
         e.stopPropagation();
         const original = this.innerText.trim();

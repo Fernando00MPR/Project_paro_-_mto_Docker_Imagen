@@ -1,6 +1,7 @@
 {% extends "menu_app/base_menu.html" %}
+{% load i18n %}
 {% load static %}
-{% block title %}Pasos de rutina{% endblock %}
+{% block title %}{% trans "Pasos de rutina" %}{% endblock %}
 {% block content %}
 
 <div class="card">
@@ -8,7 +9,7 @@
     <div class="card-header" style="gap:16px;">
         <div style="min-width:0; flex:1;">
             <div class="card-title">
-                Rutinas de mantenimiento
+                {% trans "Rutinas de mantenimiento" %}
                 {% if filtro_area %}
                     {% for a in areas %}
                         {% if a.pk|stringformat:"s" == filtro_area %}
@@ -19,8 +20,9 @@
             </div>
         </div>
         <a href="{% url 'mto:importar_pasos' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm" style="flex-shrink:0; white-space:nowrap;">
-            + Agregar Rutina de mantenimiento
+            + {% trans "Agregar Rutina de mantenimiento" %}
         </a>
+        {% include 'menu_app/_language_selector.html' %}
     </div>
 
 <!-- Filtro por plan -->
@@ -29,14 +31,14 @@
         
         <input type="hidden" name="area" value="{{ filtro_area }}">
         <div class="filter-group">
-            <label>N° Plan de trabajo</label>
+            <label>{% trans "N° Plan de trabajo" %}</label>
             <select name="pt" style="width:160px; appearance:none; -webkit-appearance:none;
                 background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");
                 background-repeat:no-repeat; background-position:right 10px center; background-color:var(--white);">
-                <option value="">Seleccione un plan</option>
+                <option value="">{% trans "Seleccione un plan" %}</option>
                 {% for pt in planes_con_pasos %}
                 <option value="{{ pt.plan_trabajo }}" {% if filtro_pt == pt.plan_trabajo %}selected{% endif %}>
-                    Plan {{ pt.plan_trabajo }}
+                    {% trans "Plan" %} {{ pt.plan_trabajo }}
                 </option>
                 {% endfor %}
             </select>
@@ -44,22 +46,22 @@
 
         {% if not filtro_pt %}
         <div class="filter-group">
-            <label>Código del Plan</label>
+            <label>{% trans "Código del Plan" %}</label>
             <input type="text" name="codigo" value="{{ filtro_codigo|default:'' }}" 
                 placeholder="Buscar código…"
                 style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
         </div>
 
         <div class="filter-group">
-            <label>Nombre del Plan</label>
+            <label>{% trans "Nombre del Plan" %}</label>
             <input type="text" name="nombre" value="{{ filtro_nombre|default:'' }}"
                 placeholder="Buscar nombre…"
                 style="height:33px; width:500px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
         </div>
         {% endif %}
         
-        <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-        <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-sm">Limpiar</a>
+        <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
+        <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
 
         <!-- Nombre y Codigo del plan -->
         {% if filtro_pt and primer_paso %}
@@ -82,7 +84,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
-                Eliminar Plan {{ filtro_pt }}
+                {% trans "Eliminar Plan" %} {{ filtro_pt }}
             </button>
         </div>
         {% endif %}
@@ -108,11 +110,11 @@
             {% if filtro_pt and planes_con_pasos %}
             <thead>
                 <tr>
-                    <th style="width:220px;">Area</th>
-                    <th style="width:80px;">N° Plan</th>
-                    <th style="width:60px;">Seq</th>
-                    <th style="width:200px;">Descripcion</th>
-                    <th>Detalles</th>
+                    <th style="width:220px;">{% trans "Área" %}</th>
+                    <th style="width:80px;">{% trans "N° Plan" %}</th>
+                    <th style="width:60px;">{% trans "Seq" %}</th>
+                    <th style="width:200px;">{% trans "Descripción" %}</th>
+                    <th>{% trans "Detalles" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -133,9 +135,9 @@
             {% else %}
             <thead>
                 <tr>
-                    <th style="width:100px; text-align:center;">N° Plan</th>
-                    <th style="width:250px;">Codigo del Plan de Trabajo</th>
-                    <th style="width:600px;">Nombre del Plan de Trabajo</th>
+                    <th style="width:100px; text-align:center;">{% trans "N° Plan" %}</th>
+                    <th style="width:250px;">{% trans "Codigo del Plan de Trabajo" %}</th>
+                    <th style="width:600px;">{% trans "Nombre del Plan de Trabajo" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -190,7 +192,7 @@
 
             <!-- Selector de cantidad -->
             <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2); flex-shrink:0;">
-                <span>Mostrar</span>
+                <span>{% trans "Mostrar" %}</span>
                 {% for n in perpage_opts %}
                 <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_pt %}pt={{ filtro_pt }}&{% endif %}per_page={{ n }}&page=1"
                 style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
@@ -212,8 +214,8 @@
 <div class="card" style="margin-top:20px;">
     <div class="card-header" style="margin-bottom:16px;">
         <div>
-            <div class="card-title" style="font-size:15px;">Historial de acciones</div>
-            <div class="card-subtitle">Importaciones y eliminaciones de rutinas</div>
+            <div class="card-title" style="font-size:15px;">{% trans "Historial de acciones" %}</div>
+            <div class="card-subtitle">{% trans "Importaciones y eliminaciones de rutinas" %}</div>
         </div>
     </div>
 
@@ -224,29 +226,29 @@
             {% if filtro_pt %}<input type="hidden" name="pt" value="{{ filtro_pt }}">{% endif %}
 
             <div class="filter-group">
-                <label>N° Plan</label>
+                <label>{% trans "N° Plan" %}</label>
                 <input type="text" name="h_plan" value="{{ h_plan }}"
                     placeholder="Buscar N° plan…"
                     style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
             </div>
 
             <div class="filter-group">
-                <label>Código</label>
+                <label>{% trans "Código" %}</label>
                 <input type="text" name="h_codigo" value="{{ h_codigo }}"
                     placeholder="Buscar código…"
                     style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
             </div>
 
             <div class="filter-group">
-                <label>Nombre del plan</label>
+                <label>{% trans "Nombre del plan" %}</label>
                 <input type="text" name="h_nombre" value="{{ h_nombre }}"
                     placeholder="Buscar nombre de la rutina…"
                     style="height:33px; width:600px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
             </div>
 
             <div class="filter-actions">
-                <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-                <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-sm">Limpiar</a>
+                <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
+                <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
             </div>
         </form>
     </div>
@@ -256,15 +258,15 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width:140px;">Fecha y hora</th>
-                    <th style="width:100px; text-align:center;">Acción</th>
-                    <th style="width:140px;">Usuario</th>
-                    <th style="width:160px;">Área</th>
-                    <th style="width:80px; text-align:center;">N° Plan</th>
-                    <th style="width:120px;">Código</th>
-                    <th>Nombre del plan</th>
-                    <th style="width:80px; text-align:center;">Pasos</th>
-                    <th>Motivo</th>
+                    <th style="width:140px;">{% trans "Fecha y hora" %}</th>
+                    <th style="width:100px; text-align:center;">{% trans "Acción" %}</th>
+                    <th style="width:140px;">{% trans "Usuario" %}</th>
+                    <th style="width:160px;">{% trans "Área" %}</th>
+                    <th style="width:80px; text-align:center;">{% trans "N° Plan" %}</th>
+                    <th style="width:120px;">{% trans "Código" %}</th>
+                    <th>{% trans "Nombre del plan" %}</th>
+                    <th style="width:80px; text-align:center;">{% trans "Pasos" %}</th>
+                    <th>{% trans "Motivo" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -278,12 +280,12 @@
                         {% if h.accion == 'importar' %}
                             <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#ECFDF5;color:#065F46;">
                                 <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
-                                Importar
+                                {% trans "Importar" %}
                             </span>
                         {% else %}
                             <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#FEF2F2;color:#991B1B;">
                                 <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-                                Eliminar
+                                {% trans "Eliminar" %}
                             </span>
                         {% endif %}
                     </td>
@@ -309,7 +311,7 @@
     </div>
     {% else %}
     <div style="text-align:center; padding:32px; color:var(--text-3); font-size:13px;">
-        Aún no hay acciones registradas.
+        {% trans "Aún no hay acciones registradas." %}
     </div>
     {% endif %}
 
@@ -371,14 +373,14 @@
     <div style="background:var(--white); border-radius:14px; padding:28px 32px;
                 min-width:360px; max-width:460px; width:100%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
     <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">
-        ¿Eliminar este plan?
+        {% trans "¿Eliminar este plan?" %}
     </div>
     <div style="font-size:13px; color:var(--text-2); margin-bottom:16px;">
-        Esta acción no se puede deshacer.
+        {% trans "Esta acción no se puede deshacer." %}
     </div>
     <div style="margin-bottom:16px;">
         <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:6px;">
-            Motivo de eliminación <span style="color:#EF4444;">*</span>
+            {% trans "Motivo de eliminación" %} <span style="color:#EF4444;">*</span>
         </label>
         <textarea id="motivo-eliminar" rows="3" placeholder="Ej. Plan obsoleto, reemplazado por nueva versión..."
             style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
@@ -388,11 +390,11 @@
     <div style="display:flex; gap:10px; justify-content:flex-start;">
         <button onclick="confirmarEliminar()" class="btn btn-danger"
                 style="background:#EF4444; color:#fff; border-color:#EF4444;">
-            Sí, eliminar
+            {% trans "Sí, eliminar" %}
         </button>
         <button onclick="document.getElementById('modal-eliminar-pasos').style.display='none';"
                 class="btn btn-ghost">
-            Cancelar
+            {% trans "Cancelar" %}
         </button>
     </div>
     </div>

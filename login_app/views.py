@@ -8,6 +8,7 @@ from paros_app.models import Area
 from mto_app.models import AccesoMto
 from mto_app.models import Area as AreaMto
 from django.utils.translation import gettext as _
+from django.core.paginator import Paginator
 
 _CAMPOS_DASHBOARD = [
     ('ver_dashboard', 'Ver dashboard', 'Acceso al dashboard de indicadores'),
@@ -26,8 +27,17 @@ _CAMPOS_PAROS = [
 ]
  
 _CAMPOS_CATALOGOS = [
-    ('ver_catalogos',       'Ver catálogos',                  'Puede consultar fallas, equipos y responsables'),
-    ('gestionar_catalogos', 'Importar y limpiar catálogos',   'Puede importar y eliminar entradas de catálogos'),
+    ('ver_catalogos',            'Ver catálogos',                  'Puede consultar fallas, equipos y responsables'),
+    ('gestionar_catalogos',      'Importar y limpiar catálogos',   'Puede importar y eliminar entradas de catálogos'),
+    ('agregar_catalogo_falla',   'Agregar falla',                  'Puede agregar nuevas fallas al catálogo'),
+    ('editar_catalogo_falla',    'Editar falla',                   'Puede editar fallas existentes en el catálogo'),
+    ('eliminar_catalogo_falla',  'Eliminar falla',                 'Puede eliminar fallas del catálogo'),
+    ('agregar_catalogo_equipo',  'Agregar equipo',                 'Puede agregar nuevos equipos al catálogo'),
+    ('editar_catalogo_equipo',   'Editar equipo',                  'Puede editar equipos existentes en el catálogo'),
+    ('eliminar_catalogo_equipo', 'Eliminar equipo',                'Puede eliminar equipos del catálogo'),
+    ('agregar_catalogo_resp',    'Agregar responsable',            'Puede agregar nuevos responsables al catálogo'),
+    ('editar_catalogo_resp',     'Editar responsable',             'Puede editar responsables existentes en el catálogo'),
+    ('eliminar_catalogo_resp',   'Eliminar responsable',           'Puede eliminar responsables del catálogo'),
 ]
  
  
@@ -43,14 +53,42 @@ def _build_permisos(campos, perfil, post):
         result.append((campo, label, desc, marcado))
     return result
  
- 
 @login_required
 @solo_admin
 def lista_usuarios(request):
     usuarios = User.objects.select_related('perfil').all().order_by('username')
-    return render(request, 'login_app/lista_usuarios.html', {'usuarios': usuarios})
+    q = request.GET.get('q', '').strip()
+    if q:
+        usuarios = usuarios.filter(
+            username__icontains=q
+        ) | usuarios.filter(
+            first_name__icontains=q
+        ) | usuarios.filter(
+            last_name__icontains=q
+        )
+    paginator = Paginator(usuarios, 15)
+    page_obj  = paginator.get_page(request.GET.get('page', 1))
+    return render(request, 'login_app/lista_usuarios.html', {
+        'usuarios': page_obj,
+        'page_obj': page_obj,
+        'busqueda': q,
+    })
  
- 
+
+def _build_permisos_mto(usuario):
+    """Retorna dict con los permisos MTO actuales del usuario."""
+    if not usuario:
+        return {}
+    try:
+        am = usuario.acceso_mto
+        return {campo: getattr(am, campo, False) for campo in [
+            'ver_plan_mantenimiento', 'ver_rutinas', 'ver_seguimiento', 'ver_responsables',
+            'editar_plan_mantenimiento', 'editar_rutinas', 'editar_seguimiento', 'editar_responsables',
+        ]}
+    except AccesoMto.DoesNotExist:
+        return {}
+
+    
 def _ctx_form(perfil, post, areas, usuario=None):
     acceso_mto    = False
     areas_mto_ids = []
@@ -62,14 +100,18 @@ def _ctx_form(perfil, post, areas, usuario=None):
             pass
     return {
         'areas': areas,
-        'permisos_dashboard': _build_permisos(_CAMPOS_DASHBOARD, perfil, post),
-        'permisos_paros':     _build_permisos(_CAMPOS_PAROS, perfil, post),
-        'permisos_catalogos': _build_permisos(_CAMPOS_CATALOGOS, perfil, post),
+        'permisos_dashboard':   _build_permisos(_CAMPOS_DASHBOARD, perfil, post),
+        'permisos_paros':       _build_permisos(_CAMPOS_PAROS, perfil, post),
+        'permisos_catalogos':   _build_permisos(_CAMPOS_CATALOGOS, perfil, post),
         'areas_permitidas_ids': list(perfil.areas_permitidas.values_list('id', flat=True)) if perfil else [],
         'areas_produccion_ids': list(perfil.areas_produccion.values_list('id', flat=True)) if perfil else [],
-        'acceso_mto':    acceso_mto,
-        'areas_mto':     AreaMto.objects.filter(activa=True),
-        'areas_mto_ids': areas_mto_ids,
+        'areas_hora_hora_ids':  list(perfil.areas_hora_hora.values_list('id', flat=True)) if perfil else [],
+        'perfil':               perfil,
+        'acceso_mto':           acceso_mto,
+        'areas_mto':            AreaMto.objects.filter(activa=True),
+        'areas_mto_ids':        areas_mto_ids,
+        'permisos_mto':         _build_permisos_mto(usuario),
+
     }
  
  
@@ -170,6 +212,10 @@ def _guardar_perfil(request, user, areas):
         'ver_todos_paros', 'crear_paro', 'editar_comentarios',
         'editar_paro', 'editar_eliminar_paro', 'cambiar_estatus_paro', 'exportar_paros', 'importar_paros',
         'ver_catalogos', 'gestionar_catalogos',
+        'agregar_catalogo_falla', 'editar_catalogo_falla', 'eliminar_catalogo_falla',
+        'agregar_catalogo_equipo', 'editar_catalogo_equipo', 'eliminar_catalogo_equipo',
+        'agregar_catalogo_resp', 'editar_catalogo_resp', 'eliminar_catalogo_resp',
+        'ver_indicadores', 'ver_hora_hora',
     ]
     for campo in campos_bool:
         setattr(perfil, campo, campo in request.POST)
@@ -178,12 +224,23 @@ def _guardar_perfil(request, user, areas):
     perfil.areas_permitidas.set(areas_ids)
     areas_prod_ids = request.POST.getlist('areas_produccion')
     perfil.areas_produccion.set(areas_prod_ids)
+    areas_hora_hora_ids = request.POST.getlist('areas_hora_hora')
+    perfil.areas_hora_hora.set(areas_hora_hora_ids)
 
     # Guardar acceso MTO
+
     acceso_mto, _ = AccesoMto.objects.get_or_create(usuario=user)
     acceso_mto.activo = 'acceso_mto' in request.POST
+    campos_mto = [
+        'ver_plan_mantenimiento', 'ver_rutinas', 'ver_seguimiento', 'ver_responsables',
+        'editar_plan_mantenimiento', 'editar_rutinas', 'editar_seguimiento', 'editar_responsables',
+    ]
+    for campo in campos_mto:
+        setattr(acceso_mto, campo, campo in request.POST)
     acceso_mto.save()
     areas_mto_ids = request.POST.getlist('areas_mto')
     acceso_mto.areas.set(areas_mto_ids)
 
     return perfil
+
+

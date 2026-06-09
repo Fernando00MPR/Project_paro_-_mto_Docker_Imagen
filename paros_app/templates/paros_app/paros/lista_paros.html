@@ -79,7 +79,7 @@
             <label>{% trans "Semana" %}</label>
             <input type="number" name="semana" min="1" max="53"
                    value="{{ filtros.semana }}" placeholder="ej. 16"
-                   style="width:80px;">
+                   style="width:80px !important; min-width:80px !important;">
         </div>
         <div class="filter-group">
             <label>{% trans "Turno" %}</label>
@@ -120,21 +120,37 @@
 
 <!-- ── Stats + selector paginación ── -->
 <div class="stat-bar">
-    <div style="display:flex;gap:16px;">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
         <div class="stat-item">
             <b>{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ paros|length }}{% endif %}</b>{% trans " paros encontrados" %}
         </div>
         <div class="stat-item"><b>{{ total_minutos }}</b> min {% trans "totales" %}</div>
-        {% if promedio_min %}
-            <div class="stat-item">
-                <b>{{ promedio_min }}</b> min {% trans "promedio" %}
+        
+        <div class="stat-item" style="border-left:3px solid #10B981;">
+            <b>{{ paros_aceptados }}</b> paros {% trans "aceptados" %}
+        </div>
+        <div class="stat-item" style="border-left:3px solid #10B981;">
+            <b>{{ minutos_aceptados }}</b> min {% trans "aceptados" %}
+        </div>
+        
+        {% if promedio_min_aceptados %}
+            <div class="stat-item" style="border-left:3px solid #10B981;">
+                <b>{{ promedio_min_aceptados }}</b> min {% trans "promedio" %}
             </div>
         {% endif %}
-        {% if paro_mayor %}
-        <div class="stat-item">
-            <b>{{ paro_mayor.tiempo_minutos }}</b> min - <span style="font-size:12px; color:var(--text-2);">{{ paro_mayor.falla }}</span>
+
+        {% if paro_mayor_aceptados %}
+        <div class="stat-item" style="border-left:3px solid #10B981;">
+            <b>{{ paro_mayor_aceptados.tiempo_minutos }}</b> min - <span style="font-size:12px; color:var(--text-2);">{{ paro_mayor_aceptados.falla }}</span>
         </div>
         {% endif %}
+
+        <div class="stat-item" style="border-left:3px solid #EF4444;">
+            <b>{{ paros_sin_aceptar }}</b> {% trans "paros sin aceptar" %}
+        </div>
+        <div class="stat-item" style="border-left:3px solid #EF4444;">
+            <b>{{ minutos_sin_aceptar }}</b> min {% trans "sin aceptar" %}
+        </div>
     </div>
     <!-- ── Filtro Columnas ── -->
     <div style="position:relative; margin-left:auto;">
@@ -232,15 +248,15 @@
                             {% if puede_estatus %}
                             <button onclick="cambiarEstatus({{ paro.id }}, this)"
                                     data-estatus="{{ paro.estatus }}"
-                                    title="{% if paro.estatus == 'rojo' %}{% trans 'Sin revisar → Pendiente' %}{% elif paro.estatus == 'amarillo' %}{% trans 'Pendiente → Revisado' %}{% else %}{% trans 'Revisado → Sin revisar' %}{% endif %}"
+                                    title="{% if paro.estatus == 'rojo' %}{% trans 'Rechazado → Pendiente' %}{% elif paro.estatus == 'amarillo' %}{% trans 'Pendiente → Aceptado' %}{% else %}{% trans 'Aceptado → Rechazado' %}{% endif %}"
                                     style="height:32px;padding:0 8px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:#fff;white-space:nowrap;width:90px;text-align:center;display:inline-flex;align-items:center;justify-content:center;
                                            background:{% if paro.estatus == 'rojo' %}#EF4444{% elif paro.estatus == 'amarillo' %}#F59E0B{% else %}#10B981{% endif %};">
-                                {% if paro.estatus == 'rojo' %}{% trans "Sin revisar" %}{% elif paro.estatus == 'amarillo' %}{% trans "Pendiente" %}{% else %}{% trans "Revisado" %}{% endif %}
+                                {% if paro.estatus == 'rojo' %}{% trans "Rechazado" %}{% elif paro.estatus == 'amarillo' %}{% trans "Pendiente" %}{% else %}{% trans "Aceptado" %}{% endif %}
                             </button>
                             {% else %}
                             <span style="height:32px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:500;color:#fff;white-space:nowrap;width:90px;text-align:center;display:inline-flex;align-items:center;justify-content:center;
                                          background:{% if paro.estatus == 'rojo' %}#EF4444{% elif paro.estatus == 'amarillo' %}#F59E0B{% else %}#10B981{% endif %};">
-                                {% if paro.estatus == 'rojo' %}{% trans "Sin revisar" %}{% elif paro.estatus == 'amarillo' %}{% trans "Pendiente" %}{% else %}{% trans "Revisado" %}{% endif %}
+                                {% if paro.estatus == 'rojo' %}{% trans "Rechazado" %}{% elif paro.estatus == 'amarillo' %}{% trans "Pendiente" %}{% else %}{% trans "Aceptado" %}{% endif %}
                             </span>
                             {% endif %}
                             <!-- Editar -->
@@ -344,12 +360,12 @@
     const i18n = {
         turno1: "{% trans 'Turno 1' %}",
         turno2: "{% trans 'Turno 2' %}",
-        sinRevisar: "{% trans 'Sin revisar' %}",
-        pendiente: "{% trans 'Pendiente' %}",
-        revisado: "{% trans 'Revisado' %}",
-        sinRevisarTitulo: "{% trans 'Sin revisar → Pendiente' %}",
-        pendienteTitulo: "{% trans 'Pendiente → Revisado' %}",
-        revisadoTitulo: "{% trans 'Revisado → Sin revisar' %}",
+        Rechazado: "{% trans 'Rechazado' %}",
+        Pendiente: "{% trans 'Pendiente' %}",
+        Aceptado: "{% trans 'Aceptado' %}",
+        RechazadoTitulo: "{% trans 'Rechazado → Pendiente' %}",
+        PendienteTitulo: "{% trans 'Pendiente → Aceptado' %}",
+        AceptadoTitulo: "{% trans 'Aceptado → Rechazado' %}",
         estatusActualizado: "{% trans 'Estatus actualizado' %}",
         errorEstatus: "{% trans 'Error al cambiar estatus' %}",
     };

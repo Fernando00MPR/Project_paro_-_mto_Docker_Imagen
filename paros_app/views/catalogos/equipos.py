@@ -37,12 +37,15 @@ def catalogo_equipos_general(request):
         qs = qs.filter(Q(equipo__icontains=q) | Q(codigo__icontains=q))
         paginator = Paginator(qs, 50)
         page_obj  = paginator.get_page(request.GET.get('page', 1))
-    puede_gestionar = request.user.is_superuser or (perfil and (perfil.es_admin or perfil.gestionar_catalogos))
+    es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
     return render(request, 'paros_app/equipos/catalogo_equipos.html', {
-        'page_obj': page_obj,
-        'areas':    areas,
-        'q':        q,
-        'puede_gestionar': puede_gestionar,
+        'page_obj':        page_obj,
+        'areas':           areas,
+        'q':               q,
+        'puede_gestionar': es_admin or (perfil and perfil.gestionar_catalogos),
+        'puede_agregar':   es_admin or (perfil and perfil.agregar_catalogo_equipo),
+        'puede_editar':    es_admin or (perfil and perfil.editar_catalogo_equipo),
+        'puede_eliminar':  es_admin or (perfil and perfil.eliminar_catalogo_equipo),
     })
 
 
@@ -261,6 +264,7 @@ def descargar_plantilla_equipos(request):
 
 
 @login_required
+@permiso_requerido('eliminar_catalogo_equipo')
 @require_http_methods(["POST"])
 def eliminar_equipo(request, equipo_id):
     equipo = get_object_or_404(CatalogoEquipo, id=equipo_id)
@@ -298,7 +302,7 @@ def exportar_equipos(request, area_id=None):
     return response
 
 @login_required
-@permiso_requerido('gestionar_catalogos')
+@permiso_requerido('agregar_catalogo_equipo')
 def agregar_equipos(request, area_id):
     area = get_object_or_404(Area, id=area_id)
     if request.method == 'POST':
@@ -321,7 +325,7 @@ def agregar_equipos(request, area_id):
     return redirect('paros:catalogo_equipos')
 
 @login_required
-@permiso_requerido('gestionar_catalogos')
+@permiso_requerido('editar_catalogo_equipo')
 def editar_equipo(request, equipo_id):
     equipo = get_object_or_404(CatalogoEquipo, id=equipo_id)
     if request.method == 'POST':

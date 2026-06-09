@@ -370,6 +370,10 @@
         .filter-group input[type="text"] {
             color-scheme: light;
         }
+
+        [data-theme="dark"] .filter-group input[type="date"] {
+            color-scheme: dark;
+        }
         [data-theme="dark"] .filter-group input[type="date"],
         [data-theme="dark"] .filter-group input[type="number"],
         [data-theme="dark"] .filter-group input[type="text"],
@@ -492,7 +496,16 @@
         ::-webkit-scrollbar-corner {
             background: var(--surface);
         }
-    </style>
+
+        [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+        [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) !important;
+        }
+
+        [data-theme="dark"] .filter-group input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: none !important;
+        }
+</style>
 {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -554,25 +567,37 @@
         <nav class="sidebar-nav">
             {% with perfil=request.user.perfil %}
 
-            <!-- ── Módulo Mantenimiento ── -->
+        <!-- ── Módulo Mantenimiento ── -->
+        <!-- ── General ── -->
+            
             <div id="nav-mto" style="display:none;">
-
+            <div class="sidebar-section">{% trans "General" %}</div>
             <a href="{% url 'mto:dashboard' %}"
-            class="{% if 'mto:dashboard' in request.resolver_match.url_name %}active{% endif %}">
+                class="{% if 'mto:dashboard' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
-                <span class="nav-label">Dashboard</span>
+                <span class="nav-label">{% trans "Dashboard" %}</span>
             </a>
 
-            <!-- ── Sidebar - Plan de Mantenimiento ── -->
+            <a href="{% url 'mto:backlog_seguimientos' %}" data-tooltip="Backlog de seguimientos"
+                class="{% if request.resolver_match.url_name == 'backlog_seguimientos' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Backlog" %}</span>
+            </a>
 
+        <!-- ── Sidebar - Plan de Mantenimiento ── -->
+            
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_plan_mantenimiento %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Mantenimiento" %}</div>
 
             {% for area in areas_menu %}
             <a href="{% url 'mto:lista_plan' %}?area={{ area.pk }}" data-tooltip="{{ area.nombre }}"
-            class="{% if request.GET.area == area.pk|stringformat:'s' and 'plan' in request.resolver_match.url_name %}active{% endif %}">
+                class="{% if request.GET.area == area.pk|stringformat:'s' and 'plan' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
@@ -580,14 +605,16 @@
                 <span class="nav-label">{{ area.nombre }}</span>
             </a>
             {% endfor %}
+            {% endif %}
 
-            <!-- ── Sidebar - Pasos rutinas ── -->
+        <!-- ── Sidebar - Pasos rutinas ── -->
 
-            <div class="sidebar-section" style="margin-top:4px;">Rutinas de Mantenimiento</div>
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_rutinas %}
+            <div class="sidebar-section" style="margin-top:4px;">{% trans "Rutinas de Mantenimiento" %}</div>
 
             {% for area in areas_menu %}
             <a href="{% url 'mto:lista_pasos' %}?area={{ area.pk }}" data-tooltip="Pasos {{ area.nombre }}"
-            class="{% if request.GET.area == area.pk|stringformat:'s' and 'paso' in request.resolver_match.url_name %}active{% endif %}">
+                class="{% if request.GET.area == area.pk|stringformat:'s' and 'paso' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
@@ -595,10 +622,28 @@
                 <span class="nav-label">{{ area.nombre }}</span>
             </a>
             {% endfor %}
+            {% endif %}
 
-            <!-- ── Sidebar - Responsables ── -->
+        <!-- ── Sidebar - Seguimiento── -->
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento %}
+            <div class="sidebar-section" style="margin-top:4px;">{% trans "Seguimientos" %}</div>
 
-            <div class="sidebar-section" style="margin-top:4px;">Responsables</div>
+            {% for area in areas_menu %}
+            <a href="{% url 'mto:lista_seguimientos' %}?area={{ area.pk }}" data-tooltip="Seguimientos {{ area.nombre }}"
+                class="{% if request.resolver_match.url_name == 'lista_seguimientos' and request.GET.area == area.pk|stringformat:'s' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span class="nav-label">{{ area.nombre }}</span>
+            </a>
+            {% endfor %}
+            {% endif %}
+
+        <!-- ── Sidebar - Responsables ── -->
+
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_responsables %}
+            <div class="sidebar-section" style="margin-top:4px;">{% trans "Responsables" %}</div>
 
             {% for area in areas_menu %}
             <a href="{% url 'mto:lista_responsables' %}?area={{ area.pk }}"
@@ -611,16 +656,17 @@
                 <span class="nav-label">{{ area.nombre }}</span>
             </a>
             {% endfor %}
+            {% endif %}
             
             {% if request.user.is_superuser or perfil.es_admin %}
-            <div class="sidebar-section" style="margin-top:4px;">Administración</div>
+            <div class="sidebar-section" style="margin-top:4px;">{% trans "Administración" %}</div>
             <a href="{% url 'lista_usuarios' %}" data-tooltip="Usuarios"
             class="{% if 'usuario' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
-                <span class="nav-label">Usuarios</span>
+                <span class="nav-label">{% trans "Gestión de usuarios" %}</span>
             </a>
             {% endif %}
 
@@ -628,20 +674,23 @@
 
             </div><!-- /nav-mto -->
 
-            <!-- ── Módulo Paros ── -->
+        <!-- ── Módulo Paros ── -->
             <div id="nav-paros">
             {% with perfil=request.user.perfil %}
             
         <!-- ── General ── -->
-            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_dashboard %}
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_dashboard or perfil.ver_analisis or perfil.ver_todos_paros or perfil.crear_paro %}
             <div class="sidebar-section">{% trans "General" %}</div>
+            {% endif %}
+
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_dashboard %}
             <a href="{% url 'paros:dashboard' %}" data-tooltip="Dashboard"
                class="{% if request.resolver_match.url_name == 'paros:dashboard' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
-                <span class="nav-label">Dashboard</span>
+                <span class="nav-label">{% trans "Dashboard" %}</span>
             </a>
             {% endif %}
 
@@ -693,7 +742,7 @@
             {% endif %}
 
         <!-- ── Catalogos ── -->
-            {% if request.user.is_superuser or perfil.es_admin or perfil.gestionar_catalogos %}
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_catalogos or perfil.gestionar_catalogos or perfil.agregar_catalogo_falla or perfil.editar_catalogo_falla or perfil.eliminar_catalogo_falla or perfil.agregar_catalogo_equipo or perfil.editar_catalogo_equipo or perfil.eliminar_catalogo_equipo or perfil.agregar_catalogo_resp or perfil.editar_catalogo_resp or perfil.eliminar_catalogo_resp %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Catálogos" %}</div>
             <a href="{% url 'paros:catalogo_fallas_general' %}" data-tooltip="Catálogo de fallas"
                class="{% if 'falla' in request.resolver_match.url_name %}active{% endif %}">
@@ -723,8 +772,19 @@
 
         <!-- ── Producción ── -->
 
-            {% if request.user.is_superuser or perfil.es_admin or perfil.areas_produccion.exists %}
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_hora_hora %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Producción" %}</div>
+            <a href="{% url 'paros:hora_hora' %}" data-tooltip="Hora x hora"
+               class="{% if request.resolver_match.url_name == 'hora_hora' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Hora x hora" %}</span>
+            </a>
+            {% endif %}
+
+            {% if request.user.is_superuser or perfil.es_admin or perfil.areas_produccion.exists %}
             <a href="{% url 'paros:registro_produccion' %}" data-tooltip="Tiempo de producción"
                class="{% if request.resolver_match.url_name == 'registro_produccion' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -733,6 +793,8 @@
                 </svg>
                 <span class="nav-label">{% trans "Tiempo de producción" %}</span>
             </a>
+            {% endif %}
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_indicadores %}
             <a href="{% url 'paros:indicadores_produccion' %}" data-tooltip="Indicadores"
                class="{% if request.resolver_match.url_name == 'indicadores_produccion' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -742,6 +804,7 @@
                 <span class="nav-label">{% trans "Indicadores" %}</span>
             </a>
             {% endif %}
+   
 
             {% if request.user.is_superuser or perfil.es_admin %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Usuarios" %}</div>

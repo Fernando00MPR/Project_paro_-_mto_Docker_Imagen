@@ -2,11 +2,11 @@
 {% block content %}
 <div style="margin-bottom:20px;">
     <a href="{% url 'mto:lista_responsables' %}{% if area_id %}?area={{ area_id }}{% endif %}"
-       class="btn btn-ghost btn-sm">← Volver</a>
+       class="btn btn-ghost btn-sm">← {% trans "Volver" %}</a>
 </div>
 
 <h1 class="page-title" style="margin-bottom:20px;">
-    {% if responsable %}Editar responsable{% else %}Nuevo responsable{% endif %}
+    {% if responsable %}{% trans "Editar responsable" %}{% else %}{% trans "Nuevo responsable" %}{% endif %}
 </h1>
 
 <div class="card" style="max-width:520px; padding:24px;">
@@ -15,25 +15,25 @@
         <input type="hidden" name="area" value="{{ area_id }}">
 
         <div class="form-field" style="margin-bottom:16px;">
-            <label>Numero de nomina *</label>
+            <label>{% trans "Numero de nomina" %} *</label>
             <input type="text" name="numero_nomina"
                    value="{{ responsable.numero_nomina|default:'' }}"
                    required placeholder="Ej: 11481">
         </div>
         <div class="form-field" style="margin-bottom:16px;">
-            <label>Nombre *</label>
+            <label>{% trans "Nombre" %} *</label>
             <input type="text" name="nombre"
                    value="{{ responsable.nombre|default:'' }}"
                    required placeholder="Nombre(s)">
         </div>
         <div class="form-field" style="margin-bottom:16px;">
-            <label>Apellidos *</label>
+            <label>{% trans "Apellidos" %} *</label>
             <input type="text" name="apellidos"
                    value="{{ responsable.apellidos|default:'' }}"
                    required placeholder="Apellido paterno y materno">
         </div>
         <div class="form-field" style="margin-bottom:16px;">
-            <label>Posicion</label>
+            <label>{% trans "Posición" %}</label>
             <input type="text" name="posicion"
                 value="{{ responsable.posicion|default:'' }}"
                 placeholder="Ej: Tecnico, Supervisor, Lider...">
@@ -42,13 +42,13 @@
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                 <input type="checkbox" name="activo"
                        {% if not responsable or responsable.activo %}checked{% endif %}>
-                Activo
+                {% trans "Activo" %}
             </label>
         </div>
         <div style="display:flex; gap:10px;">
-            <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
             <a href="{% url 'mto:lista_responsables' %}{% if area_id %}?area={{ area_id }}{% endif %}"
-               class="btn btn-ghost">Cancelar</a>
+               class="btn btn-ghost">{% trans "Cancelar" %}</a>
         </div>
     </form>
 </div>

@@ -24,7 +24,22 @@ urlpatterns = [
     path('responsables/nuevo/',              views.form_responsable,     name='nuevo_responsable'),
     path('responsables/editar/<int:pk>/',    views.form_responsable,     name='editar_responsable'),
     path('responsables/eliminar/<int:pk>/',  views.eliminar_responsable, name='eliminar_responsable'),
+    path('responsables/buscar-mto/',                   views.buscar_responsables_mto,  name='buscar_responsables_mto'),
 
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/',                                 views.dashboard, name='dashboard'),
+
+    path('seguimientos/',                              views.lista_seguimientos,       name='lista_seguimientos'),
+    path('seguimiento/agregar/<int:registro_pk>/',     views.agregar_seguimiento,      name='agregar_seguimiento'),
+    path('seguimiento/editar/<int:seguimiento_pk>/',   views.editar_seguimiento,       name='editar_seguimiento'),
+    path('seguimiento/eliminar/<int:seguimiento_pk>/', views.eliminar_seguimiento,     name='eliminar_seguimiento'),
+    path('seguimiento/validar-ot/<int:seg_pk>/',       views.toggle_validado_ot,       name='toggle_validado_ot'),
+    path('seguimiento/validar-manual/<int:seg_pk>/',   views.toggle_validado_manual,   name='toggle_validado_manual'),
+
+    path('seguimiento-manual/agregar/',                views.agregar_seguimiento_manual,  name='agregar_seguimiento_manual'),
+    path('seguimiento-manual/editar/<int:seg_pk>/',    views.editar_seguimiento_manual,   name='editar_seguimiento_manual'),
+    path('seguimiento-manual/eliminar/<int:seg_pk>/',  views.eliminar_seguimiento_manual, name='eliminar_seguimiento_manual'),
+
+    path('backlog/',                                   views.backlog_seguimientos, name='backlog_seguimientos'),
+
 
 ]

@@ -1,0 +1,343 @@
+{% extends "menu_app/base_menu.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Seguimientos de OTs" %}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div>
+        <div class="card-title">{% trans "Seguimientos de OTs" %}
+            {% if area_nombre %} — {{ area_nombre }}{% endif %}
+        </div>
+        <div class="card-subtitle">
+            {% trans "Acciones correctivas registradas por orden de trabajo" %}
+        </div>
+    </div>
+    <button type="button" onclick="abrirModalManual()" class="btn btn-primary">
+        + {% trans "Nuevo seguimiento" %}
+    </button>
+</div>
+
+<!-- Filtros -->
+<div style="padding:10px 14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px;">
+    <form method="get" style="display:flex; gap:10px; align-items:flex-end;">
+        {% if area_filtro %}<input type="hidden" name="area" value="{{ area_filtro }}">{% endif %}
+        <div class="filter-group">
+            <label>{% trans "Estatus" %}</label>
+            <select name="estatus" onchange="this.form.submit()">
+                <option value="">{% trans "Todos" %}</option>
+                {% for val, label in estatus_choices %}
+                <option value="{{ val }}" {% if estatus_filtro == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Tipo" %}</label>
+            <select name="tipo" onchange="this.form.submit()">
+                <option value="">{% trans "Todos" %}</option>
+                <option value="ot" {% if tipo_filtro == 'ot' %}selected{% endif %}>{% trans "Seguimientos de OTs" %}</option>
+                <option value="manual" {% if tipo_filtro == 'manual' %}selected{% endif %}>{% trans "Correctivos" %}</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>{% trans "No. Orden" %}</label>
+            <input type="text" name="orden" value="{{ filtro_orden }}"
+                placeholder="Buscar orden..." style="width:130px;"
+                onchange="this.form.submit()">
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Problema" %}</label>
+            <input type="text" name="problema" value="{{ filtro_problema }}"
+                placeholder="Buscar problema..."
+                style="min-width:300px;"
+                onchange="this.form.submit()">
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Acción" %}</label>
+            <input type="text" name="accion" value="{{ filtro_accion }}"
+                placeholder="Buscar acción..."
+                style="min-width:300px;"
+                onchange="this.form.submit()">
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Validación" %}</label>
+            <select name="validado" onchange="this.form.submit()">
+                <option value="">{% trans "Todos" %}</option>
+                <option value="1" {% if filtro_validado == '1' %}selected{% endif %}>{% trans "Validado" %}</option>
+                <option value="0" {% if filtro_validado == '0' %}selected{% endif %}>{% trans "Pendiente" %}</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- Tabla -->
+<div class="card" style="padding:0; overflow:hidden;">
+    <div class="table-wrap" style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="text-align:center; width:100px;">{% trans "No. Orden" %}</th>
+                    <th style="text-align:center; width:100px;">{% trans "Código plan" %}</th>
+                    <th style="text-align:center; width:100px;">{% trans "Tipo" %}</th>
+                    <th style="text-align:left;   width:300px;">{% trans "Problema" %}</th>
+                    <th style="text-align:left;   width:300px;">{% trans "Acción" %}</th>
+                    <th style="text-align:left;   width:140px;">{% trans "Responsable" %}</th>
+                    <th style="text-align:center; width:150px;">{% trans "Compromiso" %}</th>
+                    <th style="text-align:center; width:150px;">{% trans "Estatus" %}</th>
+                    <th style="text-align:center; width:100px;">{% trans "Creado" %}</th>
+                    <th style="text-align:left;   width:200px;">{% trans "Notas" %}</th>
+                    <th style="text-align:center; width:100px;">{% trans "Validación" %}</th>
+                    <th style="text-align:center; width:200px">{% trans "Acciones" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for seg in seguimientos %}
+                <tr data-ot-id="{{ seg.id }}">
+                    <td style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">
+                        {{ seg.no_orden }}
+                    </td>
+                    <td style="font-size:12px; color:var(--text-2); text-align:center;">
+                        {{ seg.registro.plan.codigo }}
+                    </td>
+                    <td style="text-align:center;">
+                        <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#FCEBEB; color:#A32D2D;">
+                            {{ seg.get_tipo_display }}
+                        </span>
+                    </td>
+                    <td style="max-width:200px; white-space:normal;">{{ seg.problema }}</td>
+                    <td style="max-width:180px; white-space:normal; color:var(--text-2);">{{ seg.accion|default:"—" }}</td>
+                    <td>{{ seg.responsable|default:"—" }}</td>
+                    <td style="color:var(--text-2); text-align:center;">
+                        {% if seg.fecha_compromiso %}{{ seg.fecha_compromiso|date:"d/m/Y" }}{% else %}—{% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        {% if seg.estatus == 'pendiente' %}
+                            <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#FAEEDA; color:#854F0B;">{% trans "Pendiente" %}</span>
+                        {% elif seg.estatus == 'en_proceso' %}
+                            <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#E6F1FB; color:#185FA5;">{% trans "En proceso" %}</span>
+                        {% else %}
+                            <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#EAF3DE; color:#3B6D11;">{% trans "Completado" %}</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--text-3); font-size:12px; text-align:center;">{{ seg.fecha_creacion|date:"d/m/Y" }}</td>
+                    <td style="max-width:150px; white-space:normal; color:var(--text-2); font-size:12px;">{{ seg.notas|default:"—" }}</td>
+                    <td style="text-align:center;">
+                        <button onclick="toggleValidadoOT({{ seg.id }}, this)"
+                                style="padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:none;
+                                    background:{% if seg.validado %}#EAF3DE{% else %}#F1EFE8{% endif %};
+                                    color:{% if seg.validado %}#3B6D11{% else %}#5F5E5A{% endif %};">
+                            {% if seg.validado %}Validado{% else %}Pendiente{% endif %}
+                        </button>
+                    </td>
+                    <td style="text-align:center;">
+                        {% if request.user.is_superuser or request.user.perfil.es_admin or request.user.acceso_mto.editar_seguimiento %}
+                        <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
+
+                            <button onclick="editarOT({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
+                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                        font-size:12px; border-radius:6px; border:1px solid var(--border);
+                                        background:var(--surface); color:var(--text); cursor:pointer;
+                                        white-space:nowrap; font-family:inherit;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                {% trans "Editar" %}
+                            </button>
+
+                            <button onclick="confirmarEliminarOT({{ seg.id }})"
+                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                        font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
+                                        background:#FFF5F5; color:#DC2626; cursor:pointer;
+                                        white-space:nowrap; font-family:inherit;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                {% trans "Eliminar" %}
+                            </button>
+
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+                {% for seg in seguimientos_manuales %}
+                <tr data-sm-id="{{ seg.id }}">
+                    <td style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">
+                        {{ seg.no_orden }}
+                    </td>
+                    <td style="font-size:12px;color:var(--text-2);text-align:center;">—</td>
+                    <td style="text-align:center;">
+                        <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#FCEBEB;color:#A32D2D;">
+                            {{ seg.get_tipo_display }}
+                        </span>
+                    </td>
+                    <td style="max-width:200px;white-space:normal;">{{ seg.problema }}</td>
+                    <td style="max-width:180px;white-space:normal;color:var(--text-2);">{{ seg.accion|default:"—" }}</td>
+                    <td>{{ seg.responsable|default:"—" }}</td>
+                    <td style="color:var(--text-2);text-align:center;">
+                        {% if seg.fecha_compromiso %}{{ seg.fecha_compromiso|date:"d/m/Y" }}{% else %}—{% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        {% if seg.estatus == 'pendiente' %}
+                            <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#FAEEDA;color:#854F0B;">{% trans "Pendiente" %}</span>
+                        {% elif seg.estatus == 'en_proceso' %}
+                            <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#E6F1FB;color:#185FA5;">{% trans "En proceso" %}</span>
+                        {% else %}
+                            <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#EAF3DE;color:#3B6D11;">{% trans "Completado" %}</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--text-3);font-size:12px;text-align:center;">{{ seg.fecha_creacion|date:"d/m/Y" }}</td>
+                    <td style="max-width:150px;white-space:normal;color:var(--text-2);font-size:12px;">{{ seg.notas|default:"—" }}</td>
+                    <td style="text-align:center;">
+                        <button onclick="toggleValidadoManual({{ seg.id }}, this)"
+                                style="padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:none;
+                                    background:{% if seg.validado %}#EAF3DE{% else %}#F1EFE8{% endif %};
+                                    color:{% if seg.validado %}#3B6D11{% else %}#5F5E5A{% endif %};">
+                            {% if seg.validado %}Validado{% else %}Pendiente{% endif %}
+                        </button>
+                    </td>
+                    <td style="text-align:center;">
+                        {% if request.user.is_superuser or request.user.perfil.es_admin or request.user.acceso_mto.editar_seguimiento %}
+                        <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
+
+                            <button onclick="editarManual({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
+                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                        font-size:12px; border-radius:6px; border:1px solid var(--border);
+                                        background:var(--surface); color:var(--text); cursor:pointer;
+                                        white-space:nowrap; font-family:inherit;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                {% trans "Editar" %}
+                            </button>
+
+                            <button onclick="confirmarEliminarManual({{ seg.id }})"
+                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                        font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
+                                        background:#FFF5F5; color:#DC2626; cursor:pointer;
+                                        white-space:nowrap; font-family:inherit;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                {% trans "Eliminar" %}
+                            </button>
+
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+                {% if not seguimientos and not seguimientos_manuales %}
+                <tr>
+                    <td colspan="12" style="text-align:center; padding:40px; color:var(--text-3);">
+                        {% trans "No hay seguimientos registrados." %}
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal seguimiento -->
+<div id="modal-manual"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
+            z-index:3000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:12px; padding:24px 28px;
+                min-width:360px; max-width:480px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;" id="modal-manual-titulo">
+            {% trans "Nuevo seguimiento" %}
+        </div>
+        <div style="font-size:11px; color:var(--text-3); margin-bottom:16px;">{% trans "Seguimiento independiente de OTs" %}</div>
+
+        <div class="form-field" style="margin-bottom:12px;">
+            <label>{% trans "Problema encontrado" %}</label>
+            <textarea id="sm-problema" rows="3" placeholder="Describe el problema..."
+                      style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; background:var(--white); color:var(--text);"></textarea>
+        </div>
+        <div class="form-field" style="margin-bottom:12px;">
+            <label>{% trans "Acción realizada" %}</label>
+            <textarea id="sm-accion" rows="2" placeholder="Describe la acción tomada..."
+                      style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; background:var(--white); color:var(--text);"></textarea>
+        </div>
+        <div class="form-field" style="margin-bottom:12px; position:relative;">
+            <label>{% trans "Responsable" %}</label>
+            <input type="text" id="sm-responsable" placeholder="Buscar responsable..." autocomplete="off"
+                style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; background:var(--white); color:var(--text); width:100%;">
+            <div id="sm-resp-dropdown" style="display:none; position:absolute; left:0; right:0; top:100%;
+                background:var(--white); border:1px solid var(--indigo); border-top:none;
+                border-radius:0 0 7px 7px; z-index:5000; max-height:180px; overflow-y:auto;
+                box-shadow:0 4px 16px rgba(0,0,0,.15);"></div>
+        </div>
+        <div class="form-field" style="margin-bottom:12px;">
+            <label>{% trans "Fecha compromiso" %}</label>
+            <input type="date" id="sm-fecha"
+                style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; background:var(--white); color:var(--text);">
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:6px;">{% trans "Estatus" %}</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="sm-pill" data-val="pendiente" onclick="smEstatus('pendiente')"
+                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid #854F0B; background:#FAEEDA; color:#854F0B;">{% trans "Pendiente" %}</button>
+                <button type="button" class="sm-pill" data-val="en_proceso" onclick="smEstatus('en_proceso')"
+                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--white); color:var(--text-2);">{% trans "En proceso" %}</button>
+                <button type="button" class="sm-pill" data-val="completado" onclick="smEstatus('completado')"
+                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--white); color:var(--text-2);">{% trans "Completado" %}</button>
+            </div>
+            <input type="hidden" id="sm-estatus" value="pendiente">
+            <input type="hidden" id="sm-id" value="">
+            <input type="hidden" id="sm-ot-id" value="">
+        </div>
+        <div class="form-field" style="margin-bottom:16px;">
+            <label>{% trans "Notas adicionales" %}</label>
+            <textarea id="sm-notas" rows="2" placeholder="Notas opcionales..."
+                      style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; background:var(--white); color:var(--text);"></textarea>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button type="button" onclick="cerrarModalManual()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <button type="button" onclick="guardarManual()" class="btn btn-primary">{% trans "Guardar" %}</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal eliminar -->
+<div id="modal-confirm-del"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
+            z-index:4000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:12px; padding:24px 28px;
+                min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:8px;">
+            {% trans "Eliminar seguimiento" %}
+        </div>
+        <div style="font-size:13px; color:var(--text-2); margin-bottom:20px;">
+            {% trans "Esta acción no se puede deshacer." %}
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="cerrarModalDel()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <button onclick="ejecutarEliminar()" class="btn btn-danger"
+                    style="background:#EF4444; color:#fff; border-color:#EF4444;">
+                {% trans "Sí, eliminar" %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Variables Django para el JS -->
+<script>
+const CSRF_SM    = '{{ csrf_token }}';
+const AREA_ID_SM = '{{ area_filtro }}';
+const URL_SM_ADD = "{% url 'mto:agregar_seguimiento_manual' %}";
+const URL_SM_EDIT = "/mto/seguimiento-manual/editar/";
+const URL_SM_DEL  = "/mto/seguimiento-manual/eliminar/";
+const URL_OT_EDIT = "/mto/seguimiento/editar/";
+const URL_OT_DEL  = "/mto/seguimiento/eliminar/";
+</script>
+<script src="{% static 'mto_app/js/lista_seguimientos.js' %}"></script>
+
+{% endblock %}

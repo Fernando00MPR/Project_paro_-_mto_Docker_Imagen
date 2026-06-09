@@ -5,9 +5,9 @@
 {% trans "Total de paros" as lbl_total %}
 {% trans "Minutos perdidos" as lbl_minutos %}
 {% trans "Promedio por paro" as lbl_promedio %}
-{% trans "Sin revisar" as lbl_sin_revisar %}
+{% trans "Rechazados" as lbl_sin_revisar %}
 {% trans "Pendiente" as lbl_pendiente %}
-{% trans "Revisado" as lbl_revisado %}
+{% trans "Aceptados" as lbl_revisado %}
 {% trans "Sin asignar" as lbl_sin_asignar %}
 {% trans "Sin falla" as lbl_sin_falla %}
 {% trans "Sin equipo" as lbl_sin_equipo %}
@@ -70,6 +70,17 @@
                     {% endfor %}
                 </select>
             </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+                <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Estatus" %}</label>
+                <select name="estatus" onchange="this.form.submit()"
+                        style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
+                    <option value=""         {% if estatus_filtro == ''         %}selected{% endif %}>{% trans "Todos" %}</option>
+                    <option value="verde"    {% if estatus_filtro == 'verde'    %}selected{% endif %}>{% trans "Aceptados" %}</option>
+                    <option value="rojo"     {% if estatus_filtro == 'rojo'     %}selected{% endif %}>{% trans "Rechazados" %}</option>
+                    <option value="amarillo" {% if estatus_filtro == 'amarillo' %}selected{% endif %}>{% trans "Pendientes" %}</option>
+                </select>
+            </div>
+
 
             <div id="wrap-desde" style="display:{% if rango == 'custom' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
                 <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{% trans "Desde" %}</label>
@@ -103,10 +114,16 @@
 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px;">
     {% include 'paros_app/_kpi.html' with valor=total_paros label=lbl_total color="var(--indigo)" icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" %}
     {% include 'paros_app/_kpi.html' with valor=total_minutos label=lbl_minutos color="#D97706" icon="M13 10V3L4 14h7v7l9-11h-7z" sufijo="min" %}
-    {% include 'paros_app/_kpi.html' with valor=promedio_min label=lbl_promedio color="#10B981" icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" sufijo="min" %}
+    {% include 'paros_app/_kpi.html' with valor=promedio_min label=lbl_promedio color="#10B981" icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" sufijo="min" %}
+    {% if estatus_filtro == '' or estatus_filtro == 'rojo' %}
     {% include 'paros_app/_kpi.html' with valor=sin_revisar label=lbl_sin_revisar color="#EF4444" icon="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% endif %}
+    {% if estatus_filtro == '' or estatus_filtro == 'amarillo' %}
     {% include 'paros_app/_kpi.html' with valor=pendiente label=lbl_pendiente color="#F59E0B" icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% endif %}
+    {% if estatus_filtro == '' or estatus_filtro == 'verde' %}
     {% include 'paros_app/_kpi.html' with valor=revisado label=lbl_revisado color="#10B981" icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% endif %}
 </div>
 
 

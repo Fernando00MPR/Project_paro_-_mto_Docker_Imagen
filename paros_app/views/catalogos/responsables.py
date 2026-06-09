@@ -37,12 +37,15 @@ def catalogo_responsables_general(request):
         qs = qs.filter(Q(responsable__icontains=q) | Q(codigo__icontains=q))
         paginator = Paginator(qs, 50)
         page_obj  = paginator.get_page(request.GET.get('page', 1))
-    puede_gestionar = request.user.is_superuser or (perfil and (perfil.es_admin or perfil.gestionar_catalogos))
+    es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
     return render(request, 'paros_app/responsables/catalogo_responsables.html', {
-        'page_obj': page_obj,
-        'areas':    areas,
-        'q':        q,
-        'puede_gestionar': puede_gestionar,
+        'page_obj':        page_obj,
+        'areas':           areas,
+        'q':               q,
+        'puede_gestionar': es_admin or (perfil and perfil.gestionar_catalogos),
+        'puede_agregar':   es_admin or (perfil and perfil.agregar_catalogo_resp),
+        'puede_editar':    es_admin or (perfil and perfil.editar_catalogo_resp),
+        'puede_eliminar':  es_admin or (perfil and perfil.eliminar_catalogo_resp),
     })
 
 
@@ -254,6 +257,7 @@ def descargar_plantilla_responsables(request):
 
 
 @login_required
+@permiso_requerido('eliminar_catalogo_resp')
 @require_http_methods(["POST"])
 def eliminar_responsable(request, responsable_id):
     resp = get_object_or_404(CatalogoResponsable, id=responsable_id)
@@ -293,7 +297,7 @@ def exportar_responsables(request, area_id=None):
 
 
 @login_required
-@permiso_requerido('gestionar_catalogos')
+@permiso_requerido('agregar_catalogo_resp')
 def agregar_responsables(request, area_id):
     area = get_object_or_404(Area, id=area_id)
     if request.method == 'POST':
@@ -315,7 +319,7 @@ def agregar_responsables(request, area_id):
     return redirect('paros:catalogo_responsables')
 
 @login_required
-@permiso_requerido('gestionar_catalogos')
+@permiso_requerido('editar_catalogo_resp')
 def editar_responsable(request, responsable_id):
     resp = get_object_or_404(CatalogoResponsable, id=responsable_id)
     if request.method == 'POST':

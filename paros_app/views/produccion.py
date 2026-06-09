@@ -12,7 +12,8 @@ from login_app.permisos import get_perfil
  
  
 def _calcular_muerto(paros_qs, equipo_nombre, hora_inicio, hora_fin):
-    qs = paros_qs.filter(equipo__iexact=equipo_nombre) if equipo_nombre else paros_qs
+    qs = paros_qs.filter(estatus='verde')
+    qs = qs.filter(equipo__iexact=equipo_nombre) if equipo_nombre else qs
     if hora_fin > hora_inicio:
         qs = qs.filter(hora__gte=hora_inicio, hora__lte=hora_fin)
     else:
@@ -25,7 +26,7 @@ def _calcular_kpis_mantenimiento(paros_qs, equipo_nombre, hora_inicio, hora_fin,
                          'Robótica', 
                          'Robotic', 
                          'Robotics']
-    qs = paros_qs.filter(responsable__in=responsables_mant)
+    qs = paros_qs.filter(estatus='verde').filter(responsable__in=responsables_mant)
     if equipo_nombre:
         qs = qs.filter(equipo__iexact=equipo_nombre)
     if hora_fin > hora_inicio:
@@ -241,6 +242,10 @@ def indicadores_produccion(request):
     
     perfil   = get_perfil(request.user)
     es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
+
+    if not es_admin and not (perfil and perfil.ver_indicadores):
+        from django.shortcuts import redirect
+        return redirect('paros:lista_paros')
  
     if es_admin:
         areas = Area.objects.all()
@@ -296,10 +301,17 @@ def indicadores_produccion(request):
  
     datos_dias = []
  
+    equipos_catalogo = list(
+    CatalogoEquipo.objects.filter(area=area_sel)
+    .values_list('equipo', flat=True)
+    )
     equipos_periodo = list(
-        RegistroProduccion.objects.filter(
-            area=area_sel, fecha__gte=d_desde, fecha__lte=d_hasta
-        ).exclude(equipo='').values_list('equipo', flat=True).distinct().order_by('equipo')
+        RegistroProduccion.objects
+        .exclude(equipo='')
+        .filter(equipo__in=equipos_catalogo)
+        .values_list('equipo', flat=True)
+        .distinct()
+        .order_by('equipo')
     )
  
     if area_sel:

@@ -1,17 +1,22 @@
 /* analisis_paros.js — Gráficas de Pareto, barras y controles de filtros */
 
 // Ajustar layout según cantidad de barras
-const maxBars = Math.max(LABELS_P.length, LABELS_B.length);
-if (maxBars > 20) {
-    document.getElementById('charts-grid').style.gridTemplateColumns = '1fr';
-} else {
-    document.getElementById('charts-grid').style.gridTemplateColumns = '1fr 1fr';
+// Responsive por tamaño de ventana
+function ajustarLayout() {
+    const maxBars = Math.max(LABELS_P.length, LABELS_B.length);
+    if (maxBars > 20 || window.innerWidth < 900) {
+        document.getElementById('charts-grid').style.gridTemplateColumns = '1fr';
+    } else {
+        document.getElementById('charts-grid').style.gridTemplateColumns = '1fr 1fr';
+    }
+    const minW = Math.max(600, maxBars * 20);
+    document.querySelectorAll('#chartPareto, #chartBarras').forEach(c => {
+        c.style.minWidth = minW + 'px';
+    });
 }
 
-const minW = Math.max(600, maxBars * 20);
-document.querySelectorAll('#chartPareto, #chartBarras').forEach(c => {
-    c.style.minWidth = minW + 'px';
-});
+ajustarLayout();
+window.addEventListener('resize', ajustarLayout);
 
 const red = '#EF4444';
 
@@ -159,22 +164,26 @@ togglePeriodo(document.getElementById('sel-periodo').value);
 // ── Toggle modo Pareto ────────────────────────────────────────────────────────
 function setModoPareto(modo) {
     document.getElementById('input-modo-pareto').value = modo;
-    ['falla', 'responsable', 'tipo_falla'].forEach(m => {
-        const id = m === 'tipo_falla' ? 'bp-tipo' : m === 'falla' ? 'bp-falla' : 'bp-resp';
+    ['falla', 'responsable', 'tipo_falla', 'atendio'].forEach(m => {
+        const id = m === 'tipo_falla' ? 'bp-tipo' : m === 'falla' ? 'bp-falla' : m === 'responsable' ? 'bp-resp' : 'bp-atendio';
+        const el = document.getElementById(id);
+        if (!el) return;
         const activo = modo === m;
-        document.getElementById(id).style.background = activo ? 'var(--indigo)' : 'var(--white)';
-        document.getElementById(id).style.color      = activo ? '#fff' : 'var(--text-2)';
+        el.style.background = activo ? 'var(--indigo)' : 'var(--white)';
+        el.style.color      = activo ? '#fff' : 'var(--text-2)';
     });
 }
 
 // ── Toggle modo Barras ────────────────────────────────────────────────────────
 function setModoBarras(modo) {
     document.getElementById('input-modo-barras').value = modo;
-    ['falla', 'responsable', 'tipo_falla'].forEach(m => {
-        const id = m === 'tipo_falla' ? 'bb-tipo' : m === 'falla' ? 'bb-falla' : 'bb-resp';
+    ['falla', 'responsable', 'tipo_falla', 'atendio'].forEach(m => {
+        const id = m === 'tipo_falla' ? 'bb-tipo' : m === 'falla' ? 'bb-falla' : m === 'responsable' ? 'bb-resp' : 'bb-atendio';
+        const el = document.getElementById(id);
+        if (!el) return;
         const activo = modo === m;
-        document.getElementById(id).style.background = activo ? 'var(--indigo)' : 'var(--white)';
-        document.getElementById(id).style.color      = activo ? '#fff' : 'var(--text-2)';
+        el.style.background = activo ? 'var(--indigo)' : 'var(--white)';
+        el.style.color      = activo ? '#fff' : 'var(--text-2)';
     });
 }
 
@@ -191,6 +200,10 @@ document.getElementById('buscador-tipos').addEventListener('input', function() {
     const q = this.value.toLowerCase();
     document.querySelectorAll('.tipo-item').forEach(l => l.style.display = l.textContent.toLowerCase().includes(q) ? '' : 'none');
 });
+document.getElementById('buscador-atendio').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.atendio-item').forEach(l => l.style.display = l.textContent.toLowerCase().includes(q) ? '' : 'none');
+});
 
 // ── Seleccionar todo / ninguno ────────────────────────────────────────────────
 function toggleTodos(listaId, estado) {
@@ -200,7 +213,7 @@ function toggleTodos(listaId, estado) {
 // ── Enviar con exclusiones ────────────────────────────────────────────────────
 function prepararExclusiones() {
     const form = document.getElementById('form-principal');
-    form.querySelectorAll('input[name="excluir_falla"],input[name="excluir_resp"],input[name="excluir_tipo"]').forEach(el => el.remove());
+    form.querySelectorAll('input[name="excluir_falla"],input[name="excluir_resp"],input[name="excluir_tipo"],input[name="excluir_atendio"]').forEach(el => el.remove());
     document.querySelectorAll('.chk-falla').forEach(chk => {
         if (!chk.checked) {
             const inp = document.createElement('input');
@@ -219,6 +232,13 @@ function prepararExclusiones() {
         if (!chk.checked) {
             const inp = document.createElement('input');
             inp.type='hidden'; inp.name='excluir_tipo'; inp.value=chk.dataset.val;
+            form.appendChild(inp);
+        }
+    });
+    document.querySelectorAll('.chk-atendio').forEach(chk => {
+        if (!chk.checked) {
+            const inp = document.createElement('input');
+            inp.type='hidden'; inp.name='excluir_atendio'; inp.value=chk.dataset.val;
             form.appendChild(inp);
         }
     });

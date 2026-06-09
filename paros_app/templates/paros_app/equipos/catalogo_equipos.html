@@ -58,19 +58,22 @@
             </span>
             <a href="{% url 'paros:exportar_equipos_area' area.id %}" class="btn btn-ghost btn-sm">↓ {% trans "Exportar" %}</a>
             {% if puede_gestionar %}
-            <a href="{% url 'paros:importar_equipos_por_area' area.id %}" class="btn btn-primary btn-sm">↑ {% trans "Importar" %}</a>
-            {% if area.catalogo_equipos.count > 0 %}
-            <button type="button" class="btn btn-sm"
-                    style="border-color:var(--red); color:var(--red); background:transparent;"
-                    onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'equipos')">
-                🗑 {% trans "Limpiar" %}
-            </button>
+                <a href="{% url 'paros:importar_equipos_por_area' area.id %}" class="btn btn-primary btn-sm">↑ {% trans "Importar" %}</a>
             {% endif %}
-            <button type="button" class="btn btn-primary btn-sm"
-                    onclick="abrirModalAgregar('{{ area.id }}', '{{ area.nombre }}', '/catalogos/equipos/agregar/{{ area.id }}/')">
-                + {% trans "Agregar" %}
-            </button>
+            {% if puede_gestionar and area.catalogo_equipos.count > 0 %}
+                <button type="button" class="btn btn-sm"
+                        style="border-color:var(--red); color:var(--red); background:transparent;"
+                        onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'equipos')">
+                    🗑 {% trans "Limpiar" %}
+                </button>
             {% endif %}
+            {% if puede_agregar %}
+                <button type="button" class="btn btn-primary btn-sm"
+                        onclick="abrirModalAgregar('{{ area.id }}', '{{ area.nombre }}', '/catalogos/equipos/agregar/{{ area.id }}/')">
+                    + {% trans "Agregar" %}
+                </button>
+            {% endif %}
+            
             <svg id="chev-area-{{ area.id }}" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                  style="transition:transform .25s; color:var(--text-3); cursor:pointer; flex-shrink:0;"
                  onclick="toggleArea('area-{{ area.id }}')">
@@ -86,7 +89,7 @@
                     <th style="width:40px;" >{% trans "Código" %}</th>
                     <th style="width:250px;">{% trans "Equipo" %}</th>
                     <th style="width:150px;">{% trans "Sub área" %}</th>
-                    {% if puede_gestionar %}
+                    {% if puede_editar or puede_eliminar %}
                     <th style="width:90px;" >{% trans "Acción" %}</th>
                     {% endif %}
                 </tr></thead>
@@ -96,17 +99,21 @@
                         <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--indigo);">{{ eq.codigo }}</td>
                         <td style="font-weight:500;">{{ eq.equipo }}</td>
                         <td style="color:var(--text-2);">{{ eq.sub_area }}</td>
-                        {% if puede_gestionar %}
+                        {% if puede_editar or puede_eliminar %}
                         <td>
                             <div style="display:flex; gap:6px;">
+                                {% if puede_editar %}
                                 <button type="button" class="btn btn-ghost btn-sm" style="min-width:80px;"
                                         onclick="abrirModalEditar('{{ eq.id }}', '{{ eq.codigo }}', '{{ eq.equipo }}', '/catalogos/equipos/editar/{{ eq.id }}/', '', '{{ eq.equipo_es }}', '{{ eq.equipo_en }}', '{{ eq.sub_area_es }}', '{{ eq.sub_area_en }}')">
                                     ✏️ {% trans "Editar" %}
                                 </button>
+                                {% endif %}
+                                {% if puede_eliminar %}
                                 <button type="button" class="btn btn-sm" style="min-width:80px; border-color:var(--red); color:var(--red); background:transparent;"
                                         onclick="confirmarEliminar('{{ eq.id }}', '{{ eq.equipo }}', '/catalogos/equipos/eliminar/{{ eq.id }}/')">
                                     🗑 {% trans "Eliminar" %}
                                 </button>
+                                {% endif %}
                             </div>
                         </td>
                         {% endif %}
@@ -114,7 +121,7 @@
                     {% endfor %}
                 </tbody>
                 <tbody id="nores-{{ area.id }}" style="display:none;">
-                    <tr><td colspan="{% if puede_gestionar %}4{% else %}3{% endif %}" style="text-align:center;padding:18px;color:var(--text-3);font-size:13px;">{% trans "Sin resultados para esta búsqueda." %}</td></tr>
+                    <tr><td colspan="{% if puede_editar or puede_eliminar %}4{% else %}3{% endif %}" style="text-align:center;padding:18px;color:var(--text-3);font-size:13px;">{% trans "Sin resultados para esta búsqueda." %}</td></tr>
                 </tbody>
             </table>
         </div>

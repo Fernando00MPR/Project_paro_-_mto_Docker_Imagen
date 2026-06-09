@@ -87,6 +87,7 @@
                     <input type="text" name="falla" id="id_falla" autocomplete="off"
                            value="{{ form.falla.value|default:'' }}"
                            placeholder="{% trans 'Escribe para buscar en el catálogo…' %}" required>
+                    <input type="hidden" name="falla_pk" id="id_falla_pk" value="">
                     <span class="help" id="falla-help">
                         {% trans "Selecciona un área primero para filtrar el catálogo de fallas." %}
                     </span>
@@ -109,6 +110,7 @@
                     <input type="text" name="responsable" id="id_responsable" autocomplete="off"
                            value="{{ form.responsable.value|default:'' }}" required
                            placeholder="{% trans 'Escribe para buscar en el catálogo…' %}">
+                    <input type="hidden" name="responsable_pk" id="id_responsable_pk" value="">
                     <span class="help" id="responsable-help">{% trans "Selecciona un área primero para filtrar." %}</span>
                     <div id="responsable-dropdown" style="
                         display:none; position:absolute; left:0; right:0; top:100%;
@@ -127,6 +129,7 @@
                     <input type="text" name="equipo" id="id_equipo" autocomplete="off"
                            value="{{ form.equipo.value|default:'' }}" required
                            placeholder="{% trans 'Escribe para buscar en el catálogo…' %}">
+                    <input type="hidden" name="equipo_pk" id="id_equipo_pk" value="">
                     <span class="help" id="equipo-help">{% trans "Selecciona un área primero para filtrar." %}</span>
                     <div id="equipo-dropdown" style="
                         display:none; position:absolute; left:0; right:0; top:100%;
@@ -147,6 +150,17 @@
                     {% if form.tiempo_minutos.errors %}
                     <ul class="errorlist">{% for e in form.tiempo_minutos.errors %}<li>{{ e }}</li>{% endfor %}</ul>
                     {% endif %}
+                </div>
+
+                 <div class="form-field" style="position:relative;">
+                    <label for="id_atendio">{% trans "Atendió la falla" %}</label>
+                    <input type="text" name="atendio" id="id_atendio" autocomplete="off"
+                        value="{{ form.atendio.value|default:'' }}"
+                        maxlength="100" placeholder="{% trans 'Opcional…' %}">
+                    <div id="atendio-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;
+                        background:var(--white);border:1px solid var(--indigo);border-top:none;
+                        border-radius:0 0 7px 7px;box-shadow:var(--shadow-md);z-index:500;
+                        max-height:220px;overflow-y:auto;"></div>
                 </div>
 
                 <!-- Comentarios -->
@@ -173,6 +187,6 @@
 
 {% block extra_js %}
 {% load static %}
-<script src="{% static 'paros_app/js/autocomplete.js' %}"></script>
+<script src="{% static 'paros_app/js/autocomplete.js' %}" defer></script>
 <script src="{% static 'paros_app/js/crear_paro.js' %}" defer></script>
 {% endblock %}

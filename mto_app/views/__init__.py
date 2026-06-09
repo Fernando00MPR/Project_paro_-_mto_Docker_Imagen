@@ -13,12 +13,6 @@ from .planes import (
     descargar_plantilla,
 )
 
-from .ejecucion import (
-    registro_ejecucion,
-    eliminar_registro,
-    asignar_responsable,
-)
-
 from .rutinas import (
     lista_pasos,
     importar_pasos,
@@ -31,6 +25,23 @@ from .responsables import (
     lista_responsables,
     form_responsable,
     eliminar_responsable,
+    buscar_responsables_mto,
 )
 
 from .dashboard import dashboard
+
+from .ejecucion import (
+    registro_ejecucion,
+    eliminar_registro,
+    asignar_responsable,
+    agregar_seguimiento,
+    editar_seguimiento,
+    eliminar_seguimiento,
+    lista_seguimientos,
+    agregar_seguimiento_manual,
+    editar_seguimiento_manual,
+    eliminar_seguimiento_manual,
+    toggle_validado_ot,
+    toggle_validado_manual,
+    backlog_seguimientos,
+)

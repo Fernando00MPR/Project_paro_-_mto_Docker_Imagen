@@ -16,7 +16,9 @@ def buscar_fallas(request):
     if q:
         qs = qs.filter(Q(nombre__icontains=q) | Q(codigo__icontains=q))
 
-    resultados = list(qs.values('codigo', 'nombre')[:20])
+    # Incluir pk para que la vista pueda resolver traducciones correctamente
+    # independientemente del idioma activo en el momento de la búsqueda.
+    resultados = list(qs.values('pk', 'codigo', 'nombre')[:20])
     return JsonResponse(resultados, safe=False)
 
 
@@ -32,7 +34,7 @@ def buscar_equipos(request):
     if q:
         qs = qs.filter(Q(equipo__icontains=q) | Q(codigo__icontains=q))
 
-    resultados = list(qs.values('codigo', 'equipo')[:20])
+    resultados = list(qs.values('pk', 'codigo', 'equipo')[:20])
     return JsonResponse(resultados, safe=False)
 
 
@@ -48,7 +50,7 @@ def buscar_responsables(request):
     if q:
         qs = qs.filter(Q(responsable__icontains=q) | Q(codigo__icontains=q))
 
-    resultados = list(qs.values('codigo', 'responsable')[:20])
+    resultados = list(qs.values('pk', 'codigo', 'responsable')[:20])
     return JsonResponse(resultados, safe=False)
 
 import re

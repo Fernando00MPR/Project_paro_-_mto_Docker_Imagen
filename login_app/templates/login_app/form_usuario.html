@@ -221,13 +221,66 @@
             </div>
         </div>
 
+         <!-- Permisos — Indicadores de producción -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Indicadores de producción" %}</div>
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
+                {% trans "Controla si el usuario puede ver los indicadores de producción." %}
+            </div>
+            <label class="perm-row" style="max-width:420px;">
+                <input type="checkbox" name="ver_indicadores"
+                    {% if perfil.ver_indicadores %}checked{% endif %}
+                    style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                <div>
+                    <div style="font-weight:600; font-size:13px;">{% trans "Ver indicadores" %}</div>
+                    <div style="font-size:12px; color:var(--text-3);">
+                        {% trans "El usuario puede ver los indicadores de producción, MTTR, MTBF, downtime y disponibilidad." %}
+                    </div>
+                </div>
+            </label>
+        </div>
+
+        <!-- Permisos — Hora x hora -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Hora x hora" %}</div>
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
+                {% trans "Selecciona las áreas que este usuario puede ver en el registro de hora x hora." %}
+            </div>
+            <label class="perm-row" style="max-width:420px; margin-bottom:14px;">
+                <input type="checkbox" name="ver_hora_hora"
+                    {% if perfil.ver_hora_hora %}checked{% endif %}
+                    style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                <div>
+                    <div style="font-weight:600; font-size:13px;">{% trans "Ver hora x hora" %}</div>
+                    <div style="font-size:12px; color:var(--text-3);">
+                        {% trans "El usuario puede acceder al registro de producción hora x hora." %}
+                    </div>
+                </div>
+            </label>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                {% for area in areas %}
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 14px; border:1px solid var(--border); border-radius:20px; font-size:13px; transition:all .15s;"
+                       onmouseover="this.style.background='var(--indigo-lt)';this.style.borderColor='var(--indigo)'"
+                       onmouseout="this.style.background='';this.style.borderColor='var(--border)'">
+                    <input type="checkbox" name="areas_hora_hora" value="{{ area.id }}"
+                           {% if area.id in areas_hora_hora_ids %}checked{% endif %}
+                           style="width:14px; height:14px; accent-color:var(--indigo);">
+                    {{ area.nombre }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Permisos MTO -->
+        
         <!-- Permisos — Gestión de Mantenimiento -->
         <div class="card" style="margin-bottom:16px;">
             <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Gestión de Mantenimiento" %}</div>
             <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
-                {% trans "Controla si el usuario puede acceder al módulo de mantenimiento y qué áreas puede ver." %}
+                {% trans "Controla si el usuario puede acceder al módulo de mantenimiento y qué áreas y pestañas puede ver." %}
             </div>
 
+            <!-- Acceso general -->
             <label class="perm-row" style="max-width:420px; margin-bottom:14px;">
                 <input type="checkbox" name="acceso_mto"
                     {% if acceso_mto %}checked{% endif %}
@@ -240,8 +293,9 @@
                 </div>
             </label>
 
+            <!-- Áreas permitidas -->
             <div style="font-size:12px; color:var(--text-3); margin-bottom:10px;">{% trans "Áreas permitidas en mantenimiento:" %}</div>
-            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
                 {% for area in areas_mto %}
                 <label style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 14px; border:1px solid var(--border); border-radius:20px; font-size:13px; transition:all .15s;"
                     onmouseover="this.style.background='var(--indigo-lt)';this.style.borderColor='var(--indigo)'"
@@ -253,7 +307,96 @@
                 </label>
                 {% endfor %}
             </div>
+
+            <!-- Permisos por pestaña -->
+            <div style="font-size:12px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:12px; padding-top:14px; border-top:1px solid var(--border);">
+                {% trans "Permisos por pestaña" %}
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+
+                <label class="perm-row">
+                    <input type="checkbox" name="ver_plan_mantenimiento"
+                        {% if permisos_mto.ver_plan_mantenimiento %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Ver plan de mantenimiento" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar el plan de mantenimiento" %}</div>
+                    </div>
+                </label>
+
+                <label class="perm-row">
+                    <input type="checkbox" name="editar_plan_mantenimiento"
+                        {% if permisos_mto.editar_plan_mantenimiento %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Editar plan de mantenimiento" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede crear, editar y eliminar planes" %}</div>
+                    </div>
+                </label>
+
+                <label class="perm-row">
+                    <input type="checkbox" name="ver_rutinas"
+                        {% if permisos_mto.ver_rutinas %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Ver rutinas" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar las rutinas de mantenimiento" %}</div>
+                    </div>
+                </label>
+
+                <label class="perm-row">
+                    <input type="checkbox" name="editar_rutinas"
+                        {% if permisos_mto.editar_rutinas %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Editar rutinas" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede importar, editar y eliminar rutinas" %}</div>
+                    </div>
+                </label>
+
+                <label class="perm-row">
+                    <input type="checkbox" name="ver_seguimiento"
+                        {% if permisos_mto.ver_seguimiento %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Ver seguimiento" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar el seguimiento de órdenes de trabajo" %}</div>
+                    </div>
+                </label>
+
+                <label class="perm-row">
+                    <input type="checkbox" name="editar_seguimiento"
+                        {% if permisos_mto.editar_seguimiento %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Editar seguimiento" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede crear, editar y cerrar seguimientos" %}</div>
+                    </div>
+                </label>
+
+                <label class="perm-row">
+                    <input type="checkbox" name="ver_responsables"
+                        {% if permisos_mto.ver_responsables %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Ver responsables" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar el catálogo de responsables" %}</div>
+                    </div>
+                </label>
+
+                <label class="perm-row">
+                    <input type="checkbox" name="editar_responsables"
+                        {% if permisos_mto.editar_responsables %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Editar responsables" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede agregar, editar y eliminar responsables" %}</div>
+                    </div>
+                </label>
+
+            </div>
         </div>
+        
 
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">

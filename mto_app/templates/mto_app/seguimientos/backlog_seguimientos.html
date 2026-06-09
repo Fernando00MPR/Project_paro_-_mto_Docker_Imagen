@@ -1,0 +1,239 @@
+{% extends "menu_app/base_menu.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Backlog de seguimientos" %}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div>
+        <div class="card-title">{% trans "Backlog de seguimientos" %}{% if area_nombre %} — {{ area_nombre }}{% endif %}</div>
+        <div class="card-subtitle">{% trans "Órdenes con fecha de compromiso vencida — pendientes y en proceso" %}</div>
+    </div>
+</div>
+
+<!-- Filtro área -->
+<div style="padding:10px 14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px;">
+    <form method="get" style="display:flex; gap:10px; align-items:flex-end;">
+        <div class="filter-group">
+            <label>{% trans "Área" %}</label>
+            <select name="area" onchange="this.form.submit()">
+                <option value="">{% trans "Todas las áreas" %}</option>
+                {% for a in areas %}
+                <option value="{{ a.id }}" {% if area_id == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+{% if personas %}
+
+{% with total_ot=0 total_manual=0 %}
+
+<!-- KPIs -->
+{% with total_general=0 %}
+<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;">
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+        <div style="font-size:11px; color:var(--text-3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">{% trans "Total vencidos" %}</div>
+        <div style="font-size:28px; font-weight:700; color:var(--indigo); line-height:1;">
+            {% with t=0 %}
+            {{ personas|length }}
+            {% endwith %}
+        </div>
+        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "responsables con atrasos" %}</div>
+    </div>
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+        <div style="font-size:11px; color:var(--text-3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">{% trans "Seguimientos de OTs" %}</div>
+        <div style="font-size:28px; font-weight:700; color:var(--indigo); line-height:1;">{{ total_ots }}</div>
+        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "órdenes vencidas" %}</div>
+    </div>
+    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+        <div style="font-size:11px; color:var(--text-3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">{% trans "Correctivos" %}</div>
+        <div style="font-size:28px; font-weight:700; color:#E24B4A; line-height:1;">{{ total_manuales }}</div>
+        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "seguimientos vencidos" %}</div>
+    </div>
+</div>
+{% endwith %}
+
+<!-- Gráficos generales -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+
+    <!-- Barras general -->
+    <div class="card" style="padding:16px 18px;">
+        <div style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px;">{% trans "Carga por responsable" %}</div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; font-size:11px; color:var(--text-2); justify-content:center;">
+            <span style="display:flex; align-items:center; gap:4px; white-space:nowrap;"><span style="width:8px;height:8px;border-radius:2px;background:#4F46E5;"></span>{% trans "Seguimiento de OTs" %} — {{ total_ots }}</span>
+            <span style="display:flex; align-items:center; gap:4px; white-space:nowrap;"><span style="width:8px;height:8px;border-radius:2px;background:#E24B4A;"></span>{% trans "Correctivo" %} — {{ total_manuales }}</span>
+        </div>
+        {% with max_total=personas.0.total %}
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            {% for p in personas %}
+            <div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-2); margin-bottom:4px;">
+                    <span>{{ p.nombre }}</span>
+                    <span style="font-weight:600; color:var(--text);">{{ p.total }}</span>
+                </div>
+                <div style="height:10px; background:var(--surface); border-radius:5px; overflow:hidden;">
+                    <div style="height:100%; width:{% widthratio p.total max_total 100 %}%;
+                        background:{% if p.ot and p.manual %}linear-gradient(90deg,#4F46E5 {% widthratio p.ot|length p.total 100 %}%,#E24B4A 0%){% elif p.ot %}#4F46E5{% else %}#E24B4A{% endif %};
+                        border-radius:5px;"></div>
+                </div>
+                <div style="font-size:10px; color:var(--text-3); margin-top:3px;">
+                    {% if p.ot %}{{ p.ot|length }} {% trans "Seguimiento de OTs" %} {{ p.ot|length|pluralize }}{% endif %}{% if p.ot and p.manual %} · {% endif %}{% if p.manual %}{{ p.manual|length }} {% trans "Correctivo" %}{{ p.manual|length|pluralize }}{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endwith %}
+    </div>
+
+    <!-- Pastel general -->
+    <div class="card" style="padding:16px 18px;">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin:0 auto; width:fit-content;">
+            <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px; color:var(--text-2); justify-content:center;">
+                <span style="display:flex; align-items:center; gap:4px;">
+                    <span style="width:8px;height:8px;border-radius:2px;background:#4F46E5;"></span>
+                    {% trans "Seguimiento de OTs" %} — {{ total_ots }}
+                </span>
+                <span style="display:flex; align-items:center; gap:4px;">
+                    <span style="width:8px;height:8px;border-radius:2px;background:#E24B4A;"></span>
+                    {% trans "Correctivos" %} — {{ total_manuales }}
+                </span>
+            </div>
+            <div style="position:relative; width:120px; height:120px;">
+                <svg viewBox="0 0 36 36" style="width:120px; height:120px; transform:rotate(-90deg);">
+                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="4"/>
+                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#4F46E5" stroke-width="4"
+                        stroke-dasharray="{{ pct_ot_general }} {{ pct_m_general }}"
+                        stroke-linecap="round"/>
+                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E24B4A" stroke-width="4"
+                        stroke-dasharray="{{ pct_m_general }} {{ pct_ot_general }}"
+                        stroke-dashoffset="-{{ pct_ot_general }}"
+                        stroke-linecap="round"/>
+                </svg>
+                <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div style="font-size:22px; font-weight:700; color:var(--text);">{{ total_general }}</div>
+                    <div style="font-size:9px; color:var(--text-3);">{% trans "total" %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endwith %}
+
+<!-- Lista colapsable por persona -->
+<div style="display:flex; flex-direction:column; gap:8px;">
+    {% for p in personas %}
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+
+        <!-- Colapsable (izquierda, ocupa todo el ancho) -->
+        <div style="flex:1; background:var(--white); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
+            <div onclick="togglePersona('p{{ forloop.counter }}')"
+                style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px;
+                        background:var(--surface); cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:34px; height:34px; border-radius:50%; background:var(--indigo-lt);
+                                display:flex; align-items:center; justify-content:center;
+                                font-size:12px; font-weight:600; color:var(--indigo); flex-shrink:0;">
+                        {{ p.nombre|slice:":2"|upper }}
+                    </div>
+                    <div>
+                        <div style="font-size:13px; font-weight:600; color:var(--text);">{{ p.nombre }}</div>
+                        <div style="font-size:11px; color:var(--text-3);">{{ p.total }} {% trans "vencida" %}{{ p.total|pluralize:"s" }}</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:4px; align-items:center; flex-wrap:nowrap">
+                    {% if p.ot %}
+                    <span style="background:var(--indigo-lt); color:var(--indigo); padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap">
+                        {{ p.ot|length }} {% trans "Seguimiento de OTs" %}
+                    </span>
+                    {% endif %}
+                    {% if p.manual %}
+                    <span style="background:#FCEBEB; color:#A32D2D; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap">
+                        {{ p.manual|length }} {% trans "Correctivo" %}
+                    </span>
+                    {% endif %}
+                    <svg id="chev-p{{ forloop.counter }}" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        style="flex-shrink:0; color:var(--text-3); transition:transform .2s; margin-left:4px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+            </div>
+            <div id="p{{ forloop.counter }}" style="display:none; padding:10px 14px; flex-direction:column; gap:6px;">
+                {% for seg in p.ot %}
+                <div style="background:var(--surface); border-radius:8px; padding:8px 10px; border-left:3px solid #4F46E5;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                        <span style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">{{ seg.no_orden }}</span>
+                        <span style="background:#FCEBEB; color:#A32D2D; padding:1px 7px; border-radius:20px; font-size:10px; font-weight:600;">
+                            {{ seg.dias_atraso }} {% trans "día" %}{{ seg.dias_atraso|pluralize }}
+                        </span>
+                    </div>
+                    <div style="font-size:12px; color:var(--text); margin-bottom:2px;">{{ seg.problema|truncatechars:70 }}</div>
+                    <div style="font-size:11px; color:var(--text-3);">{% trans "Vence:" %} {{ seg.fecha_compromiso|date:"d/m/Y" }} · {% trans "Seguimiento de OTs" %}</div>
+                </div>
+                {% endfor %}
+                {% for seg in p.manual %}
+                <div style="background:var(--surface); border-radius:8px; padding:8px 10px; border-left:3px solid #E24B4A;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                        <span style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">{{ seg.no_orden }}</span>
+                        <span style="background:#FCEBEB; color:#A32D2D; padding:1px 7px; border-radius:20px; font-size:10px; font-weight:600;">
+                            {{ seg.dias_atraso }} {% trans "día" %}{{ seg.dias_atraso|pluralize }}
+                        </span>
+                    </div>
+                    <div style="font-size:12px; color:var(--text); margin-bottom:2px;">{{ seg.problema|truncatechars:70 }}</div>
+                    <div style="font-size:11px; color:var(--text-3);">{% trans "Vence:" %} {{ seg.fecha_compromiso|date:"d/m/Y" }} · {% trans "Correctivo" %}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Gráficos (derecha) -->
+        <div id="grafico-{{ forloop.counter }}" data-grafico 
+            style="background:var(--white); border:1px solid var(--border); border-radius:10px;
+            padding:10px 14px; display:flex; align-items:center;
+            justify-content:center; gap:10px; flex-shrink:0; width:500px;">
+            <div id="donut-wrapper-{{ forloop.counter }}" style="position:relative; width:56px; height:56px; flex-shrink:0;">
+                <canvas id="donut-{{ forloop.counter }}" width="56" height="56"
+                        data-ot="{{ p.ot|length }}" data-manual="{{ p.manual|length }}"></canvas>
+                <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+                    <span style="font-size:13px; font-weight:700; color:var(--text);">{{ p.total }}</span>
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                {% if p.ot %}
+                <div style="font-size:9px; color:var(--text-2); display:flex; align-items:center; gap:3px; white-space:nowrap;">
+                    <span style="width:6px; height:6px; border-radius:1px; background:#4F46E5; flex-shrink:0;"></span>
+                    {{ p.ot|length }} {% trans "Seguimiento de OTs" %} 
+                </div>
+                {% endif %}
+                {% if p.manual %}
+                <div style="font-size:9px; color:var(--text-2); display:flex; align-items:center; gap:3px; white-space:nowrap;">
+                    <span style="width:6px; height:6px; border-radius:1px; background:#E24B4A; flex-shrink:0;"></span>
+                    {{ p.manual|length }} {% trans "Correctivo" %} 
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="card" style="text-align:center; padding:60px; color:var(--text-3);">
+    <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+         style="margin:0 auto 16px; display:block; opacity:.3;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <div style="font-size:15px; font-weight:600; margin-bottom:6px;">{% trans "Sin atrasos" %} </div>
+    <div style="font-size:13px;">{% trans "Todos los seguimientos están al día." %} </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="{% static 'mto_app/js/backlog_seguimientos.js' %}"></script>
+{% endblock %}

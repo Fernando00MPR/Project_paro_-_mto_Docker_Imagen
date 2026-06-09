@@ -31,9 +31,7 @@
 
     <!-- Encabezado -->
     <div style="margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid #E5E4F0;">
-        <div style="font-size:15px; font-weight:600; color:#1E1B4B;">
-            Registrar ejecucion
-        </div>
+        <div style="font-size:15px; font-weight:600; color:#1E1B4B;">Registrar ejecucion</div>
         <div style="font-size:12px; color:#9CA3AF; margin-top:3px;">
             {{ plan.equipo }} &middot; S{{ semana }}/{{ anio }} &middot;
             {{ lunes|date:"d M" }} – {{ domingo|date:"d M Y" }}
@@ -49,23 +47,18 @@
                 <select name="responsable" id="responsable">
                     <option value="">-- Sin asignar --</option>
                     {% for r in responsables %}
-                    <option value="{{ r.pk }}"
-                        {% if registro and registro.responsable_id == r.pk %}selected{% endif %}>
+                    <option value="{{ r.pk }}" {% if registro and registro.responsable_id == r.pk %}selected{% endif %}>
                         {{ r.numero_nomina }} — {{ r.nombre }} {{ r.apellidos }}
                     </option>
                     {% endfor %}
                 </select>
             </div>
-
             <div class="field" style="margin-bottom:0;">
                 <label>Estado *</label>
                 <select name="estado" required>
                     <option value="">-- Seleccionar estado --</option>
                     {% for val, label in estados %}
-                    <option value="{{ val }}"
-                        {% if registro and registro.estado == val %}selected{% endif %}>
-                        {{ label }}
-                    </option>
+                    <option value="{{ val }}" {% if registro and registro.estado == val %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -74,14 +67,12 @@
 
         <div class="field">
             <label>Fecha de ejecucion</label>
-            <input type="date" name="fecha_ejecucion"
-                   value="{{ registro.fecha_ejecucion|date:'Y-m-d'|default:'' }}">
+            <input type="date" name="fecha_ejecucion" value="{{ registro.fecha_ejecucion|date:'Y-m-d'|default:'' }}">
         </div>
 
         <div class="field">
             <label>Observaciones</label>
-            <textarea name="observaciones"
-                      placeholder="Describe lo realizado, materiales, anomalias...">{{ registro.observaciones|default:'' }}</textarea>
+            <textarea name="observaciones" placeholder="Describe lo realizado, materiales, anomalias...">{{ registro.observaciones|default:'' }}</textarea>
         </div>
 
         <div style="display:flex; gap:8px; justify-content:space-between; margin-top:16px;">
@@ -92,38 +83,122 @@
                         onclick="document.getElementById('modal-confirm').style.display='flex'">Eliminar</button>
                 {% endif %}
                 <button type="button" class="btn btn-ghost"
-                        onclick="window.parent.postMessage('cerrar_form_registro', '*')">
-                    Cancelar
-                </button>
+                        onclick="window.parent.postMessage('cerrar_form_registro', '*')">Cancelar</button>
             </div>
         </div>
     </form>
 </div>
 
-<!-- Modal confirmacion — fuera del form -->
-<div id="modal-confirm"
-    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
-            z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; padding:24px 28px;
-                min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:15px; font-weight:600; color:#1E1B4B; margin-bottom:8px;">
-            Eliminar registro
-        </div>
-        <div style="font-size:13px; color:#6B7280; margin-bottom:20px;">
-            Esta accion no se puede deshacer.
-        </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button onclick="document.getElementById('modal-confirm').style.display='none'"
-                    class="btn btn-ghost">Cancelar</button>
-            <button onclick="confirmarEliminar()" class="btn btn-danger"
-                    style="background:#EF4444; color:#fff; border-color:#EF4444;">
-                Si, eliminar
-            </button>
+{% if registro and registro.estado == 'completada' %}
+<div style="margin:0 24px 20px;">
+    <div style="border-top:1px solid #E5E4F0; padding-top:16px;">
+        <div style="border-radius:12px;overflow:hidden;border:0.5px solid #CECBF6;">
+
+            <!-- Header colapsable -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#EEEDFE;cursor:pointer;"
+                onclick="toggleSeguimiento()">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <svg width="15" height="15" fill="none" stroke="#3C3489" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span style="font-size:13px;font-weight:600;color:#3C3489;">Seguimiento</span>
+                    <span id="badge-seguimientos" style="display:none;background:#fff;color:#3C3489;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button type="button" onclick="event.stopPropagation(); abrirModalSeguimiento()"
+                            style="padding:4px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:#4F46E5;color:#fff;">
+                        + Dar seguimiento
+                    </button>
+                    <svg id="chevron-seg" width="14" height="14" fill="none" stroke="#3C3489" viewBox="0 0 24 24" style="transition:transform .2s;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Contenido -->
+            <div id="seg-content" style="display:none; padding:12px 16px;">
+                <div id="lista-seguimientos" style="display:flex; flex-direction:column; gap:8px;">
+                    {% for seg in registro.seguimientos.all %}
+                    <div class="seg-item" data-id="{{ seg.id }}"
+                         style="border:0.5px solid #E5E4F0; border-radius:8px; padding:10px 12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:5px;">
+                            <div style="display:flex; gap:6px; align-items:center;">
+                                <span style="padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; background:#FCEBEB; color:#A32D2D;">Correctiva</span>
+                                <span style="font-size:11px; color:#9CA3AF;">{{ seg.fecha_creacion|date:"d/m/Y" }}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span class="badge-estatus" style="padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600;
+                                    {% if seg.estatus == 'pendiente' %}background:#FAEEDA; color:#854F0B;
+                                    {% elif seg.estatus == 'en_proceso' %}background:#E6F1FB; color:#185FA5;
+                                    {% else %}background:#EAF3DE; color:#3B6D11;{% endif %}">
+                                    {{ seg.get_estatus_display }}
+                                </span>
+                                <button type="button"
+                                    onclick="editarSeguimiento({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
+                                    style="font-size:11px; color:#6B7280; background:none; border:none; cursor:pointer; padding:2px 6px;">✏️</button>
+                                <button type="button" onclick="confirmarEliminarSeg({{ seg.id }})"
+                                    style="font-size:11px; color:#EF4444; background:none; border:none; cursor:pointer; padding:2px 6px;">🗑</button>
+                            </div>
+                        </div>
+                        <div style="font-size:12px; font-weight:600; color:#1E1B4B; margin-bottom:6px;">{{ seg.problema }}</div>
+                        {% if seg.accion %}
+                        <div style="font-size:11px; color:#4B5563; margin-bottom:4px;">
+                            <span style="font-weight:600; color:#1E1B4B;">Acción:</span> {{ seg.accion }}
+                        </div>
+                        {% endif %}
+                        {% if seg.notas %}
+                        <div style="font-size:11px; color:#4B5563; margin-bottom:4px;">
+                            <span style="font-weight:600; color:#1E1B4B;">Notas:</span> {{ seg.notas }}
+                        </div>
+                        {% endif %}
+                        <div style="font-size:11px; color:#9CA3AF; margin-top:2px;">
+                            {% if seg.responsable %}<span style="font-weight:600; color:#6B7280;">Responsable:</span> {{ seg.responsable }}{% if seg.fecha_compromiso %} · {% endif %}{% endif %}
+                            {% if seg.fecha_compromiso %}<span style="font-weight:600; color:#6B7280;">Compromiso:</span> {{ seg.fecha_compromiso|date:"d/m/Y" }}{% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div id="empty-seg" style="text-align:center; padding:16px; color:#9CA3AF; font-size:12px;">
+                        Sin seguimientos registrados.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
-<!-- Toast de confirmación -->
+<!-- Modal eliminar seguimiento -->
+<div id="modal-confirm-seg"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
+            z-index:99999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:24px 28px; min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div style="font-size:15px; font-weight:600; color:#1E1B4B; margin-bottom:8px;">Eliminar seguimiento</div>
+        <div style="font-size:13px; color:#6B7280; margin-bottom:20px;">Esta acción no se puede deshacer.</div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="document.getElementById('modal-confirm-seg').style.display='none'" class="btn btn-ghost">Cancelar</button>
+            <button onclick="eliminarSeguimientoConfirmado()" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">Sí, eliminar</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal confirmar eliminar registro -->
+<div id="modal-confirm"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
+            z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:24px 28px; min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div style="font-size:15px; font-weight:600; color:#1E1B4B; margin-bottom:8px;">Eliminar registro</div>
+        <div style="font-size:13px; color:#6B7280; margin-bottom:20px;">Esta accion no se puede deshacer.</div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="document.getElementById('modal-confirm').style.display='none'" class="btn btn-ghost">Cancelar</button>
+            <button onclick="confirmarEliminar()" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">Si, eliminar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
 <div id="toast-ok"
      style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
             background:#065F46; color:#fff; padding:10px 20px; border-radius:8px;
@@ -132,6 +207,7 @@
     ✓ Registro guardado
 </div>
 
+<!-- Variables Django para JS -->
 <script>
 window.REGISTRO_CONFIG = {
     plan_pk: {{ plan.pk }},
@@ -140,5 +216,18 @@ window.REGISTRO_CONFIG = {
 };
 </script>
 <script src="{% static 'mto_app/js/registro_form.js' %}"></script>
+
+{% if registro and registro.estado == 'completada' %}
+<script>
+const CSRF_SEG    = document.cookie.split(';').find(s => s.trim().startsWith('csrftoken='))?.trim().split('=')[1] || '';
+const REGISTRO_PK = {{ registro.pk }};
+const URL_AGREGAR = "{% url 'mto:agregar_seguimiento' registro.pk %}";
+const URL_EDITAR  = "/mto/seguimiento/editar/";
+const URL_ELIMINAR = "/mto/seguimiento/eliminar/";
+const SEG_SUBTITULO = '{{ plan.rutina }} · S{{ semana }}/{{ anio }}';
+</script>
+<script src="{% static 'mto_app/js/registro_form_seg.js' %}"></script>
+{% endif %}
+
 </body>
 </html>

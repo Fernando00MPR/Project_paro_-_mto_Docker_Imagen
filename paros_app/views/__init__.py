@@ -68,3 +68,13 @@ from .produccion import (
     guardar_accion_dia, 
     get_accion_dia
 )
+
+from .hora_hora import (
+    hora_hora,
+    guardar_hora_hora,
+    eficiencia_data,
+    guardar_target_hora_hora,
+    get_target_hora_hora,
+    guardar_target_anual_hora_hora,
+    get_target_anual_hora_hora,
+)

@@ -20,9 +20,9 @@ class Paro(models.Model):
         (2, _('Turno 2')),
     ]
     ESTATUS_CHOICES = [
-        ('rojo',     _('Sin revisar')),
+        ('rojo',     _('Rechazado')),
         ('amarillo', _('Pendiente')),
-        ('verde',    _('Revisado')),
+        ('verde',    _('Aceptado')),
     ]
 
     area           = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='paros', verbose_name="Área")
@@ -34,6 +34,7 @@ class Paro(models.Model):
     hora           = models.TimeField(verbose_name="Hora (HH:MM)")
     tiempo_minutos = models.PositiveIntegerField(validators=[MinValueValidator(0)], verbose_name="Tiempo (minutos)")
     estatus        = models.CharField(max_length=10, choices=ESTATUS_CHOICES, default='rojo', verbose_name="Estatus")
+    atendio        = models.CharField(max_length=100, blank=True, default='', verbose_name="Atendió la falla")
     comentarios    = models.CharField(max_length=100, blank=True, verbose_name="Comentarios")
 
     def __str__(self):
@@ -106,11 +107,11 @@ class BitacoraParo(models.Model):
         'creado':         'Paro creado',
     }
     ESTATUS_LABELS = {
-        'rojo':     'Sin revisar',
+        'rojo':     'Rechazado',
         'amarillo': 'Pendiente',
-        'verde':    'Revisado',
+        'verde':    'Aceptado',
     }
-
+    
     paro           = models.ForeignKey(Paro, on_delete=models.CASCADE,
                                        related_name='bitacora', verbose_name='Paro')
     usuario        = models.ForeignKey('auth.User', on_delete=models.SET_NULL,
@@ -256,3 +257,54 @@ class TargetIndicador(models.Model):
 
     def __str__(self):
         return f"{self.area.nombre} — {self.get_indicador_display()}: {self.valor}"
+
+# Hora x Hora 
+class RegistroHoraHora(models.Model):
+    TURNO_CHOICES = [
+        ('dia',   'Día'),
+        ('noche', 'Noche'),
+    ]
+
+    area   = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name='Área')
+    fecha  = models.DateField(verbose_name='Fecha')
+    turno  = models.CharField(max_length=10, choices=TURNO_CHOICES, verbose_name='Turno')
+    hora   = models.PositiveSmallIntegerField(verbose_name='Hora (0-23)')
+    valor  = models.PositiveSmallIntegerField(default=0, verbose_name='Cantidad producida')
+
+    class Meta:
+        verbose_name        = 'Registro hora x hora'
+        verbose_name_plural = 'Registros hora x hora'
+        unique_together     = ('area', 'fecha', 'turno', 'hora')
+        ordering            = ['area', 'fecha', 'turno', 'hora']
+
+    def __str__(self):
+        return f"{self.area.nombre} — {self.fecha} — {self.turno} — {self.hora:02d}:00 — {self.valor}"
+
+# Eficiencia   
+class TargetHoraHora(models.Model):
+    area              = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name='Área')
+    anio              = models.PositiveSmallIntegerField(verbose_name='Año')
+    mes               = models.PositiveSmallIntegerField(verbose_name='Mes')
+    target_skid       = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Target skid por hora')
+    target_eficiencia = models.FloatField(null=True, blank=True, verbose_name='Target eficiencia %')
+
+    class Meta:
+        verbose_name        = 'Target hora x hora'
+        verbose_name_plural = 'Targets hora x hora'
+        unique_together     = ('area', 'anio', 'mes')
+
+    def __str__(self):
+        return f"{self.area.nombre} — {self.mes}/{self.anio} — Skid:{self.target_skid} Ef:{self.target_eficiencia}%"
+    
+class TargetAnualHoraHora(models.Model):
+    area              = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name='Área')
+    anio              = models.PositiveSmallIntegerField(verbose_name='Año')
+    target_eficiencia = models.FloatField(null=True, blank=True, verbose_name='Target eficiencia anual %')
+
+    class Meta:
+        verbose_name        = 'Target anual hora x hora'
+        verbose_name_plural = 'Targets anuales hora x hora'
+        unique_together     = ('area', 'anio')
+
+    def __str__(self):
+        return f"{self.area.nombre} — {self.anio} — {self.target_eficiencia}%"

@@ -62,19 +62,21 @@
             </span>
             <a href="{% url 'paros:exportar_fallas_area' area.id %}" class="btn btn-ghost btn-sm">↓ {% trans "Exportar" %}</a>
             {% if puede_gestionar %}
-            <a href="{% url 'paros:importar_fallas_por_area' area.id %}" class="btn btn-primary btn-sm">↑ {% trans "Importar" %}</a>
-            {% if area.catalogo_fallas.count > 0 %}
-            <button type="button" class="btn btn-sm"
-                    style="border-color:var(--red); color:var(--red); background:transparent;"
-                    onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'fallas')">
-                🗑 {% trans "Limpiar" %}
-            </button>
+                <a href="{% url 'paros:importar_fallas_por_area' area.id %}" class="btn btn-primary btn-sm">↑ {% trans "Importar" %}</a>
             {% endif %}
-            <button type="button" class="btn btn-primary btn-sm"
-                    onclick="abrirModalAgregar('{{ area.id }}', '{{ area.nombre }}', '/catalogos/fallas/agregar/{{ area.id }}/')">
-                + {% trans "Agregar" %}
-            </button>
-            {% endif %}
+                {% if puede_gestionar and area.catalogo_fallas.count > 0 %}
+                    <button type="button" class="btn btn-sm"
+                            style="border-color:var(--red); color:var(--red); background:transparent;"
+                            onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'fallas')">
+                        🗑 {% trans "Limpiar" %}
+                    </button>
+                {% endif %}
+                {% if puede_agregar %}
+                    <button type="button" class="btn btn-primary btn-sm"
+                            onclick="abrirModalAgregar('{{ area.id }}', '{{ area.nombre }}', '/catalogos/fallas/agregar/{{ area.id }}/')">
+                        + {% trans "Agregar" %}
+                    </button>
+                {% endif %}
             <svg id="chev-area-{{ area.id }}" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                  style="transition:transform .25s; color:var(--text-3); cursor:pointer; flex-shrink:0;"
                  onclick="toggleArea('area-{{ area.id }}')">
@@ -92,7 +94,7 @@
                     <th style="width:200px;">{% trans "Falla" %}</th>
                     <th style="width:120px;">{% trans "Tipo de falla" %}</th>
                     <th style="width:80px; ">{% trans "Área de origen" %}</th>
-                    {% if puede_gestionar %}
+                    {% if puede_editar or puede_eliminar %}
                     <th style="width:90px;">{% trans "Acción" %}</th>
                     {% endif %}
                 </tr></thead>
@@ -103,17 +105,21 @@
                         <td style="font-weight:500;">{{ f.nombre }}</td>
                         <td style="color:var(--text-2);font-size:13px;">{{ f.tipo_falla|default:"—" }}</td>
                         <td style="color:var(--text-2);font-size:13px;">{{ f.area_origen|default:"—" }}</td>
-                        {% if puede_gestionar %}
+                        {% if puede_editar or puede_eliminar %}
                         <td>
                             <div style="display:flex; gap:6px;">
-                                <button type="button" class="btn btn-ghost btn-sm" style="min-width:80px;"
-                                        onclick="abrirModalEditar('{{ f.id }}', '{{ f.codigo }}', '{{ f.nombre|escapejs }}', '/catalogos/fallas/editar/{{ f.id }}/', '{{ f.area_origen|escapejs }}', '{{ f.nombre_es|escapejs }}', '{{ f.nombre_en|escapejs }}', '', '', '{{ f.tipo_falla_es|escapejs }}', '{{ f.tipo_falla_en|escapejs }}')">
-                                    ✏️ {% trans "Editar" %}
-                                </button>
-                                <button type="button" class="btn btn-sm" style="min-width:80px; border-color:var(--red); color:var(--red); background:transparent;"
-                                        onclick="confirmarEliminar('{{ f.id }}', '{{ f.nombre }}', '/catalogos/fallas/eliminar/{{ f.id }}/')">
-                                    🗑  {% trans "Eliminar" %}
-                                </button>
+                                {% if puede_editar %}
+                                    <button type="button" class="btn btn-ghost btn-sm" style="min-width:80px;"
+                                            onclick="abrirModalEditar('{{ f.id }}', '{{ f.codigo }}', '{{ f.nombre|escapejs }}', '/catalogos/fallas/editar/{{ f.id }}/', '{{ f.area_origen|escapejs }}', '{{ f.nombre_es|escapejs }}', '{{ f.nombre_en|escapejs }}', '', '', '{{ f.tipo_falla_es|escapejs }}', '{{ f.tipo_falla_en|escapejs }}')">
+                                        ✏️ {% trans "Editar" %}
+                                    </button>
+                                {% endif %}
+                                {% if puede_eliminar %}
+                                    <button type="button" class="btn btn-sm" style="min-width:80px; border-color:var(--red); color:var(--red); background:transparent;"
+                                            onclick="confirmarEliminar('{{ f.id }}', '{{ f.nombre }}', '/catalogos/fallas/eliminar/{{ f.id }}/')">
+                                        🗑  {% trans "Eliminar" %}
+                                    </button>
+                                {% endif %}
                             </div>
                         </td>
                         {% endif %}
@@ -121,7 +127,7 @@
                     {% endfor %}
                 </tbody>
                 <tbody id="nores-{{ area.id }}" style="display:none;">
-                    <tr><td colspan="{% if puede_gestionar %}5{% else %}4{% endif %}" style="text-align:center;padding:18px;color:var(--text-3);font-size:13px;">{% trans "Sin resultados para esta búsqueda." %}</td></tr>
+                    <tr><td colspan="{% if puede_editar or puede_eliminar %}5{% else %}4{% endif %}" style="text-align:center;padding:18px;color:var(--text-3);font-size:13px;">{% trans "Sin resultados para esta búsqueda." %}</td></tr>
                 </tbody>
             </table>
         </div>

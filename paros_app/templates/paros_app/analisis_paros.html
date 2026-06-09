@@ -35,10 +35,12 @@
     <form method="get" id="form-principal" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
         {% for f in fallas_excluidas %}<input type="hidden" name="excluir_falla" value="{{ f }}">{% endfor %}
         {% for r in resp_excluidas %}<input type="hidden" name="excluir_resp" value="{{ r }}">{% endfor %}
+        {% for t in tipos_excluidos %}<input type="hidden" name="excluir_tipo" value="{{ t }}">{% endfor %}
+        {% for a in atendio_excluidos %}<input type="hidden" name="excluir_atendio" value="{{ a }}">{% endfor %}
 
         <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Área" %}</label>
-            <select name="area" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
+            <select name="area" onchange="prepararExclusiones()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
                 <option value="">{% trans "Todas las áreas" %}</option>
                 {% for a in areas %}<option value="{{ a.id }}" {% if area_id == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nombre }}</option>{% endfor %}
             </select>
@@ -46,7 +48,7 @@
 
         <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Período" %}</label>
-            <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value)"
+            <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value); if(this.value !== 'custom' && this.value !== 'semana') prepararExclusiones();"
                     style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:150px;">
                 <option value="hoy"    {% if periodo == 'hoy'    %}selected{% endif %}>  {% trans "Hoy" %}</option>
                 <option value="7"      {% if periodo == '7'      %}selected{% endif %}>  {% trans "Últimos 7 días" %}</option>
@@ -60,30 +62,38 @@
         <div id="wrap-semana" style="display:none;flex-direction:column;gap:4px;">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Semana" %}</label>
             <input type="number" name="semana_num" value="{{ semana_num|default:semana_actual }}" min="1" max="53"
-                   style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);width:80px;">
+                   style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);width:80px;" onchange="prepararExclusiones()">
         </div>
         <div id="wrap-desde" style="display:none;flex-direction:column;gap:4px;">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Desde" %}</label>
-            <input type="date" name="fecha_desde" value="{{ fecha_desde }}" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);">
+            <input type="date" name="fecha_desde" value="{{ fecha_desde }}" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);" onchange="prepararExclusiones()">
         </div>
         <div id="wrap-hasta" style="display:none;flex-direction:column;gap:4px;">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Hasta" %}</label>
-            <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);">
+            <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);" onchange="prepararExclusiones()">
         </div>
 
         <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Turno" %}</label>
-            <select name="turno" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:120px;">
+            <select name="turno" onchange="prepararExclusiones()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:120px;">
                 <option value=""  {% if turno == ''  %}selected{% endif %}>{% trans "Ambos turnos" %}</option>
                 <option value="1" {% if turno == '1' %}selected{% endif %}>{% trans "Turno 1" %}</option>
                 <option value="2" {% if turno == '2' %}selected{% endif %}>{% trans "Turno 2" %}</option>
+            </select>
+        </div>
+         <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Estatus" %}</label>
+            <select name="estatus" onchange="prepararExclusiones()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
+                <option value=""        {% if estatus_filtro == ''        %}selected{% endif %}>{% trans "Todos" %}</option>
+                <option value="verde"   {% if estatus_filtro == 'verde'   %}selected{% endif %}>{% trans "Aceptados" %}</option>
+                <option value="rojo"    {% if estatus_filtro == 'rojo'    %}selected{% endif %}>{% trans "Rechazados" %}</option>
+                <option value="amarillo"{% if estatus_filtro == 'amarillo'%}selected{% endif %}>{% trans "Pendientes" %}</option>
             </select>
         </div>
 
         <input type="hidden" name="modo_pareto" id="input-modo-pareto" value="{{ modo_pareto }}">
         <input type="hidden" name="modo_barras" id="input-modo-barras" value="{{ modo_barras }}">
 
-        <button type="button" class="btn btn-primary" style="height:33px;padding:0 18px;font-size:12px;" onclick="prepararExclusiones()">{% trans "Aplicar filtros" %}</button>
     </form>
 </div>
 
@@ -98,12 +108,14 @@
                 <div style="font-size:11px;color:var(--text-3);">{% if modo_pareto == 'falla' %}{% trans "Fallas" %}{% elif modo_pareto == 'responsable' %}{% trans "Responsables" %}{% else %}{% trans "Tipos de falla" %}{% endif %} {% trans "que generan el 80% del tiempo perdido" %}</div>
             </div>
             <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;height:28px;">
-                <button type="button" id="bp-falla" onclick="setModoPareto('falla')"
+                <button type="button" id="bp-falla" onclick="setModoPareto('falla'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_pareto == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
-                <button type="button" id="bp-resp" onclick="setModoPareto('responsable')"
+                <button type="button" id="bp-resp" onclick="setModoPareto('responsable'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
-                <button type="button" id="bp-tipo" onclick="setModoPareto('tipo_falla')"
+                <button type="button" id="bp-tipo" onclick="setModoPareto('tipo_falla'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'tipo_falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'tipo_falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Tipo de falla" %}</button>
+                <button type="button" id="bp-atendio" onclick="setModoPareto('atendio'); prepararExclusiones();"
+                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'atendio' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'atendio' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Atendió" %}</button>
             </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
@@ -123,12 +135,14 @@
                 <div style="font-size:11px;color:var(--text-3);">{% trans "Ordenado por tiempo acumulado — mayor a menor" %}</div>
             </div>
             <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;height:28px;">
-                <button type="button" id="bb-falla" onclick="setModoBarras('falla')"
+                <button type="button" id="bb-falla" onclick="setModoBarras('falla'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_barras == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
-                <button type="button" id="bb-resp" onclick="setModoBarras('responsable')"
+                <button type="button" id="bb-resp" onclick="setModoBarras('responsable'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
-                <button type="button" id="bb-tipo" onclick="setModoBarras('tipo_falla')"
+                <button type="button" id="bb-tipo" onclick="setModoBarras('tipo_falla'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'tipo_falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'tipo_falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Tipo de falla" %}</button>
+                <button type="button" id="bb-atendio" onclick="setModoBarras('atendio'); prepararExclusiones();"
+                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'atendio' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'atendio' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Atendió" %}</button>
             </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
@@ -167,8 +181,9 @@
     <input type="hidden" name="turno"       value="{{ turno }}">
     <input type="hidden" name="modo_pareto" value="{{ modo_pareto }}">
     <input type="hidden" name="modo_barras" value="{{ modo_barras }}">
+    <input type="hidden" name="estatus"     value="{{ estatus_filtro }}">
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
         <div class="card" style="padding:16px 18px;">
             <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar fallas" %}</div>
             <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca las que no quieres ver en los gráficos" %}</div>
@@ -180,6 +195,7 @@
                        onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
                     <input type="checkbox" class="chk-falla" data-val="{{ f.falla }}"
                            {% if f.falla not in fallas_excluidas %}checked{% endif %}
+                           onchange="prepararExclusiones()"
                            style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
                     <span style="flex:1;">{{ f.falla }}</span>
                     <span style="font-size:11px;color:var(--text-3);">{{ f.minutos }} min</span>
@@ -187,8 +203,8 @@
                 {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
             </div>
             <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-                <button type="button" onclick="toggleTodos('lista-fallas',true)" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
-                <button type="button" onclick="toggleTodos('lista-fallas',false)" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+                <button type="button" onclick="toggleTodos('lista-fallas',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                <button type="button" onclick="toggleTodos('lista-fallas',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
             </div>
         </div>
 
@@ -203,6 +219,7 @@
                        onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
                     <input type="checkbox" class="chk-resp" data-val="{{ r.responsable }}"
                            {% if r.responsable not in resp_excluidas %}checked{% endif %}
+                            onchange="prepararExclusiones()"
                            style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
                     <span style="flex:1;">{{ r.responsable }}</span>
                     <span style="font-size:11px;color:var(--text-3);">{{ r.minutos }} min</span>
@@ -210,8 +227,8 @@
                 {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
             </div>
             <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-                <button type="button" onclick="toggleTodos('lista-responsables',true)" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
-                <button type="button" onclick="toggleTodos('lista-responsables',false)" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+                <button type="button" onclick="toggleTodos('lista-responsables',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                <button type="button" onclick="toggleTodos('lista-responsables',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
             </div>
         </div>
 
@@ -226,16 +243,42 @@
                        onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
                     <input type="checkbox" class="chk-tipo" data-val="{{ t }}"
                            {% if t not in tipos_excluidos %}checked{% endif %}
+                            onchange="prepararExclusiones()"
                            style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
                     <span style="flex:1;">{{ t }}</span>
                 </label>
                 {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
             </div>
             <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-                <button type="button" onclick="toggleTodos('lista-tipos',true)" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
-                <button type="button" onclick="toggleTodos('lista-tipos',false)" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+                <button type="button" onclick="toggleTodos('lista-tipos',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                <button type="button" onclick="toggleTodos('lista-tipos',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
             </div>
         </div>
+
+        <div class="card" style="padding:16px 18px;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar quién atendió" %}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
+            <input type="text" id="buscador-atendio" placeholder="{% trans 'Buscar…' %}"
+                style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
+            <div id="lista-atendio" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
+                {% for a in lista_atendio %}
+                <label class="atendio-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
+                    onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" class="chk-atendio" data-val="{{ a.atendio }}"
+                        {% if a.atendio not in atendio_excluidos %}checked{% endif %}
+                        onchange="prepararExclusiones()"
+                        style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
+                    <span style="flex:1;">{{ a.atendio }}</span>
+                    <span style="font-size:11px;color:var(--text-3);">{{ a.minutos }} min</span>
+                </label>
+                {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                <button type="button" onclick="toggleTodos('lista-atendio',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                <button type="button" onclick="toggleTodos('lista-atendio',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+            </div>
+        </div>
+
     </div>
 </form>
 

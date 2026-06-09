@@ -4,7 +4,7 @@ from datetime import datetime, date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -30,7 +30,7 @@ def _registrar_bitacora(paro, usuario, campo, anterior, nuevo):
 
 def _campos_paro_dict(paro):
     """Snapshot de campos auditables de un paro."""
-    ESTATUS_L = {'rojo': 'Sin revisar', 'amarillo': 'Pendiente', 'verde': 'Revisado'}
+    ESTATUS_L = {'rojo': 'Rechazado', 'amarillo': 'Pendiente', 'verde': 'Aceptado'}
     return {
         'area':           paro.area.nombre,
         'fecha':          paro.fecha.strftime('%d/%m/%Y'),
@@ -72,10 +72,15 @@ def lista_paros(request):
     if not get_params.get('fecha_hasta'):
         get_params['fecha_hasta'] = hoy
 
-    paros_qs      = _aplicar_filtros(paros_qs, get_params)
-    total_minutos = paros_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
-    promedio_min  = round(total_minutos / paros_qs.count(), 1) if paros_qs.count() else 0
-    paro_mayor    = paros_qs.order_by('-tiempo_minutos').values('falla', 'tiempo_minutos').first()
+    paros_qs               = _aplicar_filtros(paros_qs, get_params)
+    total_minutos          = paros_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
+    paros_aceptados_qs     = paros_qs.filter(estatus='verde')
+    paros_aceptados        = paros_aceptados_qs.count()
+    minutos_aceptados      = paros_aceptados_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
+    promedio_min_aceptados = round(minutos_aceptados / paros_aceptados, 1) if paros_aceptados else 0
+    paro_mayor_aceptados   = paros_aceptados_qs.order_by('-tiempo_minutos').values('falla', 'tiempo_minutos').first()
+    paros_sin_aceptar      = paros_qs.filter(estatus='rojo').count()
+    minutos_sin_aceptar    = paros_qs.filter(estatus='rojo').aggregate(t=Sum('tiempo_minutos'))['t'] or 0
 
     por_pagina = get_params.get('por_pagina', '8')
     try:
@@ -94,8 +99,6 @@ def lista_paros(request):
         'areas':          Area.objects.all(),
         'filtros':        get_params,
         'total_minutos':  total_minutos,
-        'promedio_min':   promedio_min,
-        'paro_mayor':     paro_mayor,
         'por_pagina':     por_pagina,
         'puede_crear':    es_admin_total or (perfil and perfil.crear_paro),
         'puede_editar':   es_admin_total or (perfil and (perfil.editar_paro or perfil.editar_eliminar_paro)),
@@ -104,6 +107,13 @@ def lista_paros(request):
         'puede_estatus':  es_admin_total or (perfil and (perfil.cambiar_estatus_paro or perfil.editar_paro or perfil.editar_eliminar_paro)),
         'puede_exportar': es_admin_total or (perfil and perfil.exportar_paros),
         'puede_importar': es_admin_total or (perfil and perfil.importar_paros),
+        'total_minutos':           total_minutos,
+        'promedio_min_aceptados':  promedio_min_aceptados,
+        'paro_mayor_aceptados':    paro_mayor_aceptados,
+        'paros_aceptados':         paros_aceptados,
+        'minutos_aceptados':       minutos_aceptados,
+        'paros_sin_aceptar':       paros_sin_aceptar,
+        'minutos_sin_aceptar':     minutos_sin_aceptar,
     })
 
 
@@ -125,10 +135,15 @@ def lista_paros_por_area(request, area_id):
     if not get_params.get('fecha_hasta'):
         get_params['fecha_hasta'] = hoy
 
-    paros_qs      = _aplicar_filtros(paros_qs, get_params)
-    total_minutos = paros_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
-    promedio_min = round(total_minutos / paros_qs.count(), 1) if paros_qs.count() else 0
-    paro_mayor    = paros_qs.order_by('-tiempo_minutos').values('falla', 'tiempo_minutos').first()
+    paros_qs               = _aplicar_filtros(paros_qs, get_params)
+    total_minutos          = paros_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
+    paros_aceptados_qs     = paros_qs.filter(estatus='verde')
+    paros_aceptados        = paros_aceptados_qs.count()
+    minutos_aceptados      = paros_aceptados_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
+    promedio_min_aceptados = round(minutos_aceptados / paros_aceptados, 1) if paros_aceptados else 0
+    paro_mayor_aceptados   = paros_aceptados_qs.order_by('-tiempo_minutos').values('falla', 'tiempo_minutos').first()
+    paros_sin_aceptar      = paros_qs.filter(estatus='rojo').count()
+    minutos_sin_aceptar    = paros_qs.filter(estatus='rojo').aggregate(t=Sum('tiempo_minutos'))['t'] or 0
 
     por_pagina = get_params.get('por_pagina', '8')
     try:
@@ -148,8 +163,8 @@ def lista_paros_por_area(request, area_id):
         'areas':          Area.objects.all(),
         'filtros':        get_params,
         'total_minutos':  total_minutos,
-        'promedio_min':   promedio_min,
-        'paro_mayor':     paro_mayor,
+        'promedio_min_aceptados':   promedio_min_aceptados,
+        'paro_mayor_aceptados':     paro_mayor_aceptados,
         'por_pagina':     por_pagina,
         'puede_crear':    request.user.is_superuser or (perfil and (perfil.es_admin or perfil.crear_paro)),
         'puede_editar':   request.user.is_superuser or (perfil and (perfil.es_admin or perfil.editar_paro or perfil.editar_eliminar_paro)),
@@ -158,6 +173,10 @@ def lista_paros_por_area(request, area_id):
         'puede_estatus':  request.user.is_superuser or (perfil and (perfil.es_admin or perfil.cambiar_estatus_paro or perfil.editar_paro or perfil.editar_eliminar_paro)),
         'puede_exportar': request.user.is_superuser or (perfil and (perfil.es_admin or perfil.exportar_paros)),
         'puede_importar': request.user.is_superuser or (perfil and (perfil.es_admin or perfil.importar_paros)),
+        'paros_aceptados':     paros_aceptados,
+        'minutos_aceptados':   minutos_aceptados,
+        'paros_sin_aceptar':   paros_sin_aceptar,
+        'minutos_sin_aceptar': minutos_sin_aceptar,
     })
 
 
@@ -169,24 +188,61 @@ def crear_paro(request):
         if form.is_valid():
             paro = form.save(commit=False)
 
-            # Buscar en catálogos para llenar traducciones
-            falla_obj = CatalogoFalla.objects.filter(
-                area=paro.area, nombre_es=paro.falla
-            ).first()
-            equipo_obj = CatalogoEquipo.objects.filter(
-                area=paro.area, equipo_es=paro.equipo
-            ).first()
-            responsable_obj = CatalogoResponsable.objects.filter(
-                area=paro.area, responsable_es=paro.responsable
-            ).first()
+            # Resolver catálogos por pk (enviado por el autocomplete como campo oculto).
+            # Esto es independiente del idioma activo al momento de crear el paro.
+            texto_falla       = request.POST.get('falla', '').strip()
+            texto_equipo      = request.POST.get('equipo', '').strip()
+            texto_responsable = request.POST.get('responsable', '').strip()
 
-            # Llenar traducciones automáticamente desde catálogos
-            paro.falla_es       = falla_obj.nombre_es       if falla_obj       else paro.falla
-            paro.falla_en       = falla_obj.nombre_en       if falla_obj       else paro.falla
-            paro.equipo_es      = equipo_obj.equipo_es      if equipo_obj      else paro.equipo
-            paro.equipo_en      = equipo_obj.equipo_en      if equipo_obj      else paro.equipo
-            paro.responsable_es = responsable_obj.responsable_es if responsable_obj else paro.responsable
-            paro.responsable_en = responsable_obj.responsable_en if responsable_obj else paro.responsable
+            falla_pk       = request.POST.get('falla_pk', '').strip()
+            equipo_pk      = request.POST.get('equipo_pk', '').strip()
+            responsable_pk = request.POST.get('responsable_pk', '').strip()
+
+            falla_obj = (
+                CatalogoFalla.objects.filter(pk=falla_pk, area=paro.area).first()
+                if falla_pk.isdigit() else
+                CatalogoFalla.objects.filter(area=paro.area).filter(
+                    Q(nombre_es=texto_falla) | Q(nombre_en=texto_falla)
+                ).first()
+            )
+            equipo_obj = (
+                CatalogoEquipo.objects.filter(pk=equipo_pk, area=paro.area).first()
+                if equipo_pk.isdigit() else
+                CatalogoEquipo.objects.filter(area=paro.area).filter(
+                    Q(equipo_es=texto_equipo) | Q(equipo_en=texto_equipo)
+                ).first()
+            )
+            responsable_obj = (
+                CatalogoResponsable.objects.filter(pk=responsable_pk, area=paro.area).first()
+                if responsable_pk.isdigit() else
+                CatalogoResponsable.objects.filter(area=paro.area).filter(
+                    Q(responsable_es=texto_responsable) | Q(responsable_en=texto_responsable)
+                ).first()
+            )
+
+            # Llenar _es y _en directamente desde el catálogo.
+            # Si el catálogo no tiene traducción en un idioma, usar el otro.
+            # Si no hay match de catálogo (texto libre), ambas columnas guardan el texto enviado.
+            if falla_obj:
+                paro.falla_es = falla_obj.nombre_es or falla_obj.nombre_en or texto_falla
+                paro.falla_en = falla_obj.nombre_en or falla_obj.nombre_es or texto_falla
+            else:
+                paro.falla_es = texto_falla
+                paro.falla_en = texto_falla
+
+            if equipo_obj:
+                paro.equipo_es = equipo_obj.equipo_es or equipo_obj.equipo_en or texto_equipo
+                paro.equipo_en = equipo_obj.equipo_en or equipo_obj.equipo_es or texto_equipo
+            else:
+                paro.equipo_es = texto_equipo
+                paro.equipo_en = texto_equipo
+
+            if responsable_obj:
+                paro.responsable_es = responsable_obj.responsable_es or responsable_obj.responsable_en or texto_responsable
+                paro.responsable_en = responsable_obj.responsable_en or responsable_obj.responsable_es or texto_responsable
+            else:
+                paro.responsable_es = texto_responsable
+                paro.responsable_en = texto_responsable
 
             paro.save()
 
@@ -213,24 +269,58 @@ def editar_paro(request, paro_id):
         if form.is_valid():
             paro = form.save(commit=False)
 
-            # Buscar en catálogos para actualizar traducciones
-            falla_obj = CatalogoFalla.objects.filter(
-                area=paro.area, nombre_es=paro.falla
-            ).first()
-            equipo_obj = CatalogoEquipo.objects.filter(
-                area=paro.area, equipo_es=paro.equipo
-            ).first()
-            responsable_obj = CatalogoResponsable.objects.filter(
-                area=paro.area, responsable_es=paro.responsable
-            ).first()
+            # Resolver catálogos por pk (enviado por el autocomplete como campo oculto).
+            texto_falla       = request.POST.get('falla', '').strip()
+            texto_equipo      = request.POST.get('equipo', '').strip()
+            texto_responsable = request.POST.get('responsable', '').strip()
 
-            # Actualizar traducciones automáticamente desde catálogos
-            paro.falla_es       = falla_obj.nombre_es            if falla_obj       else paro.falla
-            paro.falla_en       = falla_obj.nombre_en            if falla_obj       else paro.falla
-            paro.equipo_es      = equipo_obj.equipo_es           if equipo_obj      else paro.equipo
-            paro.equipo_en      = equipo_obj.equipo_en           if equipo_obj      else paro.equipo
-            paro.responsable_es = responsable_obj.responsable_es if responsable_obj else paro.responsable
-            paro.responsable_en = responsable_obj.responsable_en if responsable_obj else paro.responsable
+            falla_pk       = request.POST.get('falla_pk', '').strip()
+            equipo_pk      = request.POST.get('equipo_pk', '').strip()
+            responsable_pk = request.POST.get('responsable_pk', '').strip()
+
+            falla_obj = (
+                CatalogoFalla.objects.filter(pk=falla_pk, area=paro.area).first()
+                if falla_pk.isdigit() else
+                CatalogoFalla.objects.filter(area=paro.area).filter(
+                    Q(nombre_es=texto_falla) | Q(nombre_en=texto_falla)
+                ).first()
+            )
+            equipo_obj = (
+                CatalogoEquipo.objects.filter(pk=equipo_pk, area=paro.area).first()
+                if equipo_pk.isdigit() else
+                CatalogoEquipo.objects.filter(area=paro.area).filter(
+                    Q(equipo_es=texto_equipo) | Q(equipo_en=texto_equipo)
+                ).first()
+            )
+            responsable_obj = (
+                CatalogoResponsable.objects.filter(pk=responsable_pk, area=paro.area).first()
+                if responsable_pk.isdigit() else
+                CatalogoResponsable.objects.filter(area=paro.area).filter(
+                    Q(responsable_es=texto_responsable) | Q(responsable_en=texto_responsable)
+                ).first()
+            )
+
+            # Actualizar _es y _en directamente desde el catálogo.
+            if falla_obj:
+                paro.falla_es = falla_obj.nombre_es or falla_obj.nombre_en or texto_falla
+                paro.falla_en = falla_obj.nombre_en or falla_obj.nombre_es or texto_falla
+            else:
+                paro.falla_es = texto_falla
+                paro.falla_en = texto_falla
+
+            if equipo_obj:
+                paro.equipo_es = equipo_obj.equipo_es or equipo_obj.equipo_en or texto_equipo
+                paro.equipo_en = equipo_obj.equipo_en or equipo_obj.equipo_es or texto_equipo
+            else:
+                paro.equipo_es = texto_equipo
+                paro.equipo_en = texto_equipo
+
+            if responsable_obj:
+                paro.responsable_es = responsable_obj.responsable_es or responsable_obj.responsable_en or texto_responsable
+                paro.responsable_en = responsable_obj.responsable_en or responsable_obj.responsable_es or texto_responsable
+            else:
+                paro.responsable_es = texto_responsable
+                paro.responsable_en = texto_responsable
 
             estatus_anterior = paro.estatus
             paro.save()

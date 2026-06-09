@@ -26,10 +26,13 @@ def catalogo_fallas_general(request):
             areas = areas.filter(id__in=perfil.areas_permitidas.all())
         else:
             areas = areas.none()
-    puede_gestionar = request.user.is_superuser or (perfil and (perfil.es_admin or perfil.gestionar_catalogos))
+    es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
     return render(request, 'paros_app/fallas/catalogo_fallas_general.html', {
-        'areas':           areas,
-        'puede_gestionar': puede_gestionar,
+        'areas':            areas,
+        'puede_gestionar':  es_admin or (perfil and perfil.gestionar_catalogos),
+        'puede_agregar':    es_admin or (perfil and perfil.agregar_catalogo_falla),
+        'puede_editar':     es_admin or (perfil and perfil.editar_catalogo_falla),
+        'puede_eliminar':   es_admin or (perfil and perfil.eliminar_catalogo_falla),
     })
 
 
@@ -49,19 +52,22 @@ def catalogo_fallas(request, area_id):
         qs = qs.filter(Q(nombre__icontains=q) | Q(codigo__icontains=q))
     paginator = Paginator(qs, 50)
     fallas    = paginator.get_page(request.GET.get('page', 1))
-    puede_gestionar = request.user.is_superuser or (perfil and (perfil.es_admin or perfil.gestionar_catalogos))
+    es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
     return render(request, 'paros_app/fallas/catalogo_fallas.html', {
-        'area':            area,
-        'fallas':          fallas,
-        'page_obj':        fallas,
-        'areas':           Area.objects.all(),
-        'q':               q,
-        'puede_gestionar': puede_gestionar,
+        'area':           area,
+        'fallas':         fallas,
+        'page_obj':       fallas,
+        'areas':          Area.objects.all(),
+        'q':              q,
+        'puede_gestionar': es_admin or (perfil and perfil.gestionar_catalogos),
+        'puede_agregar':   es_admin or (perfil and perfil.agregar_catalogo_falla),
+        'puede_editar':    es_admin or (perfil and perfil.editar_catalogo_falla),
+        'puede_eliminar':  es_admin or (perfil and perfil.eliminar_catalogo_falla),
     })
 
 
 @login_required
-@permiso_requerido('gestionar_catalogos')
+@permiso_requerido('eliminar_catalogo_falla')
 @require_http_methods(["POST"])
 def eliminar_falla(request, falla_id):
     falla = get_object_or_404(CatalogoFalla, id=falla_id)
@@ -323,7 +329,7 @@ def exportar_fallas(request, area_id=None):
 
 
 @login_required
-@permiso_requerido('gestionar_catalogos')
+@permiso_requerido('agregar_catalogo_falla')
 def agregar_falla(request, area_id):
     area = get_object_or_404(Area, id=area_id)
     if request.method == 'POST':
@@ -355,7 +361,7 @@ def agregar_falla(request, area_id):
     return redirect('paros:catalogo_fallas_general')
 
 @login_required
-@permiso_requerido('gestionar_catalogos')
+@permiso_requerido('editar_catalogo_falla')
 def editar_falla(request, falla_id):
     falla = get_object_or_404(CatalogoFalla, id=falla_id)
     if request.method == 'POST':

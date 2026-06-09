@@ -134,3 +134,10 @@
 /* ── catálogos (equipos, fallas_general, responsables) ────────────────────── */
 .area-header:hover          { background: var(--indigo-lt) !important; }
 .area-content.collapsed     { display: none; }
+
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+html[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+body[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+body[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}

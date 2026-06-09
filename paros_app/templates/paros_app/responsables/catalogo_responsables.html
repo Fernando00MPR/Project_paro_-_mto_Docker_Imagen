@@ -58,19 +58,21 @@
             </span>
             <a href="{% url 'paros:exportar_responsables_area' area.id %}" class="btn btn-ghost btn-sm">↓ {% trans "Exportar" %}</a>
             {% if puede_gestionar %}
-            <a href="{% url 'paros:importar_responsables_por_area' area.id %}" class="btn btn-primary btn-sm">↑ {% trans "Importar" %}</a>
-            {% if area.catalogo_responsables.count > 0 %}
-            <button type="button" class="btn btn-sm"
-                    style="border-color:var(--red); color:var(--red); background:transparent;"
-                    onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'responsables')">
-                🗑 {% trans "Limpiar" %}
-            </button>
+                <a href="{% url 'paros:importar_responsables_por_area' area.id %}" class="btn btn-primary btn-sm">↑ {% trans "Importar" %}</a>
             {% endif %}
-            <button type="button" class="btn btn-primary btn-sm"
-                    onclick="abrirModalAgregar('{{ area.id }}', '{{ area.nombre }}', '/catalogos/responsables/agregar/{{ area.id }}/')">
-                + {% trans "Agregar" %}
-            </button>
+            {% if puede_gestionar and area.catalogo_responsables.count > 0 %}
+                <button type="button" class="btn btn-sm"
+                        style="border-color:var(--red); color:var(--red); background:transparent;"
+                        onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'responsables')">
+                    🗑 {% trans "Limpiar" %}
+                </button>
             {% endif %}
+            {% if puede_agregar %}
+                <button type="button" class="btn btn-primary btn-sm"
+                        onclick="abrirModalAgregar('{{ area.id }}', '{{ area.nombre }}', '/catalogos/responsables/agregar/{{ area.id }}/')">
+                    + {% trans "Agregar" %}
+                </button>
+                {% endif %}
             <svg id="chev-area-{{ area.id }}" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                  style="transition:transform .25s; color:var(--text-3); cursor:pointer; flex-shrink:0;"
                  onclick="toggleArea('area-{{ area.id }}')">
@@ -85,7 +87,7 @@
                 <thead><tr>
                     <th style="width:40px;">{% trans "Código" %}</th>
                     <th style="width:400px;">{% trans "Responsable" %}</th>
-                    {% if puede_gestionar %}
+                    {% if puede_editar or puede_eliminar %}
                     <th style="width:90px;">{% trans "Acción" %}</th>
                     {% endif %}
                 </tr></thead>
@@ -94,17 +96,21 @@
                     <tr data-busqueda="{{ resp.codigo|lower }} {{ resp.responsable|lower }}">
                         <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--indigo);">{{ resp.codigo }}</td>
                         <td style="font-weight:500;">{{ resp.responsable }}</td>
-                        {% if puede_gestionar %}
+                        {% if puede_editar or puede_eliminar %}
                         <td>
                             <div style="display:flex; gap:6px;">
+                                {% if puede_editar %}
                                 <button type="button" class="btn btn-ghost btn-sm" style="min-width:80px;"
                                         onclick="abrirModalEditar('{{ resp.id }}', '{{ resp.codigo }}', '{{ resp.responsable }}', '/catalogos/responsables/editar/{{ resp.id }}/', '', '{{ resp.responsable_es }}', '{{ resp.responsable_en }}')">
                                     ✏️ {% trans "Editar" %}
                                 </button>
+                                {% endif %}
+                                {% if puede_eliminar %}
                                 <button type="button" class="btn btn-sm" style="min-width:80px; border-color:var(--red); color:var(--red); background:transparent;"
                                         onclick="confirmarEliminar('{{ resp.id }}', '{{ resp.responsable }}', '/catalogos/responsables/eliminar/{{ resp.id }}/')">
                                     🗑  {% trans "Eliminar" %}
                                 </button>
+                                {% endif %}
                             </div>
                         </td>
                         {% endif %}
@@ -112,7 +118,7 @@
                     {% endfor %}
                 </tbody>
                 <tbody id="nores-{{ area.id }}" style="display:none;">
-                    <tr><td colspan="{% if puede_gestionar %}3{% else %}2{% endif %}" style="text-align:center;padding:18px;color:var(--text-3);font-size:13px;">{% trans "Sin resultados para esta búsqueda." %}</td></tr>
+                    <tr><td colspan="{% if puede_editar or puede_eliminar %}3{% else %}2{% endif %}" style="text-align:center;padding:18px;color:var(--text-3);font-size:13px;">{% trans "Sin resultados para esta búsqueda." %}</td></tr>
                 </tbody>
             </table>
         </div>

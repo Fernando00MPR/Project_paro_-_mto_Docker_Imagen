@@ -1,6 +1,7 @@
 {% extends "menu_app/base_menu.html" %}
+{% load i18n %}
 {% load static %}
-{% block title %}Plan de mantenimiento{% endblock %}
+{% block title %}{% trans "Plan de mantenimiento" %}{% endblock %}
 {% block content %}
 
 <!-- ── Encabezado ── -->
@@ -9,7 +10,7 @@
     <div class="card-header">
         <div>
             <div class="card-title">
-                Plan de mantenimiento
+                {% trans "Plan de mantenimiento" %}
                 {% if filtro_area %}
                     {% for a in areas_menu %}
                         {% if a.pk|stringformat:"s" == filtro_area %}
@@ -30,11 +31,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                Exportar Excel S{{ filtro_semana }}
+                {% trans "Exportar Excel S" %}{{ filtro_semana }}
             </a>
             {% endif %}
-            <a href="{% url 'mto:importar_plan' %}" class="btn btn-ghost">Importar Excel</a>
-            <a href="{% url 'mto:nuevo_plan' %}" class="btn btn-primary">+ Nueva tarea</a>
+            <a href="{% url 'mto:importar_plan' %}" class="btn btn-ghost">{% trans "Importar Excel" %}</a>
+            <a href="{% url 'mto:nuevo_plan' %}" class="btn btn-primary">+ {% trans "Nueva tarea" %}</a>
+            {% include 'menu_app/_language_selector.html' %}
         </div>
     </div>
 
@@ -46,17 +48,17 @@
         <input type="hidden" name="area" value="{{ filtro_area }}">
         {% endif %}
         <div class="filter-group">
-            <label>Semana</label>
+            <label>{% trans "Semana" %}</label>
             <input type="number" name="semana" min="1" max="52"
                    value="{{ filtro_semana|default:'' }}" placeholder="Ej: 17" style="width:90px;">
         </div>
         <div class="filter-group">
-            <label>Año</label>
+            <label>{% trans "Año" %}</label>
             <input type="number" name="anio" min="2020" max="2099"
                    value="{{ filtro_anio|default:anio_actual }}" style="width:90px;">
         </div>
         <div class="filter-group">
-            <label>Frecuencia</label>
+            <label>{% trans "Frecuencia" %}</label>
             <select name="frecuencia">
                 <option value="">Todas</option>
                 {% for val, label in frecuencias %}
@@ -65,15 +67,15 @@
             </select>
         </div>
         <div class="filter-group">
-            <label>Buscar</label>
+            <label>{% trans "Buscar" %}</label>
             <input type="text" name="q" value="{{ busqueda }}" placeholder="Codigo, equipo o rutina...">
         </div>
         <div class="filter-group" style="justify-content:flex-end; margin-top:auto;">
             <label>&nbsp;</label>
             <div style="display:flex; gap:8px; align-items:flex-end; height:100%;">
-                <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+                <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
                 <a href="{% url 'mto:lista_plan' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
-                   class="btn btn-ghost btn-sm">Limpiar</a>
+                   class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
             </div>
         </div>
     </form>
@@ -81,13 +83,11 @@
     <!-- ── Indicadores de semana ── -->
     {% if filtro_semana %}
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:16px;">
-
         <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Órdenes S{{ filtro_semana }}</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">{{ stats_semana.total }}</div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{{ stats_semana.completadas }} completadas</div>
         </div>
-
         <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Pendientes</div>
             <div style="font-size:24px; font-weight:500; line-height:1;
@@ -96,7 +96,6 @@
             </div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">sin completar esta semana</div>
         </div>
-
         <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Tiempo total</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">
@@ -108,20 +107,17 @@
             </div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">de mantenimiento programado</div>
         </div>
-
     </div>
     {% else %}
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:16px;">
-
         <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Planes activos</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">{{ planes.paginator.count }}</div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">en el plan de mantenimiento</div>
         </div>
-
     </div>
     {% endif %}
-    
+
 </div>
 
 <div class="card">
@@ -135,7 +131,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/>
                 </svg>
-                Columnas
+                {% trans "Columnas" %}
             </button>
             <div id="col-picker" style="display:none; position:absolute; right:0; top:36px; z-index:100;
                                         background:var(--white); border:1px solid var(--border);
@@ -143,82 +139,54 @@
                                         box-shadow:var(--shadow-md);">
                 <div style="font-size:11px; font-weight:600; color:var(--text-3);
                             text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">
-                    Mostrar columnas
+                    {% trans "Mostrar columnas" %}
                 </div>
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <label class="col-toggle" data-col="col-area">
-                        <input type="checkbox" checked onchange="toggleCol('col-area', this.checked)"> Area
-                    </label>
-                    <label class="col-toggle" data-col="col-codigo">
-                        <input type="checkbox" checked onchange="toggleCol('col-codigo', this.checked)"> Codigo
-                    </label>
-                    <label class="col-toggle" data-col="col-rutina">
-                        <input type="checkbox" checked onchange="toggleCol('col-rutina', this.checked)"> Rutina
-                    </label>
-                    <label class="col-toggle" data-col="col-actividad">
-                        <input type="checkbox" checked onchange="toggleCol('col-actividad', this.checked)"> Actividad
-                    </label>
-                    <label class="col-toggle" data-col="col-duracion">
-                        <input type="checkbox" checked onchange="toggleCol('col-duracion', this.checked)"> Duracion
-                    </label>
-                    <label class="col-toggle" data-col="col-frecuencia">
-                        <input type="checkbox" checked onchange="toggleCol('col-frecuencia', this.checked)"> Frecuencia
-                    </label>
-                    <label class="col-toggle" data-col="col-plan">
-                        <input type="checkbox" onchange="toggleCol('col-plan', this.checked)"> N° Plan
-                    </label>
-                    <label class="col-toggle" data-col="col-sinicio">
-                        <input type="checkbox" onchange="toggleCol('col-sinicio', this.checked)"> Semana inicio
-                    </label>
-                    <label class="col-toggle" data-col="col-proximo">
-                        <input type="checkbox" checked onchange="toggleCol('col-proximo', this.checked)"> Proximo mantenimiento
-                    </label>
-                    <label class="col-toggle" data-col="col-nombre-equipo">
-                        <input type="checkbox" onchange="toggleCol('col-nombre-equipo', this.checked)"> Equipo
-                    </label>
-                    <label class="col-toggle" data-col="col-locacion">
-                        <input type="checkbox" onchange="toggleCol('col-locacion', this.checked)"> Locacion
-                    </label>
-                    <label class="col-toggle" data-col="col-tipo">
-                        <input type="checkbox" onchange="toggleCol('col-tipo', this.checked)"> Tipo de mantenimiento
-                    </label>
-                    <label class="col-toggle" data-col="col-prioridad">
-                        <input type="checkbox" onchange="toggleCol('col-prioridad', this.checked)"> Prioridad
-                    </label>
-                    <label class="col-toggle" data-col="col-estatus">
-                        <input type="checkbox" onchange="toggleCol('col-estatus', this.checked)"> Estatus
-                    </label>
+                    <label class="col-toggle" data-col="col-area"><input type="checkbox" checked onchange="toggleCol('col-area', this.checked)"> {% trans "Area" %}</label>
+                    <label class="col-toggle" data-col="col-codigo"><input type="checkbox" checked onchange="toggleCol('col-codigo', this.checked)"> {% trans "Codigo" %}</label>
+                    <label class="col-toggle" data-col="col-rutina"><input type="checkbox" checked onchange="toggleCol('col-rutina', this.checked)"> {% trans "Rutina" %}</label>
+                    <label class="col-toggle" data-col="col-actividad"><input type="checkbox" checked onchange="toggleCol('col-actividad', this.checked)"> {% trans "Actividad" %}</label>
+                    <label class="col-toggle" data-col="col-duracion"><input type="checkbox" checked onchange="toggleCol('col-duracion', this.checked)"> {% trans "Duración" %}</label>
+                    <label class="col-toggle" data-col="col-frecuencia"><input type="checkbox" checked onchange="toggleCol('col-frecuencia', this.checked)"> {% trans "Frecuencia" %}</label>
+                    <label class="col-toggle" data-col="col-plan"><input type="checkbox" onchange="toggleCol('col-plan', this.checked)"> {% trans "N° Plan" %}</label>
+                    <label class="col-toggle" data-col="col-sinicio"><input type="checkbox" onchange="toggleCol('col-sinicio', this.checked)"> {% trans "Semana inicio" %}</label>
+                    <label class="col-toggle" data-col="col-proximo"><input type="checkbox" checked onchange="toggleCol('col-proximo', this.checked)"> {% trans "Proximo mantenimiento" %}</label>
+                    <label class="col-toggle" data-col="col-nombre-equipo"><input type="checkbox" onchange="toggleCol('col-nombre-equipo', this.checked)"> {% trans "Equipo" %}</label>
+                    <label class="col-toggle" data-col="col-locacion"><input type="checkbox" onchange="toggleCol('col-locacion', this.checked)"> {% trans "Locación" %}</label>
+                    <label class="col-toggle" data-col="col-tipo"><input type="checkbox" onchange="toggleCol('col-tipo', this.checked)"> {% trans "Tipo de mantenimiento" %}</label>
+                    <label class="col-toggle" data-col="col-prioridad"><input type="checkbox" onchange="toggleCol('col-prioridad', this.checked)"> {% trans "Prioridad" %}</label>
+                    <label class="col-toggle" data-col="col-estatus"><input type="checkbox" onchange="toggleCol('col-estatus', this.checked)"> {% trans "Estatus" %}</label>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ── Tabla ── -->
-    <div class="table-wrap">
+    <div class="table-wrap" style="overflow-x:auto;">
         <table style="table-layout:auto; width:auto; min-width:100%;">
             <thead>
                 <tr>
-                    <th class="col-area"          style="text-align:center;">Area</th>
-                    <th class="col-codigo"        style="text-align:center; min-width: 100px;">Codigo</th>
-                    <th class="col-rutina"        style="text-align:center; min-width: 120px;">Rutina</th>
-                    <th class="col-actividad"     style="text-align:center;">Actividad</th>
-                    <th class="col-duracion"      style="text-align:center;">Dur.</th>
-                    <th class="col-frecuencia"    style="text-align:center;">Frecuencia</th>
-                    <th class="col-plan"          style="text-align:center;">N°<br>Plan</th>
-                    <th class="col-sinicio"       style="display:none; text-align:center; min-width: 130px;">Semana<br>inicio</th>
+                    <th class="col-area"          style="text-align:center;">{% trans "Área" %}</th>
+                    <th class="col-codigo"        style="text-align:center; width:140px;">{% trans "Código" %}</th>
+                    <th class="col-rutina"        style="text-align:center; width:160px;">{% trans "Rutina" %}</th>
+                    <th class="col-actividad"     style="text-align:center; width:550px;">{% trans "Actividad" %}</th>
+                    <th class="col-duracion"      style="text-align:center; width:60px; ">{% trans "Dur." %}</th>
+                    <th class="col-frecuencia"    style="text-align:center; width:150px;">{% trans "Frecuencia" %}</th>
+                    <th class="col-plan"          style="text-align:center; width:60px; ">N°<br>{% trans "Plan" %}</th>
+                    <th class="col-sinicio"       style="display:none; text-align:center; width:130px;">{% trans "Semana" %}<br>{% trans "inicio" %}</th>
                     {% if filtro_semana %}
-                    <th style="text-align:center;">Semana<br>actual</th>
+                    <th style="text-align:center;">{% trans "Semana" %}<br>{% trans "actual" %}</th>
                     {% endif %}
-                    <th class="col-proximo"       style="text-align:center;">Proximo<br>mantenimiento</th>
+                    <th class="col-proximo"       style="text-align:center; width:180px;">{% trans "Proximo" %}<br>{% trans "mantenimiento" %}</th>
                     {% if filtro_semana %}
-                    <th style="text-align:center;">Responsable</th>
+                    <th style="text-align:center;">{% trans "Responsable" %}</th>
                     {% endif %}
-                    <th class="col-nombre-equipo" style="display:none; text-align:center;">Equipo</th>
-                    <th class="col-locacion"      style="display:none; text-align:center;">Locacion</th>
-                    <th class="col-tipo"          style="display:none; text-align:center;">Tipo<br>Mantenimiento</th>
-                    <th class="col-prioridad"     style="display:none; text-align:center;">Prioridad</th>
-                    <th class="col-estatus"       style="display:none; text-align:center;">Estatus</th>
-                    <th>Acciones</th>
+                    <th class="col-nombre-equipo" style="display:none; text-align:center;">{% trans "Equipo" %}</th>
+                    <th class="col-locacion"      style="display:none; text-align:center;">{% trans "Locación" %}</th>
+                    <th class="col-tipo"          style="display:none; text-align:center;">{% trans "Tipo" %}<br>{% trans "Mantenimiento" %}</th>
+                    <th class="col-prioridad"     style="display:none; text-align:center;">{% trans "Prioridad" %}</th>
+                    <th class="col-estatus"       style="display:none; text-align:center;">{% trans "Estatus" %}</th>
+                    <th style="text-align:center;">{% trans "Acciones" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -229,68 +197,45 @@
                     <td class="col-rutina" style="text-align:center;">{{ p.rutina }}</td>
                     <td class="col-actividad">{{ p.actividad }}</td>
                     <td class="col-duracion" style="text-align:center;">
-                        {% if p.duracion_minutos < 60 %}
-                            {{ p.duracion_minutos }} min
-                        {% else %}
-                            {% widthratio p.duracion_minutos 60 1 %} h
-                        {% endif %}
+                        {% if p.duracion_minutos < 60 %}{{ p.duracion_minutos }} min
+                        {% else %}{% widthratio p.duracion_minutos 60 1 %} h{% endif %}
                     </td>
                     <td class="col-frecuencia" style="text-align:center;">
                         <span class="badge badge-t1">{{ p.get_frecuencia_display }}</span>
                     </td>
                     <td class="col-plan" style="text-align:center;">{{ p.plan_trabajo }}</td>
 
-                    <!-- Semana inicio -->
                     <td class="col-sinicio" style="display:none;">
                         {% if p.semana_inicio and p.anio_inicio %}
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center;">
-                            <span style="font-size:12px; font-weight:600; color:var(--text-2);">
-                                S{{ p.semana_inicio }}/{{ p.anio_inicio }}
-                            </span>
-                            <span style="font-size:11px; color:var(--text-3);">
-                                {{ p.semana_inicio_lunes|date:"d M" }} – {{ p.semana_inicio_domingo|date:"d M Y" }}
-                            </span>
+                            <span style="font-size:12px; font-weight:600; color:var(--text-2);">S{{ p.semana_inicio }}/{{ p.anio_inicio }}</span>
+                            <span style="font-size:11px; color:var(--text-3);">{{ p.semana_inicio_lunes|date:"d M" }} – {{ p.semana_inicio_domingo|date:"d M Y" }}</span>
                         </div>
                         {% else %}
                         <span style="color:var(--text-3); display:block; text-align:center;">--</span>
                         {% endif %}
                     </td>
 
-                    <!-- Semana actual (solo con filtro de semana) -->
                     {% if filtro_semana %}
                     <td style="text-align:center;">
                         {% if p.semana_actual %}
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
-                            <span style="font-size:12px; font-weight:600; color:#065F46;">
-                                S{{ p.semana_actual.semana }}/{{ p.semana_actual.lunes|date:"Y" }}
-                            </span>
-                            <span style="font-size:11px; color:var(--text-3);">
-                                {{ p.semana_actual.lunes|date:"d M" }} – {{ p.semana_actual.domingo|date:"d M" }}
-                            </span>
+                            <span style="font-size:12px; font-weight:600; color:#065F46;">S{{ p.semana_actual.semana }}/{{ p.semana_actual.lunes|date:"Y" }}</span>
+                            <span style="font-size:11px; color:var(--text-3);">{{ p.semana_actual.lunes|date:"d M" }} – {{ p.semana_actual.domingo|date:"d M" }}</span>
                         </div>
-                        {% else %}
-                        <span style="color:var(--text-3);">--</span>
-                        {% endif %}
+                        {% else %}<span style="color:var(--text-3);">--</span>{% endif %}
                     </td>
                     {% endif %}
 
-                    <!-- Proximo mantenimiento -->
                     <td class="col-proximo">
                         {% if p.proximo %}
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center;">
-                            <span style="font-size:12px; font-weight:600; color:var(--indigo);">
-                                S{{ p.proximo.semana }}/{{ p.proximo.lunes|date:"Y" }}
-                            </span>
-                            <span style="font-size:11px; color:var(--text-2);">
-                                {{ p.proximo.lunes|date:"d M" }} – {{ p.proximo.domingo|date:"d M Y" }}
-                            </span>
+                            <span style="font-size:12px; font-weight:600; color:var(--indigo);">S{{ p.proximo.semana }}/{{ p.proximo.lunes|date:"Y" }}</span>
+                            <span style="font-size:11px; color:var(--text-2);">{{ p.proximo.lunes|date:"d M" }} – {{ p.proximo.domingo|date:"d M Y" }}</span>
                         </div>
-                        {% else %}
-                        <span style="color:var(--text-3); display:block; text-align:center;">--</span>
-                        {% endif %}
+                        {% else %}<span style="color:var(--text-3); display:block; text-align:center;">--</span>{% endif %}
                     </td>
 
-                    <!-- Responsable (solo con filtro de semana) -->
                     {% if filtro_semana %}
                     <td style="text-align:center;">
                         <select onchange="asignarResponsable({{ p.pk }}, {{ filtro_semana }}, this)"
@@ -299,8 +244,7 @@
                                        color:var(--text); outline:none; min-width:150px; cursor:pointer;">
                             <option value="">-- Sin asignar --</option>
                             {% for r in p.responsables_area %}
-                            <option value="{{ r.pk }}"
-                                {% if p.registro_semana and p.registro_semana.responsable_id == r.pk %}selected{% endif %}>
+                            <option value="{{ r.pk }}" {% if p.registro_semana and p.registro_semana.responsable_id == r.pk %}selected{% endif %}>
                                 {{ r.numero_nomina }} — {{ r.nombre }} {{ r.apellidos }}
                             </option>
                             {% endfor %}
@@ -308,57 +252,52 @@
                         {% if p.registro_semana and p.registro_semana.estado %}
                         <div style="margin-top:4px;">
                             {% if p.registro_semana.estado == 'completada' %}
-                            <span style="font-size:10px; font-weight:600; color:#065F46;
-                                         background:#D1FAE5; padding:2px 8px; border-radius:20px;">Completada</span>
+                            <span style="font-size:10px; font-weight:600; color:#065F46; background:#D1FAE5; padding:2px 8px; border-radius:20px;">{% trans "Completada" %}</span>
                             {% elif p.registro_semana.estado == 'pendiente' %}
-                            <span style="font-size:10px; font-weight:600; color:#92400E;
-                                         background:#FEF3C7; padding:2px 8px; border-radius:20px;">Pendiente</span>
+                            <span style="font-size:10px; font-weight:600; color:#92400E; background:#FEF3C7; padding:2px 8px; border-radius:20px;">{% trans "Pendiente" %}</span>
                             {% elif p.registro_semana.estado == 'reagendada' %}
-                            <span style="font-size:10px; font-weight:600; color:#3730A3;
-                                         background:#E0E7FF; padding:2px 8px; border-radius:20px;">Reagendada</span>
+                            <span style="font-size:10px; font-weight:600; color:#3730A3; background:#E0E7FF; padding:2px 8px; border-radius:20px;">{% trans "Reagendada" %}</span>
                             {% elif p.registro_semana.estado == 'cancelada' %}
-                            <span style="font-size:10px; font-weight:600; color:#991B1B;
-                                         background:#FEE2E2; padding:2px 8px; border-radius:20px;">Cancelada</span>
+                            <span style="font-size:10px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px;">{% trans "Cancelada" %}</span>
                             {% endif %}
                         </div>
                         {% endif %}
                     </td>
                     {% endif %}
 
-                    <!-- Columnas ocultas por defecto -->
                     <td class="col-nombre-equipo" style="display:none;">{{ p.nombre_equipo|default:"--" }}</td>
-                    <td class="col-locacion"      style="display:none;">{{ p.locacion|default:"--" }}</td>
+                    <td class="col-locacion"      style="display:none; text-align:center;">{{ p.locacion|default:"--" }}</td>
                     <td class="col-tipo"          style="display:none; text-align:center;">{{ p.get_tipo_mto_display|default:"--" }}</td>
                     <td class="col-prioridad"     style="display:none; text-align:center;">{{ p.get_prioridad_display|default:"--" }}</td>
                     <td class="col-estatus"       style="display:none; text-align:center;">
                         {% if p.estatus == 'Abierta' %}
-                        <span style="font-size:11px; font-weight:600; color:#065F46; background:#D1FAE5; padding:2px 8px; border-radius:20px;">Abierta</span>
+                        <span style="font-size:11px; font-weight:600; color:#065F46; background:#D1FAE5; padding:2px 8px; border-radius:20px;">{% trans "Abierta" %}</span>
                         {% elif p.estatus == 'Cerrada' %}
-                        <span style="font-size:11px; font-weight:600; color:#6B7280; background:#F3F4F6; padding:2px 8px; border-radius:20px;">Cerrada</span>
+                        <span style="font-size:11px; font-weight:600; color:#6B7280; background:#F3F4F6; padding:2px 8px; border-radius:20px;">{% trans "Cerrada" %}</span>
                         {% elif p.estatus == 'Cancelada' %}
-                        <span style="font-size:11px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px;">Cancelada</span>
+                        <span style="font-size:11px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px;">{% trans "Cancelada" %}</span>
                         {% endif %}
                     </td>
 
-                    <!-- Acciones -->
-                    <td>
+                    <td style="align-items:center;">
                         <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:nowrap;">
-                            <button onclick="abrirModal({{ p.pk }})" class="btn btn-ghost btn-sm"
-                                    style="padding:4px 8px; white-space:nowrap;">Ver</button>
-                            <a href="{% url 'mto:editar_plan' p.pk %}" class="btn btn-ghost btn-sm"
-                               style="padding:4px 8px; white-space:nowrap;">Editar</a>
-                            <button type="button" class="btn btn-danger btn-sm"
-                                    style="padding:4px 8px; white-space:nowrap;"
-                                    onclick="confirmarEliminar('{% url 'mto:eliminar_plan' p.pk %}')">
-                                Eliminar
-                            </button>
+                            <button onclick="abrirModal({{ p.pk }})" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Ver" %}</button>
+
+                            {% if request.user.is_superuser or request.user.perfil.es_admin or request.user.acceso_mto.editar_plan_mantenimiento %}
+                            <a href="{% url 'mto:editar_plan' p.pk %}" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Editar" %}</a>
+                            {% endif %}
+                            
+                            {% if request.user.is_superuser or request.user.perfil.es_admin or request.user.acceso_mto.editar_plan_mantenimiento %}
+                            <button type="button" class="btn btn-danger btn-sm" style="padding:4px 8px; white-space:nowrap;"
+                                    onclick="confirmarEliminar('{% url 'mto:eliminar_plan' p.pk %}')">{% trans "Eliminar" %}</button>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
                     <td colspan="12" style="text-align:center; color:var(--text-3); padding:24px;">
-                        No hay tareas registradas. <a href="{% url 'mto:nuevo_plan' %}">Agregar primera tarea</a>
+                        {% trans "No hay tareas registradas." %} <a href="{% url 'mto:nuevo_plan' %}">{% trans "Agregar primera tarea" %}</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -368,53 +307,33 @@
 
     <!-- ── Paginación ── -->
     {% if planes.has_other_pages or planes.paginator.num_pages > 1 %}
-    <div style="display:flex; justify-content:space-between; align-items:center;
-                padding:14px 0; margin-top:4px;">
-
-        <!-- Páginas -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
         <div style="display:flex; align-items:center; gap:4px;">
             {% if planes.has_previous %}
             <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ planes.previous_page_number }}"
-               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-                      border:1px solid var(--border); border-radius:6px; color:var(--text-2);
-                      text-decoration:none; font-size:13px;">‹</a>
+               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--text-2); text-decoration:none; font-size:13px;">‹</a>
             {% endif %}
-
             {% for num in planes.paginator.page_range %}
                 {% if planes.number == num %}
-                <span style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-                             background:var(--indigo); color:#fff; border-radius:6px; font-size:13px; font-weight:600;">
-                    {{ num }}
-                </span>
+                <span style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; background:var(--indigo); color:#fff; border-radius:6px; font-size:13px; font-weight:600;">{{ num }}</span>
                 {% elif num > planes.number|add:'-3' and num < planes.number|add:'3' %}
                 <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ num }}"
-                   style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-                          border:1px solid var(--border); border-radius:6px; color:var(--text-2);
-                          text-decoration:none; font-size:13px;">{{ num }}</a>
+                   style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--text-2); text-decoration:none; font-size:13px;">{{ num }}</a>
                 {% endif %}
             {% endfor %}
-
             {% if planes.has_next %}
             <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ planes.next_page_number }}"
-               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-                      border:1px solid var(--border); border-radius:6px; color:var(--text-2);
-                      text-decoration:none; font-size:13px;">›</a>
+               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--text-2); text-decoration:none; font-size:13px;">›</a>
             {% endif %}
         </div>
-
-        <!-- Selector de cantidad -->
         <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
-            <span>Mostrar</span>
+            <span>{% trans "Mostrar" %}</span>
             {% for n in perpage_opts %}
             <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ n }}&page=1"
-               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-                      border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;
-                      {% if per_page == n %}background:var(--indigo); color:#fff;{% else %}border:1px solid var(--border); color:var(--text-2);{% endif %}">
-                {{ n }}
-            </a>
+               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;
+                      {% if per_page == n %}background:var(--indigo); color:#fff;{% else %}border:1px solid var(--border); color:var(--text-2);{% endif %}">{{ n }}</a>
             {% endfor %}
         </div>
-
     </div>
     {% endif %}
 
@@ -426,8 +345,7 @@
             z-index:1000; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:14px; width:min(860px,95vw);
                 box-shadow:0 8px 40px rgba(0,0,0,.18); overflow:hidden; position:relative;">
-        <iframe id="modal-iframe" src=""
-                style="width:100%; height:940px; border:none; display:block;"></iframe>
+        <iframe id="modal-iframe" src="" style="width:100%; height:940px; border:none; display:block;"></iframe>
     </div>
 </div>
 
@@ -437,20 +355,13 @@
             z-index:2000; align-items:center; justify-content:center;">
     <div style="background:var(--white); border-radius:14px; padding:28px 32px;
                 min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">
-            Eliminar plan
-        </div>
-        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">
-            Esta accion no se puede deshacer. ¿Confirmas que deseas eliminar este plan?
-        </div>
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar plan" %}</div>
+        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">{% trans "Esta accion no se puede deshacer. ¿Confirmas que deseas eliminar este plan?" %}</div>
         <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button onclick="cerrarModalEliminar()" class="btn btn-ghost">Cancelar</button>
+            <button onclick="cerrarModalEliminar()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
             <form id="form-eliminar" method="post" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger"
-                        style="background:#EF4444; color:#fff; border-color:#EF4444;">
-                    Si, eliminar
-                </button>
+                <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Si, eliminar" %}</button>
             </form>
         </div>
     </div>
@@ -464,35 +375,89 @@
             align-items:center; gap:8px; z-index:9999; white-space:nowrap;">
 </div>
 
-<!-- Variables de Django para el JS -->
-<script>
-    window.MTO_CONFIG = {
-        anio_actual: {{ anio_actual }},
-        csrf_token:  '{{ csrf_token }}'
-    };
-</script>
-
 <!-- Overlay exportar Excel -->
 <div id="overlay-exportar"
      style="display:none; position:fixed; inset:0; background:rgba(20,18,60,0.6);
             z-index:9000; align-items:center; justify-content:center; flex-direction:column; gap:16px;">
     <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
         <div style="width:64px; height:64px; border:5px solid rgba(255,255,255,0.25);
-                    border-top-color:#fff; border-radius:50%;
-                    animation:overlay-spin 0.9s linear infinite;"></div>
-        <span style="font-size:14px; font-weight:500; color:#fff;" id="overlay-msg">Calculando planes...</span>
-        <span style="font-size:12px; color:rgba(255,255,255,0.6);">Esto puede tomar unos segundos</span>
+                    border-top-color:#fff; border-radius:50%; animation:overlay-spin 0.9s linear infinite;"></div>
+        <span style="font-size:14px; font-weight:500; color:#fff;" id="overlay-msg">{% trans "Calculando planes..." %}</span>
+        <span style="font-size:12px; color:rgba(255,255,255,0.6);">{% trans "Esto puede tomar unos segundos" %}</span>
     </div>
 </div>
+<style>@keyframes overlay-spin { to { transform: rotate(360deg); } }</style>
 
-<style>
-@keyframes overlay-spin { to { transform: rotate(360deg); } }
-</style>
+<!-- Modal seguimiento -->
+<div id="modal-seg-padre"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
+            z-index:3000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:24px 28px;
+                min-width:360px; max-width:480px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div style="font-size:14px; font-weight:600; color:#1E1B4B; margin-bottom:4px;" id="mseg-titulo">{% trans "Nuevo seguimiento" %}</div>
+        <div style="font-size:11px; color:#9CA3AF; margin-bottom:16px;" id="mseg-subtitulo"></div>
+
+        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
+            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Problema encontrado" %} *</label>
+            <textarea id="mseg-problema" rows="3" placeholder="Describe el problema..."
+                      style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical;"></textarea>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
+            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Acción realizada" %}</label>
+            <textarea id="mseg-accion" rows="2" placeholder="Describe la acción tomada..."
+                      style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical;"></textarea>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:5px; position:relative; margin-bottom:14px;">
+            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Responsable" %}</label>
+            <input type="text" id="mseg-responsable" placeholder="Buscar responsable..." autocomplete="off"
+                style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px; width:100%;">
+            <div id="mseg-resp-dropdown" style="display:none; position:absolute; left:0; right:0; top:100%;
+                background:var(--white); border:1px solid var(--indigo); border-top:none;
+                border-radius:0 0 7px 7px; z-index:5000; max-height:180px; overflow-y:auto;
+                box-shadow:0 4px 16px rgba(0,0,0,.15);"></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
+            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Fecha compromiso" %}</label>
+            <input type="date" id="mseg-fecha"
+                style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px;">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
+            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Estatus" %}</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="mseg-pill" data-val="pendiente" onclick="msegEstatus('pendiente')"
+                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid #854F0B; background:#FAEEDA; color:#854F0B;">{% trans "Pendiente" %}</button>
+                <button type="button" class="mseg-pill" data-val="en_proceso" onclick="msegEstatus('en_proceso')"
+                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #E5E4F0; background:#fff; color:#6B7280;">{% trans "En proceso" %}</button>
+                <button type="button" class="mseg-pill" data-val="completado" onclick="msegEstatus('completado')"
+                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #E5E4F0; background:#fff; color:#6B7280;">{% trans "Completado" %}</button>
+            </div>
+            <input type="hidden" id="mseg-estatus" value="pendiente">
+            <input type="hidden" id="mseg-id" value="">
+            <input type="hidden" id="mseg-registro-pk" value="">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:16px;">
+            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Notas adicionales" %}</label>
+            <textarea id="mseg-notas" rows="2" placeholder="Notas opcionales..."
+                      style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical;"></textarea>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button type="button" onclick="cerrarMseg()"
+                    style="padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; border:1px solid #E5E4F0; background:transparent; color:#6B7280;">{% trans "Cancelar" %}</button>
+            <button type="button" onclick="guardarMseg()"
+                    style="padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; border:none; background:#4F46E5; color:#fff;">{% trans "Guardar" %}</button>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
 {% block extra_js %}
-{% load static %}
+<!-- Variable Django necesaria para el JS -->
+<script>
+    window.MTO_CONFIG = { anio_actual: {{ anio_actual }}, csrf_token: '{{ csrf_token }}' };
+    const CSRF_MTO = '{{ csrf_token }}';
+</script>
 <script src="{% static 'mto_app/js/plan_lista.js' %}"></script>
-<script src="{% static 'mto_app/js/overlay_exportar.js' %}"> </script>
+<script src="{% static 'mto_app/js/overlay_exportar.js' %}"></script>
+<script src="{% static 'mto_app/js/lista_plan_extra.js' %}"></script>
 {% endblock %}

@@ -4,6 +4,7 @@ from django.contrib import messages
 from .utils import requiere_acceso_mto
 from ..models import Area, Responsable
 from .utils import areas_permitidas_mto
+from django.http import JsonResponse
 
 @login_required
 def lista_responsables(request):
@@ -70,3 +71,21 @@ def eliminar_responsable(request, pk):
         responsable.delete()
         messages.success(request, f"Responsable '{responsable.nombre_completo()}' eliminado.")
     return redirect(f"/mto/responsables/?area={area_pk}")
+
+def buscar_responsables_mto(request):
+    q       = request.GET.get('q', '').strip()
+    area_id = request.GET.get('area_id', '')
+    qs      = Responsable.objects.filter(activo=True)
+    if area_id:
+        qs = qs.filter(area_id=area_id)
+    if q:
+        qs = qs.filter(nombre__icontains=q) | qs.filter(apellidos__icontains=q)
+    data = [
+        {
+            'codigo':      r.numero_nomina,
+            'nombre':      f"{r.nombre} {r.apellidos}",
+            'descripcion': r.posicion,
+        }
+        for r in qs[:15]
+    ]
+    return JsonResponse(data, safe=False)

@@ -1,0 +1,958 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Hora x hora" %}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div>
+        <div class="card-title">{% trans "Hora x hora" %}</div>
+        <div class="card-subtitle">{% trans "Registro de producción por hora, turno y día del mes" %}</div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div style="padding:14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:20px;">
+    <form method="get" id="form-filtros" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+        <div class="filter-group">
+            <label>Mes</label>
+            <select name="mes" onchange="document.getElementById('form-filtros').submit()">
+                {% for num, nombre in meses %}
+                <option value="{{ num }}" {% if mes == num %}selected{% endif %}>{{ nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+         <div class="filter-group">
+            <label>{% trans "Año" %}</label>
+            <input type="number" name="anio" value="{{ anio }}" min="2018" max="2099"
+                   style="width:90px;" onchange="document.getElementById('form-filtros').submit()">
+        </div>
+
+    </form>
+</div>
+
+<!-- Áreas -->
+{% for area in areas %}
+<div class="card" style="margin-bottom:16px; padding:0; overflow:hidden;">
+
+    <!-- Header colapsable -->
+    <div style="display:flex; justify-content:space-between; align-items:center;
+                padding:12px 16px; background:var(--surface);">
+        <div onclick="toggleArea({{ area.id }})" style="cursor:pointer; flex:1;">
+            <div style="font-size:14px; font-weight:600; color:var(--text);">
+                {{ area.nombre }}
+            </div>
+            <div style="margin-top:4px;">
+                <span style="display:inline-flex; align-items:center; gap:5px; padding:2px 10px;
+                            border-radius:20px; font-size:11px; font-weight:600;
+                            background:var(--indigo-lt); color:var(--indigo);">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    {% for num, nombre in meses %}{% if mes == num %}{{ nombre }}{% endif %}{% endfor %} {{ anio }}
+                </span>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:11px;">
+                <span id="badge-skid-{{ area.id }}"
+                    style="display:none; padding:2px 8px; border-radius:20px; font-size:11px;
+                            font-weight:600; background:var(--indigo-lt); color:var(--indigo);">
+                    Skid: —
+                </span>
+                <span id="badge-ef-{{ area.id }}"
+                    style="display:none; padding:2px 8px; border-radius:20px; font-size:11px;
+                            font-weight:600; background:var(--indigo-lt); color:var(--indigo);">
+                    Eficiencia: — %
+                </span>
+            </div>
+            <button type="button"
+                    onclick="abrirModalTarget({{ area.id }}, '{{ area.nombre }}')"
+                    style="display:flex; align-items:center; gap:5px; padding:5px 12px;
+                        border:1px solid var(--border); border-radius:7px; font-size:12px;
+                        background:var(--white); color:var(--text-2); cursor:pointer;
+                        font-family:inherit;">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="6"/>
+                    <circle cx="12" cy="12" r="2"/>
+                </svg>
+                Target
+            </button>
+            <svg id="chevron-{{ area.id }}" width="16" height="16" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24" style="transition:transform .2s; cursor:pointer;"
+                onclick="toggleArea({{ area.id }})">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Contenido colapsable -->
+    <div id="area-{{ area.id }}" style="display:none;">
+        {% if area.id in areas_con_tablas %}
+            <!-- Turno día -->
+            <div style="padding:12px 16px 0;">
+                <div style="font-size:12px; font-weight:600; color:#185FA5; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    Turno de día — 06:00 a 17:00
+                </div>
+            </div>
+            <div style="overflow-x:auto; padding:0 16px 12px;">
+                <table style="border-collapse:collapse; font-size:11px; white-space:nowrap; width:max-content; min-width:100%;">
+                    <thead>
+                        <tr style="background:var(--surface);">
+                            <th style="padding:6px 10px; text-align:left; border:0.5px solid var(--border); min-width:60px; position:sticky; left:0; background:var(--surface); z-index:2;">Hora</th>
+                            {% for d in dias %}
+                            <th style="padding:6px 8px; text-align:center; border:0.5px solid var(--border); min-width:36px;">{{ d }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hora in horas_dia %}
+                        <tr>
+                            <td style="padding:5px 10px; border:0.5px solid var(--border); font-family:'DM Mono',monospace; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{{ hora|stringformat:"02d" }}:00</td>
+                            {% for d in dias %}
+                            <td style="padding:0; border:0.5px solid var(--border); text-align:center;"
+                                data-area="{{ area.id }}"
+                                data-dia="{{ d }}"
+                                data-hora="{{ hora }}"
+                                data-turno="dia"
+                                data-anio="{{ anio }}"
+                                data-mes="{{ mes }}"
+                                class="celda-hora"
+                                onclick="editarCelda(this)">
+                                <span class="valor-celda"></span>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        <!-- Total turno día -->
+                        <tr style="background:#E6F1FB;">
+                            <td style="padding:6px 10px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:#185FA5; position:sticky; left:0; background:#E6F1FB; z-index:1;">Total</td>
+                            {% for d in dias %}
+                            <td style="padding:5px 8px; border:0.5px solid var(--border); text-align:center; font-weight:600; font-size:11px; color:#185FA5; font-family:'DM Mono',monospace;"
+                                id="total-dia-dia-{{ area.id }}-{{ d }}">—</td>
+                            {% endfor %}
+                        </tr>
+                        <tr style="background:#E6F1FB;">
+                            <td style="padding:6px 10px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:#185FA5; position:sticky; left:0; background:#E6F1FB; z-index:1;">Hrs</td>
+                            {% for d in dias %}
+                            <td style="padding:5px 8px; border:0.5px solid var(--border); text-align:center; font-size:11px; color:#185FA5; font-family:'DM Mono',monospace;"
+                                id="hrs-dia-{{ area.id }}-{{ d }}">—</td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tabla resumen diario -->
+            <div style="overflow-x:auto; padding:0 16px 12px;">
+                <table style="border-collapse:collapse; font-size:11px; white-space:nowrap; width:max-content; min-width:100%;">
+                    <thead>
+                        <tr style="background:var(--surface);">
+                            <th style="padding:6px 10px; text-align:left; border:0.5px solid var(--border); min-width:100px; position:sticky; left:0; background:var(--surface); z-index:2;">Indicador</th>
+                            {% for d in dias %}
+                            <th style="padding:6px 8px; text-align:center; border:0.5px solid var(--border); min-width:36px;">{{ d }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding:5px 10px; border:0.5px solid var(--border); font-weight:500; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">Skid corridos</td>
+                            {% for d in dias %}
+                            <td style="padding:5px 8px; border:0.5px solid var(--border); text-align:center; font-family:'DM Mono',monospace; font-size:11px;"
+                                id="skid-corridos-{{ area.id }}-{{ d }}">—</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td style="padding:5px 10px; border:0.5px solid var(--border); font-weight:500; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">Skid planeados</td>
+                            {% for d in dias %}
+                            <td style="padding:5px 8px; border:0.5px solid var(--border); text-align:center; font-family:'DM Mono',monospace; font-size:11px;"
+                                id="skid-planeados-{{ area.id }}-{{ d }}">—</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td style="padding:5px 10px; border:0.5px solid var(--border); font-weight:500; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">Eficiencia</td>
+                            {% for d in dias %}
+                            <td style="padding:5px 8px; border:0.5px solid var(--border); text-align:center; font-family:'DM Mono',monospace; font-size:11px; font-weight:600;"
+                                id="skid-eficiencia-{{ area.id }}-{{ d }}">—</td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Turno noche -->
+            <div style="padding:12px 16px 0;">
+                <div style="font-size:12px; font-weight:600; color:#185FA5; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                    Turno de noche — 18:00 a 05:00
+                </div>
+            </div>
+            <div style="overflow-x:auto; padding:0 16px 16px;">
+                <table style="border-collapse:collapse; font-size:11px; white-space:nowrap; width:max-content; min-width:100%;">
+                    <thead>
+                        <tr style="background:var(--surface);">
+                            <th style="padding:6px 10px; text-align:left; border:0.5px solid var(--border); min-width:60px; position:sticky; left:0; background:var(--surface); z-index:2;">Hora</th>
+                            {% for d in dias %}
+                            <th style="padding:6px 8px; text-align:center; border:0.5px solid var(--border); min-width:36px;">{{ d }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hora in horas_noche %}
+                        <tr>
+                            <td style="padding:5px 10px; border:0.5px solid var(--border); font-family:'DM Mono',monospace; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{{ hora|stringformat:"02d" }}:00</td>
+                            {% for d in dias %}
+                            <td style="padding:0; border:0.5px solid var(--border); text-align:center;"
+                                data-area="{{ area.id }}"
+                                data-dia="{{ d }}"
+                                data-hora="{{ hora }}"
+                                data-turno="noche"
+                                data-anio="{{ anio }}"
+                                data-mes="{{ mes }}"
+                                class="celda-hora"
+                                onclick="editarCelda(this)">
+                                <span class="valor-celda"></span>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        <!-- Total turno noche -->
+                        <tr style="background:#E6F1FB;">
+                            <td style="padding:6px 10px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:#3C3489; position:sticky; left:0; background:#E6F1FB; z-index:1;">Total</td>
+                            {% for d in dias %}
+                            <td style="padding:5px 8px; border:0.5px solid var(--border); text-align:center; font-weight:600; font-size:11px; color:#3C3489; font-family:'DM Mono',monospace;"
+                                id="total-noche-dia-{{ area.id }}-{{ d }}">—</td>
+                            {% endfor %}
+                        </tr>
+                        <tr style="background:#E6F1FB;">
+                            <td style="padding:6px 10px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:#3C3489; position:sticky; left:0; background:#E6F1FB; z-index:1;">Hrs</td>
+                            {% for d in dias %}
+                            <td style="padding:5px 8px; border:0.5px solid var(--border); text-align:center; font-size:11px; color:#3C3489; font-family:'DM Mono',monospace;"
+                                id="hrs-noche-{{ area.id }}-{{ d }}">—</td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div style="padding:20px 16px; text-align:center; color:var(--text-3); font-size:13px;">
+                {% trans "No tienes acceso a los registros de esta área." %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<div class="card" style="text-align:center; padding:40px; color:var(--text-3);">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.5" style="margin-bottom:10px; opacity:.4;">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <div style="font-size:13px; font-weight:600; margin-bottom:4px;">{% trans "Sin acceso" %}</div>
+    <div style="font-size:12px;">{% trans "No tienes permisos para ver ninguna área en hora x hora." %}</div>
+</div>
+{% endfor %}
+
+<!-- Modal edición -->
+<div id="modal-hora" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+     z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:24px 28px;
+                min-width:280px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;" id="modal-titulo">Registrar valor</div>
+        <div style="font-size:12px; color:var(--text-2); margin-bottom:16px;" id="modal-subtitulo"></div>
+        <div class="filter-group" style="margin-bottom:16px;">
+            <label>Valor (minutos)</label>
+            <input type="number" id="modal-input" min="0" max="99" placeholder="0 - 99"
+                   style="width:100%;" onkeydown="if(event.key==='Enter') guardarModal()">
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="borrarModal()" class="btn btn-ghost btn-sm" style="color:#DC2626; border-color:#DC2626;">Borrar</button>
+            <button onclick="cerrarModal()" class="btn btn-ghost btn-sm">Cancelar</button>
+            <button onclick="guardarModal()" class="btn btn-primary btn-sm">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico de eficiencia -->
+<div class="card" style="margin-top:20px; padding:0; overflow:hidden;">
+    <div style="padding:14px 16px; background:var(--surface); border-bottom:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+                <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Eficiencia de producción" %}</div>
+                <div style="font-size:11px; color:var(--text-3); margin-top:2px;">{% trans "Skid corridos vs planeados" %}</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <!-- Selector área -->
+                <select id="ef-area" onchange="cargarTargets().then(() => cargarEficiencia())"
+                        style="height:30px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:12px; background:var(--white); color:var(--text);">
+                    {% for area in areas_grafico %}
+                    <option value="{{ area.id }}">{{ area.nombre }}</option>
+                    {% endfor %}
+                </select>
+                <!-- Pills vista -->
+                <div style="display:flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; height:30px;">
+                    <button onclick="setVistaEf('dia', this)" id="pill-dia"
+                            style="padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:none; font-family:inherit; background:#4F46E5; color:#fff;">
+                        {% trans "Día" %}
+                    </button>
+                    <button onclick="setVistaEf('mes', this)" id="pill-mes"
+                            style="padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:none; border-left:1px solid var(--border); font-family:inherit; background:var(--white); color:var(--text-2);">
+                        {% trans "Mes" %}
+                    </button>
+                    <button onclick="setVistaEf('anio', this)" id="pill-anio"
+                            style="padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:none; border-left:1px solid var(--border); font-family:inherit; background:var(--white); color:var(--text-2);">
+                        {% trans "Año" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selector rango días -->
+        <div id="ef-rango" style="display:flex; gap:10px; align-items:flex-end; margin-top:12px; flex-wrap:wrap;">
+            <!-- Rango días -->
+            <div id="ef-rango-dia" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                <div class="filter-group">
+                    <label>{% trans "Desde" %}</label>
+                    <input type="date" id="ef-desde" value="{{ anio }}-{{ mes|stringformat:'02d' }}-01"
+                           onchange="cargarEficiencia()">
+                </div>
+                <div class="filter-group">
+                    <label>{% trans "Hasta" %}</label>
+                    <input type="date" id="ef-hasta" value="{{ anio }}-{{ mes|stringformat:'02d' }}-{{ dias_mes }}"
+                           onchange="cargarEficiencia()">
+                </div>
+            </div>
+            <!-- Rango meses -->
+            <div id="ef-rango-mes" style="display:none; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                <div class="filter-group">
+                    <label>{% trans "Año" %}</label>
+                    <input type="number" id="ef-mes-anio" value="{{ anio }}" min="2018" max="2099"
+                           style="width:90px;" onchange="cargarEficiencia()">
+                </div>
+                <div class="filter-group">
+                    <label>{% trans "Mes inicio" %}</label>
+                    <select id="ef-mes-desde" onchange="cargarEficiencia()">
+                        {% for num, nombre in meses %}<option value="{{ num }}">{{ nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>{% trans "Mes fin" %}</label>
+                    <select id="ef-mes-hasta" onchange="cargarEficiencia()">
+                        {% for num, nombre in meses %}<option value="{{ num }}" {% if mes == num %}selected{% endif %}>{{ nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <!-- Rango años -->
+            <div id="ef-rango-anio" style="display:none; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                <div class="filter-group">
+                    <label>{% trans "Año inicio" %}</label>
+                    <input type="number" id="ef-anio-desde" value="2018" min="2018" max="2099"
+                           style="width:90px;" onchange="cargarEficiencia()">
+                </div>
+                <div class="filter-group">
+                    <label>{% trans "Año fin" %}</label>
+                    <input type="number" id="ef-anio-hasta" value="{{ anio }}" min="2018" max="2099"
+                           style="width:90px;" onchange="cargarEficiencia()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="padding:16px;">
+        <!-- Gráfico -->
+        <div style="position:relative; width:100%; height:240px; margin-bottom:16px;">
+            <canvas id="chartEficiencia" role="img" aria-label="Gráfico de eficiencia de producción">{% trans "Eficiencia de producción." %}</canvas>
+        </div>
+
+        <!-- Tabla horizontal -->
+        <div style="overflow-x:auto; border:0.5px solid var(--border); border-radius:8px;">
+            <table id="ef-tabla" style="border-collapse:collapse; font-size:11px; white-space:nowrap; width:max-content; min-width:100%;">
+                <thead>
+                    <tr style="background:var(--surface);">
+                        <th style="padding:6px 12px; text-align:left; border:0.5px solid var(--border); min-width:120px; position:sticky; left:0; background:var(--surface); z-index:2;">{% trans "Indicador" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:6px 12px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "Skid corridos" %}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:6px 12px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "Skid planeados" %}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:6px 12px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "Eficiencia" %}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal target hora x hora -->
+<div id="modal-target-hxh" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+     z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:24px 28px;
+                min-width:320px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;">
+            Configurar targets
+        </div>
+        <div style="font-size:12px; color:var(--text-2); margin-bottom:16px;" id="modal-target-subtitulo"></div>
+
+        <div class="filter-group" style="margin-bottom:12px;">
+            <label>Target skid por hora</label>
+            <input type="number" id="modal-target-skid" min="0" max="999" placeholder="Ej. 65"
+                   style="width:100%;">
+        </div>
+        <div class="filter-group" style="margin-bottom:12px;">
+            <label>Target eficiencia mensual (%)</label>
+            <input type="number" id="modal-target-ef" min="0" max="100" step="0.1" placeholder="Ej. 91"
+                   style="width:100%;">
+        </div>
+        <div style="border-top:1px solid var(--border); padding-top:12px; margin-bottom:12px;">
+            <div style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">Target anual</div>
+            <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                <div class="filter-group" style="flex:1;">
+                    <label>Año</label>
+                    <input type="number" id="modal-target-anio" value="{{ anio }}" min="2020" max="2099" style="width:100%;" onchange="cargarTargetAnual()">
+                </div>
+                <div class="filter-group" style="flex:2;">
+                    <label>Target eficiencia anual (%)</label>
+                    <input type="number" id="modal-target-ef-anio" min="0" max="100" step="0.1" placeholder="Ej. 91"
+                           style="width:100%;">
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="cerrarModalTarget()" class="btn btn-ghost btn-sm">Cancelar</button>
+            <button onclick="guardarTarget()" class="btn btn-primary btn-sm">Guardar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const CSRF             = document.cookie.split(';').find(s=>s.trim().startsWith('csrftoken='))?.trim().split('=')[1] || '';
+const URL_GUARD        = "{% url 'paros:guardar_hora_hora' %}";
+const URL_TARGET_GUARD = "{% url 'paros:guardar_target_hora_hora' %}";
+const URL_TARGET_GET   = "{% url 'paros:get_target_hora_hora' %}";
+const URL_TARGET_ANUAL_GUARD = "{% url 'paros:guardar_target_anual_hora_hora' %}";
+const URL_TARGET_ANUAL_GET   = "{% url 'paros:get_target_anual_hora_hora' %}";
+const URL_EF           = "{% url 'paros:eficiencia_data' %}";
+const DATOS            = {{ datos_json|safe }};
+const AREAS_IDS        = [{% for area in areas %}'{{ area.id }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+ 
+let celdaActual  = null;
+let targetAreaId = null;
+let targetSkid   = {};
+let targetEf     = {};
+let chartEf      = null;
+let vistaEf      = 'dia';
+ 
+// ── Cargar datos iniciales ────────────────────────────────────
+function cargarDatos() {
+    document.querySelectorAll('.celda-hora').forEach(td => {
+        const aid   = td.dataset.area;
+        const turno = td.dataset.turno;
+        const dia   = parseInt(td.dataset.dia);
+        const hora  = parseInt(td.dataset.hora);
+        const val   = DATOS[aid]?.[turno]?.[dia]?.[hora];
+        if (val !== undefined && val > 0) {
+            td.querySelector('.valor-celda').textContent = val;
+            td.style.background = turno === 'dia' ? '#E6F1FB' : '#EEEDFE';
+            td.style.color      = turno === 'dia' ? '#185FA5' : '#3C3489';
+            td.style.fontWeight = '600';
+        }
+    });
+    recalcularTodos();
+}
+ 
+// ── Colapsar / expandir ───────────────────────────────────────
+function toggleArea(id) {
+    const el  = document.getElementById('area-' + id);
+    const chv = document.getElementById('chevron-' + id);
+    const open = el.style.display === 'none';
+    el.style.display    = open ? 'block' : 'none';
+    chv.style.transform = open ? 'rotate(180deg)' : '';
+}
+ 
+// ── Editar celda ──────────────────────────────────────────────
+function editarCelda(td) {
+    celdaActual = td;
+    const hora  = parseInt(td.dataset.hora);
+    const dia   = parseInt(td.dataset.dia);
+    const mes   = parseInt(td.dataset.mes);
+    const anio  = parseInt(td.dataset.anio);
+    const turno = td.dataset.turno;
+    const valActual = td.querySelector('.valor-celda').textContent.trim();
+    const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('modal-titulo').textContent    = `${hora.toString().padStart(2,'0')}:00 — Día ${dia}`;
+    document.getElementById('modal-subtitulo').textContent = `${meses[mes]} ${anio} · Turno ${turno}`;
+    document.getElementById('modal-input').value = valActual || '';
+    document.getElementById('modal-hora').style.display = 'flex';
+    setTimeout(() => document.getElementById('modal-input').focus(), 50);
+}
+ 
+function cerrarModal() {
+    document.getElementById('modal-hora').style.display = 'none';
+    celdaActual = null;
+}
+ 
+function borrarModal() {
+    if (!celdaActual) return;
+    enviarValor(celdaActual, '');
+    cerrarModal();
+}
+ 
+function guardarModal() {
+    if (!celdaActual) return;
+    const val = document.getElementById('modal-input').value.trim();
+    enviarValor(celdaActual, val);
+    cerrarModal();
+}
+ 
+// ── Enviar valor al servidor ──────────────────────────────────
+function enviarValor(td, valor) {
+    const area  = td.dataset.area;
+    const turno = td.dataset.turno;
+    const hora  = parseInt(td.dataset.hora);
+    const dia   = parseInt(td.dataset.dia);
+    const mes   = parseInt(td.dataset.mes).toString().padStart(2,'0');
+    const anio  = td.dataset.anio;
+    const fecha = `${anio}-${mes}-${dia.toString().padStart(2,'0')}`;
+ 
+    fetch(URL_GUARD, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
+        body: JSON.stringify({area_id:area, fecha, turno, hora, valor: valor === '' ? null : parseInt(valor)})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const span = td.querySelector('.valor-celda');
+            if (data.eliminado || !valor) {
+                span.textContent    = '';
+                td.style.background = '';
+                td.style.color      = '';
+                td.style.fontWeight = '';
+                if (!DATOS[area]) DATOS[area] = {};
+                if (!DATOS[area][turno]) DATOS[area][turno] = {};
+                if (!DATOS[area][turno][dia]) DATOS[area][turno][dia] = {};
+                delete DATOS[area][turno][dia][hora];
+            } else {
+                span.textContent = data.valor;
+                const tS = targetSkid[area];
+                const v  = parseInt(data.valor);
+                if (tS !== null && tS !== undefined) {
+                    td.style.background = v >= tS ? '#EAF3DE' : '#FCEBEB';
+                    td.style.color      = v >= tS ? '#3B6D11' : '#A32D2D';
+                } else {
+                    td.style.background = turno === 'dia' ? '#E6F1FB' : '#EEEDFE';
+                    td.style.color      = turno === 'dia' ? '#185FA5' : '#3C3489';
+                }
+                td.style.fontWeight = '600';
+                if (!DATOS[area]) DATOS[area] = {};
+                if (!DATOS[area][turno]) DATOS[area][turno] = {};
+                if (!DATOS[area][turno][dia]) DATOS[area][turno][dia] = {};
+                DATOS[area][turno][dia][hora] = data.valor;
+            }
+            recalcularArea(area);
+        } else {
+            alert('Error: ' + (data.error || 'No se pudo guardar'));
+        }
+    })
+    .catch(() => alert('Error de conexión'));
+}
+ 
+// ── Recalcular totales ────────────────────────────────────────
+function recalcularArea(aid) {
+    ['dia','noche'].forEach(turno => {
+        for (let d = 1; d <= 31; d++) {
+            const diasData  = DATOS[aid]?.[turno]?.[d] || {};
+            const totalDia  = Object.values(diasData).reduce((s,v) => s+v, 0);
+            const el        = document.getElementById(`total-${turno}-dia-${aid}-${d}`);
+            if (el) el.textContent = totalDia > 0 ? totalDia : '—';
+            const hrsConReg = Object.values(diasData).filter(v => v > 0).length;
+            const elHrs     = document.getElementById(`hrs-${turno}-${aid}-${d}`);
+            if (elHrs) elHrs.textContent = hrsConReg > 0 ? hrsConReg * 60 : '—';
+        }
+    });
+ 
+    const tEf = targetEf[aid] ?? 91;
+ 
+    for (let d = 1; d <= 31; d++) {
+        const dataDia    = DATOS[aid]?.['dia']?.[d]   || {};
+        const dataNoche  = DATOS[aid]?.['noche']?.[d] || {};
+        const corridos   = Object.values(dataDia).reduce((s,v) => s+v, 0) +
+                           Object.values(dataNoche).reduce((s,v) => s+v, 0);
+        const hrsDia     = Object.values(dataDia).filter(v => v > 0).length;
+        const hrsNoche   = Object.values(dataNoche).filter(v => v > 0).length;
+        const planeados  = (hrsDia + hrsNoche) * 65;
+        const eficiencia = planeados > 0 ? ((corridos / planeados) * 100).toFixed(1) : null;
+ 
+        const elC = document.getElementById(`skid-corridos-${aid}-${d}`);
+        const elP = document.getElementById(`skid-planeados-${aid}-${d}`);
+        const elE = document.getElementById(`skid-eficiencia-${aid}-${d}`);
+ 
+        if (elC) elC.textContent = corridos  > 0 ? corridos  : '—';
+        if (elP) elP.textContent = planeados > 0 ? planeados : '—';
+        if (elE) {
+            if (eficiencia !== null && planeados > 0) {
+                const pct = parseFloat(eficiencia);
+                elE.textContent    = pct + '%';
+                elE.style.color    = pct >= tEf ? '#3B6D11' : '#A32D2D';
+                elE.style.background = pct >= tEf ? '#EAF3DE' : '#FCEBEB';
+                elE.style.padding    = '2px 8px';
+                elE.style.borderRadius = '20px';
+                elE.style.fontWeight   = '600';
+                elE.style.fontSize     = '11px';
+            } else {
+                elE.textContent = '—';
+                elE.style.color = '';
+            }
+        }
+    }
+}
+ 
+function recalcularTodos() {
+    const aids = new Set();
+    document.querySelectorAll('[id^="total-dia-dia-"]').forEach(el => {
+        aids.add(el.id.split('-')[3]);
+    });
+    aids.forEach(aid => recalcularArea(aid));
+}
+ 
+// ── Gráfico de eficiencia ─────────────────────────────────────
+function setVistaEf(vista, btn) {
+    vistaEf = vista;
+    ['dia','mes','anio'].forEach(v => {
+        const b = document.getElementById('pill-' + v);
+        b.style.background = v === vista ? '#4F46E5' : 'var(--white)';
+        b.style.color      = v === vista ? '#fff'    : 'var(--text-2)';
+    });
+    document.getElementById('ef-rango-dia').style.display  = vista === 'dia'  ? 'flex' : 'none';
+    document.getElementById('ef-rango-mes').style.display  = vista === 'mes'  ? 'flex' : 'none';
+    document.getElementById('ef-rango-anio').style.display = vista === 'anio' ? 'flex' : 'none';
+    cargarEficiencia();
+}
+ 
+function cargarEficiencia() {
+    const area_id = document.getElementById('ef-area').value;
+    let url = `${URL_EF}?area_id=${area_id}&vista=${vistaEf}`;
+
+    // Determinar mes/año para cargar el target correcto
+    let tAnio = {{ anio }};
+    let tMes  = {{ mes }};
+    if (vistaEf === 'mes') {
+        tAnio = parseInt(document.getElementById('ef-mes-anio').value);
+        tMes  = parseInt(document.getElementById('ef-mes-desde').value);
+    } else if (vistaEf === 'dia') {
+        const desde = document.getElementById('ef-desde').value;
+        if (desde) {
+            const parts = desde.split('-');
+            tAnio = parseInt(parts[0]);
+            tMes  = parseInt(parts[1]);
+        }
+    }
+
+    // Cargar target del periodo antes de renderizar
+    fetch(`${URL_TARGET_GET}?area_id=${area_id}&anio=${tAnio}&mes=${tMes}`)
+    .then(r => r.json())
+    .then(tData => {
+        if (tData.ok) {
+            targetEf[area_id] = tData.target_eficiencia;
+        }
+    })
+    .then(() => {
+    if (vistaEf === 'dia') {
+        url += `&desde=${document.getElementById('ef-desde').value}&hasta=${document.getElementById('ef-hasta').value}`;
+    } else if (vistaEf === 'mes') {
+        url += `&anio=${document.getElementById('ef-mes-anio').value}&mes_desde=${document.getElementById('ef-mes-desde').value}&mes_hasta=${document.getElementById('ef-mes-hasta').value}`;
+    } else if (vistaEf === 'anio') {
+        url += `&anio_desde=${document.getElementById('ef-anio-desde').value}&anio_hasta=${document.getElementById('ef-anio-hasta').value}`;
+    }
+        fetch(url).then(r => r.json()).then(data => { if (data.ok) renderizarEficiencia(data.datos); }).catch(() => {});
+    })
+    .catch(() => {});
+}
+ 
+function renderizarEficiencia(datos) {
+    const areaId         = document.getElementById('ef-area').value;
+    const targetEfActual = targetEf[areaId] ?? 91;
+    const labels         = datos.map(d => d.label);
+    const eficiencia     = datos.map(d => d.eficiencia);
+    const targets = datos.map(d => d.target_ef ?? targetEfActual);
+    const bgColors = eficiencia.map((v, i) => v === null ? 'rgba(136,135,128,0.3)' : v >= targets[i] ? 'rgba(79,70,229,0.75)' : 'rgba(226,75,74,0.75)');
+    const bdColors = eficiencia.map((v, i) => v === null ? '#888780'               : v >= targets[i] ? '#4F46E5'               : '#E24B4A');
+ 
+    if (chartEf) chartEf.destroy();
+ 
+    chartEf = new Chart(document.getElementById('chartEficiencia'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label: 'Eficiencia %', data: eficiencia.map(v => v ?? 0), backgroundColor: bgColors, borderColor: bdColors, borderWidth: 1, borderRadius: 4, order: 2 },
+                { type: 'line', label: 'Meta', data: targets, borderColor: '#F59E0B', borderWidth: 2, borderDash: [6,4], pointRadius: 3, fill: false, order: 1 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.dataset.type === 'line'
+                            ? ` Meta: ${targetEfActual}%`
+                            : ` ${ctx.parsed.y.toFixed(1)}%`
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#888780', maxRotation: 45, autoSkip: true } },
+                y: { min: 0, max: 100, grid: { color: 'rgba(136,135,128,0.15)' }, ticks: { font: { size: 11 }, color: '#888780', callback: v => v + '%' } }
+            },
+            animation: {
+                onComplete: function() {
+                    const chart = this;
+                    const meta  = chart.getDatasetMeta(0);
+                    const ctx2  = chart.ctx;
+                    ctx2.save();
+                    ctx2.font      = 'bold 11px sans-serif';
+                    ctx2.textAlign = 'center';
+                    chart.data.datasets[0].data.forEach((val, i) => {
+                        if (!val) return;
+                        const bar = meta.data[i];
+                        const ef  = eficiencia[i];
+                        if (ef === null) return;
+                        ctx2.fillStyle = ef >= targets[i] ? '#4F46E5' : '#E24B4A';
+                        ctx2.fillText(ef + '%', bar.x, bar.y - 6);
+                    });
+                    ctx2.restore();
+                }
+            }
+        }
+    });
+ 
+    // Tabla horizontal
+    const tabla = document.getElementById('ef-tabla');
+    const thead = tabla.querySelector('thead tr');
+    const filas = tabla.querySelectorAll('tbody tr');
+    while (thead.children.length > 1) thead.removeChild(thead.lastChild);
+    filas.forEach(tr => { while (tr.children.length > 1) tr.removeChild(tr.lastChild); });
+ 
+    const thStyle = 'padding:6px 8px; text-align:center; border:0.5px solid var(--border); min-width:60px; font-weight:500; font-size:11px; color:var(--text-3);';
+    const tdStyle = 'padding:6px 8px; border:0.5px solid var(--border); text-align:center; font-family:"DM Mono",monospace; font-size:11px;';
+ 
+    datos.forEach(d => {
+        const th = document.createElement('th');
+        th.style.cssText = thStyle;
+        th.textContent = d.label;
+        thead.appendChild(th);
+ 
+        const td0 = document.createElement('td');
+        td0.style.cssText = tdStyle;
+        td0.textContent = d.corridos > 0 ? d.corridos : '—';
+        filas[0].appendChild(td0);
+ 
+        const td1 = document.createElement('td');
+        td1.style.cssText = tdStyle;
+        td1.textContent = d.planeados > 0 ? d.planeados : '—';
+        filas[1].appendChild(td1);
+ 
+        const td2 = document.createElement('td');
+        td2.style.cssText = tdStyle;
+        if (d.eficiencia !== null && d.planeados > 0) {
+            const pct   = d.eficiencia;
+            const color = pct >= (d.target_ef ?? targetEfActual) ? '#3B6D11' : '#A32D2D';
+            const bg    = pct >= (d.target_ef ?? targetEfActual) ? '#EAF3DE' : '#FCEBEB';
+            td2.innerHTML = `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:${bg};color:${color};">${pct}%</span>`;
+        } else {
+            td2.textContent = '—';
+        }
+        filas[2].appendChild(td2);
+    });
+}
+ 
+// ── Target ────────────────────────────────────────────────────
+function abrirModalTarget(areaId, areaNombre) {
+    targetAreaId = areaId;
+    document.getElementById('modal-target-subtitulo').textContent =
+        `${areaNombre} — {% for num, nombre in meses %}{% if mes == num %}{{ nombre }}{% endif %}{% endfor %} {{ anio }}`;
+
+    const anioModal = document.getElementById('modal-target-anio').value || '{{ anio }}';
+
+    Promise.all([
+        fetch(`${URL_TARGET_GET}?area_id=${areaId}&anio={{ anio }}&mes={{ mes }}`).then(r => r.json()),
+        fetch(`${URL_TARGET_ANUAL_GET}?area_id=${areaId}&anio=${anioModal}`).then(r => r.json()),
+    ]).then(([mensual, anual]) => {
+        document.getElementById('modal-target-skid').value     = mensual.target_skid ?? '';
+        document.getElementById('modal-target-ef').value       = mensual.target_eficiencia ?? '';
+        document.getElementById('modal-target-ef-anio').value  = anual.target_eficiencia ?? '';
+        document.getElementById('modal-target-hxh').style.display = 'flex';
+        document.getElementById('modal-target-skid').focus();
+    });
+}
+ 
+function cerrarModalTarget() {
+    document.getElementById('modal-target-hxh').style.display = 'none';
+    targetAreaId = null;
+}
+ 
+function guardarTarget() {
+    const skid    = document.getElementById('modal-target-skid').value.trim();
+    const ef      = document.getElementById('modal-target-ef').value.trim();
+    const anio    = document.getElementById('modal-target-anio').value.trim();
+    const efAnio  = document.getElementById('modal-target-ef-anio').value.trim();
+
+    Promise.all([
+        fetch(URL_TARGET_GUARD, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
+            body: JSON.stringify({
+                area_id:           targetAreaId,
+                anio:              {{ anio }},
+                mes:               {{ mes }},
+                target_skid:       skid   === '' ? null : parseInt(skid),
+                target_eficiencia: ef     === '' ? null : parseFloat(ef),
+            })
+        }).then(r => r.json()),
+        fetch(URL_TARGET_ANUAL_GUARD, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
+            body: JSON.stringify({
+                area_id:           targetAreaId,
+                anio:              parseInt(anio),
+                target_eficiencia: efAnio === '' ? null : parseFloat(efAnio),
+            })
+        }).then(r => r.json()),
+    ]).then(([mensual, anual]) => {
+        if (mensual.ok && anual.ok) {
+            targetSkid[targetAreaId] = mensual.target_skid;
+            targetEf[targetAreaId]   = mensual.target_eficiencia;
+            actualizarBadgesTarget(targetAreaId);
+            cerrarModalTarget();
+            recalcularArea(String(targetAreaId));
+            aplicarColoresSkid(String(targetAreaId));
+            cargarEficiencia();
+        } else {
+            alert('Error al guardar: ' + (mensual.error || anual.error || 'desconocido'));
+        }
+    });
+}
+ 
+function aplicarColoresSkid(aid) {
+    const tSkid = targetSkid[aid];
+    document.querySelectorAll(`.celda-hora[data-area="${aid}"]`).forEach(td => {
+        const span = td.querySelector('.valor-celda');
+        if (!span.textContent.trim()) {
+            td.style.background = '';
+            td.style.color      = '';
+            td.style.fontWeight = '';
+            return;
+        }
+        const val = parseInt(span.textContent.trim());
+        if (tSkid !== null && tSkid !== undefined) {
+            td.style.background = val >= tSkid ? '#EAF3DE' : '#FCEBEB';
+            td.style.color      = val >= tSkid ? '#3B6D11' : '#A32D2D';
+        } else {
+            const turno = td.dataset.turno;
+            td.style.background = turno === 'dia' ? '#E6F1FB' : '#EEEDFE';
+            td.style.color      = turno === 'dia' ? '#185FA5' : '#3C3489';
+        }
+        td.style.fontWeight = '600';
+    });
+    actualizarBadgesTarget(aid);
+}
+ 
+function cargarTargets() {
+    const promesas = AREAS_IDS.map(aid =>
+        fetch(`${URL_TARGET_GET}?area_id=${aid}&anio={{ anio }}&mes={{ mes }}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) {
+                targetSkid[aid] = data.target_skid;
+                targetEf[aid]   = data.target_eficiencia;
+                actualizarBadgesTarget(aid);
+            }
+        })
+    );
+    return Promise.all(promesas);
+}
+ 
+// ── Eventos ───────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { cerrarModal(); cerrarModalTarget(); }
+});
+document.getElementById('modal-hora').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+});
+document.getElementById('modal-target-hxh').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalTarget();
+});
+ 
+// ── Inicializar ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    cargarDatos();
+    cargarTargets().then(() => {
+        AREAS_IDS.forEach(aid => aplicarColoresSkid(aid));
+        if (document.getElementById('chartEficiencia')) {
+            cargarEficiencia();
+        }
+    });
+});
+
+function actualizarBadgesTarget(aid) {
+    const tS  = targetSkid[aid];
+    const tEf = targetEf[aid];
+
+    const badgeSkid = document.getElementById(`badge-skid-${aid}`);
+    const badgeEf   = document.getElementById(`badge-ef-${aid}`);
+
+    if (badgeSkid) {
+        if (tS !== null && tS !== undefined) {
+            badgeSkid.textContent  = `Skids: ${tS}`;
+            badgeSkid.style.display = 'inline-block';
+        } else {
+            badgeSkid.style.display = 'none';
+        }
+    }
+    if (badgeEf) {
+        if (tEf !== null && tEf !== undefined) {
+            badgeEf.textContent  = `Eficiencia: ${tEf}%`;
+            badgeEf.style.display = 'inline-block';
+        } else {
+            badgeEf.style.display = 'none';
+        }
+    }
+}
+
+function cargarTargetAnual() {
+    if (!targetAreaId) return;
+    const anio = document.getElementById('modal-target-anio').value;
+    fetch(`${URL_TARGET_ANUAL_GET}?area_id=${targetAreaId}&anio=${anio}`)
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('modal-target-ef-anio').value = data.target_eficiencia ?? '';
+    });
+}
+</script>
+{% endblock %}

@@ -75,6 +75,15 @@ urlpatterns = [
     path('produccion/target/',                       views.guardar_target,         name='guardar_target'),
     path('produccion/accion-dia/',                   views.guardar_accion_dia,     name='guardar_accion_dia'),
     path('produccion/accion-dia/get/',               views.get_accion_dia,         name='get_accion_dia'),
+
+    # ── Hora x Hora ───────────────────────────────────────────
+    path('hora-hora/',                               views.hora_hora,                      name='hora_hora'),
+    path('hora-hora/guardar/',                       views.guardar_hora_hora,              name='guardar_hora_hora'),
+    path('hora-hora/eficiencia/',                    views.eficiencia_data,                name='eficiencia_data'),
+    path('hora-hora/target/guardar/',                views.guardar_target_hora_hora,       name='guardar_target_hora_hora'),
+    path('hora-hora/target/get/',                    views.get_target_hora_hora,           name='get_target_hora_hora'),
+    path('hora-hora/target/anual/guardar/',          views.guardar_target_anual_hora_hora, name='guardar_target_anual_hora_hora'),
+    path('hora-hora/target/anual/get/',              views.get_target_anual_hora_hora,     name='get_target_anual_hora_hora'),
 ]
 
 

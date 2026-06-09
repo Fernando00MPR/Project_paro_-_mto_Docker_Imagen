@@ -1,10 +1,12 @@
 {% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% block title %}{% trans "Responsables" %}{% endblock %}
 {% block content %}
 <div class="card">
     <div class="card-header">
         <div>
             <div class="card-title">
-                Responsables
+                {% trans "Responsables" %}
                 {% if filtro_area %}
                     {% for a in areas %}
                         {% if a.pk|stringformat:"s" == filtro_area %}
@@ -18,7 +20,7 @@
             </div>
         </div>
         <a href="{% url 'mto:nuevo_responsable' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm">
-            + Agregar responsable
+            + {% trans "Agregar responsable" %}
         </a>
     </div>
 </div>
@@ -28,14 +30,14 @@
         <thead>
             <tr>
                 <th style="width:50px; text-align:center;">#</th>
-                <th style="width:140px;"># NOMINA</th>
-                <th>NOMBRE</th>
-                <th>APELLIDOS</th>
-                <th style="width:140px;">POSICION</th>
-                <th style="width:100px; text-align:center;">ESTATUS</th>
-                <th style="width:200px; text-align:center;">REGISTRO</th>
-                <th style="width:200px; text-align:center;">ULTIMA EDICION</th>
-                <th style="width:200px; text-align:center; padding-right:16px;">ACCIONES</th>
+                <th style="width:140px;"># {% trans "NOMINA" %}</th>
+                <th>{% trans "NOMBRE" %}</th>
+                <th>{% trans "APELLIDOS" %}</th>
+                <th style="width:140px;">{% trans "POSICIÓN" %}</th>
+                <th style="width:100px; text-align:center;">{% trans "ESTATUS" %}</th>
+                <th style="width:200px; text-align:center;">{% trans "REGISTRO" %}</th>
+                <th style="width:200px; text-align:center;">{% trans "ULTIMA EDICIÓN" %}</th>
+                <th style="width:200px; text-align:center; padding-right:16px;">{% trans "ACCIONES" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -51,10 +53,10 @@
                 <td style="text-align:center;">
                     {% if r.activo %}
                         <span style="font-size:11px; font-weight:600; color:#065F46; background:#D1FAE5;
-                                    padding:3px 10px; border-radius:20px;">Activo</span>
+                                    padding:3px 10px; border-radius:20px;">{% trans "Activo" %}</span>
                     {% else %}
                         <span style="font-size:11px; font-weight:600; color:#6B7280; background:#F3F4F6;
-                                    padding:3px 10px; border-radius:20px;">Inactivo</span>
+                                    padding:3px 10px; border-radius:20px;">{% trans "Inactivo" %}</span>
                     {% endif %}
                 </td>
                 <td style="text-align:center; font-size:12px; color:var(--muted);">
@@ -74,7 +76,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
-                            Editar
+                            {% trans "Editar" %}
                         </a>
                         <form method="post" action="{% url 'mto:eliminar_responsable' r.pk %}" style="margin:0;">
                             {% csrf_token %}
@@ -88,7 +90,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
-                                Eliminar
+                                {% trans "Eliminar" %}
                             </button>
                         </form>
                     </div>
@@ -97,7 +99,7 @@
             {% empty %}
             <tr>
                 <td colspan="9" style="text-align:center; color:var(--muted); padding:32px;">
-                    No hay responsables registrados para esta área.
+                    {% trans "No hay responsables registrados para esta área." %}
                 </td>
             </tr>
             {% endfor %}

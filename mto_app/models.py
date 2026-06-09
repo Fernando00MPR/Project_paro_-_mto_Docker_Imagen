@@ -159,6 +159,18 @@ class AccesoMto(models.Model):
     activo  = models.BooleanField(default=True, verbose_name="Acceso a Gestión de Mantenimiento")
     areas   = models.ManyToManyField(Area, blank=True, verbose_name="Áreas permitidas")
 
+     # Permisos por pestaña
+    ver_plan_mantenimiento  = models.BooleanField(default=False, verbose_name="Ver plan de mantenimiento")
+    ver_rutinas             = models.BooleanField(default=False, verbose_name="Ver rutinas")
+    ver_seguimiento         = models.BooleanField(default=False, verbose_name="Ver seguimiento")
+    ver_responsables        = models.BooleanField(default=False, verbose_name="Ver responsables")
+
+    # Permisos de acción por pestaña
+    editar_plan_mantenimiento  = models.BooleanField(default=False, verbose_name="Editar plan de mantenimiento")
+    editar_rutinas             = models.BooleanField(default=False, verbose_name="Editar rutinas")
+    editar_seguimiento         = models.BooleanField(default=False, verbose_name="Editar seguimiento")
+    editar_responsables        = models.BooleanField(default=False, verbose_name="Editar responsables")
+
     def __str__(self):
         return f"{self.usuario.username} — MTO"
 
@@ -192,3 +204,74 @@ class HistorialRutina(models.Model):
         verbose_name = "Historial de rutina"
         verbose_name_plural = "Historial de rutinas"
         ordering = ['-fecha']
+
+class SeguimientoOT(models.Model):
+    TIPO_CHOICES = [
+        ('correctiva', 'Correctiva'),
+    ]
+    ESTATUS_CHOICES = [
+        ('pendiente',   'Pendiente'),
+        ('en_proceso',  'En proceso'),
+        ('completado',  'Completado'),
+    ]
+
+    registro       = models.ForeignKey(
+        'RegistroEjecucion', on_delete=models.CASCADE,
+        related_name='seguimientos', verbose_name='Registro de ejecución'
+    )
+    tipo           = models.CharField(max_length=20, choices=TIPO_CHOICES, default='correctiva', verbose_name='Tipo')
+    problema       = models.TextField(verbose_name='Problema encontrado')
+    accion         = models.TextField(blank=True, default='', verbose_name='Acción realizada')
+    responsable    = models.CharField(max_length=100, blank=True, default='', verbose_name='Responsable')
+    fecha_compromiso = models.DateField(null=True, blank=True, verbose_name='Fecha compromiso')
+    estatus        = models.CharField(max_length=20, choices=ESTATUS_CHOICES, default='pendiente', verbose_name='Estatus')
+    notas          = models.TextField(blank=True, default='', verbose_name='Notas adicionales')
+    creado_por     = models.ForeignKey(
+        'auth.User', on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='Creado por'
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
+    validado = models.BooleanField(default=False, verbose_name='Validado')
+
+    class Meta:
+        ordering = ['-fecha_creacion']
+        verbose_name = 'Seguimiento de OT'
+        verbose_name_plural = 'Seguimientos de OT'
+
+    def __str__(self):
+        return f"Seguimiento {self.registro} — {self.get_tipo_display()} — {self.get_estatus_display()}"
+    
+class SeguimientoManual(models.Model):
+    TIPO_CHOICES = [
+        ('correctiva', 'Correctiva'),
+    ]
+    ESTATUS_CHOICES = [
+        ('pendiente',  'Pendiente'),
+        ('en_proceso', 'En proceso'),
+        ('completado', 'Completado'),
+    ]
+
+    consecutivo      = models.PositiveIntegerField(unique=True, verbose_name='Consecutivo')
+    area             = models.ForeignKey('Area', on_delete=models.PROTECT, null=True, blank=True, verbose_name='Área')
+    tipo             = models.CharField(max_length=20, choices=TIPO_CHOICES, default='correctiva')
+    problema         = models.TextField(verbose_name='Problema encontrado')
+    accion           = models.TextField(blank=True, default='', verbose_name='Acción realizada')
+    responsable      = models.CharField(max_length=100, blank=True, default='', verbose_name='Responsable')
+    fecha_compromiso = models.DateField(null=True, blank=True, verbose_name='Fecha compromiso')
+    estatus          = models.CharField(max_length=20, choices=ESTATUS_CHOICES, default='pendiente')
+    notas            = models.TextField(blank=True, default='', verbose_name='Notas adicionales')
+    creado_por       = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    fecha_creacion   = models.DateTimeField(auto_now_add=True)
+    validado = models.BooleanField(default=False, verbose_name='Validado')
+
+    class Meta:
+        ordering = ['-consecutivo']
+        verbose_name = 'Seguimiento manual'
+        verbose_name_plural = 'Seguimientos manuales'
+
+    @property
+    def no_orden(self):
+        return f"M{self.consecutivo:08d}"
+
+    def __str__(self):
+        return f"{self.no_orden} — {self.get_estatus_display()}"

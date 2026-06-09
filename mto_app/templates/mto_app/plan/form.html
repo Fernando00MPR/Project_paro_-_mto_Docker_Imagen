@@ -1,29 +1,30 @@
 {% extends "menu_app/base_menu.html" %}
-{% block title %}{% if plan %}Editar{% else %}Nueva{% endif %} tarea{% endblock %}
+{% load i18n %}
+{% block title %}{% if plan %}{% trans "Editar" %}{% else %}{% trans "Nueva" %}{% endif %} {% trans "tarea" %}{% endblock %}
 {% block content %}
 <div class="card" style="max-width:680px;">
     <div class="card-header">
         <div>
-            <div class="card-title">{% if plan %}Editar tarea{% else %}Nueva tarea de mantenimiento{% endif %}</div>
-            <div class="card-subtitle">Completa todos los campos del plan</div>
+            <div class="card-title">{% if plan %}{% trans "Editar tarea" %}{% else %}{% trans "Nueva tarea de mantenimiento" %}{% endif %}</div>
+            <div class="card-subtitle">{% trans "Completa todos los campos del plan" %}</div>
         </div>
     </div>
     <form method="post">
         {% csrf_token %}
         <div class="form-grid">
             <div class="form-field">
-                <label>Código *</label>
+                <label>{% trans "Código" %} *</label>
                 <input type="text" name="codigo" value="{{ plan.codigo|default:'' }}" required>
             </div>
             <div class="form-field">
-                <label>N° Plan de trabajo *</label>
+                <label>{% trans "N° Plan de trabajo" %} *</label>
                 <input type="text" name="plan_trabajo" value="{{ plan.plan_trabajo|default:'' }}"
                        placeholder="Ej: PT-2024-001">
             </div>
             <div class="form-field">
-                <label>Área *</label>
+                <label>{% trans "Área" %} *</label>
                 <select name="area" required>
-                    <option value="">— Seleccionar —</option>
+                    <option value="">— {% trans "Seleccionar" %} —</option>
                     {% for a in areas %}
                     <option value="{{ a.pk }}" {% if plan.area_id == a.pk %}selected{% endif %}>
                         {{ a.nombre }}
@@ -32,9 +33,9 @@
                 </select>
             </div>
             <div class="form-field">
-                <label>Frecuencia *</label>
+                <label>{% trans "Frecuencia" %} *</label>
                 <select name="frecuencia" required>
-                    <option value="">— Seleccionar —</option>
+                    <option value="">— {% trans "Seleccionar" %} —</option>
                     {% for val, label in frecuencias %}
                     <option value="{{ val }}" {% if plan.frecuencia == val %}selected{% endif %}>
                         {{ label }}
@@ -43,35 +44,35 @@
                 </select>
             </div>
             <div class="form-field full">
-                <label>Actividad</label>
+                <label>{% trans "Actividad" %}</label>
                 <input type="text" name="actividad" value="{{ plan.actividad|default:'' }}" required
                        placeholder="Descriptivo de la actividad del equipo">
             </div>
             <div class="form-field full">
-                <label>Rutina *</label>
+                <label>{% trans "Rutina" %} *</label>
                 <input type="text" name="rutina" value="{{ plan.rutina|default:'' }}" required
                        placeholder="Descripción de la rutina de mantenimiento">
             </div>
             <div class="form-field">
-                <label>Duracion estimada (minutos) *</label>
+                <label>{% trans "Duración estimada (minutos)" %} *</label>
                 <input type="number" name="duracion_minutos" min="5" step="5"
                     value="{{ plan.duracion_minutos|default:'60' }}" required>
                 <span class="help">Ejemplo: 30 min, 60 min, 120 min (2 h)</span>
             </div>
             <div class="form-field">
-                <label>Equipo</label>
+                <label>{% trans "Equipo" %}</label>
                 <input type="text" name="nombre_equipo"
                     value="{{ plan.nombre_equipo|default:'' }}"
                     placeholder="Nombre corto del equipo">
             </div>
             <div class="form-field">
-                <label>Locacion</label>
+                <label>{% trans "Locación" %}</label>
                 <input type="text" name="locacion"
                     value="{{ plan.locacion|default:'' }}"
                     placeholder="Ej: Automatic Warehouse">
             </div>
             <div class="form-field">
-                <label>Tipo de mantenimiento</label>
+                <label>{% trans "Tipo de mantenimiento" %}</label>
                 <select name="tipo_mto">
                     {% for val, label in tipos_mto %}
                     <option value="{{ val }}" {% if plan.tipo_mto == val %}selected{% endif %}>
@@ -81,7 +82,7 @@
                 </select>
             </div>
             <div class="form-field">
-                <label>Prioridad</label>
+                <label>{% trans "Prioridad" %}</label>
                 <select name="prioridad">
                     {% for val, label in prioridades %}
                     <option value="{{ val }}" {% if plan.prioridad == val %}selected{% endif %}>
@@ -91,7 +92,7 @@
                 </select>
             </div>
             <div class="form-field">
-                <label>Estatus</label>
+                <label>{% trans "Estatus" %}</label>
                 <select name="estatus">
                     {% for val, label in status_opts %}
                     <option value="{{ val }}" {% if plan.estatus == val %}selected{% endif %}>
@@ -101,14 +102,14 @@
                 </select>
             </div>
             <div class="form-field">
-                <label>Semana de inicio *</label>
+                <label>{% trans "Semana de inicio" %} *</label>
                 <input type="number" name="semana_inicio" min="1" max="52"
                     value="{{ plan.semana_inicio|default:'' }}" required
                     placeholder="Ej: 1, 15, 32">
-                <span class="help">Numero de semana del año (1 al 52)</span>
+                <span class="help">{% trans "Numero de semana del año (1 al 52)" %}</span>
             </div>
             <div class="form-field">
-                <label>Año de inicio *</label>
+                <label>{% trans "Año de inicio" %} *</label>
                 <input type="number" name="anio_inicio" min="2020" max="2099"
                     value="{{ plan.anio_inicio|default:'' }}" required
                     placeholder="Ej: 2025">
@@ -118,13 +119,13 @@
                     <input type="checkbox" name="activo"
                            {% if not plan or plan.activo %}checked{% endif %}
                            style="accent-color:var(--indigo);">
-                    Tarea activa
+                    {% trans "Tarea activa" %}
                 </label>
             </div>
         </div>
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Guardar</button>
-            <a href="{% url 'mto:lista_plan' %}" class="btn btn-ghost">Cancelar</a>
+            <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
+            <a href="{% url 'mto:lista_plan' %}" class="btn btn-ghost">{% trans "Cancelar" %}</a>
         </div>
     </form>
 </div>

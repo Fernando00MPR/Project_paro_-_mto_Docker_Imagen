@@ -46,6 +46,7 @@ def dashboard(request):
         fecha_ini = fecha_fin - timedelta(days=dias - 1)
 
     responsable_filtro = request.GET.get('responsable', '')
+    estatus_filtro = request.GET.get('estatus', 'verde')
     qs = Paro.objects.select_related('area').filter(
         fecha__gte=fecha_ini, fecha__lte=fecha_fin
     )
@@ -53,6 +54,8 @@ def dashboard(request):
         qs = qs.filter(area_id=area_id)
     if responsable_filtro:
         qs = qs.filter(responsable=responsable_filtro)
+    if estatus_filtro in ('rojo', 'amarillo', 'verde'):
+        qs = qs.filter(estatus=estatus_filtro)
 
     area_actual = None
     if area_id:
@@ -195,6 +198,7 @@ def dashboard(request):
         'max_falla':                max_falla,
         'max_equipo':               max_equipo,
         'max_tend':                 max_tend,
+        'estatus_filtro':           estatus_filtro,
     })
 
 
@@ -260,6 +264,9 @@ def analisis_paros(request):
         qs = qs.filter(area__in=areas_disp)
     if turno in ('1', '2'):
         qs = qs.filter(turno=int(turno))
+    estatus_filtro = request.GET.get('estatus', 'verde')
+    if estatus_filtro in ('rojo', 'amarillo', 'verde'):
+        qs = qs.filter(estatus=estatus_filtro)
 
     # ── Exclusiones por checkbox ──────────────────────────────────────────────
     fallas_excluidas = request.GET.getlist('excluir_falla')
@@ -267,6 +274,7 @@ def analisis_paros(request):
     modo_pareto      = request.GET.get('modo_pareto', 'falla')
     modo_barras      = request.GET.get('modo_barras', 'falla')
     tipos_excluidos  = request.GET.getlist('excluir_tipo')
+    atendio_excluidos = request.GET.getlist('excluir_atendio')
 
     # ── Listas para los paneles (antes de exclusión) ──────────────────────────
     lista_fallas = (
@@ -299,6 +307,12 @@ def analisis_paros(request):
             .distinct()
             .order_by('tipo_falla')
         )
+    lista_atendio = (
+        qs.values('atendio')
+        .annotate(minutos=Sum('tiempo_minutos'))
+        .exclude(atendio='')
+        .order_by('-minutos')
+    )
 
     # ── Aplicar exclusiones ───────────────────────────────────────────────────
     qs_graf = qs
@@ -313,6 +327,8 @@ def analisis_paros(request):
             tipo_falla__in=tipos_excluidos
         ).values_list('nombre_en', flat=True))
         qs_graf = qs_graf.exclude(falla__in=fallas_de_tipos)
+    if atendio_excluidos:
+        qs_graf = qs_graf.exclude(atendio__in=atendio_excluidos)
 
     # ── KPIs ──────────────────────────────────────────────────────────────────
     total_paros   = qs_graf.count()
@@ -387,6 +403,16 @@ def analisis_paros(request):
         labels_p  = [t[0] for t in sorted_tipos]
         minutos_p = [t[1]['minutos'] for t in sorted_tipos]
         nparos_p  = [t[1]['n_paros'] for t in sorted_tipos]
+    elif modo_pareto == 'atendio':
+        grupos_pareto = (
+            qs_graf.exclude(atendio='')
+            .values('atendio')
+            .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
+            .order_by('-minutos')
+        )
+        labels_p  = [g['atendio'] for g in grupos_pareto]
+        minutos_p = [g['minutos'] or 0 for g in grupos_pareto]
+        nparos_p  = [g['n_paros'] for g in grupos_pareto]
     else:
         campo_pareto  = 'falla' if modo_pareto == 'falla' else 'responsable'
         grupos_pareto = (
@@ -423,6 +449,16 @@ def analisis_paros(request):
         labels_b  = [t[0] for t in sorted_tipos_b]
         minutos_b = [t[1]['minutos'] for t in sorted_tipos_b]
         nparos_b  = [t[1]['n_paros'] for t in sorted_tipos_b]
+    elif modo_barras == 'atendio':
+        grupos_barras = (
+            qs_graf.exclude(atendio='')
+            .values('atendio')
+            .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
+            .order_by('-minutos')
+        )
+        labels_b  = [g['atendio'] for g in grupos_barras]
+        minutos_b = [g['minutos'] or 0 for g in grupos_barras]
+        nparos_b  = [g['n_paros'] for g in grupos_barras]
     else:
         campo_barras  = 'falla' if modo_barras == 'falla' else 'responsable'
         grupos_barras = (
@@ -464,4 +500,7 @@ def analisis_paros(request):
         'resp_excluidas':     resp_excluidas,
         'lista_tipos':        list(lista_tipos),
         'tipos_excluidos':    tipos_excluidos,
+        'estatus_filtro':     estatus_filtro,
+        'lista_atendio':      lista_atendio,
+        'atendio_excluidos':  atendio_excluidos,
     })
