@@ -13,7 +13,7 @@ from login_app.permisos import get_perfil
  
 def _calcular_muerto(paros_qs, equipo_nombre, hora_inicio, hora_fin):
     qs = paros_qs.filter(estatus='verde')
-    qs = qs.filter(equipo__iexact=equipo_nombre) if equipo_nombre else qs
+    qs = qs.filter(Q(equipo_es__iexact=equipo_nombre) | Q(equipo_en__iexact=equipo_nombre)) if equipo_nombre else qs
     if hora_fin > hora_inicio:
         qs = qs.filter(hora__gte=hora_inicio, hora__lte=hora_fin)
     else:
@@ -28,11 +28,11 @@ def _calcular_kpis_mantenimiento(paros_qs, equipo_nombre, hora_inicio, hora_fin,
                          'Robotics']
     qs = paros_qs.filter(estatus='verde').filter(responsable__in=responsables_mant)
     if equipo_nombre:
-        qs = qs.filter(equipo__iexact=equipo_nombre)
+        qs = qs.filter(Q(equipo_es__iexact=equipo_nombre) | Q(equipo_en__iexact=equipo_nombre))
     if hora_fin > hora_inicio:
         qs = qs.filter(hora__gte=hora_inicio, hora__lte=hora_fin)
     else:
-        from django.db.models import Q
+        #from django.db.models import Q
         qs = qs.filter(Q(hora__gte=hora_inicio) | Q(hora__lte=hora_fin))
     
     n_paros  = qs.count()
