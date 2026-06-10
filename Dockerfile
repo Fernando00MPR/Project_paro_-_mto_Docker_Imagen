@@ -34,6 +34,4 @@ COPY . .
 EXPOSE 8000
 
 # ── Comando de inicio ─────────────────────────────────────────────────────────
-#CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py compilemessages && python manage.py migrate && python manage.py crear_superusuario && gunicorn paros_project.wsgi:application --bind 0.0.0.0:8000 --workers 3"]
-#CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py compilemessages && python manage.py migrate && python manage.py crear_superusuario && gunicorn paros_project.wsgi:application --bind 0.0.0.0:8000 --workers 3 --log-level debug --access-logfile - --error-logfile -"]
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py compilemessages && python manage.py migrate && python manage.py crear_superusuario && gunicorn paros_project.wsgi:application --bind 0.0.0.0:8000 --workers 3 --log-level debug --access-logfile - --error-logfile - --capture-output"]
+CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py compilemessages && python manage.py migrate && python manage.py crear_superusuario && gunicorn paros_project.wsgi:application --bind 0.0.0.0:8000 --workers 3 --capture-output"]
