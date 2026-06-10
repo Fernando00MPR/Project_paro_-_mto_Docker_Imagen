@@ -20,8 +20,7 @@ def iniciar_scheduler():
 
     scheduler.add_job(
         respaldar,
-        #trigger=CronTrigger(day_of_week='mon', hour=2, minute=0),  # Lunes 2 AM
-        trigger=CronTrigger(minute='*/2'),  # cada 2 minutos
+        trigger=CronTrigger(day_of_week='mon', hour=2, minute=0),  # Lunes 2 AM
         id='respaldo_semanal',
         name='Respaldo semanal de BD',
         jobstore='default',
