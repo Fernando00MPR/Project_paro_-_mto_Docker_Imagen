@@ -136,8 +136,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 # ── Archivos de medios ─────────────────────────────────────────────────────────
+# ── Archivos de medios ─────────────────────────────────────────────────────────
 MEDIA_URL  = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-WHITENOISE_MEDIA_ROOT  = MEDIA_ROOT
-WHITENOISE_MEDIA_PREFIX = MEDIA_URL
