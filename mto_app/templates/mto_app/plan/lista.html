@@ -283,11 +283,11 @@
                         <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:nowrap;">
                             <button onclick="abrirModal({{ p.pk }})" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Ver" %}</button>
 
-                            {% if request.user.is_superuser or request.user.perfil.es_admin or request.user.acceso_mto.editar_plan_mantenimiento %}
+                            {% if puede_editar_plan %}
                             <a href="{% url 'mto:editar_plan' p.pk %}" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Editar" %}</a>
                             {% endif %}
                             
-                            {% if request.user.is_superuser or request.user.perfil.es_admin or request.user.acceso_mto.editar_plan_mantenimiento %}
+                            {% if puede_editar_plan %}
                             <button type="button" class="btn btn-danger btn-sm" style="padding:4px 8px; white-space:nowrap;"
                                     onclick="confirmarEliminar('{% url 'mto:eliminar_plan' p.pk %}')">{% trans "Eliminar" %}</button>
                             {% endif %}

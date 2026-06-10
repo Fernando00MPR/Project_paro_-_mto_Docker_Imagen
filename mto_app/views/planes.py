@@ -165,6 +165,11 @@ def lista_plan(request):
             )
             for a in areas_permitidas_mto(request)
         },
+        'puede_editar_plan': (
+            request.user.is_superuser or
+            (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+            (hasattr(request.user, 'acceso_mto') and request.user.acceso_mto.editar_plan_mantenimiento)
+        ),
     }
     return render(request, 'mto_app/plan/lista.html', ctx)
 
