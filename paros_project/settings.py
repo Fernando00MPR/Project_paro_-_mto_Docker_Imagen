@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     'paros_app',
     'menu_app',
     'mto_app',
+    'django_apscheduler',
+    'dbbackup',
 ]
 
 MIDDLEWARE = [
@@ -46,7 +48,20 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+    "dbbackup": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": str(BASE_DIR / "respaldos"),
+        },
+    },
+}
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
@@ -119,3 +134,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ── Mensajes ───────────────────────────────────────────────────────────────────
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# ── Archivos de medios ─────────────────────────────────────────────────────────
+MEDIA_URL  = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+WHITENOISE_MEDIA_ROOT  = MEDIA_ROOT
+WHITENOISE_MEDIA_PREFIX = MEDIA_URL

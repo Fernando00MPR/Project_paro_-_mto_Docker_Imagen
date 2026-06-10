@@ -285,6 +285,20 @@
                                 </svg>
                             </button>
                             {% endif %}
+                            {% if paro.imagenes.exists %}
+                            <button onclick="verImagenes({{ paro.id }})"
+                                    title="{% trans 'Ver imágenes' %}"
+                                    style="display:inline-flex; align-items:center; justify-content:center;
+                                        width:28px; height:28px; border-radius:6px; border:1px solid var(--border);
+                                        background:var(--surface); color:var(--text-2); cursor:pointer; padding:0;">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </button>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -350,6 +364,48 @@
         </div>
     </div>
 </div>
+
+<!-- Modal imágenes -->
+<div id="modal-imagenes" style="display:none; position:fixed; inset:0;
+     background:rgba(30,27,75,.45); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:24px;
+                max-width:600px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del paro" %}</div>
+            <button onclick="cerrarModalImagenes()"
+                    style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
+        </div>
+        <div id="modal-imagenes-contenido" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;"></div>
+    </div>
+</div>
+
+<script>
+function verImagenes(paroId) {
+    fetch(`/paros/${paroId}/imagenes/`)
+        .then(r => r.json())
+        .then(data => {
+            const cont = document.getElementById('modal-imagenes-contenido');
+            cont.innerHTML = '';
+            data.imagenes.forEach(img => {
+                const a = document.createElement('a');
+                a.href = img.url;
+                a.target = '_blank';
+                const i = document.createElement('img');
+                i.src = img.url;
+                i.style.cssText = 'width:150px; height:150px; object-fit:cover; border-radius:8px; border:1px solid var(--border);';
+                a.appendChild(i);
+                cont.appendChild(a);
+            });
+            document.getElementById('modal-imagenes').style.display = 'flex';
+        });
+}
+function cerrarModalImagenes() {
+    document.getElementById('modal-imagenes').style.display = 'none';
+}
+document.getElementById('modal-imagenes').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalImagenes();
+});
+</script>
 
 {% endblock %}
 

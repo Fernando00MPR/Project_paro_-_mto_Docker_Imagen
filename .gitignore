@@ -21,3 +21,10 @@ staticfiles/
 # OS
 .DS_Store
 Thumbs.db
+
+# Media y respaldos
+/media
+/respaldos
+
+# Traducciones compiladas
+*.mo

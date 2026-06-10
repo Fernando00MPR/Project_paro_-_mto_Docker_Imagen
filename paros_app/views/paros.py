@@ -13,7 +13,7 @@ from ..models import Area, Paro, BitacoraParo, CatalogoFalla, CatalogoEquipo, Ca
 from ..forms import ParoForm
 from login_app.permisos import permiso_requerido, get_perfil
 from .utils import _aplicar_filtros
-
+from ..models import Area, Paro, BitacoraParo, CatalogoFalla, CatalogoEquipo, CatalogoResponsable, ImagenParo
 
 # ── Helpers internos ──────────────────────────────────────────────────────────
 
@@ -246,6 +246,16 @@ def crear_paro(request):
 
             paro.save()
 
+            # Guardar imágenes
+            imagenes = request.FILES.getlist('imagenes')
+            if len(imagenes) > 4:
+                for imagen in imagenes[:4]:
+                    ImagenParo.objects.create(paro=paro, imagen=imagen)
+                messages.warning(request, "Solo se guardaron 4 imágenes — ese es el límite por paro.")
+            else:
+                for imagen in imagenes:
+                    ImagenParo.objects.create(paro=paro, imagen=imagen)
+
             BitacoraParo.objects.create(
                 paro=paro, usuario=request.user,
                 campo='creado', valor_anterior='', valor_nuevo=''
@@ -324,6 +334,20 @@ def editar_paro(request, paro_id):
 
             estatus_anterior = paro.estatus
             paro.save()
+
+            # Guardar nuevas imágenes
+            imagenes = request.FILES.getlist('imagenes')
+            existentes = paro.imagenes.count()
+            disponibles = 4 - existentes
+            if disponibles <= 0:
+                messages.warning(request, "Este paro ya tiene 4 imágenes — no se pueden agregar más.")
+            elif len(imagenes) > disponibles:
+                for imagen in imagenes[:disponibles]:
+                    ImagenParo.objects.create(paro=paro, imagen=imagen)
+                messages.warning(request, f"Solo se guardaron {disponibles} imagen(es) — se alcanzó el límite de 4.")
+            else:
+                for imagen in imagenes:
+                    ImagenParo.objects.create(paro=paro, imagen=imagen)
 
             nuevo_estatus = request.POST.get('estatus', paro.estatus)
             if nuevo_estatus in ('rojo', 'amarillo', 'verde'):
@@ -458,3 +482,21 @@ def actualizar_campo_paro(request, paro_id):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+
+@login_required
+def imagenes_paro(request, paro_id):
+    paro = get_object_or_404(Paro, id=paro_id)
+    imagenes = [{'url': img.imagen.url} for img in paro.imagenes.all()]
+    return JsonResponse({'imagenes': imagenes})
+
+
+@login_required
+@require_http_methods(["POST"])
+def eliminar_imagen_paro(request, imagen_id):
+    from ..models import ImagenParo
+    imagen = get_object_or_404(ImagenParo, id=imagen_id)
+    paro_id = imagen.paro_id
+    imagen.imagen.delete()
+    imagen.delete()
+    return redirect('paros:editar_paro', paro_id=paro_id)

@@ -12,6 +12,8 @@ from .paros        import (
     eliminar_paro,
     cambiar_estatus_paro,
     actualizar_campo_paro,
+    imagenes_paro,
+    eliminar_imagen_paro,
 )
 from .exportacion  import (
     exportar_csv, 

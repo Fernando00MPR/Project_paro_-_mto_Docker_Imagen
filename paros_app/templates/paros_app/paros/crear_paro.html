@@ -19,7 +19,7 @@
     </div>
 
     <div class="card">
-        <form method="post" novalidate>
+        <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
             <div class="form-grid">
 
@@ -173,6 +173,70 @@
                     <ul class="errorlist">{% for e in form.comentarios.errors %}<li>{{ e }}</li>{% endfor %}</ul>
                     {% endif %}
                 </div>
+
+                <!-- Imágenes -->
+                <div class="form-field full">
+                    <label>{% trans "Imágenes" %} <span style="font-size:11px; color:var(--text-3);">{% trans "Opcional — puedes subir varias" %}</span></label>
+
+                    <div id="zona-imagenes" onclick="document.getElementById('input-imagenes').click()"
+                        style="border:2px dashed var(--border); border-radius:10px; padding:24px;
+                                text-align:center; cursor:pointer; transition:all .2s;
+                                background:var(--surface);"
+                        onmouseover="this.style.borderColor='var(--indigo)';this.style.background='var(--indigo-lt)'"
+                        onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                        <svg width="28" height="28" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" style="margin-bottom:8px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <div id="zona-texto" style="font-size:13px; font-weight:500; color:var(--text-2);">{% trans "Haz clic para seleccionar imágenes" %}</div>
+                        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "JPG, PNG, WEBP — puedes seleccionar varias" %}</div>
+                    </div>
+
+                    <input type="file" id="input-imagenes" name="imagenes" multiple accept="image/*" style="display:none;"
+                        onchange="previsualizarImagenes(this)">
+
+                    <div id="preview-imagenes" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+                </div>
+
+                <script>
+                function previsualizarImagenes(input) {
+                    const MAX = 4;
+                    const preview = document.getElementById('preview-imagenes');
+
+                    if (input.files.length > MAX) {
+                        showToast('Máximo 4 imágenes por paro.', 'warning');
+                        input.value = '';
+                        preview.innerHTML = '';
+                        document.getElementById('zona-texto').textContent = '{% trans "Haz clic para seleccionar imágenes" %}';
+                        return;
+                    }
+
+                    preview.innerHTML = '';
+                    Array.from(input.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            const div = document.createElement('div');
+                            div.style.cssText = 'position:relative;';
+                            div.innerHTML = `
+                                <img src="${e.target.result}"
+                                    style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+                                <div style="position:absolute;bottom:4px;left:0;right:0;text-align:center;
+                                            font-size:9px;color:#fff;background:rgba(0,0,0,.4);
+                                            border-radius:0 0 8px 8px;padding:2px 4px;
+                                            overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
+                                    ${file.name}
+                                </div>`;
+                            preview.appendChild(div);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                    const count = input.files.length;
+                    document.getElementById('zona-texto').textContent = count === 1
+                        ? `1 {% trans "imagen seleccionada" %}`
+                        : `${count} {% trans "imágenes seleccionadas" %}`;
+                }
+                </script>
 
             </div>
 

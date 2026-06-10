@@ -84,6 +84,9 @@ urlpatterns = [
     path('hora-hora/target/get/',                    views.get_target_hora_hora,           name='get_target_hora_hora'),
     path('hora-hora/target/anual/guardar/',          views.guardar_target_anual_hora_hora, name='guardar_target_anual_hora_hora'),
     path('hora-hora/target/anual/get/',              views.get_target_anual_hora_hora,     name='get_target_anual_hora_hora'),
+
+    path('paros/<int:paro_id>/imagenes/',          views.imagenes_paro,         name='imagenes_paro'),
+    path('paros/imagen/eliminar/<int:imagen_id>/', views.eliminar_imagen_paro,  name='eliminar_imagen_paro'),
 ]
 
 

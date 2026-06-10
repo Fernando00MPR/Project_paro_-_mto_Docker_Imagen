@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _ 
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 # Areas
 class Area(models.Model):
@@ -308,3 +310,35 @@ class TargetAnualHoraHora(models.Model):
 
     def __str__(self):
         return f"{self.area.nombre} — {self.anio} — {self.target_eficiencia}%"
+
+
+def imagen_paro_upload_path(instance, filename):
+    return f'paros/{instance.paro_id}/{filename}'
+
+
+class ImagenParo(models.Model):
+    paro        = models.ForeignKey('Paro', on_delete=models.CASCADE, related_name='imagenes', verbose_name='Paro')
+    imagen      = models.ImageField(upload_to=imagen_paro_upload_path, verbose_name='Imagen')
+    descripcion = models.CharField(max_length=100, blank=True, verbose_name='Descripción')
+    subida_en   = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de subida')
+
+    class Meta:
+        verbose_name = 'Imagen de paro'
+        verbose_name_plural = 'Imágenes de paro'
+        ordering = ['subida_en']
+
+    def __str__(self):
+        return f'Imagen paro #{self.paro_id} — {self.subida_en:%d/%m/%Y}'
+    
+@receiver(post_delete, sender=ImagenParo)
+def borrar_archivo_imagen(sender, instance, **kwargs):
+    """Borra el archivo físico cuando se elimina el registro ImagenParo."""
+    if instance.imagen:
+        instance.imagen.delete(save=False)
+
+@receiver(post_delete, sender=Paro)
+def borrar_imagenes_paro(sender, instance, **kwargs):
+    """Borra todas las imágenes físicas cuando se elimina un paro."""
+    for imagen in instance.imagenes.all():
+        if imagen.imagen:
+            imagen.imagen.delete(save=False)
