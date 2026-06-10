@@ -13,7 +13,4 @@ urlpatterns = [
     path('', include('login_app.urls')),
     path('', include(('paros_app.urls', 'paros'))),
     path('mto/', include(('mto_app.urls', 'mto'))),
-]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
