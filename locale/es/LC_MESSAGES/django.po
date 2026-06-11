@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-10 00:16-0600\n"
+"POT-Creation-Date: 2026-06-11 09:51-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -304,7 +304,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\paros\crear_paro.html:245
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:226
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:330
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:362
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:360
 #: .\paros_app\templates\paros_app\registro_produccion.html:260
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:148
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:186
@@ -502,7 +502,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:254
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:280
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:335
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:358
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:356
 #: .\paros_app\templates\paros_app\registro_produccion.html:259
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:237
 msgid "Sí, eliminar"
@@ -842,7 +842,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:122
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:254
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:259
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:420
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:418
 msgid "Pendiente"
 msgstr ""
 
@@ -1444,7 +1444,7 @@ msgstr ""
 
 #: .\mto_app\templates\mto_app\plan\lista.html:330
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:195
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:343
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:341
 msgid "Mostrar"
 msgstr ""
 
@@ -1683,7 +1683,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:147
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:274
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:325
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:353
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:351
 #: .\paros_app\templates\paros_app\registro_produccion.html:256
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:139
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:231
@@ -1850,7 +1850,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\dashboard.html:159
 #: .\paros_app\templates\paros_app\dashboard.html:198
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:88
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:417
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:415
 #: .\paros_app\templates\paros_app\registro_produccion.html:23
 msgid "Turno 1"
 msgstr ""
@@ -1860,7 +1860,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\dashboard.html:177
 #: .\paros_app\templates\paros_app\dashboard.html:203
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:89
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:418
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:416
 #: .\paros_app\templates\paros_app\registro_produccion.html:24
 msgid "Turno 2"
 msgstr ""
@@ -1869,7 +1869,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:121
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:254
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:259
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:419
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:417
 msgid "Rechazado"
 msgstr ""
 
@@ -1877,7 +1877,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:123
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:254
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:259
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:421
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:419
 msgid "Aceptado"
 msgstr ""
 
@@ -2651,28 +2651,23 @@ msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:178
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:233
-msgid "Falla (ES)"
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:125
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:74
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:100
+msgid "Falla (Español)"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:184
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:238
-msgid "Falla (EN)"
+msgid "Falla (Ingles)"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:190
-#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:243
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:159
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:76
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:102
-msgid "Tipo de falla (ES)"
+msgid "Tipo de falla (Español)"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:196
-#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:248
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:160
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:77
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:103
-msgid "Tipo de falla (EN)"
+msgid "Tipo de falla (Ingles)"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:205
@@ -2685,6 +2680,20 @@ msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:224
 msgid "Editar falla"
+msgstr ""
+
+#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:243
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:159
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:76
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:102
+msgid "Tipo de falla (ES)"
+msgstr ""
+
+#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:248
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:160
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:77
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:103
+msgid "Tipo de falla (EN)"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:299
@@ -2717,12 +2726,6 @@ msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:46
 msgid "fallas procesadas correctamente."
-msgstr ""
-
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:125
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:74
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:100
-msgid "Falla (Español)"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:126
@@ -3250,7 +3253,7 @@ msgid "Buscar equipo…"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:125
-msgid " paros encontrados"
+msgid " Paros encontrados"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:127
@@ -3258,6 +3261,9 @@ msgid "totales"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:130
+msgid "Paros aceptados"
+msgstr ""
+
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:133
 msgid "aceptados"
 msgstr ""
@@ -3267,7 +3273,7 @@ msgid "promedio"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:149
-msgid "paros sin aceptar"
+msgid "Paros sin aceptar"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:152
@@ -3280,17 +3286,17 @@ msgid "Tiempo"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:251
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:422
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:420
 msgid "Rechazado → Pendiente"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:251
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:423
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:421
 msgid "Pendiente → Aceptado"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:251
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:424
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:422
 msgid "Aceptado → Rechazado"
 msgstr ""
 
@@ -3298,23 +3304,23 @@ msgstr ""
 msgid "Ver imágenes"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:308
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:306
 msgid "No hay paros registrados con los filtros actuales."
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:353
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:351
 msgid "¿Eliminar este paro?"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:374
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:372
 msgid "Imágenes del paro"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:425
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:423
 msgid "Estatus actualizado"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:426
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:424
 msgid "Error al cambiar estatus"
 msgstr ""
 

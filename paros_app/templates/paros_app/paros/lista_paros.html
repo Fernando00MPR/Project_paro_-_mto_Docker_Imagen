@@ -122,12 +122,12 @@
 <div class="stat-bar">
     <div style="display:flex;gap:16px;flex-wrap:wrap;">
         <div class="stat-item">
-            <b>{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ paros|length }}{% endif %}</b>{% trans " paros encontrados" %}
+            <b>{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ paros|length }}{% endif %}</b>{% trans " Paros encontrados" %}
         </div>
         <div class="stat-item"><b>{{ total_minutos }}</b> min {% trans "totales" %}</div>
         
         <div class="stat-item" style="border-left:3px solid #10B981;">
-            <b>{{ paros_aceptados }}</b> paros {% trans "aceptados" %}
+            <b>{{ paros_aceptados }}</b> {% trans "Paros aceptados" %}
         </div>
         <div class="stat-item" style="border-left:3px solid #10B981;">
             <b>{{ minutos_aceptados }}</b> min {% trans "aceptados" %}
@@ -146,7 +146,7 @@
         {% endif %}
 
         <div class="stat-item" style="border-left:3px solid #EF4444;">
-            <b>{{ paros_sin_aceptar }}</b> {% trans "paros sin aceptar" %}
+            <b>{{ paros_sin_aceptar }}</b> {% trans "Paros sin aceptar" %}
         </div>
         <div class="stat-item" style="border-left:3px solid #EF4444;">
             <b>{{ minutos_sin_aceptar }}</b> min {% trans "sin aceptar" %}
