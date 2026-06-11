@@ -71,9 +71,9 @@ def dashboard(request):
     promedio_min  = round(total_minutos / total_paros, 1) if total_paros else 0
 
     # ── Estatus counts ────────────────────────────────────────────────────────
-    sin_revisar = qs.filter(estatus='rojo').count()
-    pendiente   = qs.filter(estatus='amarillo').count()
-    revisado    = qs.filter(estatus='verde').count()
+    Rechazados  = qs.filter(estatus='rojo').count()
+    Pendiente   = qs.filter(estatus='amarillo').count()
+    Aceptados   = qs.filter(estatus='verde').count()
 
     # ── Top responsables ──────────────────────────────────────────────────────
     top_responsables = (
@@ -183,9 +183,9 @@ def dashboard(request):
         'total_minutos':            total_minutos,
         'total_horas':              total_horas,
         'promedio_min':             promedio_min,
-        'sin_revisar':              sin_revisar,
-        'pendiente':                pendiente,
-        'revisado':                 revisado,
+        'Rechazados':               Rechazados,
+        'Pendiente':                Pendiente,
+        'Aceptados':                Aceptados,
         'responsable_filtro':       responsable_filtro,
         'responsables_disponibles': responsables_disponibles,
         'top_responsables':         top_responsables,

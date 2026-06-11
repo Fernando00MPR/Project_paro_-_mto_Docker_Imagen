@@ -5,9 +5,9 @@
 {% trans "Total de paros" as lbl_total %}
 {% trans "Minutos perdidos" as lbl_minutos %}
 {% trans "Promedio por paro" as lbl_promedio %}
-{% trans "Rechazados" as lbl_sin_revisar %}
-{% trans "Pendiente" as lbl_pendiente %}
-{% trans "Aceptados" as lbl_revisado %}
+{% trans "Rechazados" as lbl_Rechazados %}
+{% trans "Pendiente" as lbl_Pendiente %}
+{% trans "Aceptados" as lbl_Aceptados %}
 {% trans "Sin asignar" as lbl_sin_asignar %}
 {% trans "Sin falla" as lbl_sin_falla %}
 {% trans "Sin equipo" as lbl_sin_equipo %}
@@ -116,13 +116,13 @@
     {% include 'paros_app/_kpi.html' with valor=total_minutos label=lbl_minutos color="#D97706" icon="M13 10V3L4 14h7v7l9-11h-7z" sufijo="min" %}
     {% include 'paros_app/_kpi.html' with valor=promedio_min label=lbl_promedio color="#10B981" icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" sufijo="min" %}
     {% if estatus_filtro == '' or estatus_filtro == 'rojo' %}
-    {% include 'paros_app/_kpi.html' with valor=sin_revisar label=lbl_sin_revisar color="#EF4444" icon="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% include 'paros_app/_kpi.html' with valor=Rechazados label=lbl_Rechazados color="#EF4444" icon="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" %}
     {% endif %}
     {% if estatus_filtro == '' or estatus_filtro == 'amarillo' %}
-    {% include 'paros_app/_kpi.html' with valor=pendiente label=lbl_pendiente color="#F59E0B" icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% include 'paros_app/_kpi.html' with valor=Pendiente label=lbl_Pendiente color="#F59E0B" icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" %}
     {% endif %}
     {% if estatus_filtro == '' or estatus_filtro == 'verde' %}
-    {% include 'paros_app/_kpi.html' with valor=revisado label=lbl_revisado color="#10B981" icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% include 'paros_app/_kpi.html' with valor=Aceptados label=lbl_Aceptados color="#10B981" icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" %}
     {% endif %}
 </div>
 
