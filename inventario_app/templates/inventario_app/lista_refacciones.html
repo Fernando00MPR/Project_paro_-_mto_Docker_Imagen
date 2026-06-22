@@ -1,0 +1,456 @@
+{% extends "menu_app/base_menu.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Inventario de refacciones" %}{% endblock %}
+{% block content %}
+
+<!-- ── Encabezado ── -->
+<div class="card">
+
+    <div class="card-header">
+        <div>
+            <div class="card-title">
+                {% trans "Inventario de refacciones" %}
+                {% if filtro_area %}
+                    {% for a in areas %}
+                        {% if a.pk|stringformat:"s" == filtro_area %}
+                            — {{ a.nombre }}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            {% if puede_editar_inventario %}
+            <button type="button" onclick="abrirModalRefaccion()" class="btn btn-primary">+ {% trans "Nueva refacción" %}</button>
+            {% endif %}
+            {% include 'menu_app/_language_selector.html' %}
+        </div>
+    </div>
+
+    <!-- ── Filtros ── -->
+    <form method="get" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;
+                            padding:14px; background:var(--surface); border:1px solid var(--border);
+                            border-radius:var(--radius); align-items:flex-end;">
+        {% if filtro_area %}
+        <input type="hidden" name="area" value="{{ filtro_area }}">
+        {% endif %}
+
+        <div class="filter-group">
+            <label>{% trans "Categoría" %}</label>
+            <select style="width: 200px;" name="categoria" onchange="this.form.submit()">
+                <option value="">{% trans "Todas" %}</option>
+                {% for cat in categorias %}
+                <option value="{{ cat.pk }}" {% if filtro_categoria == cat.pk|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>{% trans "Buscar" %}</label>
+            <input style="width: 400px;" type="text" name="q" value="{{ busqueda }}" placeholder="No. Item o nombre..."
+                oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
+        </div>
+
+        <div class="filter-group">
+            <label>&nbsp;</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; height:36px;">
+                <span style="position:relative; display:inline-block; width:38px; height:22px; flex-shrink:0;">
+                    <input type="checkbox" name="bajo_minimo" value="1" {% if solo_bajo_minimo %}checked{% endif %}
+                        onchange="this.nextElementSibling.style.background = this.checked ? 'var(--indigo)' : 'var(--border)'; this.nextElementSibling.firstElementChild.style.transform = this.checked ? 'translateX(16px)' : 'translateX(0)'; this.form.submit();"
+                        style="position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer; z-index:1;">
+                    <span style="position:absolute; inset:0; border-radius:11px; transition:background .2s;
+                                background:{% if solo_bajo_minimo %}var(--indigo){% else %}var(--border){% endif %};">
+                        <span style="position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%;
+                                    background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform .2s;
+                                    transform:translateX({% if solo_bajo_minimo %}16px{% else %}0{% endif %});"></span>
+                    </span>
+                </span>
+                <span style="font-size:13px; color:var(--text-2);">{% trans "Solo bajo stock mínimo" %}</span>
+            </label>
+        </div>
+
+        <div class="filter-group">
+            <label>&nbsp;</label>
+            <a href="{% url 'inventario:lista_refacciones' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
+            class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
+        </div>
+
+    </form>
+
+    <!-- ── Indicadores ── -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:0;">
+        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
+            <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Refacciones" %}</div>
+            <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">{{ refacciones.paginator.count }}</div>
+            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "registradas en el área" %}</div>
+        </div>
+        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
+            <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Bajo stock mínimo" %}</div>
+            <div style="font-size:24px; font-weight:500; line-height:1; color:{% if total_bajo_minimo > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">{{ total_bajo_minimo }}</div>
+            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "requieren reabasto" %}</div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card">
+
+    <!-- ── Selector de columnas ── -->
+    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <div style="position:relative;" id="inv-col-picker-wrap">
+            <button onclick="toggleInvColPicker()" class="btn btn-ghost btn-sm"
+                    style="display:flex; align-items:center; gap:6px;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/>
+                </svg>
+                {% trans "Columnas" %}
+            </button>
+            <div id="inv-col-picker" style="display:none; position:absolute; right:0; top:36px; z-index:100;
+                                        background:var(--white); border:1px solid var(--border);
+                                        border-radius:10px; padding:12px 16px; min-width:200px;
+                                        box-shadow:var(--shadow-md);">
+                <div style="font-size:11px; font-weight:600; color:var(--text-3);
+                            text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">
+                    {% trans "Mostrar columnas" %}
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label class="inv-col-toggle" data-col="inv-col-item">      <input type="checkbox" checked onchange="toggleInvCol('inv-col-item', this.checked)"> {% trans "No. Item" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-nombre">    <input type="checkbox" checked onchange="toggleInvCol('inv-col-nombre', this.checked)"> {% trans "Nombre" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-categoria"> <input type="checkbox" checked onchange="toggleInvCol('inv-col-categoria', this.checked)"> {% trans "Categoría" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-unidad">    <input type="checkbox" checked onchange="toggleInvCol('inv-col-unidad', this.checked)"> {% trans "Unidad" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-stock">     <input type="checkbox" checked onchange="toggleInvCol('inv-col-stock', this.checked)"> {% trans "Stock" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-minimo">    <input type="checkbox" checked onchange="toggleInvCol('inv-col-minimo', this.checked)"> {% trans "Stock mínimo" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-ubicacion"> <input type="checkbox" checked onchange="toggleInvCol('inv-col-ubicacion', this.checked)"> {% trans "Ubicación" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-proveedor"> <input type="checkbox" onchange="toggleInvCol('inv-col-proveedor', this.checked)"> {% trans "Proveedor" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-costo">     <input type="checkbox" onchange="toggleInvCol('inv-col-costo', this.checked)"> {% trans "Costo unitario" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-creado">    <input type="checkbox" onchange="toggleInvCol('inv-col-creado', this.checked)"> {% trans "Creado en" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-modificado"><input type="checkbox" onchange="toggleInvCol('inv-col-modificado', this.checked)"> {% trans "Modificado en" %}</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Tabla ── -->
+    <div class="table-wrap" style="overflow-x:auto;">
+        <table style="table-layout:auto; width:max-content; min-width:100%;">
+            <thead>
+                <tr>
+                    <th class="inv-col-item"       style="text-align:center; width:110px;">{% trans "No. Item" %}</th>
+                    <th class="inv-col-nombre"     style="text-align:left;   width:260px;">{% trans "Nombre" %}</th>
+                    <th class="inv-col-categoria"  style="text-align:center; width:140px;">{% trans "Categoría" %}</th>
+                    <th class="inv-col-unidad"     style="text-align:center; width:90px; ">{% trans "Unidad" %}</th>
+                    <th class="inv-col-stock"      style="text-align:center; width:80px; ">{% trans "Stock" %}</th>
+                    <th class="inv-col-minimo"     style="text-align:center; width:80px;" >{% trans "Mínimo" %}</th>
+                    <th class="inv-col-ubicacion"  style="text-align:center; width:80px;" >{% trans "Ubicación" %}</th>
+                    <th class="inv-col-proveedor"  style="display:none; text-align:left;   width:160px;">{% trans "Proveedor" %}</th>
+                    <th class="inv-col-costo"      style="display:none; text-align:center; width:110px;">{% trans "Costo unit." %}</th>
+                    <th class="inv-col-creado"     style="display:none; text-align:center; width:120px;">{% trans "Creado en" %}</th>
+                    <th class="inv-col-modificado" style="display:none; text-align:center; width:120px;">{% trans "Modificado en" %}</th>
+                    <th                            style="text-align:center; width:160px;">{% trans "Acciones" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in refacciones %}
+                <tr>
+                    <td class="inv-col-item" style="text-align:center;"><strong>{{ r.no_item }}</strong></td>
+                    <td class="inv-col-nombre">{{ r.nombre }}</td>
+                    <td class="inv-col-categoria" style="text-align:center;">
+                        {% if r.categoria %}
+                        <span class="badge badge-t1">{{ r.categoria.nombre }}</span>
+                        {% else %}
+                        <span style="color:var(--text-3);">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="inv-col-unidad" style="text-align:center;">{{ r.get_unidad_display }}</td>
+                    <td class="inv-col-stock" style="text-align:center; font-family:'DM Mono',monospace;">{{ r.stock_actual }}</td>
+                    <td class="inv-col-minimo" style="text-align:center;">
+                        {% if r.bajo_minimo %}
+                        <span style="font-size:11px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px;">{{ r.stock_minimo }}</span>
+                        {% else %}
+                        <span style="font-family:'DM Mono',monospace; color:var(--text-2);">{{ r.stock_minimo }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="inv-col-ubicacion" style="text-align:center;">{{ r.ubicacion|default:"--" }}</td>
+                    <td class="inv-col-proveedor" style="display:none;">{{ r.proveedor|default:"--" }}</td>
+                    <td class="inv-col-costo" style="display:none; text-align:center; font-family:'DM Mono',monospace;">
+                        {% if r.costo_unitario %}${{ r.costo_unitario }}{% else %}--{% endif %}
+                    </td>
+                    <td class="inv-col-creado"    style="display:none; text-align:center; font-size:12px; color:var(--text-3);">{{ r.creado_en|date:"d/m/Y H:i" }}</td>
+                    <td class="inv-col-modificado" style="display:none; text-align:center; font-size:12px; color:var(--text-3);">{{ r.modificado_en|date:"d/m/Y H:i" }}</td>
+                    <td style="text-align:center;">
+                        <div style="display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:nowrap;">
+                            {% if r.imagenes.exists %}
+                            <button type="button" onclick="verImagenesRefaccion({{ r.pk }})"
+                                    title="{% trans 'Ver imágenes' %}"
+                                    style="display:inline-flex; align-items:center; justify-content:center;
+                                        width:30px; height:30px; border-radius:6px; border:1px solid var(--border);
+                                        background:var(--surface); color:var(--text-2); cursor:pointer; padding:0; flex-shrink:0;">
+                                <svg width="14" height="14" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                            {% else %}
+                            <div style="width:30px; height:30px; flex-shrink:0;"></div>
+                            {% endif %}
+
+                            {% if puede_editar_inventario %}
+                            <button type="button" onclick="editarRefaccion({{ r.pk }}, '{{ r.no_item|escapejs }}', '{{ r.nombre|escapejs }}', {{ r.area_id }}, {{ r.categoria_id|default:'null' }}, '{{ r.unidad }}', {{ r.stock_actual }}, {{ r.stock_minimo }}, '{{ r.ubicacion|escapejs }}', '{{ r.proveedor|escapejs }}', '{{ r.costo_unitario|default:'' }}', '{{ r.descripcion|escapejs }}', {{ r.activo|yesno:'true,false' }})"
+                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                        font-size:12px; border-radius:6px; border:1px solid var(--border);
+                                        background:var(--surface); color:var(--text); cursor:pointer;
+                                        white-space:nowrap;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                {% trans "Editar" %}
+                            </button>
+                            {% endif %}
+
+                            {% if puede_eliminar_inventario %}
+                            <button type="button"
+                                    onclick="confirmarEliminarRefaccion('{% url 'inventario:eliminar_refaccion' r.pk %}')"
+                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                        font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
+                                        background:#FFF5F5; color:#DC2626; cursor:pointer;
+                                        white-space:nowrap;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                {% trans "Eliminar" %}
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" style="text-align:center; color:var(--text-3); padding:24px;">
+                        {% trans "No hay refacciones registradas." %} 
+                        {% if puede_editar_inventario %}
+                            <a href="{% url 'inventario:nueva_refaccion' %}">{% trans "Agregar primera refacción" %}</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ── Paginación ── -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
+        <div class="pagination" style="margin:0;">
+            {% if refacciones.has_previous %}
+            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_categoria %}categoria={{ filtro_categoria }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ refacciones.previous_page_number }}">‹</a>
+            {% else %}
+            <span class="disabled">‹</span>
+            {% endif %}
+            {% for num in refacciones.paginator.page_range %}
+                {% if refacciones.number == num %}
+                <span class="current">{{ num }}</span>
+                {% elif num > refacciones.number|add:'-3' and num < refacciones.number|add:'3' %}
+                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_categoria %}categoria={{ filtro_categoria }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if refacciones.has_next %}
+            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_categoria %}categoria={{ filtro_categoria }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ refacciones.next_page_number }}">›</a>
+            {% else %}
+            <span class="disabled">›</span>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Modal confirmar eliminar ── -->
+<div id="modal-eliminar-refaccion"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+                min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar refacción" %}</div>
+        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">{% trans "Esta acción no se puede deshacer. ¿Confirmas que deseas eliminar esta refacción?" %}</div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="cerrarModalEliminarRefaccion()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <form id="form-eliminar-refaccion" method="post" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal nuevo/editar refacción ── -->
+<div id="modal-refaccion"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
+            z-index:3000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:12px; padding:24px 28px;
+                min-width:360px; max-width:560px; width:90%; max-height:90vh; overflow-y:auto;
+                box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:16px;" id="modal-refaccion-titulo">
+            {% trans "Nueva refacción" %}
+        </div>
+
+        <form method="post" action="{% url 'inventario:nueva_refaccion' %}" id="form-refaccion" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-grid">
+                <div class="form-field">
+                    <label>{% trans "No. Item" %} *</label>
+                    <input type="text" name="no_item" id="ref-no_item" required placeholder="Ej: 001">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Nombre" %} *</label>
+                    <input type="text" name="nombre" id="ref-nombre" required placeholder="Ej: Rodamiento 6205">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Área" %} *</label>
+                    <select name="area" id="ref-area" required>
+                        <option value="">{% trans "Selecciona un área" %}</option>
+                        {% for a in areas %}
+                        <option value="{{ a.pk }}">{{ a.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Categoría" %}</label>
+                    <select name="categoria" id="ref-categoria">
+                        <option value="">{% trans "Sin categoría" %}</option>
+                        {% for c in categorias %}
+                        <option value="{{ c.pk }}">{{ c.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Unidad" %}</label>
+                    <select name="unidad" id="ref-unidad">
+                        {% for val, label in unidades %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Stock actual" %}</label>
+                    <input type="number" name="stock_actual" id="ref-stock_actual" min="0" value="0">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Stock mínimo" %}</label>
+                    <input type="number" name="stock_minimo" id="ref-stock_minimo" min="0" value="0">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Ubicación" %}</label>
+                    <input type="text" name="ubicacion" id="ref-ubicacion" placeholder="Ej: Rack 3, Nivel B">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Proveedor" %}</label>
+                    <input type="text" name="proveedor" id="ref-proveedor">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Costo unitario" %}</label>
+                    <input type="number" name="costo_unitario" id="ref-costo_unitario" step="0.01" min="0" placeholder="0.00">
+                </div>
+
+                <div class="form-field full">
+                    <label>{% trans "Descripción" %}</label>
+                    <textarea name="descripcion" id="ref-descripcion" rows="2"></textarea>
+                </div>
+
+                <div class="form-field">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" name="activo" id="ref-activo" checked
+                               style="width:16px; height:16px; accent-color:var(--indigo); margin:0;">
+                        {% trans "Activo" %}
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-field full" style="margin-top:14px;">
+                <label>{% trans "Imágenes" %} <span style="color:var(--text-3); font-weight:400;">({% trans "máximo 2" %})</span></label>
+                <div id="ref-dropzone"
+                    style="border:2px dashed var(--border); border-radius:8px; padding:18px;
+                            text-align:center; cursor:pointer; background:var(--surface);
+                            transition:border-color .15s;">
+                    <svg width="26" height="26" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" style="margin-bottom:6px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <div style="font-size:12px; color:var(--text-2);">
+                        {% trans "Arrastra imágenes aquí o haz clic para seleccionar" %}
+                    </div>
+                    <input type="file" name="imagenes" id="ref-input-imagenes" accept="image/*" multiple style="display:none;">
+                </div>
+                <div id="ref-preview-imagenes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+                <div id="ref-imagenes-existentes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+            </div>
+
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:20px;">
+                <button type="button" onclick="cerrarModalRefaccion()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+                <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal imágenes (lightbox + miniaturas) -->
+<div id="modal-imagenes-ref" style="display:none; position:fixed; inset:0;
+     background:rgba(30,27,75,.45); z-index:5000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:24px;
+                max-width:520px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes de la refacción" %}</div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button onclick="descargarImagenRefActual()" title="{% trans 'Descargar' %}"
+                        style="background:none; border:none; cursor:pointer; color:var(--text-2); display:flex; align-items:center;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-6l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                </button>
+                <button onclick="cerrarModalImagenesRef()"
+                        style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
+            </div>
+        </div>
+
+        <div style="position:relative; background:var(--surface); border-radius:10px;
+                    height:300px; display:flex; align-items:center; justify-content:center;
+                    overflow:hidden; margin-bottom:12px;">
+            <img id="lightbox-ref-img-principal" src="" alt=""
+                 style="max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-in;"
+                 onclick="window.open(this.src, '_blank')">
+
+            <button onclick="lightboxRefAnterior()" title="{% trans 'Anterior' %}"
+                    style="position:absolute; left:8px; top:50%; transform:translateY(-50%);
+                           width:32px; height:32px; border-radius:50%; border:none;
+                           background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+                           display:flex; align-items:center; justify-content:center; font-size:16px;">‹</button>
+            <button onclick="lightboxRefSiguiente()" title="{% trans 'Siguiente' %}"
+                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%);
+                           width:32px; height:32px; border-radius:50%; border:none;
+                           background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+                           display:flex; align-items:center; justify-content:center; font-size:16px;">›</button>
+        </div>
+
+        <div id="lightbox-ref-miniaturas" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'inventario_app/js/lista_refacciones.js' %}"></script>
+{% endblock %}

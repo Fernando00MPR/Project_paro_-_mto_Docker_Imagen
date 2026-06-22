@@ -70,47 +70,112 @@
     </form>
 </div>
 
+<!-- ── Selector de columnas ── -->
+<div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+    <div style="position:relative;" id="seg-col-picker-wrap">
+        <button onclick="toggleSegColPicker()" class="btn btn-ghost btn-sm"
+                style="display:flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/>
+            </svg>
+            {% trans "Columnas" %}
+        </button>
+        <div id="seg-col-picker" style="display:none; position:absolute; right:0; top:36px; z-index:100;
+                                    background:var(--white); border:1px solid var(--border);
+                                    border-radius:10px; padding:12px 16px; min-width:200px;
+                                    box-shadow:var(--shadow-md);">
+            <div style="font-size:11px; font-weight:600; color:var(--text-3);
+                        text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">
+                {% trans "Mostrar columnas" %}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <label class="seg-col-toggle" data-col="seg-col-orden"><input type="checkbox" checked onchange="toggleSegCol('seg-col-orden', this.checked)"> {% trans "No. Orden" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-codigo"><input type="checkbox" checked onchange="toggleSegCol('seg-col-codigo', this.checked)"> {% trans "Código plan" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-tipo"><input type="checkbox" checked onchange="toggleSegCol('seg-col-tipo', this.checked)"> {% trans "Tipo" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-problema"><input type="checkbox" checked onchange="toggleSegCol('seg-col-problema', this.checked)"> {% trans "Problema" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-accion"><input type="checkbox" checked onchange="toggleSegCol('seg-col-accion', this.checked)"> {% trans "Acción" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-responsable"><input type="checkbox" checked onchange="toggleSegCol('seg-col-responsable', this.checked)"> {% trans "Responsable" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-compromiso"><input type="checkbox" checked onchange="toggleSegCol('seg-col-compromiso', this.checked)"> {% trans "Compromiso" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-estatus"><input type="checkbox" checked onchange="toggleSegCol('seg-col-estatus', this.checked)"> {% trans "Estatus" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-creado"><input type="checkbox" checked onchange="toggleSegCol('seg-col-creado', this.checked)"> {% trans "Creado" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-notas"><input type="checkbox" checked onchange="toggleSegCol('seg-col-notas', this.checked)"> {% trans "Notas" %}</label>
+                <label class="seg-col-toggle" data-col="seg-col-validacion"><input type="checkbox" checked onchange="toggleSegCol('seg-col-validacion', this.checked)"> {% trans "Validación" %}</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- Tabla -->
 <div class="card" style="padding:0; overflow:hidden;">
     <div class="table-wrap" style="overflow-x:auto;">
         <table>
             <thead>
                 <tr>
-                    <th style="text-align:center; width:100px;">{% trans "No. Orden" %}</th>
-                    <th style="text-align:center; width:100px;">{% trans "Código plan" %}</th>
-                    <th style="text-align:center; width:100px;">{% trans "Tipo" %}</th>
-                    <th style="text-align:left;   width:300px;">{% trans "Problema" %}</th>
-                    <th style="text-align:left;   width:300px;">{% trans "Acción" %}</th>
-                    <th style="text-align:left;   width:140px;">{% trans "Responsable" %}</th>
-                    <th style="text-align:center; width:150px;">{% trans "Compromiso" %}</th>
-                    <th style="text-align:center; width:150px;">{% trans "Estatus" %}</th>
-                    <th style="text-align:center; width:100px;">{% trans "Creado" %}</th>
-                    <th style="text-align:left;   width:200px;">{% trans "Notas" %}</th>
-                    <th style="text-align:center; width:100px;">{% trans "Validación" %}</th>
-                    <th style="text-align:center; width:200px">{% trans "Acciones" %}</th>
+                    <th class="seg-col-orden"       style="text-align:center; width:100px;">
+                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden_por' and k != 'direccion' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden_por=no_orden&direccion={% if orden_por == 'no_orden' and direccion == 'desc' %}asc{% else %}desc{% endif %}"
+                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if orden_por == 'no_orden' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if orden_por == 'no_orden' %}600{% else %}500{% endif %};">
+                            {% trans "No. Orden" %}
+                            {% if orden_por == 'no_orden' %}
+                                {% if direccion == 'desc' %}
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                {% else %}
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+                                {% endif %}
+                            {% else %}
+                                <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th class="seg-col-codigo"      style="text-align:center; width:100px;">{% trans "Código plan" %}</th>
+                    <th class="seg-col-tipo"        style="text-align:center; width:100px;">{% trans "Tipo" %}</th>
+                    <th class="seg-col-problema"    style="text-align:left;   width:300px;">{% trans "Problema" %}</th>
+                    <th class="seg-col-accion"      style="text-align:left;   width:300px;">{% trans "Acción" %}</th>
+                    <th class="seg-col-responsable" style="text-align:left;   width:140px;">{% trans "Responsable" %}</th>
+                    <th class="seg-col-compromiso"  style="text-align:center; width:150px;">{% trans "Compromiso" %}</th>
+                    <th class="seg-col-estatus"     style="text-align:center; width:150px;">{% trans "Estatus" %}</th>
+                    <th class="seg-col-creado"      style="text-align:center; width:100px;">
+                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden_por' and k != 'direccion' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden_por=fecha_creacion&direccion={% if orden_por == 'fecha_creacion' and direccion == 'desc' %}asc{% else %}desc{% endif %}"
+                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if orden_por == 'fecha_creacion' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if orden_por == 'fecha_creacion' %}600{% else %}500{% endif %};">
+                            {% trans "Creado" %}
+                            {% if orden_por == 'fecha_creacion' %}
+                                {% if direccion == 'desc' %}
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                {% else %}
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+                                {% endif %}
+                            {% else %}
+                                <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th class="seg-col-notas"       style="text-align:left;   width:200px;">{% trans "Notas" %}</th>
+                    <th class="seg-col-validacion"  style="text-align:center; width:100px;">{% trans "Validación" %}</th>
+                    <th style="text-align:center;   width:200px;">{% trans "Acciones" %}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for seg in seguimientos %}
                 <tr data-ot-id="{{ seg.id }}">
-                    <td style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">
+                    <td class="seg-col-orden"      style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">
                         {{ seg.no_orden }}
                     </td>
-                    <td style="font-size:12px; color:var(--text-2); text-align:center;">
+                    <td class="seg-col-codigo"     style="font-size:12px; color:var(--text-2); text-align:center;">
                         {{ seg.registro.plan.codigo }}
                     </td>
-                    <td style="text-align:center;">
+                    <td class="seg-col-tipo"       style="text-align:center;">
                         <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#FCEBEB; color:#A32D2D;">
                             {{ seg.get_tipo_display }}
                         </span>
                     </td>
-                    <td style="max-width:200px; white-space:normal;">{{ seg.problema }}</td>
-                    <td style="max-width:180px; white-space:normal; color:var(--text-2);">{{ seg.accion|default:"—" }}</td>
-                    <td>{{ seg.responsable|default:"—" }}</td>
-                    <td style="color:var(--text-2); text-align:center;">
+                    <td class="seg-col-problema"   style="max-width:200px; white-space:normal;">{{ seg.problema }}</td>
+                    <td class="seg-col-accion"     style="max-width:180px; white-space:normal; color:var(--text-2);">{{ seg.accion|default:"—" }}</td>
+                    <td class="seg-col-responsable" >{{ seg.responsable|default:"—" }}</td>
+                    <td class="seg-col-compromiso" style="color:var(--text-2); text-align:center;">
                         {% if seg.fecha_compromiso %}{{ seg.fecha_compromiso|date:"d/m/Y" }}{% else %}—{% endif %}
                     </td>
-                    <td style="text-align:center;">
+                    <td class="seg-col-estatus"    style="text-align:center;">
                         {% if seg.estatus == 'pendiente' %}
                             <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#FAEEDA; color:#854F0B;">{% trans "Pendiente" %}</span>
                         {% elif seg.estatus == 'en_proceso' %}
@@ -119,9 +184,9 @@
                             <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#EAF3DE; color:#3B6D11;">{% trans "Completado" %}</span>
                         {% endif %}
                     </td>
-                    <td style="color:var(--text-3); font-size:12px; text-align:center;">{{ seg.fecha_creacion|date:"d/m/Y" }}</td>
-                    <td style="max-width:150px; white-space:normal; color:var(--text-2); font-size:12px;">{{ seg.notas|default:"—" }}</td>
-                    <td style="text-align:center;">
+                    <td class="seg-col-creado"     style="color:var(--text-3); font-size:12px; text-align:center;">{{ seg.fecha_creacion|date:"d/m/Y" }}</td>
+                    <td class="seg-col-notas"      style="max-width:150px; white-space:normal; color:var(--text-2); font-size:12px;">{{ seg.notas|default:"—" }}</td>
+                    <td class="seg-col-validacion" style="text-align:center;">
                         <button onclick="toggleValidadoOT({{ seg.id }}, this)"
                                 style="padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:none;
                                     background:{% if seg.validado %}#EAF3DE{% else %}#F1EFE8{% endif %};
@@ -130,57 +195,78 @@
                         </button>
                     </td>
                     <td style="text-align:center;">
-                        {% if request.user.is_superuser or request.user.perfil.es_admin or request.user.acceso_mto.editar_seguimiento %}
+                       
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
 
+                            {% if seg.imagenes.exists %}
+                                <button onclick="verImagenesSeg('ot', {{ seg.id }})"
+                                        title="{% trans 'Ver imágenes' %}"
+                                        style="display:inline-flex; align-items:center; justify-content:center;
+                                            width:32px; height:30px; border-radius:6px; border:1px solid var(--border);
+                                            background:var(--surface); color:var(--text-2); cursor:pointer; padding:0; flex-shrink:0;">
+                                    <svg width="14" height="14" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            {% else %}
+                                <div style="width:32px; height:32px; flex-shrink:0;"></div>
+                            {% endif %}
+                            
+                            {% if puede_editar_seguimiento %}
                             <button onclick="editarOT({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid var(--border);
                                         background:var(--surface); color:var(--text); cursor:pointer;
-                                        white-space:nowrap; font-family:inherit;">
+                                        white-space:nowrap; font-family:inherit; height:30px;">
                                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                                 {% trans "Editar" %}
                             </button>
+                            {% endif %}
+                            
 
+                            {% if puede_eliminar_seguimiento %}
                             <button onclick="confirmarEliminarOT({{ seg.id }})"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
                                         background:#FFF5F5; color:#DC2626; cursor:pointer;
-                                        white-space:nowrap; font-family:inherit;">
+                                        white-space:nowrap; font-family:inherit; height:30px;">
                                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
                                 {% trans "Eliminar" %}
                             </button>
+                            {% endif %}
+                            
 
                         </div>
-                        {% endif %}
+                
                     </td>
                 </tr>
                 {% endfor %}
 
                 {% for seg in seguimientos_manuales %}
                 <tr data-sm-id="{{ seg.id }}">
-                    <td style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">
+                    <td class="seg-col-orden"       style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">
                         {{ seg.no_orden }}
                     </td>
-                    <td style="font-size:12px;color:var(--text-2);text-align:center;">—</td>
-                    <td style="text-align:center;">
+                    <td class="seg-col-codigo"      style="font-size:12px;color:var(--text-2);text-align:center;">—</td>
+                    <td class="seg-col-tipo"        style="text-align:center;">
                         <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#FCEBEB;color:#A32D2D;">
                             {{ seg.get_tipo_display }}
                         </span>
                     </td>
-                    <td style="max-width:200px;white-space:normal;">{{ seg.problema }}</td>
-                    <td style="max-width:180px;white-space:normal;color:var(--text-2);">{{ seg.accion|default:"—" }}</td>
-                    <td>{{ seg.responsable|default:"—" }}</td>
-                    <td style="color:var(--text-2);text-align:center;">
+                    <td class="seg-col-problema"    style="max-width:200px;white-space:normal;">{{ seg.problema }}</td>
+                    <td class="seg-col-accion"      style="max-width:180px;white-space:normal;color:var(--text-2);">{{ seg.accion|default:"—" }}</td>
+                    <td class="seg-col-responsable">{{ seg.responsable|default:"—" }}</td>
+                    <td class="seg-col-compromiso"  style="color:var(--text-2);text-align:center;">
                         {% if seg.fecha_compromiso %}{{ seg.fecha_compromiso|date:"d/m/Y" }}{% else %}—{% endif %}
                     </td>
-                    <td style="text-align:center;">
+                    <td class="seg-col-estatus"     style="text-align:center;">
                         {% if seg.estatus == 'pendiente' %}
                             <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#FAEEDA;color:#854F0B;">{% trans "Pendiente" %}</span>
                         {% elif seg.estatus == 'en_proceso' %}
@@ -189,9 +275,9 @@
                             <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#EAF3DE;color:#3B6D11;">{% trans "Completado" %}</span>
                         {% endif %}
                     </td>
-                    <td style="color:var(--text-3);font-size:12px;text-align:center;">{{ seg.fecha_creacion|date:"d/m/Y" }}</td>
-                    <td style="max-width:150px;white-space:normal;color:var(--text-2);font-size:12px;">{{ seg.notas|default:"—" }}</td>
-                    <td style="text-align:center;">
+                    <td class="seg-col-creado"      style="color:var(--text-3);font-size:12px;text-align:center;">{{ seg.fecha_creacion|date:"d/m/Y" }}</td>
+                    <td class="seg-col-notas"       style="max-width:150px;white-space:normal;color:var(--text-2);font-size:12px;">{{ seg.notas|default:"—" }}</td>
+                    <td class="seg-col-validacion"  style="text-align:center;">
                         <button onclick="toggleValidadoManual({{ seg.id }}, this)"
                                 style="padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:none;
                                     background:{% if seg.validado %}#EAF3DE{% else %}#F1EFE8{% endif %};
@@ -200,35 +286,54 @@
                         </button>
                     </td>
                     <td style="text-align:center;">
-                        {% if request.user.is_superuser or request.user.perfil.es_admin or request.user.acceso_mto.editar_seguimiento %}
+        
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
 
+                            {% if seg.imagenes.exists %}
+                                <button onclick="verImagenesSeg('manual', {{ seg.id }})"
+                                        title="{% trans 'Ver imágenes' %}"
+                                        style="display:inline-flex; align-items:center; justify-content:center;
+                                            width:32px; height:30px; border-radius:6px; border:1px solid var(--border);
+                                            background:var(--surface); color:var(--text-2); cursor:pointer; padding:0; flex-shrink:0;">
+                                    <svg width="14" height="14" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            {% else %}
+                                <div style="width:32px; height:32px; flex-shrink:0;"></div>
+                            {% endif %}
+
+                            {% if puede_editar_seguimiento %}
                             <button onclick="editarManual({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid var(--border);
                                         background:var(--surface); color:var(--text); cursor:pointer;
-                                        white-space:nowrap; font-family:inherit;">
+                                        white-space:nowrap; font-family:inherit; height:30px;">
                                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                                 {% trans "Editar" %}
                             </button>
+                            {% endif %}
 
+                            {% if puede_eliminar_seguimiento %}
                             <button onclick="confirmarEliminarManual({{ seg.id }})"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
                                         background:#FFF5F5; color:#DC2626; cursor:pointer;
-                                        white-space:nowrap; font-family:inherit;">
+                                        white-space:nowrap; font-family:inherit; height:30px;">
                                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
                                 {% trans "Eliminar" %}
                             </button>
+                            {% endif %}
 
                         </div>
-                        {% endif %}
+
                     </td>
                 </tr>
                 {% endfor %}
@@ -242,6 +347,30 @@
                 {% endif %}
             </tbody>
         </table>
+        
+        <!-- ── Paginación ── -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
+            <div class="pagination" style="margin:0;">
+                {% if combinados_page.has_previous %}
+                <a href="?area={{ area_filtro }}&per_page={{ per_page }}&page={{ combinados_page.previous_page_number }}">‹</a>
+                {% else %}
+                <span class="disabled">‹</span>
+                {% endif %}
+                {% for num in combinados_page.paginator.page_range %}
+                    {% if combinados_page.number == num %}
+                    <span class="current">{{ num }}</span>
+                    {% elif num > combinados_page.number|add:'-3' and num < combinados_page.number|add:'3' %}
+                    <a href="?area={{ area_filtro }}&per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if combinados_page.has_next %}
+                <a href="?area={{ area_filtro }}&per_page={{ per_page }}&page={{ combinados_page.next_page_number }}">›</a>
+                {% else %}
+                <span class="disabled">›</span>
+                {% endif %}
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -299,6 +428,26 @@
             <textarea id="sm-notas" rows="2" placeholder="Notas opcionales..."
                       style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; background:var(--white); color:var(--text);"></textarea>
         </div>
+
+        <!-- ── Imágenes ── -->
+        <div class="form-field" style="margin-bottom:16px;">
+            <label>{% trans "Imágenes" %} <span style="color:var(--text-3); font-weight:400;">({% trans "máximo 4" %})</span></label>
+            <div id="sm-dropzone"
+                style="border:2px dashed var(--border); border-radius:8px; padding:18px;
+                        text-align:center; cursor:pointer; background:var(--surface);
+                        transition:border-color .15s;">
+                <svg width="26" height="26" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" style="margin-bottom:6px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <div style="font-size:12px; color:var(--text-2);">
+                    {% trans "Arrastra imágenes aquí o haz clic para seleccionar" %}
+                </div>
+                <input type="file" id="sm-input-imagenes" accept="image/*" multiple style="display:none;">
+            </div>
+            <div id="sm-preview-imagenes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+        </div>
+
         <div style="display:flex; gap:8px; justify-content:flex-end;">
             <button type="button" onclick="cerrarModalManual()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
             <button type="button" onclick="guardarManual()" class="btn btn-primary">{% trans "Guardar" %}</button>
@@ -325,6 +474,49 @@
                 {% trans "Sí, eliminar" %}
             </button>
         </div>
+    </div>
+</div>
+
+<!-- Modal imágenes (lightbox + miniaturas) -->
+<div id="modal-imagenes-seg" style="display:none; position:fixed; inset:0;
+     background:rgba(30,27,75,.45); z-index:5000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:24px;
+                max-width:520px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del seguimiento" %}</div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button onclick="descargarImagenSegActual()" title="{% trans 'Descargar' %}"
+                        style="background:none; border:none; cursor:pointer; color:var(--text-2); display:flex; align-items:center;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-6l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                </button>
+                <button onclick="cerrarModalImagenesSeg()"
+                        style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
+            </div>
+        </div>
+
+        <div style="position:relative; background:var(--surface); border-radius:10px;
+                    height:300px; display:flex; align-items:center; justify-content:center;
+                    overflow:hidden; margin-bottom:12px;">
+            <img id="lightbox-seg-img-principal" src="" alt=""
+                 style="max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-in;"
+                 onclick="window.open(this.src, '_blank')">
+
+            <button onclick="lightboxSegAnterior()" title="{% trans 'Anterior' %}"
+                    style="position:absolute; left:8px; top:50%; transform:translateY(-50%);
+                           width:32px; height:32px; border-radius:50%; border:none;
+                           background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+                           display:flex; align-items:center; justify-content:center; font-size:16px;">‹</button>
+            <button onclick="lightboxSegSiguiente()" title="{% trans 'Siguiente' %}"
+                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%);
+                           width:32px; height:32px; border-radius:50%; border:none;
+                           background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+                           display:flex; align-items:center; justify-content:center; font-size:16px;">›</button>
+        </div>
+
+        <div id="lightbox-seg-miniaturas" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"></div>
     </div>
 </div>
 

@@ -67,8 +67,10 @@
                 </td>
                 <td style="text-align:center; padding-right:16px;">
                     <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
+
+                        {% if puede_editar_responsables %}
                         <a href="{% url 'mto:editar_responsable' r.pk %}?area={{ filtro_area }}"
-                        style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                 font-size:12px; border-radius:6px; border:1px solid var(--border);
                                 background:var(--surface); color:var(--text); text-decoration:none;
                                 white-space:nowrap;">
@@ -78,7 +80,10 @@
                             </svg>
                             {% trans "Editar" %}
                         </a>
+                        {% endif %}
+
                         <form method="post" action="{% url 'mto:eliminar_responsable' r.pk %}" style="margin:0;">
+                            {% if puede_eliminar_responsables %}
                             {% csrf_token %}
                             <button type="submit"
                                     onclick="return confirm('¿Eliminar a {{ r.nombre }} {{ r.apellidos }}?')"
@@ -92,6 +97,7 @@
                                 </svg>
                                 {% trans "Eliminar" %}
                             </button>
+                            {% endif %}
                         </form>
                     </div>
                 </td>

@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'paros_app',
     'menu_app',
     'mto_app',
+    'inventario_app',
     'django_apscheduler',
     'dbbackup',
 ]

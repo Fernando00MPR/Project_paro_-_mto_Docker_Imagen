@@ -12,7 +12,7 @@
 
         body {
             font-family: 'DM Sans', sans-serif;
-            background: #F8F7FF;
+            background-color: #1E1B4B;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -28,7 +28,7 @@
             border-radius: 16px;
             border: 1px solid #E5E4F0;
             overflow: hidden;
-            box-shadow: 0 8px 40px rgba(79,70,229,.1);
+            box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.3);
         }
 
         /* Panel izquierdo decorativo */
@@ -76,11 +76,33 @@
             display: flex;
             gap: 6px;
         }
+
+        .panel-slide {
+            flex: 0 0 100%;
+            min-width: 100%;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
         .panel-dots span {
-            width: 6px; height: 6px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: rgba(255,255,255,.3);
+            transition: background .3s, width .3s, border-radius .3s;
+            display: inline-block;
         }
+
+        .panel-dots span.active {
+            background: #fff;
+            width: 18px;
+            border-radius: 3px;
+        }
+
         .panel-dots span:first-child { background: #fff; }
 
         /* Panel derecho: formulario */
@@ -162,22 +184,101 @@
             .login-panel { display: none; }
             .login-form-wrap { padding: 36px 28px; }
         }
+
+        @keyframes drift1 { 
+            0%  {transform:translate(0,0)} 
+            20% {transform:translate(40px,-30px)} 
+            40% {transform:translate(-30px,50px)} 
+            60% {transform:translate(50px,20px)} 
+            80% {transform:translate(-20px,-40px)} 
+            100%{transform:translate(0,0)} 
+        }
+        @keyframes drift2 { 
+            0%  {transform:translate(0,0)} 
+            20% {transform:translate(-50px,30px)} 
+            40% {transform:translate(40px,-50px)} 
+            60% {transform:translate(-30px,40px)} 
+            80% {transform:translate(50px,-20px)} 
+            100%{transform:translate(0,0)} 
+        }
+        @keyframes drift3 { 
+            0%  {transform:translate(0,0)} 
+            20% {transform:translate(30px,50px)} 
+            40% {transform:translate(-50px,-30px)} 
+            60% {transform:translate(40px,-50px)} 
+            80% {transform:translate(-40px,30px)} 
+            100%{transform:translate(0,0)} 
+        }
+
     </style>
 </head>
 <body>
-    <div class="login-wrap">
+    <div class="login-wrap" style="position:relative; z-index:1;">
 
         <div class="login-panel">
             <div class="panel-brand">
                 <div class="panel-brand-dot"></div>
                 <span>{% trans "Gestión de Paros" %}</span>
             </div>
-            <div class="panel-body">
-                <h2>{% trans "Control de paros de producción" %}</h2>
-                <p>{% trans "Registra, consulta y analiza los paros por área, turno y tiempo de manera rápida." %}</p>
+
+            <div class="panel-body" style="overflow:hidden; position:relative;">
+                <div id="panel-track" style="display:flex; transition:transform .5s ease;">
+
+                    <div class="panel-slide">
+                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,.12);
+                                    display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                            <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                            </svg>
+                        </div>
+                        <h2>{% trans "Control de paros de producción" %}</h2>
+                        <p>{% trans "Registra, consulta y analiza los paros por área, turno y tiempo de manera rápida." %}</p>
+                    </div>
+
+                    <div class="panel-slide">
+                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,.12);
+                                    display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                            <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <h2>{% trans "Mantenimiento bajo control" %}</h2>
+                        <p>{% trans "Planea, ejecuta y da seguimiento a las rutinas de mantenimiento preventivo y correctivo." %}</p>
+                    </div>
+
+                    <div class="panel-slide">
+                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,.12);
+                                    display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                            <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 20V10M12 20V4M6 20v-6"/>
+                            </svg>
+                        </div>
+                        <h2>{% trans "Indicadores en tiempo real" %}</h2>
+                        <p>{% trans "Visualiza tendencias, tiempos perdidos y desempeño por área al instante." %}</p>
+                    </div>
+
+                    <div class="panel-slide">
+                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,.12);
+                                    display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                            <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                        </div>
+                        <h2>{% trans "Inventario siempre actualizado" %}</h2>
+                        <p>{% trans "Controla refacciones, stock mínimo y movimientos de almacén sin complicaciones." %}</p>
+                    </div>
+
+                </div>
             </div>
-            <div class="panel-dots">
-                <span></span><span></span><span></span><span></span>
+
+            <div class="panel-dots" id="panel-dots">
+                <span class="active" data-dot="0"></span>
+                <span data-dot="1"></span>
+                <span data-dot="2"></span>
+                <span data-dot="3"></span>
             </div>
         </div>
 
@@ -231,6 +332,11 @@
                 </script>
                 <input type="hidden" name="next" value="{{ next }}">
                 <button type="submit" class="btn-login">{% trans "Entrar" %}</button>
+
+                <div style="text-align:center; padding-top:12px; margin-top:4px; border-top:1px solid #E5E4F0;">
+                    <span style="font-size:14px; color:#9CA3AF;">{% trans "Versión" %} 1.0.0</span>
+                </div>
+                
             </form>
         </div>
 
@@ -256,5 +362,36 @@
             </button>
         </form>
     </div>
+
+    <script>
+    (function() {
+        const track = document.getElementById('panel-track');
+        const dots  = document.querySelectorAll('#panel-dots span');
+        const total = dots.length;
+        let actual  = 0;
+
+        function mostrar(index) {
+            track.style.transform = `translateX(-${index * 100}%)`;
+            dots.forEach((d, i) => d.classList.toggle('active', i === index));
+            actual = index;
+        }
+
+        setInterval(() => {
+            mostrar((actual + 1) % total);
+        }, 4000);
+    })();
+    </script>
+
 </body>
+    <div style="position:fixed; top:-80px; left:-80px; width:400px; height:400px; border-radius:50%;
+                background:rgba(99,102,241,0.15); pointer-events:none; z-index:0;
+                animation:drift1 12s ease-in-out infinite;"></div>
+
+    <div style="position:fixed; bottom:-100px; right:-60px; width:460px; height:460px; border-radius:50%;
+                background:rgba(139,92,246,0.12); pointer-events:none; z-index:0;
+                animation:drift2 14s ease-in-out infinite;"></div>
+
+    <div style="position:fixed; top:30%; right:5%; width:220px; height:220px; border-radius:50%;
+                background:rgba(165,180,252,0.08); pointer-events:none; z-index:0;
+                animation:drift3 10s ease-in-out infinite;"></div>
 </html>

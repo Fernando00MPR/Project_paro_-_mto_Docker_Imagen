@@ -16,6 +16,16 @@ from .utils import lunes_de_semana, INTERVALO, _frecuencia_desde_excel
 
 @login_required
 def lista_plan(request):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_ver = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.ver_plan_mantenimiento)
+    )
+    if not puede_ver:
+        messages.error(request, "No tienes permiso para ver esta sección.")
+        return redirect('mto:dashboard')
+    
     area_id       = request.GET.get('area')
     frecuencia    = request.GET.get('frecuencia')
     busqueda      = request.GET.get('q', '').strip()
@@ -168,7 +178,12 @@ def lista_plan(request):
         'puede_editar_plan': (
             request.user.is_superuser or
             (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
-            (hasattr(request.user, 'acceso_mto') and request.user.acceso_mto.editar_plan_mantenimiento)
+            (acceso and acceso.editar_plan_mantenimiento)
+        ),
+        'puede_eliminar_plan': (
+            request.user.is_superuser or
+            (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+            (acceso and acceso.eliminar_plan_mantenimiento)
         ),
     }
     return render(request, 'mto_app/plan/lista.html', ctx)

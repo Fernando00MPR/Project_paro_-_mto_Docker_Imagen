@@ -17,6 +17,8 @@ urlpatterns = [
     path('pasos/',                           views.lista_pasos,          name='lista_pasos'),
     path('pasos/importar/',                  views.importar_pasos,       name='importar_pasos'),
     path('pasos/eliminar/',                  views.eliminar_pasos_plan,  name='eliminar_pasos_plan'),
+
+    path('rutinas/historial/',               views.historial_rutinas, name='historial_rutinas'),
     
     path('exportar/semana/',                 views.exportar_semana_excel, name='exportar_semana_excel'),
    
@@ -39,7 +41,11 @@ urlpatterns = [
     path('seguimiento-manual/editar/<int:seg_pk>/',    views.editar_seguimiento_manual,   name='editar_seguimiento_manual'),
     path('seguimiento-manual/eliminar/<int:seg_pk>/',  views.eliminar_seguimiento_manual, name='eliminar_seguimiento_manual'),
 
+    path('seguimiento/<str:tipo>/<int:seg_pk>/imagenes/subir/',   views.subir_imagenes_seguimiento,  name='subir_imagenes_seguimiento'),
+    path('seguimiento/<str:tipo>/<int:seg_pk>/imagenes/',         views.imagenes_seguimiento,        name='imagenes_seguimiento'),
+    path('seguimiento/imagen/eliminar/<int:imagen_id>/',          views.eliminar_imagen_seguimiento, name='eliminar_imagen_seguimiento'),
+
     path('backlog/',                                   views.backlog_seguimientos, name='backlog_seguimientos'),
 
-
+    
 ]

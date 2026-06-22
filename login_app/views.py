@@ -82,8 +82,14 @@ def _build_permisos_mto(usuario):
     try:
         am = usuario.acceso_mto
         return {campo: getattr(am, campo, False) for campo in [
-            'ver_plan_mantenimiento', 'ver_rutinas', 'ver_seguimiento', 'ver_responsables',
-            'editar_plan_mantenimiento', 'editar_rutinas', 'editar_seguimiento', 'editar_responsables',
+            'ver_dashboard', 'ver_backlog',
+            'ver_plan_mantenimiento', 'editar_plan_mantenimiento', 'eliminar_plan_mantenimiento',
+            'ver_rutinas', 'editar_rutinas', 'eliminar_rutinas',
+            'ver_seguimiento', 'editar_seguimiento', 'eliminar_seguimiento',
+            'ver_responsables', 'editar_responsables', 'eliminar_responsables',
+            'ver_inventario', 'editar_inventario', 'eliminar_inventario',
+            'ver_seguimiento_refaccion', 'editar_seguimiento_refaccion', 'eliminar_seguimiento_refaccion',
+            'ver_seguimiento_servicio', 'editar_seguimiento_servicio', 'eliminar_seguimiento_servicio',
         ]}
     except AccesoMto.DoesNotExist:
         return {}
@@ -215,7 +221,8 @@ def _guardar_perfil(request, user, areas):
         'agregar_catalogo_falla', 'editar_catalogo_falla', 'eliminar_catalogo_falla',
         'agregar_catalogo_equipo', 'editar_catalogo_equipo', 'eliminar_catalogo_equipo',
         'agregar_catalogo_resp', 'editar_catalogo_resp', 'eliminar_catalogo_resp',
-        'ver_indicadores', 'ver_hora_hora',
+        'ver_indicadores', 'ver_hora_hora', 
+        'ver_seguimiento_servicio', 'editar_seguimiento_servicio', 'eliminar_seguimiento_servicio',
     ]
     for campo in campos_bool:
         setattr(perfil, campo, campo in request.POST)
@@ -232,8 +239,13 @@ def _guardar_perfil(request, user, areas):
     acceso_mto, _ = AccesoMto.objects.get_or_create(usuario=user)
     acceso_mto.activo = 'acceso_mto' in request.POST
     campos_mto = [
-        'ver_plan_mantenimiento', 'ver_rutinas', 'ver_seguimiento', 'ver_responsables',
-        'editar_plan_mantenimiento', 'editar_rutinas', 'editar_seguimiento', 'editar_responsables',
+        'ver_dashboard', 'ver_backlog',
+        'ver_plan_mantenimiento', 'editar_plan_mantenimiento', 'eliminar_plan_mantenimiento',
+        'ver_rutinas', 'editar_rutinas', 'eliminar_rutinas',
+        'ver_seguimiento', 'editar_seguimiento', 'eliminar_seguimiento',
+        'ver_responsables', 'editar_responsables', 'eliminar_responsables',
+        'ver_inventario', 'editar_inventario', 'eliminar_inventario',
+        'ver_seguimiento_refaccion', 'editar_seguimiento_refaccion', 'eliminar_seguimiento_refaccion',
     ]
     for campo in campos_mto:
         setattr(acceso_mto, campo, campo in request.POST)

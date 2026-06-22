@@ -114,10 +114,8 @@ class BitacoraParo(models.Model):
         'verde':    'Aceptado',
     }
     
-    paro           = models.ForeignKey(Paro, on_delete=models.CASCADE,
-                                       related_name='bitacora', verbose_name='Paro')
-    usuario        = models.ForeignKey('auth.User', on_delete=models.SET_NULL,
-                                       null=True, blank=True, verbose_name='Usuario')
+    paro           = models.ForeignKey(Paro, on_delete=models.CASCADE, related_name='bitacora', verbose_name='Paro')
+    usuario        = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Usuario')
     fecha_hora     = models.DateTimeField(auto_now_add=True, verbose_name='Fecha y hora')
     campo          = models.CharField(max_length=50, verbose_name='Campo')
     valor_anterior = models.TextField(blank=True, default='', verbose_name='Valor anterior')

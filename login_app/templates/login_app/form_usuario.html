@@ -221,7 +221,7 @@
             </div>
         </div>
 
-         <!-- Permisos — Indicadores de producción -->
+        <!-- Permisos — Indicadores de producción -->
         <div class="card" style="margin-bottom:16px;">
             <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Indicadores de producción" %}</div>
             <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
@@ -272,14 +272,14 @@
         </div>
 
         <!-- Permisos MTO -->
-        
+ 
         <!-- Permisos — Gestión de Mantenimiento -->
         <div class="card" style="margin-bottom:16px;">
             <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Gestión de Mantenimiento" %}</div>
             <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
                 {% trans "Controla si el usuario puede acceder al módulo de mantenimiento y qué áreas y pestañas puede ver." %}
             </div>
-
+        
             <!-- Acceso general -->
             <label class="perm-row" style="max-width:420px; margin-bottom:14px;">
                 <input type="checkbox" name="acceso_mto"
@@ -292,9 +292,39 @@
                     </div>
                 </div>
             </label>
-
-            <!-- Áreas permitidas -->
-            <div style="font-size:12px; color:var(--text-3); margin-bottom:10px;">{% trans "Áreas permitidas en mantenimiento:" %}</div>
+        
+            <!-- ── Sección 1: General ── -->
+            <div style="font-size:12px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:12px; padding-top:14px; border-top:1px solid var(--border);">
+                {% trans "General" %}
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px;">
+        
+                <label class="perm-row">
+                    <input type="checkbox" name="ver_dashboard"
+                        {% if permisos_mto.ver_dashboard %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Ver dashboard" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar el dashboard general de mantenimiento" %}</div>
+                    </div>
+                </label>
+        
+                <label class="perm-row">
+                    <input type="checkbox" name="ver_backlog"
+                        {% if permisos_mto.ver_backlog %}checked{% endif %}
+                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-weight:600; font-size:13px;">{% trans "Ver backlog" %}</div>
+                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar el backlog de seguimientos" %}</div>
+                    </div>
+                </label>
+        
+            </div>
+        
+            <!-- ── Sección 2: Áreas permitidas ── -->
+            <div style="font-size:12px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:12px; padding-top:14px; border-top:1px solid var(--border);">
+                {% trans "Áreas permitidas en mantenimiento" %}
+            </div>
             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
                 {% for area in areas_mto %}
                 <label style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 14px; border:1px solid var(--border); border-radius:20px; font-size:13px; transition:all .15s;"
@@ -307,94 +337,140 @@
                 </label>
                 {% endfor %}
             </div>
-
-            <!-- Permisos por pestaña -->
-            <div style="font-size:12px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:12px; padding-top:14px; border-top:1px solid var(--border);">
+        
+            <!-- ── Sección 3: Permisos por pestaña (Ver / Editar / Eliminar) ── -->
+            <div style="font-size:12px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:14px; padding-top:14px; border-top:1px solid var(--border);">
                 {% trans "Permisos por pestaña" %}
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        
+            <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:560px;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:8px 10px; font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border);">{% trans "Sección" %}</th>
+                        <th style="text-align:center; padding:8px 10px; font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); width:80px;">{% trans "Ver" %}</th>
+                        <th style="text-align:center; padding:8px 10px; font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); width:80px;">{% trans "Editar" %}</th>
+                        <th style="text-align:center; padding:8px 10px; font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); width:80px;">{% trans "Eliminar" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+        
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Plan de mantenimiento" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="ver_plan_mantenimiento" {% if permisos_mto.ver_plan_mantenimiento %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_plan_mantenimiento" {% if permisos_mto.editar_plan_mantenimiento %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_plan_mantenimiento" {% if permisos_mto.eliminar_plan_mantenimiento %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+        
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Rutinas" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="ver_rutinas" {% if permisos_mto.ver_rutinas %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_rutinas" {% if permisos_mto.editar_rutinas %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_rutinas" {% if permisos_mto.eliminar_rutinas %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+        
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Seguimiento" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="ver_seguimiento" {% if permisos_mto.ver_seguimiento %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_seguimiento" {% if permisos_mto.editar_seguimiento %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_seguimiento" {% if permisos_mto.eliminar_seguimiento %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+        
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Responsables" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="ver_responsables" {% if permisos_mto.ver_responsables %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_responsables" {% if permisos_mto.editar_responsables %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_responsables" {% if permisos_mto.eliminar_responsables %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+        
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Inventario" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="ver_inventario" {% if permisos_mto.ver_inventario %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_inventario" {% if permisos_mto.editar_inventario %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_inventario" {% if permisos_mto.eliminar_inventario %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+        
+                    <tr>
+                        <td style="padding:10px; font-weight:500;">{% trans "Seguimiento de refacciones" %}</td>
+                        <td style="text-align:center; padding:10px;">
+                            <input type="checkbox" name="ver_seguimiento_refaccion" {% if permisos_mto.ver_seguimiento_refaccion %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px;">
+                            <input type="checkbox" name="editar_seguimiento_refaccion" {% if permisos_mto.editar_seguimiento_refaccion %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px;">
+                            <input type="checkbox" name="eliminar_seguimiento_refaccion" {% if permisos_mto.eliminar_seguimiento_refaccion %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
 
-                <label class="perm-row">
-                    <input type="checkbox" name="ver_plan_mantenimiento"
-                        {% if permisos_mto.ver_plan_mantenimiento %}checked{% endif %}
-                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px;">{% trans "Ver plan de mantenimiento" %}</div>
-                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar el plan de mantenimiento" %}</div>
-                    </div>
-                </label>
-
-                <label class="perm-row">
-                    <input type="checkbox" name="editar_plan_mantenimiento"
-                        {% if permisos_mto.editar_plan_mantenimiento %}checked{% endif %}
-                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px;">{% trans "Editar plan de mantenimiento" %}</div>
-                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede crear, editar y eliminar planes" %}</div>
-                    </div>
-                </label>
-
-                <label class="perm-row">
-                    <input type="checkbox" name="ver_rutinas"
-                        {% if permisos_mto.ver_rutinas %}checked{% endif %}
-                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px;">{% trans "Ver rutinas" %}</div>
-                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar las rutinas de mantenimiento" %}</div>
-                    </div>
-                </label>
-
-                <label class="perm-row">
-                    <input type="checkbox" name="editar_rutinas"
-                        {% if permisos_mto.editar_rutinas %}checked{% endif %}
-                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px;">{% trans "Editar rutinas" %}</div>
-                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede importar, editar y eliminar rutinas" %}</div>
-                    </div>
-                </label>
-
-                <label class="perm-row">
-                    <input type="checkbox" name="ver_seguimiento"
-                        {% if permisos_mto.ver_seguimiento %}checked{% endif %}
-                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px;">{% trans "Ver seguimiento" %}</div>
-                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar el seguimiento de órdenes de trabajo" %}</div>
-                    </div>
-                </label>
-
-                <label class="perm-row">
-                    <input type="checkbox" name="editar_seguimiento"
-                        {% if permisos_mto.editar_seguimiento %}checked{% endif %}
-                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px;">{% trans "Editar seguimiento" %}</div>
-                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede crear, editar y cerrar seguimientos" %}</div>
-                    </div>
-                </label>
-
-                <label class="perm-row">
-                    <input type="checkbox" name="ver_responsables"
-                        {% if permisos_mto.ver_responsables %}checked{% endif %}
-                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px;">{% trans "Ver responsables" %}</div>
-                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede consultar el catálogo de responsables" %}</div>
-                    </div>
-                </label>
-
-                <label class="perm-row">
-                    <input type="checkbox" name="editar_responsables"
-                        {% if permisos_mto.editar_responsables %}checked{% endif %}
-                        style="width:16px; height:16px; accent-color:var(--indigo); flex-shrink:0;">
-                    <div>
-                        <div style="font-weight:600; font-size:13px;">{% trans "Editar responsables" %}</div>
-                        <div style="font-size:12px; color:var(--text-3);">{% trans "Puede agregar, editar y eliminar responsables" %}</div>
-                    </div>
-                </label>
-
+                    <tr>
+                        <td style="padding:10px; font-weight:500;">{% trans "Seguimiento de servicios" %}</td>
+                        <td style="text-align:center; padding:10px;">
+                            <input type="checkbox" name="ver_seguimiento_servicio" {% if permisos_mto.ver_seguimiento_servicio %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px;">
+                            <input type="checkbox" name="editar_seguimiento_servicio" {% if permisos_mto.editar_seguimiento_servicio %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px;">
+                            <input type="checkbox" name="eliminar_seguimiento_servicio" {% if permisos_mto.eliminar_seguimiento_servicio %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+        
+                </tbody>
+            </table>
             </div>
+        
         </div>
         
 

@@ -8,6 +8,16 @@ from ..models import Area, PlanMantenimiento, PasoRutina, HistorialRutina
 
 @login_required
 def lista_pasos(request):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_ver = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.ver_rutinas)
+    )
+    if not puede_ver:
+        messages.error(request, "No tienes permiso para ver esta sección.")
+        return redirect('mto:dashboard')
+
     plan_trabajo  = request.GET.get('pt', '').strip()
     area_id       = request.GET.get('area', '').strip()
     filtro_codigo = request.GET.get('codigo', '').strip()
@@ -53,24 +63,6 @@ def lista_pasos(request):
 
     primer_paso = pasos.first() if plan_trabajo else None
 
-    h_plan    = request.GET.get('h_plan', '').strip()
-    h_codigo  = request.GET.get('h_codigo', '').strip()
-    h_nombre  = request.GET.get('h_nombre', '').strip()
-
-    historial_qs = HistorialRutina.objects.select_related('usuario', 'area').all()
-    if h_plan:
-        historial_qs = historial_qs.filter(plan_trabajo__icontains=h_plan)
-    if h_codigo:
-        historial_qs = historial_qs.filter(codigo_plan__icontains=h_codigo)
-    if h_nombre:
-        historial_qs = historial_qs.filter(nombre_plan__icontains=h_nombre)
-
-    h_per_page_raw = request.GET.get('h_per_page', '5')
-    h_per_page     = h_per_page_raw if h_per_page_raw in ('5', '10', '15', '20') else '5'
-    h_paginator    = Paginator(historial_qs, int(h_per_page))
-    h_page_num     = request.GET.get('h_page', 1)
-    historial_page = h_paginator.get_page(h_page_num)
-
     ctx = {
         'pasos':            pasos_page,
         'planes_con_pasos': planes_con_pasos,
@@ -82,18 +74,24 @@ def lista_pasos(request):
         'primer_paso':      primer_paso,
         'filtro_codigo':    filtro_codigo,
         'filtro_nombre':    filtro_nombre,
-        'historial':        historial_page,
-        'h_plan':           h_plan,
-        'h_codigo':         h_codigo,
-        'h_nombre':         h_nombre,
-        'h_per_page':       h_per_page,
-        'h_perpage_opts':   ['5', '10', '15', '20'],
+        'puede_editar_rutinas':   (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.editar_rutinas)),
+        'puede_eliminar_rutinas': (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.eliminar_rutinas)),
     }
     return render(request, 'mto_app/rutinas/lista_rutinas.html', ctx)
 
 
 @login_required
 def importar_pasos(request):
+
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_editar = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.editar_rutinas)
+    )
+    if not puede_editar:
+        messages.error(request, "No tienes permiso para importar rutinas.")
+        return redirect('mto:lista_pasos')
 
     def limpiar(valor):
         if not valor:
@@ -181,6 +179,16 @@ def importar_pasos(request):
 
 @login_required
 def eliminar_pasos_plan(request):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_eliminar = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.eliminar_rutinas)
+    )
+    if not puede_eliminar:
+        messages.error(request, "No tienes permiso para eliminar rutinas.")
+        return redirect('mto:lista_pasos')
+
     if request.method == 'POST':
         plan_trabajo = request.POST.get('plan_trabajo', '').strip()
         area_id      = request.POST.get('area_id', '').strip()
@@ -213,3 +221,34 @@ def eliminar_pasos_plan(request):
 
             messages.success(request, f"{cantidad} paso(s) eliminados.")
     return redirect('mto:lista_pasos')
+
+
+@login_required
+def historial_rutinas(request):
+    h_plan    = request.GET.get('h_plan', '').strip()
+    h_codigo  = request.GET.get('h_codigo', '').strip()
+    h_nombre  = request.GET.get('h_nombre', '').strip()
+
+    historial_qs = HistorialRutina.objects.select_related('usuario', 'area').all()
+    if h_plan:
+        historial_qs = historial_qs.filter(plan_trabajo__icontains=h_plan)
+    if h_codigo:
+        historial_qs = historial_qs.filter(codigo_plan__icontains=h_codigo)
+    if h_nombre:
+        historial_qs = historial_qs.filter(nombre_plan__icontains=h_nombre)
+
+    h_per_page_raw = request.GET.get('h_per_page', '20')
+    h_per_page     = h_per_page_raw if h_per_page_raw in ('20', '30', '40') else '20'
+    h_paginator    = Paginator(historial_qs, int(h_per_page))
+    h_page_num     = request.GET.get('h_page', 1)
+    historial_page = h_paginator.get_page(h_page_num)
+
+    ctx = {
+        'historial':      historial_page,
+        'h_plan':         h_plan,
+        'h_codigo':       h_codigo,
+        'h_nombre':       h_nombre,
+        'h_per_page':     h_per_page,
+        'h_perpage_opts': ['20', '30', '40'],
+    }
+    return render(request, 'mto_app/rutinas/historial_rutinas.html', ctx)

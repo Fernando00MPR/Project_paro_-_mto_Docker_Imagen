@@ -287,7 +287,7 @@
                             <a href="{% url 'mto:editar_plan' p.pk %}" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Editar" %}</a>
                             {% endif %}
                             
-                            {% if puede_editar_plan %}
+                            {% if puede_eliminar_plan %}
                             <button type="button" class="btn btn-danger btn-sm" style="padding:4px 8px; white-space:nowrap;"
                                     onclick="confirmarEliminar('{% url 'mto:eliminar_plan' p.pk %}')">{% trans "Eliminar" %}</button>
                             {% endif %}

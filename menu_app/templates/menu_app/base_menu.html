@@ -571,7 +571,12 @@
         <!-- ── General ── -->
             
             <div id="nav-mto" style="display:none;">
+            
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_dashboard or request.user.acceso_mto.ver_backlog %}
             <div class="sidebar-section">{% trans "General" %}</div>
+            {% endif %}
+
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_dashboard %}
             <a href="{% url 'mto:dashboard' %}"
                 class="{% if 'mto:dashboard' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -580,7 +585,9 @@
                 </svg>
                 <span class="nav-label">{% trans "Dashboard" %}</span>
             </a>
+            {% endif %}
 
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_backlog %}
             <a href="{% url 'mto:backlog_seguimientos' %}" data-tooltip="Backlog de seguimientos"
                 class="{% if request.resolver_match.url_name == 'backlog_seguimientos' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -589,79 +596,123 @@
                 </svg>
                 <span class="nav-label">{% trans "Backlog" %}</span>
             </a>
-
-        <!-- ── Sidebar - Plan de Mantenimiento ── -->
-            
-            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_plan_mantenimiento %}
-            <div class="sidebar-section" style="margin-top:4px;">{% trans "Mantenimiento" %}</div>
-
-            {% for area in areas_menu %}
-            <a href="{% url 'mto:lista_plan' %}?area={{ area.pk }}" data-tooltip="{{ area.nombre }}"
-                class="{% if request.GET.area == area.pk|stringformat:'s' and 'plan' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                <span class="nav-label">{{ area.nombre }}</span>
-            </a>
-            {% endfor %}
             {% endif %}
 
-        <!-- ── Sidebar - Pasos rutinas ── -->
+            
+            <div style="padding:10px 12px; margin-bottom:4px;">
+                <label style="font-size:10px; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px;">
+                    {% trans "Área actual" %}
+                </label>
+                <select id="selector-area-mto" onchange="cambiarAreaMto(this.value)"
+                        style="width:100%; padding:7px 10px; border-radius:7px; border:1px solid var(--border);
+                            background:var(--surface); color:var(--text); font-size:13px; font-family:inherit; cursor:pointer;">
+                    {% for area in areas_menu %}
+                    <option value="{{ area.pk }}">{{ area.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- ── Sidebar - Plan de Mantenimiento ── -->
+
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_plan_mantenimiento %}
+            <a href="#" id="link-plan-mantenimiento" data-base-url="{% url 'mto:lista_plan' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_plan' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span class="nav-label">{% trans "Plan de mantenimiento" %}</span>
+            </a>
+            {% endif %}
+
+            <!-- ── Sidebar - Pasos rutinas ── -->
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_rutinas %}
-            <div class="sidebar-section" style="margin-top:4px;">{% trans "Rutinas de Mantenimiento" %}</div>
-
-            {% for area in areas_menu %}
-            <a href="{% url 'mto:lista_pasos' %}?area={{ area.pk }}" data-tooltip="Pasos {{ area.nombre }}"
-                class="{% if request.GET.area == area.pk|stringformat:'s' and 'paso' in request.resolver_match.url_name %}active{% endif %}">
+            <a href="#" id="link-rutinas" data-base-url="{% url 'mto:lista_pasos' %}" class="link-area-dinamico {% if 'paso' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
                 </svg>
-                <span class="nav-label">{{ area.nombre }}</span>
+                <span class="nav-label">{% trans "Rutinas de Mantenimiento" %}</span>
             </a>
-            {% endfor %}
+            
+
+            <!-- ── Sidebar - Pasos rutinas Historial ── -->
+
+            <a href="{% url 'mto:historial_rutinas' %}" data-tooltip="Historial de rutinas"
+                class="{% if request.resolver_match.url_name == 'historial_rutinas' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Historial de rutinas" %}</span>
+            </a>
             {% endif %}
 
-        <!-- ── Sidebar - Seguimiento── -->
-            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento %}
-            <div class="sidebar-section" style="margin-top:4px;">{% trans "Seguimientos" %}</div>
+            <!-- ── Sidebar - Seguimiento ── -->
 
-            {% for area in areas_menu %}
-            <a href="{% url 'mto:lista_seguimientos' %}?area={{ area.pk }}" data-tooltip="Seguimientos {{ area.nombre }}"
-                class="{% if request.resolver_match.url_name == 'lista_seguimientos' and request.GET.area == area.pk|stringformat:'s' %}active{% endif %}">
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento %}
+            <a href="#" id="link-seguimientos" data-base-url="{% url 'mto:lista_seguimientos' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
-                <span class="nav-label">{{ area.nombre }}</span>
+                <span class="nav-label">{% trans "Seguimientos" %}</span>
             </a>
-            {% endfor %}
             {% endif %}
 
-        <!-- ── Sidebar - Responsables ── -->
+            <!-- ── Sidebar - Responsables ── -->
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_responsables %}
-            <div class="sidebar-section" style="margin-top:4px;">{% trans "Responsables" %}</div>
-
-            {% for area in areas_menu %}
-            <a href="{% url 'mto:lista_responsables' %}?area={{ area.pk }}"
-            data-tooltip="Responsables {{ area.nombre }}"
-            class="{% if request.GET.area == area.pk|stringformat:'s' and 'responsable' in request.resolver_match.url_name %}active{% endif %}">
+            <a href="#" id="link-responsables" data-base-url="{% url 'mto:lista_responsables' %}" class="link-area-dinamico {% if 'responsable' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                <span class="nav-label">{{ area.nombre }}</span>
+                <span class="nav-label">{% trans "Responsables" %}</span>
             </a>
-            {% endfor %}
             {% endif %}
-            
+
+            <!-- ── Sidebar - Inventario ── -->
+
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_inventario %}
+            <a href="#" id="link-inventario" data-base-url="{% url 'inventario:lista_refacciones' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_refacciones' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+                <span class="nav-label">{% trans "Inventario" %}</span>
+            </a>
+            {% endif %}
+
+            <!-- ── Sidebar - Seguimiento de refacciones ── -->
+
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento_refaccion %}
+            <a href="#" id="link-seguimientos-refaccion" data-base-url="{% url 'inventario:lista_seguimientos_refaccion' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos_refaccion' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Seg. de refacciones" %}</span>
+            </a>
+            {% endif %}
+
+            <!-- ── Sidebar - Seguimiento de servicios ── -->
+
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento_servicio %}
+
+            <a href="#" id="link-seguimientos-servicio" data-base-url="{% url 'inventario:lista_seguimientos_servicio' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos_servicio' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Seg. de servicios" %}</span>
+            </a>
+            {% endif %}
+
             {% if request.user.is_superuser or perfil.es_admin %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Administración" %}</div>
             <a href="{% url 'lista_usuarios' %}" data-tooltip="Usuarios"
-            class="{% if 'usuario' in request.resolver_match.url_name %}active{% endif %}">
+                class="{% if 'usuario' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -835,9 +886,13 @@
                         {% if request.user.get_full_name %}{{ request.user.get_full_name }}{% else %}{{ request.user.username }}{% endif %}
                     </div>
                     <div style="font-size:11px; color:var(--text-3);">
-                        {% if request.user.is_superuser %}Superusuario
-                        {% elif request.user.perfil.es_admin %}Administrador
-                        {% else %}Operador{% endif %}
+                        {% if request.user.is_superuser %}
+                            {% trans "Superusuario" %}
+                        {% elif request.user.perfil.es_admin %}
+                            {% trans "Administrador" %}
+                        {% else %}
+                            {% trans "Rol Especifico" %}
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -999,6 +1054,45 @@ document.addEventListener('click', function(e) {
             dd.style.display = 'none';
             document.getElementById('brand-chevron').style.transform = '';
         }
+    }
+});
+
+// Menu mantenimiento secciones
+const AREA_MTO_KEY = 'mto_area_actual';
+
+function cambiarAreaMto(areaId) {
+    localStorage.setItem(AREA_MTO_KEY, areaId);
+    actualizarLinksArea(areaId);
+
+    // Si la página actual corresponde a una de las 6 vistas dinámicas, navega automáticamente
+    const linkActivo = document.querySelector('.link-area-dinamico.active');
+    if (linkActivo) {
+        window.location.href = `${linkActivo.dataset.baseUrl}?area=${areaId}`;
+    }
+}
+
+function actualizarLinksArea(areaId) {
+    document.querySelectorAll('.link-area-dinamico').forEach(link => {
+        const base = link.dataset.baseUrl;
+        link.href = `${base}?area=${areaId}`;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const selector = document.getElementById('selector-area-mto');
+    if (!selector) return;
+
+    // Si la URL actual ya tiene un área (por ejemplo, al recargar la página en una vista),
+    // usamos esa; si no, usamos la guardada en localStorage; si no hay nada, la primera opción.
+    const params = new URLSearchParams(window.location.search);
+    const areaUrl = params.get('area');
+    const areaGuardada = localStorage.getItem(AREA_MTO_KEY);
+    const areaInicial = areaUrl || areaGuardada || selector.options[0]?.value;
+
+    if (areaInicial) {
+        selector.value = areaInicial;
+        localStorage.setItem(AREA_MTO_KEY, areaInicial);
+        actualizarLinksArea(areaInicial);
     }
 });
 </script>

@@ -8,6 +8,16 @@ from django.http import JsonResponse
 
 @login_required
 def lista_responsables(request):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_ver = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.ver_responsables)
+    )
+    if not puede_ver:
+        messages.error(request, "No tienes permiso para ver esta sección.")
+        return redirect('mto:dashboard')
+    
     area_id      = request.GET.get('area', '').strip()
     responsables = Responsable.objects.select_related('area').filter(activo=True)
     if area_id:
@@ -16,12 +26,24 @@ def lista_responsables(request):
         'responsables': responsables,
         'areas':        areas_permitidas_mto(request),
         'filtro_area':  area_id,
+        'puede_editar_responsables':   (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.editar_responsables)),
+        'puede_eliminar_responsables': (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.eliminar_responsables)),
     }
     return render(request, 'mto_app/responsables/lista.html', ctx)
 
 
 @login_required
 def form_responsable(request, pk=None):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_editar = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.editar_responsables)
+    )
+    if not puede_editar:
+        messages.error(request, "No tienes permiso para editar responsables.")
+        return redirect('mto:lista_responsables')
+    
     responsable = get_object_or_404(Responsable, pk=pk) if pk else None
     areas       = areas_permitidas_mto(request)
     area_id     = request.GET.get('area', '')
@@ -65,12 +87,23 @@ def form_responsable(request, pk=None):
 
 @login_required
 def eliminar_responsable(request, pk):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_eliminar = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.eliminar_responsables)
+    )
+    if not puede_eliminar:
+        messages.error(request, "No tienes permiso para eliminar responsables.")
+        return redirect('mto:lista_responsables')
+
     responsable = get_object_or_404(Responsable, pk=pk)
     area_pk     = responsable.area_id
     if request.method == 'POST':
         responsable.delete()
         messages.success(request, f"Responsable '{responsable.nombre_completo()}' eliminado.")
     return redirect(f"/mto/responsables/?area={area_pk}")
+
 
 def buscar_responsables_mto(request):
     q       = request.GET.get('q', '').strip()
