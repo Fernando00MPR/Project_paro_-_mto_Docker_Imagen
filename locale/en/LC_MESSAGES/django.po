@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-21 21:00-0600\n"
+"POT-Creation-Date: 2026-06-23 09:23-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,7 +83,7 @@ msgstr "No. Item"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:133
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:278
 #: .\login_app\templates\login_app\form_usuario.html:45 .\mto_app\models.py:134
-#: .\mto_app\templates\mto_app\responsables\form.html:24
+#: .\mto_app\templates\mto_app\responsables\form.html:25
 #: .\paros_app\models.py:54
 msgid "Nombre"
 msgstr "Name"
@@ -161,7 +161,7 @@ msgstr "Unit Cost"
 #: .\inventario_app\models.py:42
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:376
 #: .\mto_app\models.py:69 .\mto_app\models.py:137
-#: .\mto_app\templates\mto_app\responsables\form.html:45
+#: .\mto_app\templates\mto_app\responsables\form.html:46
 #: .\mto_app\templates\mto_app\responsables\lista.html:56
 msgid "Activo"
 msgstr "Active"
@@ -448,7 +448,7 @@ msgstr "Edit"
 #: .\login_app\templates\login_app\lista_usuarios.html:117
 #: .\login_app\templates\login_app\lista_usuarios.html:171
 #: .\mto_app\models.py:208 .\mto_app\templates\mto_app\plan\lista.html:292
-#: .\mto_app\templates\mto_app\responsables\lista.html:98
+#: .\mto_app\templates\mto_app\responsables\lista.html:96
 #: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:78
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:241
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:331
@@ -492,7 +492,8 @@ msgstr ""
 #: .\mto_app\templates\mto_app\plan\form.html:128
 #: .\mto_app\templates\mto_app\plan\lista.html:361
 #: .\mto_app\templates\mto_app\plan\lista.html:445
-#: .\mto_app\templates\mto_app\responsables\form.html:51
+#: .\mto_app\templates\mto_app\responsables\form.html:52
+#: .\mto_app\templates\mto_app\responsables\lista.html:123
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:245
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:452
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:471
@@ -521,6 +522,7 @@ msgstr "Cancel"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:231
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:249
 #: .\login_app\templates\login_app\lista_usuarios.html:248
+#: .\mto_app\templates\mto_app\responsables\lista.html:126
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:241
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:474
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:254
@@ -562,7 +564,7 @@ msgstr "Drag images here or click to select"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:341
 #: .\mto_app\templates\mto_app\plan\form.html:127
 #: .\mto_app\templates\mto_app\plan\lista.html:447
-#: .\mto_app\templates\mto_app\responsables\form.html:49
+#: .\mto_app\templates\mto_app\responsables\form.html:50
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:453
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:328
 msgid "Guardar"
@@ -598,7 +600,6 @@ msgstr "Next"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:4
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:13
 #: .\login_app\templates\login_app\form_usuario.html:439
-
 msgid "Seguimiento de refacciones"
 msgstr "Spare Parts Tracking"
 
@@ -782,7 +783,7 @@ msgstr "Configure user access credentials and permissions."
 #: .\login_app\templates\login_app\form_usuario.html:12
 #: .\mto_app\templates\mto_app\plan\detalle.html:8
 #: .\mto_app\templates\mto_app\plan\importar.html:11
-#: .\mto_app\templates\mto_app\responsables\form.html:5
+#: .\mto_app\templates\mto_app\responsables\form.html:6
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:12
 msgid "Volver"
 msgstr "Back"
@@ -847,8 +848,7 @@ msgid ""
 "Acceso total al sistema: puede gestionar usuarios y todos los módulos sin "
 "restricciones"
 msgstr ""
-"Full system access: can manage users and all modules without "
-"restrictions"
+"Full system access: can manage users and all modules without restrictions"
 
 #: .\login_app\templates\login_app\form_usuario.html:127
 msgid "Permisos — Área"
@@ -1212,8 +1212,7 @@ msgid ""
 "Planea, ejecuta y da seguimiento a las rutinas de mantenimiento preventivo y "
 "correctivo."
 msgstr ""
-"Plan, execute and monitor preventive maintenance routines and "
-"corrective."
+"Plan, execute and monitor preventive maintenance routines and corrective."
 
 #: .\login_app\templates\login_app\login.html:258
 msgid "Indicadores en tiempo real"
@@ -1222,8 +1221,7 @@ msgstr "Real-Time Indicators"
 #: .\login_app\templates\login_app\login.html:259
 msgid ""
 "Visualiza tendencias, tiempos perdidos y desempeño por área al instante."
-msgstr ""
-"View trends, lost time and performance by area instantly."
+msgstr "View trends, lost time and performance by area instantly."
 
 #: .\login_app\templates\login_app\login.html:270
 msgid "Inventario siempre actualizado"
@@ -1234,8 +1232,8 @@ msgid ""
 "Controla refacciones, stock mínimo y movimientos de almacén sin "
 "complicaciones."
 msgstr ""
-"Control spare parts, minimum stock and warehouse movements without"
-"complications."
+"Control spare parts, minimum stock and warehouse movements "
+"withoutcomplications."
 
 #: .\login_app\templates\login_app\login.html:286
 msgid "Bienvenido"
@@ -1670,12 +1668,12 @@ msgid "Pasos de rutina"
 msgstr "Routine Steps"
 
 #: .\mto_app\models.py:133
-#: .\mto_app\templates\mto_app\responsables\form.html:18
+#: .\mto_app\templates\mto_app\responsables\form.html:19
 msgid "Numero de nomina"
 msgstr "Payroll Number"
 
 #: .\mto_app\models.py:135
-#: .\mto_app\templates\mto_app\responsables\form.html:30
+#: .\mto_app\templates\mto_app\responsables\form.html:31
 msgid "Apellidos"
 msgstr "Last names"
 
@@ -1903,6 +1901,10 @@ msgstr "Validated"
 #: .\mto_app\models.py:256
 msgid "Seguimiento de OT"
 msgstr "OT Tracking"
+
+#: .\mto_app\models.py:257
+msgid "Seguimientos de OT"
+msgstr "Work Order Follow-Ups"
 
 #: .\mto_app\models.py:272
 msgid "Consecutivo"
@@ -2449,15 +2451,15 @@ msgstr "Calculating plans..."
 msgid "Esto puede tomar unos segundos"
 msgstr "This may take a few seconds"
 
-#: .\mto_app\templates\mto_app\responsables\form.html:9
+#: .\mto_app\templates\mto_app\responsables\form.html:10
 msgid "Editar responsable"
 msgstr "Edit Responsible"
 
-#: .\mto_app\templates\mto_app\responsables\form.html:9
+#: .\mto_app\templates\mto_app\responsables\form.html:10
 msgid "Nuevo responsable"
 msgstr "New Responsible"
 
-#: .\mto_app\templates\mto_app\responsables\form.html:36
+#: .\mto_app\templates\mto_app\responsables\form.html:37
 msgid "Posición"
 msgstr "Job Title"
 
@@ -2502,9 +2504,13 @@ msgstr "ACTION"
 msgid "Inactivo"
 msgstr "Inactive"
 
-#: .\mto_app\templates\mto_app\responsables\lista.html:108
+#: .\mto_app\templates\mto_app\responsables\lista.html:106
 msgid "No hay responsables registrados para esta área."
 msgstr "No responsible persons are registered for this area."
+
+#: .\mto_app\templates\mto_app\responsables\lista.html:120
+msgid "Eliminar responsable"
+msgstr "Delete responsible"
 
 #: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:9
 msgid "Historial de acciones"
@@ -2583,7 +2589,6 @@ msgstr "Total Overdue"
 msgid "responsables con atrasos"
 msgstr "Assignees with Overdue Items"
 
-#: .\mto_app\models.py:257
 #: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:46
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:4
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:9
@@ -3533,15 +3538,32 @@ msgstr "Add fault"
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:178
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:233
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:125
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:157
 #: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:74
 #: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:100
 msgid "Falla (Español)"
 msgstr "Fault (Spanish)"
 
+#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:184
+#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:238
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:126
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:158
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:101
+msgid "Fault (Ingles)"
+msgstr "Fault (English)"
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:190
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:159
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:102
 msgid "Tipo de falla (Español)"
 msgstr "Failure type (Spanish)"
+
+#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:196
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:76
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:77
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:128
+msgid "Tipo de falla (Ingles)"
+msgstr "Failure type (English)"
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:205
 msgid "Cargando áreas…"
@@ -3556,14 +3578,10 @@ msgid "Editar falla"
 msgstr "Edit fault"
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:243
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:159
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:102
 msgid "Tipo de falla (ES)"
 msgstr "Failure Type (ES)"
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:248
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:160
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:103
 msgid "Tipo de falla (EN)"
 msgstr "Failure Type (EN)"
 
@@ -3601,40 +3619,23 @@ msgstr "Skipped"
 msgid "fallas procesadas correctamente."
 msgstr "faults processed successfully."
 
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:126
-msgid "Fault (Ingles)"
-msgstr "Fault (English)"
-
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:127
 msgid "Tipo de Falla (Español)"
 msgstr "Failure type (Spanish)"
 
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:157
-msgid "Falla (español)"
-msgstr "Fault (Spanish)"
-
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:158
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:101
-msgid "Fault (English)"
-msgstr "Fault (English)"
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:160
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:103
+msgid "Failure type (Ingles)"
+msgstr "Failure type (English)"
 
 #: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:3
 #: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:9
 msgid "Importar fallas"
 msgstr "Import faults"
 
-#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:184
-#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:238
 #: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:75
 msgid "Falla (Ingles)"
-msgstr "Fault (English)"
-
-#: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:196
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:76
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:77
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:128
-msgid "Tipo de falla (Ingles)"
-msgstr "Failure type (English)"
+msgstr "Falla (English)"
 
 #: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:78
 msgid "Area de origen"
@@ -3654,8 +3655,7 @@ msgstr "You do not have access to the records for this area."
 
 #: .\paros_app\templates\paros_app\hora_hora.html:267
 msgid "No tienes permisos para ver ninguna área en hora x hora."
-msgstr ""
-"You do not have permission to view any area in the Hour-by-Hour report."
+msgstr "You do not have permission to view any area in the Hour-by-Hour report."
 
 #: .\paros_app\templates\paros_app\hora_hora.html:296
 msgid "Eficiencia de producción"
@@ -4362,6 +4362,9 @@ msgstr "Import responsible parties"
 #: .\paros_project\settings.py:119
 msgid "English"
 msgstr "English"
+
+#~ msgid "Falla (español)"
+#~ msgstr "Fault (Spanish)"
 
 #~ msgid "Puede crear, editar y eliminar planes"
 #~ msgstr "Can create, edit, and delete maintenance plans"

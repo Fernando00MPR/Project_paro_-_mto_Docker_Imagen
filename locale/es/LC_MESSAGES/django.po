@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-21 21:00-0600\n"
+"POT-Creation-Date: 2026-06-23 09:23-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -85,7 +85,7 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:133
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:278
 #: .\login_app\templates\login_app\form_usuario.html:45 .\mto_app\models.py:134
-#: .\mto_app\templates\mto_app\responsables\form.html:24
+#: .\mto_app\templates\mto_app\responsables\form.html:25
 #: .\paros_app\models.py:54
 msgid "Nombre"
 msgstr ""
@@ -163,7 +163,7 @@ msgstr ""
 #: .\inventario_app\models.py:42
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:376
 #: .\mto_app\models.py:69 .\mto_app\models.py:137
-#: .\mto_app\templates\mto_app\responsables\form.html:45
+#: .\mto_app\templates\mto_app\responsables\form.html:46
 #: .\mto_app\templates\mto_app\responsables\lista.html:56
 msgid "Activo"
 msgstr ""
@@ -450,7 +450,7 @@ msgstr ""
 #: .\login_app\templates\login_app\lista_usuarios.html:117
 #: .\login_app\templates\login_app\lista_usuarios.html:171
 #: .\mto_app\models.py:208 .\mto_app\templates\mto_app\plan\lista.html:292
-#: .\mto_app\templates\mto_app\responsables\lista.html:98
+#: .\mto_app\templates\mto_app\responsables\lista.html:96
 #: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:78
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:241
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:331
@@ -492,7 +492,8 @@ msgstr ""
 #: .\mto_app\templates\mto_app\plan\form.html:128
 #: .\mto_app\templates\mto_app\plan\lista.html:361
 #: .\mto_app\templates\mto_app\plan\lista.html:445
-#: .\mto_app\templates\mto_app\responsables\form.html:51
+#: .\mto_app\templates\mto_app\responsables\form.html:52
+#: .\mto_app\templates\mto_app\responsables\lista.html:123
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:245
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:452
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:471
@@ -521,6 +522,7 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:231
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:249
 #: .\login_app\templates\login_app\lista_usuarios.html:248
+#: .\mto_app\templates\mto_app\responsables\lista.html:126
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:241
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:474
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:254
@@ -562,7 +564,7 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:341
 #: .\mto_app\templates\mto_app\plan\form.html:127
 #: .\mto_app\templates\mto_app\plan\lista.html:447
-#: .\mto_app\templates\mto_app\responsables\form.html:49
+#: .\mto_app\templates\mto_app\responsables\form.html:50
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:453
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:328
 msgid "Guardar"
@@ -781,7 +783,7 @@ msgstr ""
 #: .\login_app\templates\login_app\form_usuario.html:12
 #: .\mto_app\templates\mto_app\plan\detalle.html:8
 #: .\mto_app\templates\mto_app\plan\importar.html:11
-#: .\mto_app\templates\mto_app\responsables\form.html:5
+#: .\mto_app\templates\mto_app\responsables\form.html:6
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:12
 msgid "Volver"
 msgstr ""
@@ -1646,12 +1648,12 @@ msgid "Pasos de rutina"
 msgstr ""
 
 #: .\mto_app\models.py:133
-#: .\mto_app\templates\mto_app\responsables\form.html:18
+#: .\mto_app\templates\mto_app\responsables\form.html:19
 msgid "Numero de nomina"
 msgstr ""
 
 #: .\mto_app\models.py:135
-#: .\mto_app\templates\mto_app\responsables\form.html:30
+#: .\mto_app\templates\mto_app\responsables\form.html:31
 msgid "Apellidos"
 msgstr ""
 
@@ -2426,15 +2428,15 @@ msgstr ""
 msgid "Esto puede tomar unos segundos"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\responsables\form.html:9
+#: .\mto_app\templates\mto_app\responsables\form.html:10
 msgid "Editar responsable"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\responsables\form.html:9
+#: .\mto_app\templates\mto_app\responsables\form.html:10
 msgid "Nuevo responsable"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\responsables\form.html:36
+#: .\mto_app\templates\mto_app\responsables\form.html:37
 msgid "Posición"
 msgstr ""
 
@@ -2479,8 +2481,12 @@ msgstr ""
 msgid "Inactivo"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\responsables\lista.html:108
+#: .\mto_app\templates\mto_app\responsables\lista.html:106
 msgid "No hay responsables registrados para esta área."
+msgstr ""
+
+#: .\mto_app\templates\mto_app\responsables\lista.html:120
+msgid "Eliminar responsable"
 msgstr ""
 
 #: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:9
@@ -3487,6 +3493,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:178
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:233
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:125
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:157
 #: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:74
 #: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:100
 msgid "Falla (Español)"
@@ -3498,6 +3505,8 @@ msgid "Falla (Ingles)"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:190
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:159
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:102
 msgid "Tipo de falla (Español)"
 msgstr ""
 
@@ -3519,14 +3528,10 @@ msgid "Editar falla"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:243
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:159
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:102
 msgid "Tipo de falla (ES)"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:248
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:160
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:103
 msgid "Tipo de falla (EN)"
 msgstr ""
 
@@ -3563,6 +3568,8 @@ msgid "fallas procesadas correctamente."
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:126
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:158
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:101
 msgid "Fault (Ingles)"
 msgstr ""
 
@@ -3574,13 +3581,9 @@ msgstr ""
 msgid "Tipo de Falla (Ingles)"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:157
-msgid "Falla (español)"
-msgstr ""
-
-#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:158
-#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:101
-msgid "Fault (English)"
+#: .\paros_app\templates\paros_app\fallas\importar_fallas.html:160
+#: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:103
+msgid "Failure type (Ingles)"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\fallas\importar_fallas_por_area.html:3
