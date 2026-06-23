@@ -1,4 +1,5 @@
 {% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
 {% block content %}
 <div style="margin-bottom:20px;">
     <a href="{% url 'mto:lista_responsables' %}{% if area_id %}?area={{ area_id }}{% endif %}"

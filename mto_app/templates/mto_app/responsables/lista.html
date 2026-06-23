@@ -82,23 +82,21 @@
                         </a>
                         {% endif %}
 
-                        <form method="post" action="{% url 'mto:eliminar_responsable' r.pk %}" style="margin:0;">
-                            {% if puede_eliminar_responsables %}
-                            {% csrf_token %}
-                            <button type="submit"
-                                    onclick="return confirm('¿Eliminar a {{ r.nombre }} {{ r.apellidos }}?')"
-                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                        font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
-                                        background:#FFF5F5; color:#DC2626; cursor:pointer;
-                                        white-space:nowrap;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                                {% trans "Eliminar" %}
-                            </button>
-                            {% endif %}
-                        </form>
+                        {% if puede_eliminar_responsables %}
+                        <button type="button"
+                                onclick="confirmarEliminarResponsable('{% url 'mto:eliminar_responsable' r.pk %}', '{{ r.nombre|escapejs }} {{ r.apellidos|escapejs }}')"
+                                style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                    font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
+                                    background:#FFF5F5; color:#DC2626; cursor:pointer;
+                                    white-space:nowrap;">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            {% trans "Eliminar" %}
+                        </button>
+                        {% endif %}
+
                     </div>
                 </td>
             </tr>
@@ -112,4 +110,44 @@
         </tbody>
     </table>
 </div>
+
+<!-- ── Modal confirmar eliminar ── -->
+<div id="modal-eliminar-responsable"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+                min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar responsable" %}</div>
+        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;" id="texto-eliminar-responsable"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="cerrarModalEliminarResponsable()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <form id="form-eliminar-responsable" method="post" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarEliminarResponsable(url, nombre) {
+    document.getElementById('form-eliminar-responsable').action = url;
+    document.getElementById('texto-eliminar-responsable').textContent =
+        `¿Eliminar a ${nombre}? Esta acción no se puede deshacer.`;
+    document.getElementById('modal-eliminar-responsable').style.display = 'flex';
+}
+
+function cerrarModalEliminarResponsable() {
+    document.getElementById('modal-eliminar-responsable').style.display = 'none';
+}
+
+document.getElementById('modal-eliminar-responsable').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalEliminarResponsable();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') cerrarModalEliminarResponsable();
+});
+</script>
+
 {% endblock %}

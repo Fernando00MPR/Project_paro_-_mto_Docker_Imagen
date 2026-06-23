@@ -120,11 +120,11 @@ function validarColumnas(headers) {
 
     const tieneCodigo        = h.some(c => c === 'codigo'        || c === 'código');
     const tieneArea          = h.some(c => c === 'area'          || c === 'área');
-    const tieneFallaEs       = h.some(c => c === 'falla_es'      || c === 'falla (es)'      || c === 'falla (español)' || c === 'falla');
-    const tieneFallaEn       = h.some(c => c === 'fault_en'      || c === 'fault (en)'      || c === 'fault (english)' || c === 'fault'              || c === 'falla (en)' || c === 'falla_en' || c === 'falla en');
-    const tieneTipoEs        = h.some(c => c === 'tipo_falla'    || c === 'tipo_de_falla'   || c === 'tipo de falla'   || c === 'tipo de falla (es)' || c.includes('tipo') && c.includes('es'));
-    const tieneTipoEn        = h.some(c => c === 'tipo_falla_en' || c === 'tipo falla (en)' || c === 'fault type'      || c === 'tipo de falla (en)' || c.includes('tipo') && c.includes('en'));
-    const tieneAreaOrigen    = h.some(c => c === 'area_origen'   || c === 'area de origen'  || c === 'area origen'     || c === 'origen');
+    const tieneFallaEs       = h.some(c => c === 'falla_es'      || c === 'falla (es)'        || c === 'falla'           || c === 'falla es'           || c === 'falla (español)'         || c === 'falla (spanish)');
+    const tieneFallaEn       = h.some(c => c === 'fault_en'      || c === 'fault (en)'        || c === 'fault'           || c === 'fault en'           || c === 'fault (ingles)'          || c === 'fault (english)');
+    const tieneTipoEs        = h.some(c => c === 'tipo_falla'    || c === 'tipo_de_falla'     || c === 'tipo de falla'   || c === 'tipo de falla (es)' || c === 'tipo de falla (español)' || c === 'tipo de falla (spanish)' || c.includes('tipo') && c.includes('es'));
+    const tieneTipoEn        = h.some(c => c === 'failure type'  || c === 'failure of type'   || c === 'fault type'      || c === 'failure type (en)'  || c === 'Failure type (ingles)'   || c === 'Failure type (english)'  || c.includes('tipo') && c.includes('en'));
+    const tieneAreaOrigen    = h.some(c => c === 'area_origen'   || c === 'area de origen'    || c === 'area origen'     || c === 'origen');
 
     if (!tieneCodigo)      errores.push('No se encuentra columna: Codigo');
     if (!tieneArea)        errores.push('No se encuentra columna: Área');
