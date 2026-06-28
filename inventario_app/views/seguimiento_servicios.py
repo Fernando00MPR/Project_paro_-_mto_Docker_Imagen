@@ -3,8 +3,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.urls import reverse
+
 from mto_app.models import Area
+
 from ..models import TipoServicio, SeguimientoServicio
+
+from datetime import date
 
 
 @login_required
@@ -27,6 +31,8 @@ def lista_seguimientos_servicio(request):
     filtro_po      = request.GET.get('po', '').strip()
     filtro_sr      = request.GET.get('sr', '').strip()
     filtro_estatus = request.GET.get('estatus', '')
+    fecha_pr_desde = request.GET.get('fecha_pr_desde', '') or date(date.today().year, 1, 1).isoformat()
+    fecha_pr_hasta = request.GET.get('fecha_pr_hasta', '') or date.today().isoformat()
 
     qs = SeguimientoServicio.objects.select_related('area', 'tipo_servicio')
 
@@ -44,6 +50,10 @@ def lista_seguimientos_servicio(request):
         qs = qs.filter(numero_po__icontains=filtro_po)
     if filtro_sr:
         qs = qs.filter(numero_sr__icontains=filtro_sr)
+    if fecha_pr_desde:
+        qs = qs.filter(fecha_pr__gte=fecha_pr_desde)
+    if fecha_pr_hasta:
+        qs = qs.filter(fecha_pr__lte=fecha_pr_hasta)
 
     seguimientos = list(qs)
     if filtro_estatus:
@@ -55,28 +65,30 @@ def lista_seguimientos_servicio(request):
     total_verde         = sum(1 for s in seguimientos_base if s.estatus == 'verde')
     total_seguimientos  = len(seguimientos_base)
 
-    per_page = request.GET.get('per_page', '20')
-    paginator = Paginator(seguimientos, int(per_page) if per_page.isdigit() else 20)
+    per_page = request.GET.get('per_page', '10')
+    paginator = Paginator(seguimientos, int(per_page) if per_page.isdigit() else 10)
     page_num = request.GET.get('page', 1)
     seguimientos_page = paginator.get_page(page_num)
 
     ctx = {
-        'seguimientos':      seguimientos_page,
-        'areas':             Area.objects.filter(activa=True),
-        'tipos_servicio':    TipoServicio.objects.all(),
-        'filtro_area':       area_id,
-        'filtro_no_item':    filtro_no_item,
-        'filtro_nombre':     filtro_nombre,
-        'filtro_tipo':       filtro_tipo,
-        'filtro_pr':         filtro_pr,
-        'filtro_po':         filtro_po,
-        'filtro_sr':         filtro_sr,
-        'filtro_estatus':    filtro_estatus,
-        'per_page':          per_page,
+        'seguimientos':       seguimientos_page,
+        'areas':              Area.objects.filter(activa=True),
+        'tipos_servicio':     TipoServicio.objects.all(),
+        'filtro_area':        area_id,
+        'filtro_no_item':     filtro_no_item,
+        'filtro_nombre':      filtro_nombre,
+        'filtro_tipo':        filtro_tipo,
+        'filtro_pr':          filtro_pr,
+        'filtro_po':          filtro_po,
+        'filtro_sr':          filtro_sr,
+        'filtro_estatus':     filtro_estatus,
+        'per_page':           per_page,
         'total_seguimientos': total_seguimientos,
         'total_rojo':         total_rojo,
         'total_amarillo':     total_amarillo,
         'total_verde':        total_verde,
+        'fecha_pr_desde':     fecha_pr_desde,
+        'fecha_pr_hasta':     fecha_pr_hasta,
         'puede_editar_seg_servicio':   (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.editar_seguimiento_servicio)),
         'puede_eliminar_seg_servicio': (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.eliminar_seguimiento_servicio)),
     }

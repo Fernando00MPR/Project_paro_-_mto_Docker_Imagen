@@ -31,7 +31,7 @@
     </div>
 
     <!-- ── Filtros ── -->
-    <form method="get" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:0;
+    <form method="get" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;
                             padding:14px; background:var(--surface); border:1px solid var(--border);
                             border-radius:var(--radius); align-items:flex-end;">
         {% if filtro_area %}
@@ -40,7 +40,7 @@
 
         <div class="filter-group">
             <label>{% trans "No. Item" %}</label>
-            <input type="text" name="no_item" value="{{ filtro_no_item }}" placeholder="Ej: 001"
+            <input type="text" name="no_item" value="{{ filtro_no_item }}" placeholder="{% trans 'Ej: 001' %}"
                 oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
         </div>
 
@@ -52,19 +52,19 @@
 
         <div class="filter-group">
             <label>{% trans "No. PR" %}</label>
-            <input type="text" name="pr" value="{{ filtro_pr }}"
+            <input type="text" name="pr" value="{{ filtro_pr }}" placeholder="{% trans 'No. PR' %}"
                 oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
         </div>
 
         <div class="filter-group">
             <label>{% trans "No. PO" %}</label>
-            <input type="text" name="po" value="{{ filtro_po }}"
+            <input type="text" name="po" value="{{ filtro_po }}" placeholder="{% trans 'No. PO' %}"
                 oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
         </div>
 
         <div class="filter-group">
             <label>{% trans "No. SR" %}</label>
-            <input type="text" name="sr" value="{{ filtro_sr }}"
+            <input type="text" name="sr" value="{{ filtro_sr }}" placeholder="{% trans 'No. SR' %}"
                 oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
         </div>
 
@@ -88,22 +88,22 @@
 
     <!-- ── Indicadores ── -->
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:0;">
-        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
+        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Total" %}</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">{{ total_seguimientos }}</div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "seguimientos registrados" %}</div>
         </div>
-        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px; border-left:3px solid #EF4444;">
+        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px; border-left:3px solid #EF4444;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Sin orden de compra" %}</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:#EF4444;">{{ total_rojo }}</div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "pendiente de generar PO" %}</div>
         </div>
-        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px; border-left:3px solid #F59E0B;">
+        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px; border-left:3px solid #F59E0B;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Pendiente de recibir" %}</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:#F59E0B;">{{ total_amarillo }}</div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "con orden de compra" %}</div>
         </div>
-        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px; border-left:3px solid #10B981;">
+        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px; border-left:3px solid #10B981;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Recibido" %}</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:#10B981;">{{ total_verde }}</div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "completado" %}</div>
@@ -113,6 +113,17 @@
 </div>
 
 <div class="card">
+
+    <!-- ── Selector de fecha ── -->
+    <form method="get" style="display:flex; gap:8px; align-items:flex-end; margin-bottom:8px;">
+        {% if filtro_area %}<input type="hidden" name="area" value="{{ filtro_area }}">{% endif %}
+        <div class="filter-group">
+            <input type="date" name="fecha_pr_desde" value="{{ fecha_pr_desde }}" onchange="this.form.submit()" style="width:150px;">
+        </div>
+        <div class="filter-group">
+            <input type="date" name="fecha_pr_hasta" value="{{ fecha_pr_hasta }}" onchange="this.form.submit()" style="width:150px;">
+        </div>
+    </form>
 
     <!-- ── Tabla ── -->
     <div class="table-wrap" style="overflow-x:auto;">
@@ -137,14 +148,14 @@
                 <tr data-id="{{ s.id }}"
                     style="background:{% if s.estatus == 'verde' %}rgba(16,185,129,0.06){% elif s.estatus == 'amarillo' %}rgba(245,158,11,0.06){% else %}rgba(239,68,68,0.06){% endif %};
                         border-left:3px solid {% if s.estatus == 'verde' %}#10B981{% elif s.estatus == 'amarillo' %}#F59E0B{% else %}#EF4444{% endif %};">
-                    <td style="text-align:center;"><strong>{{ s.refaccion.no_item }}</strong></td>
+                    <td style="text-align:center; white-space:nowrap;"><strong>{{ s.refaccion.no_item }}</strong></td>
                     <td>{{ s.refaccion.nombre }}</td>
                     <td style="text-align:center; font-family:'DM Mono',monospace;">{{ s.cantidad }}</td>
-                    <td style="text-align:center;">{{ s.numero_pr }}</td>
+                    <td style="text-align:center; white-space:nowrap;">{{ s.numero_pr }}</td>
                     <td style="text-align:center; color:var(--text-2);">{{ s.fecha_pr|date:"d/m/Y"|default:"--" }}</td>
-                    <td style="text-align:center;">{{ s.numero_po|default:"--" }}</td>
+                    <td style="text-align:center; white-space:nowrap;">{{ s.numero_po|default:"--" }}</td>
                     <td style="text-align:center; color:var(--text-2);">{{ s.fecha_po|date:"d/m/Y"|default:"--" }}</td>
-                    <td style="text-align:center;">{{ s.numero_sr|default:"--" }}</td>
+                    <td style="text-align:center; white-space:nowrap;">{{ s.numero_sr|default:"--" }}</td>
                     <td style="text-align:center; color:var(--text-2);">{{ s.fecha_sr|date:"d/m/Y"|default:"--" }}</td>
                     <td style="color:var(--text-2); font-size:12px;">{{ s.comentarios|default:"--" }}</td>
                     <td style="text-align:center;">
@@ -189,31 +200,31 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
         
-        <!-- ── Paginación ── -->
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
-            <div class="pagination" style="margin:0;">
-                {% if seguimientos.has_previous %}
+    <!-- ── Paginación ── -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
+        <div class="pagination" style="margin:0;">
+            {% if seguimientos.has_previous %}
                 <a href="?area={{ filtro_area }}&per_page={{ per_page }}&page={{ seguimientos.previous_page_number }}">‹</a>
-                {% else %}
+            {% else %}
                 <span class="disabled">‹</span>
-                {% endif %}
-                {% for num in seguimientos.paginator.page_range %}
-                    {% if seguimientos.number == num %}
+            {% endif %}
+            {% for num in seguimientos.paginator.page_range %}
+                {% if seguimientos.number == num %}
                     <span class="current">{{ num }}</span>
-                    {% elif num > seguimientos.number|add:'-3' and num < seguimientos.number|add:'3' %}
+                {% elif num > seguimientos.number|add:'-3' and num < seguimientos.number|add:'3' %}
                     <a href="?area={{ filtro_area }}&per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
-                    {% endif %}
-                {% endfor %}
-                {% if seguimientos.has_next %}
-                <a href="?area={{ filtro_area }}&per_page={{ per_page }}&page={{ seguimientos.next_page_number }}">›</a>
-                {% else %}
-                <span class="disabled">›</span>
                 {% endif %}
-            </div>
+            {% endfor %}
+            {% if seguimientos.has_next %}
+                <a href="?area={{ filtro_area }}&per_page={{ per_page }}&page={{ seguimientos.next_page_number }}">›</a>
+            {% else %}
+                <span class="disabled">›</span>
+            {% endif %}
         </div>
     </div>
-
+    
 </div>
 
 <!-- ── Modal confirmar eliminar ── -->
@@ -266,7 +277,7 @@
                     <input type="text" id="seg-no-item-display" disabled style="background:var(--surface);">
                 </div>
 
-                <div class="form-field">
+                <div class="form-field full">
                     <label>{% trans "Nombre seleccionado" %}</label>
                     <input type="text" id="seg-nombre-display" disabled style="background:var(--surface);">
                 </div>

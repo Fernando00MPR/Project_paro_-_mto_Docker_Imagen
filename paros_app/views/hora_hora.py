@@ -22,7 +22,7 @@ def hora_hora(request):
 
     if not es_admin and not (perfil and perfil.ver_hora_hora):
         return redirect('paros:lista_paros')
-
+    """
     if es_admin:
         areas            = Area.objects.all()
         areas_con_tablas = set(Area.objects.values_list('id', flat=True))
@@ -30,10 +30,17 @@ def hora_hora(request):
     else:
         areas_con_tablas = set(perfil.areas_hora_hora.values_list('id', flat=True)) if perfil else set()
         areas_con_tablas_qs = perfil.areas_hora_hora.all() if perfil else Area.objects.none()
-        # Mostrar todas las áreas en el listado pero solo permitir tablas en las asignadas
+        
         areas = perfil.areas_hora_hora.all() if perfil else Area.objects.none()
         areas_grafico = areas_con_tablas_qs if areas_con_tablas else Area.objects.all()
-
+        
+    """
+    areas_con_tablas = set(perfil.areas_hora_hora.values_list('id', flat=True)) if perfil else set()
+    areas_con_tablas_qs = perfil.areas_hora_hora.all() if perfil else Area.objects.none()
+    
+    areas = perfil.areas_hora_hora.all() if perfil else Area.objects.none()
+    areas_grafico = areas_con_tablas_qs
+    
     hoy   = date.today()
     anio  = int(request.GET.get('anio', hoy.year))
     mes   = int(request.GET.get('mes',  hoy.month))

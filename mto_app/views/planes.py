@@ -95,7 +95,7 @@ def lista_plan(request):
                     plan.semana_actual = {
                         'semana':  semana_num,
                         'lunes':   lunes_busq,
-                        'domingo': lunes_busq + timedelta(days=5),
+                        'domingo': lunes_busq + timedelta(days=6),
                     }
 
                     try:

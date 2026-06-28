@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 from django.db.models import Sum, Q
 from django.contrib.auth.models import User
+from django.utils.formats import date_format
 import json
  
 from ..models import Area, Paro, RegistroProduccion, CatalogoEquipo, TargetIndicador
@@ -15,11 +16,11 @@ def _calcular_muerto(paros_qs, equipo_nombre, hora_inicio, hora_fin):
     qs = paros_qs.filter(estatus='verde')
     qs = qs.filter(Q(equipo_es__iexact=equipo_nombre) | Q(equipo_en__iexact=equipo_nombre)) if equipo_nombre else qs
     if hora_fin > hora_inicio:
-        qs = qs.filter(hora__gte=hora_inicio, hora__lte=hora_fin)
+        qs = qs.filter(hora__gte=hora_inicio, hora__lt=hora_fin)
     else:
-        qs = qs.filter(Q(hora__gte=hora_inicio) | Q(hora__lte=hora_fin))
+        qs = qs.filter(Q(hora__gte=hora_inicio) | Q(hora__lt=hora_fin))
     return qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
- 
+
 def _calcular_kpis_mantenimiento(paros_qs, equipo_nombre, hora_inicio, hora_fin, tiempo_planeado):
     responsables_mant = ['Mantenimiento', 
                          'Maintenance', 
@@ -30,10 +31,9 @@ def _calcular_kpis_mantenimiento(paros_qs, equipo_nombre, hora_inicio, hora_fin,
     if equipo_nombre:
         qs = qs.filter(Q(equipo_es__iexact=equipo_nombre) | Q(equipo_en__iexact=equipo_nombre))
     if hora_fin > hora_inicio:
-        qs = qs.filter(hora__gte=hora_inicio, hora__lte=hora_fin)
+        qs = qs.filter(hora__gte=hora_inicio, hora__lt=hora_fin)
     else:
-        #from django.db.models import Q
-        qs = qs.filter(Q(hora__gte=hora_inicio) | Q(hora__lte=hora_fin))
+        qs = qs.filter(Q(hora__gte=hora_inicio) | Q(hora__lt=hora_fin))
     
     n_paros  = qs.count()
     t_muerto = qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
@@ -229,16 +229,7 @@ def actualizar_orden(request):
        
 @login_required
 def indicadores_produccion(request):
-    import locale
     from datetime import timedelta
-    
-    try:
-        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
-    except:
-        try:
-            locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')
-        except:
-            pass
     
     perfil   = get_perfil(request.user)
     es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
@@ -360,7 +351,7 @@ def indicadores_produccion(request):
             datos_dias.append({
                 'fecha':         fecha.strftime('%d/%m/%y'),
                 'fecha_lbl':     fecha.strftime('%d/%m'),
-                'dia_semana':    fecha.strftime('%A'),
+                'dia_semana':    date_format(fecha, 'l'),
                 'planeado':      total_planeado,
                 'muerto':        total_muerto,
                 'downtime':      downtime,
@@ -402,6 +393,11 @@ def indicadores_produccion(request):
         for t in TargetIndicador.objects.filter(area=area_sel, anio=d_desde.year, mes=d_desde.month):
             targets_all[t.indicador] = t.valor
         target_valor = targets_all.get(indicador)
+        
+        if target_valor is not None:
+            target_valor = float(target_valor)
+
+        target_valor_input = str(target_valor) if target_valor is not None else ''
  
     # Cargar AccionDia existentes y pre-inyectarlos en datos_dias
     from ..models import AccionDia
@@ -460,11 +456,12 @@ def indicadores_produccion(request):
         'valores':        json.dumps(valores),
         'min_width':      min_width,
         'semana_actual':  hoy.isocalendar()[1],
-        'equipo_sel':      equipo_sel,
-        'equipos_periodo': equipos_periodo,
-        'target_valor':    target_valor,
-        'targets_json':    json.dumps(targets_all),
-        'd_desde': d_desde,
+        'equipo_sel':         equipo_sel,
+        'equipos_periodo':    equipos_periodo,
+        'target_valor':       target_valor,
+        'target_valor_input': target_valor_input,
+        'targets_json':       json.dumps(targets_all),
+        'd_desde':            d_desde,
     })
  
 @login_required

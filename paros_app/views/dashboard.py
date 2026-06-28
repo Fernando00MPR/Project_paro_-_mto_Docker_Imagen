@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Sum
 from django.shortcuts import render
+from django.http import JsonResponse
 
 from ..models import Area, Paro, CatalogoResponsable
 from ..models import CatalogoFalla as CF
@@ -503,4 +504,108 @@ def analisis_paros(request):
         'estatus_filtro':     estatus_filtro,
         'lista_atendio':      lista_atendio,
         'atendio_excluidos':  atendio_excluidos,
+    })
+
+
+@login_required
+@permiso_requerido('ver_dashboard')
+def dashboard_json(request):
+    from collections import defaultdict
+
+    areas        = Area.objects.all()
+    primera_area = areas.first()
+    area_id      = request.GET.get('area', str(primera_area.id) if primera_area else '')
+    rango        = request.GET.get('rango', '7')
+    fecha_fin    = date.today()
+    año_actual   = fecha_fin.year
+    semana_num   = request.GET.get('semana_num', '')
+    semana_actual = date.today().isocalendar()[1]
+
+    if rango == 'custom':
+        try:
+            fecha_ini = date.fromisoformat(request.GET.get('fecha_ini', ''))
+            fecha_fin = date.fromisoformat(request.GET.get('fecha_fin', str(fecha_fin)))
+        except ValueError:
+            fecha_ini = fecha_fin - timedelta(days=7)
+    elif rango == 'semana_num':
+        try:
+            sn = int(semana_num) if semana_num else semana_actual
+            fecha_ini = date.fromisocalendar(año_actual, sn, 1)
+            fecha_fin = date.fromisocalendar(año_actual, sn, 7)
+        except (ValueError, TypeError):
+            fecha_ini = fecha_fin - timedelta(days=7)
+    elif rango == 'semanas':
+        fecha_ini = date(año_actual, 1, 1)
+        fecha_fin = date(año_actual, 12, 31)
+    else:
+        dias = int(rango) if rango.isdigit() else 7
+        fecha_ini = fecha_fin - timedelta(days=dias - 1)
+
+    responsable_filtro = request.GET.get('responsable', '')
+    estatus_filtro     = request.GET.get('estatus', 'verde')
+
+    qs = Paro.objects.select_related('area').filter(fecha__gte=fecha_ini, fecha__lte=fecha_fin)
+    if area_id:
+        qs = qs.filter(area_id=area_id)
+    if responsable_filtro:
+        qs = qs.filter(responsable=responsable_filtro)
+    if estatus_filtro in ('rojo', 'amarillo', 'verde'):
+        qs = qs.filter(estatus=estatus_filtro)
+
+    total_paros   = qs.count()
+    total_minutos = qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
+    promedio_min  = round(total_minutos / total_paros, 1) if total_paros else 0
+
+    top_responsables = list(qs.values('responsable').annotate(total=Count('id'), minutos=Sum('tiempo_minutos')).order_by('-total')[:8])
+    top_fallas       = list(qs.values('falla').annotate(total=Count('id'), minutos=Sum('tiempo_minutos')).order_by('-total')[:8])
+    top_equipos      = list(qs.values('equipo').annotate(total=Count('id'), minutos=Sum('tiempo_minutos')).order_by('-total')[:8])
+
+    turno1 = qs.filter(turno=1).count()
+    turno2 = qs.filter(turno=2).count()
+
+    es_hoy     = (rango == '1')
+    es_semanas = (rango == 'semanas')
+
+    if es_hoy:
+        horas_dict = {i: 0 for i in range(24)}
+        for p in qs.values('hora', 'tiempo_minutos'):
+            h = p['hora'].hour if p['hora'] else 0
+            horas_dict[h] += p['tiempo_minutos'] or 0
+        chart_labels = [f'{i:02d}:00' for i in range(24)]
+        chart_data   = [horas_dict[i] for i in range(24)]
+    elif es_semanas:
+        semanas_dict = defaultdict(int)
+        for p in qs.values('fecha', 'tiempo_minutos'):
+            semanas_dict[p['fecha'].isocalendar()[1]] += p['tiempo_minutos'] or 0
+        ultima_semana = date(año_actual, 12, 28).isocalendar()[1]
+        chart_labels = [f'Sem {s:02d}' for s in range(1, ultima_semana + 1)]
+        chart_data   = [semanas_dict[s] for s in range(1, ultima_semana + 1)]
+    else:
+        tendencia_dict = defaultdict(int)
+        for p in qs.values('fecha', 'tiempo_minutos'):
+            tendencia_dict[str(p['fecha'])] += p['tiempo_minutos'] or 0
+        delta = (fecha_fin - fecha_ini).days + 1
+        chart_labels, chart_data = [], []
+        for i in range(delta):
+            d = fecha_ini + timedelta(days=i)
+            chart_labels.append(str(d)[5:])
+            chart_data.append(tendencia_dict[str(d)])
+
+    return JsonResponse({
+        'total_paros':      total_paros,
+        'total_minutos':    total_minutos,
+        'promedio_min':     promedio_min,
+        'rechazados':       qs.filter(estatus='rojo').count(),
+        'pendiente':        qs.filter(estatus='amarillo').count(),
+        'aceptados':        qs.filter(estatus='verde').count(),
+        'turno1':           turno1,
+        'turno2':           turno2,
+        'top_responsables': [{'nombre': r['responsable'] or '', 'total': r['total'], 'minutos': r['minutos'] or 0} for r in top_responsables],
+        'top_fallas':       [{'nombre': f['falla'] or '',       'total': f['total'], 'minutos': f['minutos'] or 0} for f in top_fallas],
+        'top_equipos':      [{'nombre': e['equipo'] or '',      'total': e['total'], 'minutos': e['minutos'] or 0} for e in top_equipos],
+        'max_resp':         max((r['total'] for r in top_responsables), default=1),
+        'max_falla':        max((f['total'] for f in top_fallas),       default=1),
+        'max_equipo':       max((e['total'] for e in top_equipos),      default=1),
+        'chart_labels':     chart_labels,
+        'chart_data':       chart_data,
     })

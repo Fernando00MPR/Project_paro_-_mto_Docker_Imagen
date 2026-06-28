@@ -186,6 +186,7 @@ def importar_paros(request):
     def _crear_paros(filas_list):
         from ..models import CatalogoFalla, CatalogoEquipo, CatalogoResponsable
         importados = 0
+        fallidos = 0
         for f in filas_list:
             try:
                 try:
@@ -201,27 +202,27 @@ def importar_paros(request):
                 responsable_obj = CatalogoResponsable.objects.filter(area=area_obj, responsable_es__iexact=f['responsable']).first()
 
                 Paro.objects.create(
-                    area=area_obj,
-                    fecha=_parse_fecha(f['fecha']),
-                    turno=f['turno'],
-                    falla=f['falla'],
-                    falla_es=falla_obj.nombre_es       if falla_obj       else f['falla'],
-                    falla_en=falla_obj.nombre_en       if falla_obj       else '',
-                    responsable=f['responsable'],
-                    responsable_es=responsable_obj.responsable_es if responsable_obj else f['responsable'],
-                    responsable_en=responsable_obj.responsable_en if responsable_obj else '',
-                    equipo=f['equipo'],
-                    equipo_es=equipo_obj.equipo_es     if equipo_obj      else f['equipo'],
-                    equipo_en=equipo_obj.equipo_en     if equipo_obj      else '',
-                    hora=dt.strptime(f['hora'], '%H:%M').time(),
-                    tiempo_minutos=int(f['tiempo']),
-                    estatus=f['estatus'],
-                    comentarios=f.get('comentarios', ''),
+                    area=            area_obj,
+                    fecha=           _parse_fecha(f['fecha']),
+                    turno=           f['turno'],
+                    falla=           f['falla'],
+                    falla_es=        falla_obj.nombre_es  if falla_obj else f['falla'],
+                    falla_en=        falla_obj.nombre_en  if falla_obj else f['falla'],
+                    responsable=     f['responsable'],
+                    responsable_es=  responsable_obj.responsable_es if responsable_obj else f['responsable'],
+                    responsable_en=  responsable_obj.responsable_en if responsable_obj else f['responsable'],
+                    equipo=          f['equipo'],
+                    equipo_es=       equipo_obj.equipo_es if equipo_obj else f['equipo'],
+                    equipo_en=       equipo_obj.equipo_en if equipo_obj else f['equipo'],
+                    hora=            dt.strptime(f['hora'], '%H:%M').time(),
+                    tiempo_minutos=  int(f['tiempo']),
+                    estatus=         f['estatus'],
+                    comentarios=     f.get('comentarios', ''),
                 )
                 importados += 1
             except Exception:
-                pass
-        return importados
+                fallidos += 1   # ← contar el fallo
+        return importados, fallidos  # ← devolver tupla
 
     if request.method == 'POST':
         accion = request.POST.get('accion', '')
@@ -229,8 +230,11 @@ def importar_paros(request):
         if accion == 'importar_permitidas':
             filas_json = request.POST.get('filas_permitidas', '[]')
             filas = json.loads(filas_json)
-            importados = _crear_paros(filas)
-            messages.success(request, f"{importados} paro(s) importados correctamente.")
+            importados, fallidos = _crear_paros(filas)
+            if fallidos:
+                messages.warning(request, f"{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar.")
+            else:
+                messages.success(request, f"{importados} paro(s) importados correctamente.")
             if area_id_param:
                 return redirect('paros:lista_paros_por_area', area_id=area_id_param)
             return redirect('paros:lista_paros')
@@ -341,8 +345,11 @@ def importar_paros(request):
                         pendiente_confirmacion = True
                         datos_sesion = json.dumps(filas_permitidas)
                     else:
-                        importados = _crear_paros(filas_permitidas)
-                        messages.success(request, f"{importados} paro(s) importados correctamente.")
+                        importados, fallidos = _crear_paros(filas_permitidas)
+                        if fallidos:
+                            messages.warning(request, f"{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar.")
+                        else:
+                            messages.success(request, f"{importados} paro(s) importados correctamente.")
                         if area_id_param:
                             return redirect('paros:lista_paros_por_area', area_id=area_id_param)
                         return redirect('paros:lista_paros')

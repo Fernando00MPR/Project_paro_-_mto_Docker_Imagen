@@ -25,90 +25,92 @@
     </div>
 </div>
 
-<div class="card" style="overflow:hidden;">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th style="width:50px; text-align:center;">#</th>
-                <th style="width:140px;"># {% trans "NOMINA" %}</th>
-                <th>{% trans "NOMBRE" %}</th>
-                <th>{% trans "APELLIDOS" %}</th>
-                <th style="width:140px;">{% trans "POSICIÓN" %}</th>
-                <th style="width:100px; text-align:center;">{% trans "ESTATUS" %}</th>
-                <th style="width:200px; text-align:center;">{% trans "REGISTRO" %}</th>
-                <th style="width:200px; text-align:center;">{% trans "ULTIMA EDICIÓN" %}</th>
-                <th style="width:200px; text-align:center; padding-right:16px;">{% trans "ACCIONES" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in responsables %}
-            <tr>
-                <td style="text-align:center; color:var(--muted); font-size:12px;">
-                    {{ forloop.counter }}
-                </td>
-                <td style="font-weight:600;">{{ r.numero_nomina }}</td>
-                <td>{{ r.nombre }}</td>
-                <td>{{ r.apellidos }}</td>
-                <td>{{ r.posicion|default:"--" }}</td>
-                <td style="text-align:center;">
-                    {% if r.activo %}
-                        <span style="font-size:11px; font-weight:600; color:#065F46; background:#D1FAE5;
-                                    padding:3px 10px; border-radius:20px;">{% trans "Activo" %}</span>
-                    {% else %}
-                        <span style="font-size:11px; font-weight:600; color:#6B7280; background:#F3F4F6;
-                                    padding:3px 10px; border-radius:20px;">{% trans "Inactivo" %}</span>
-                    {% endif %}
-                </td>
-                <td style="text-align:center; font-size:12px; color:var(--muted);">
-                    {{ r.creado_en|date:"d/m/Y H:i" }}
-                </td>
-                <td style="text-align:center; font-size:12px; color:var(--muted);">
-                    {{ r.modificado_en|date:"d/m/Y H:i" }}
-                </td>
-                <td style="text-align:center; padding-right:16px;">
-                    <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
-
-                        {% if puede_editar_responsables %}
-                        <a href="{% url 'mto:editar_responsable' r.pk %}?area={{ filtro_area }}"
-                                style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                font-size:12px; border-radius:6px; border:1px solid var(--border);
-                                background:var(--surface); color:var(--text); text-decoration:none;
-                                white-space:nowrap;">
-                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            {% trans "Editar" %}
-                        </a>
+<div class="card">
+    <div class="table-wrap" style="overflow-x:auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:50px;  text-align:center;">#</th>
+                    <th style="width:140px; text-align:center;"># {% trans "NOMINA" %}</th>
+                    <th style="width:200px;">{% trans "NOMBRE" %}</th>
+                    <th style="width:200px;">{% trans "APELLIDOS" %}</th>
+                    <th style="width:140px;">{% trans "POSICIÓN" %}</th>
+                    <th style="width:100px; text-align:center;">{% trans "ESTATUS" %}</th>
+                    <th style="width:200px; text-align:center;">{% trans "REGISTRO" %}</th>
+                    <th style="width:200px; text-align:center;">{% trans "ULTIMA EDICIÓN" %}</th>
+                    <th style="width:200px; text-align:center; padding-right:16px;">{% trans "ACCIONES" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in responsables %}
+                <tr>
+                    <td style="text-align:center; color:var(--muted); font-size:12px;">
+                        {{ forloop.counter }}
+                    </td>
+                    <td style="font-weight:600; text-align:center;">{{ r.numero_nomina }}</td>
+                    <td>{{ r.nombre }}</td>
+                    <td>{{ r.apellidos }}</td>
+                    <td>{{ r.posicion|default:"--" }}</td>
+                    <td style="text-align:center;">
+                        {% if r.activo %}
+                            <span style="font-size:11px; font-weight:600; color:#065F46; background:#D1FAE5;
+                                        padding:3px 10px; border-radius:20px;">{% trans "Activo" %}</span>
+                        {% else %}
+                            <span style="font-size:11px; font-weight:600; color:#6B7280; background:#F3F4F6;
+                                        padding:3px 10px; border-radius:20px;">{% trans "Inactivo" %}</span>
                         {% endif %}
+                    </td>
+                    <td style="text-align:center; font-size:12px; color:var(--muted);">
+                        {{ r.creado_en|date:"d/m/Y H:i" }}
+                    </td>
+                    <td style="text-align:center; font-size:12px; color:var(--muted);">
+                        {{ r.modificado_en|date:"d/m/Y H:i" }}
+                    </td>
+                    <td style="text-align:center; padding-right:16px;">
+                        <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
 
-                        {% if puede_eliminar_responsables %}
-                        <button type="button"
-                                onclick="confirmarEliminarResponsable('{% url 'mto:eliminar_responsable' r.pk %}', '{{ r.nombre|escapejs }} {{ r.apellidos|escapejs }}')"
-                                style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                    font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
-                                    background:#FFF5F5; color:#DC2626; cursor:pointer;
+                            {% if puede_editar_responsables %}
+                            <a href="{% url 'mto:editar_responsable' r.pk %}?area={{ filtro_area }}"
+                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                    font-size:12px; border-radius:6px; border:1px solid var(--border);
+                                    background:var(--surface); color:var(--text); text-decoration:none;
                                     white-space:nowrap;">
-                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            {% trans "Eliminar" %}
-                        </button>
-                        {% endif %}
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                {% trans "Editar" %}
+                            </a>
+                            {% endif %}
 
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="9" style="text-align:center; color:var(--muted); padding:32px;">
-                    {% trans "No hay responsables registrados para esta área." %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                            {% if puede_eliminar_responsables %}
+                            <button type="button"
+                                    onclick="confirmarEliminarResponsable('{% url 'mto:eliminar_responsable' r.pk %}', '{{ r.nombre|escapejs }} {{ r.apellidos|escapejs }}')"
+                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                        font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
+                                        background:#FFF5F5; color:#DC2626; cursor:pointer;
+                                        white-space:nowrap;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                {% trans "Eliminar" %}
+                            </button>
+                            {% endif %}
+
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align:center; color:var(--muted); padding:32px;">
+                        {% trans "No hay responsables registrados para esta área." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- ── Modal confirmar eliminar ── -->

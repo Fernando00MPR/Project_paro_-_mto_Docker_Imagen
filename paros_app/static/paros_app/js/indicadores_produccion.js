@@ -3,10 +3,14 @@
 // ──────────────────────────────────────────────────────────────
 
 // ── Filtros de período ────────────────────────────────────────
-function togglePeriodo(v) {
+function togglePeriodo(v, autoSubmit) {
     document.getElementById('wrap-semana-num').style.display = v === 'semana_num' ? 'flex' : 'none';
     document.getElementById('wrap-desde').style.display      = v === 'custom'     ? 'flex' : 'none';
     document.getElementById('wrap-hasta').style.display      = v === 'custom'     ? 'flex' : 'none';
+
+    if (autoSubmit && (v === 'semana' || v === 'mes')) {
+        document.getElementById('form-filtros').submit();
+    }
 }
 
 // ── Conversión de fechas ──────────────────────────────────────
@@ -134,31 +138,18 @@ function seleccionarIndicador(val) {
 
 // ── Outlier detection ─────────────────────────────────────────
 function detectarOutlier() {
-    const valoresPos = VALORES.filter(v => v !== null && v > 0).sort((a, b) => a - b);
-    let axisMax    = undefined;
-    let hayOutlier = false;
-    if (valoresPos.length >= 1) {
-        const p90    = valoresPos[Math.min(Math.floor(valoresPos.length * 0.9), valoresPos.length - 1)];
-        const maxVal = valoresPos[valoresPos.length - 1];
-        if (maxVal > p90 * 2 && valoresPos.length >= 3) {
-            axisMax = Math.ceil(p90 * 1.4);
-            hayOutlier = true;
-        } else if (valoresPos.length < 3 && maxVal > 0) {
-            const segundoMax = valoresPos.length > 1 ? valoresPos[valoresPos.length - 2] : 0;
-            if (segundoMax > 0 && maxVal > segundoMax * 3) {
-                axisMax = Math.ceil(segundoMax * 2);
-                hayOutlier = true;
-            } else if (segundoMax === 0 && maxVal > 20) {
-                axisMax = Math.ceil(maxVal * 0.15);
-                hayOutlier = true;
-            }
-        }
+    const valoresPos = VALORES.filter(v => v !== null && v > 0);
+    const maxReal = valoresPos.length > 0 ? Math.max(...valoresPos) : 0;
+
+    let axisMax = undefined;
+    if (maxReal > 0) {
+        const base = TARGET !== null ? Math.max(maxReal, TARGET) : maxReal;
+        axisMax = Math.ceil(base * 1.1);
+    } else if (TARGET !== null) {
+        axisMax = Math.ceil(TARGET * 1.1);
     }
-    const maxReal = valoresPos.length > 0 ? valoresPos[valoresPos.length - 1] : 0;
-    if (TARGET !== null && axisMax !== undefined) {
-        axisMax = Math.ceil(Math.max(maxReal, TARGET) * 1.1);
-    }
-    return { axisMax, hayOutlier };
+
+    return { axisMax, hayOutlier: false };
 }
 
 function esRojo(v, hayOutlier, axisMax) {
@@ -227,12 +218,14 @@ function crearGrafica() {
                     }
                 }
             },
-            layout: { padding: { top: 28, bottom: 4 } },
+            layout: { padding: { top: 36, bottom: 4 } },
             scales: {
                 x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#888780', maxRotation: 60, autoSkip: true, autoSkipPadding: 8 } },
                 y: {
                     beginAtZero: true,
-                    max: (window.INDICADOR_ACTUAL === 'downtime' || window.INDICADOR_ACTUAL === 'disponibilidad') ? 100 : window.INDICADOR_ACTUAL === 'mtbf' ? 24 : axisMax,
+                    max: window.INDICADOR_ACTUAL === 'disponibilidad' ? 120 
+                    : window.INDICADOR_ACTUAL === 'mtbf' ? 24 
+                    : axisMax,
                     suggestedMax: Math.max(...VALORES.filter(v => v > 0)) > 0 ? undefined : 1,
                     grid: { color: 'rgba(136,135,128,0.15)' },
                     ticks: {
@@ -265,21 +258,29 @@ function crearGrafica() {
                         const ejesFijos = ind === 'downtime' || ind === 'disponibilidad' || ind === 'mtbf';
                         const esRecortada = !ejesFijos && hayOutlier && axisMax !== undefined && val > axisMax;
                         const label = val === 0.01 ? '0' + unidad : val + unidad;
+                        const rojo = esRojo(val, hayOutlier, axisMax);
+
                         if (esRecortada) {
                             const yArea = chart.chartArea.top + 16;
                             const bw = bar.width || 30;
-                            ctx2.fillStyle = esRojo(val, hayOutlier, axisMax) ? '#DC2626' : '#4F46E5';
+                            ctx2.fillStyle = rojo ? '#DC2626' : '#4F46E5';
                             ctx2.fillRect(bar.x - bw / 2, chart.chartArea.top, bw, 20);
                             ctx2.fillStyle = '#ffffff';
                             ctx2.fillText(label, bar.x, yArea);
+                        } else if (rojo) {
+                            // Siempre arriba de la barra en rojo, sin importar qué tan cerca esté del techo
+                            const yPos = Math.max(bar.y - 6, chart.chartArea.top + 12);
+                            ctx2.fillStyle = '#DC2626';
+                            ctx2.fillText(label, bar.x, yPos);
                         } else {
                             const yPos = bar.y - 6;
-                            const dentroDeBar = yPos < chart.chartArea.top + 20;
+                            const dentroDeBar = yPos < chart.chartArea.top + 14;
                             if (dentroDeBar) {
                                 ctx2.fillStyle = '#ffffff';
                                 ctx2.fillText(label, bar.x, bar.y + 16);
                             } else {
-                                ctx2.fillStyle = esRojo(val, hayOutlier, axisMax) ? '#DC2626' : '#4F46E5';
+                                const esDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                                ctx2.fillStyle = esDark ? '#FFFFFF' : '#4F46E5';
                                 ctx2.fillText(label, bar.x, yPos);
                             }
                         }
@@ -347,11 +348,32 @@ function toggleSinRegistros() {
 }
 
 function aplicarFiltroTabla() {
-    document.querySelectorAll('tr.sin-registro').forEach(tr => {
-        tr.style.display = ocultando ? 'none' : '';
+    document.querySelectorAll('tbody tr[data-fecha]').forEach(tr => {
+        const ocultoPorSinRegistro = ocultando && tr.classList.contains('sin-registro');
+        const ocultoPorTarget = tr.dataset.ocultoPorTarget === 'true';
+        tr.style.display = (ocultoPorSinRegistro || ocultoPorTarget) ? 'none' : '';
     });
     const btn = document.getElementById('btn-filtrar');
     if (btn) btn.textContent = ocultando ? 'Mostrar sin registro' : 'Ocultar sin registro';
+}
+
+let filtroTarget = localStorage.getItem('ind-filtro-target') || 'fuera';
+
+function aplicarFiltroTarget(valorForzado) {
+    const sel = document.getElementById('sel-filtro-target');
+    filtroTarget = valorForzado !== undefined ? valorForzado : (sel ? sel.value : 'todos');
+    localStorage.setItem('ind-filtro-target', filtroTarget);
+
+    document.querySelectorAll('tbody tr[data-fecha]').forEach(tr => {
+        if (filtroTarget === 'todos') {
+            tr.dataset.ocultoPorTarget = 'false';
+        } else if (filtroTarget === 'dentro') {
+            tr.dataset.ocultoPorTarget = tr.classList.contains('ind-ok-target') ? 'false' : 'true';
+        } else if (filtroTarget === 'fuera') {
+            tr.dataset.ocultoPorTarget = tr.classList.contains('ind-sobre-target') ? 'false' : 'true';
+        }
+    });
+    aplicarFiltroTabla();
 }
 
 // ── Panel de columnas ─────────────────────────────────────────
@@ -650,7 +672,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     mostrarColumnaIndicador(window.INDICADOR_ACTUAL);
     poblarValoresTabla();
-    aplicarFiltroTabla();
+    const selFiltro = document.getElementById('sel-filtro-target');
+    if (selFiltro) selFiltro.value = filtroTarget;
+    aplicarFiltroTarget(filtroTarget);
 
     document.querySelectorAll('tbody tr[data-fecha]').forEach(tr => {
 

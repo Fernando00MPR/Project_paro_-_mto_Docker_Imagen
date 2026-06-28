@@ -70,45 +70,45 @@
     </form>
 </div>
 
-<!-- ── Selector de columnas ── -->
-<div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-    <div style="position:relative;" id="seg-col-picker-wrap">
-        <button onclick="toggleSegColPicker()" class="btn btn-ghost btn-sm"
-                style="display:flex; align-items:center; gap:6px;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/>
-            </svg>
-            {% trans "Columnas" %}
-        </button>
-        <div id="seg-col-picker" style="display:none; position:absolute; right:0; top:36px; z-index:100;
-                                    background:var(--white); border:1px solid var(--border);
-                                    border-radius:10px; padding:12px 16px; min-width:200px;
-                                    box-shadow:var(--shadow-md);">
-            <div style="font-size:11px; font-weight:600; color:var(--text-3);
-                        text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">
-                {% trans "Mostrar columnas" %}
-            </div>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                <label class="seg-col-toggle" data-col="seg-col-orden"><input type="checkbox" checked onchange="toggleSegCol('seg-col-orden', this.checked)"> {% trans "No. Orden" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-codigo"><input type="checkbox" checked onchange="toggleSegCol('seg-col-codigo', this.checked)"> {% trans "Código plan" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-tipo"><input type="checkbox" checked onchange="toggleSegCol('seg-col-tipo', this.checked)"> {% trans "Tipo" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-problema"><input type="checkbox" checked onchange="toggleSegCol('seg-col-problema', this.checked)"> {% trans "Problema" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-accion"><input type="checkbox" checked onchange="toggleSegCol('seg-col-accion', this.checked)"> {% trans "Acción" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-responsable"><input type="checkbox" checked onchange="toggleSegCol('seg-col-responsable', this.checked)"> {% trans "Responsable" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-compromiso"><input type="checkbox" checked onchange="toggleSegCol('seg-col-compromiso', this.checked)"> {% trans "Compromiso" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-estatus"><input type="checkbox" checked onchange="toggleSegCol('seg-col-estatus', this.checked)"> {% trans "Estatus" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-creado"><input type="checkbox" checked onchange="toggleSegCol('seg-col-creado', this.checked)"> {% trans "Creado" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-notas"><input type="checkbox" checked onchange="toggleSegCol('seg-col-notas', this.checked)"> {% trans "Notas" %}</label>
-                <label class="seg-col-toggle" data-col="seg-col-validacion"><input type="checkbox" checked onchange="toggleSegCol('seg-col-validacion', this.checked)"> {% trans "Validación" %}</label>
+<!-- Tabla -->
+<div class="card">
+
+    <!-- ── Selector de columnas ── -->
+    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <div style="position:relative;" id="seg-col-picker-wrap">
+            <button onclick="toggleSegColPicker()" class="btn btn-ghost btn-sm"
+                    style="display:flex; align-items:center; gap:6px;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/>
+                </svg>
+                {% trans "Columnas" %}
+            </button>
+            <div id="seg-col-picker" style="display:none; position:absolute; right:0; top:36px; z-index:100;
+                                        background:var(--white); border:1px solid var(--border);
+                                        border-radius:10px; padding:12px 16px; min-width:200px;
+                                        box-shadow:var(--shadow-md);">
+                <div style="font-size:11px; font-weight:600; color:var(--text-3);
+                            text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">
+                    {% trans "Mostrar columnas" %}
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label class="seg-col-toggle" data-col="seg-col-orden"><input type="checkbox" checked onchange="toggleSegCol('seg-col-orden', this.checked)"> {% trans "No. Orden" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-codigo"><input type="checkbox" checked onchange="toggleSegCol('seg-col-codigo', this.checked)"> {% trans "Código plan" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-tipo"><input type="checkbox" checked onchange="toggleSegCol('seg-col-tipo', this.checked)"> {% trans "Tipo" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-problema"><input type="checkbox" checked onchange="toggleSegCol('seg-col-problema', this.checked)"> {% trans "Problema" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-accion"><input type="checkbox" checked onchange="toggleSegCol('seg-col-accion', this.checked)"> {% trans "Acción" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-responsable"><input type="checkbox" checked onchange="toggleSegCol('seg-col-responsable', this.checked)"> {% trans "Responsable" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-compromiso"><input type="checkbox" checked onchange="toggleSegCol('seg-col-compromiso', this.checked)"> {% trans "Compromiso" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-estatus"><input type="checkbox" checked onchange="toggleSegCol('seg-col-estatus', this.checked)"> {% trans "Estatus" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-creado"><input type="checkbox" checked onchange="toggleSegCol('seg-col-creado', this.checked)"> {% trans "Creado" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-notas"><input type="checkbox" checked onchange="toggleSegCol('seg-col-notas', this.checked)"> {% trans "Notas" %}</label>
+                    <label class="seg-col-toggle" data-col="seg-col-validacion"><input type="checkbox" checked onchange="toggleSegCol('seg-col-validacion', this.checked)"> {% trans "Validación" %}</label>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-
-<!-- Tabla -->
-<div class="card" style="padding:0; overflow:hidden;">
     <div class="table-wrap" style="overflow-x:auto;">
         <table>
             <thead>
@@ -481,7 +481,7 @@
 <div id="modal-imagenes-seg" style="display:none; position:fixed; inset:0;
      background:rgba(30,27,75,.45); z-index:5000; align-items:center; justify-content:center;">
     <div style="background:var(--white); border-radius:14px; padding:24px;
-                max-width:520px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+                max-width:700px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
             <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del seguimiento" %}</div>
             <div style="display:flex; gap:10px; align-items:center;">

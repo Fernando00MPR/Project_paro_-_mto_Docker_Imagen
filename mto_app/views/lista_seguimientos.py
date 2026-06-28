@@ -111,8 +111,8 @@ def lista_seguimientos(request):
 
     todos_combinados = seguimientos + seguimientos_manuales
 
-    per_page = request.GET.get('per_page', '20')
-    paginator = Paginator(todos_combinados, int(per_page) if per_page.isdigit() else 20)
+    per_page = request.GET.get('per_page', '12')
+    paginator = Paginator(todos_combinados, int(per_page) if per_page.isdigit() else 12)
     page_num = request.GET.get('page', 1)
     combinados_page = paginator.get_page(page_num)
 

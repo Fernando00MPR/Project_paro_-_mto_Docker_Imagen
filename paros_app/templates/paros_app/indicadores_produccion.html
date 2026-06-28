@@ -16,7 +16,7 @@
         <div class="flex-row">
             <div class="filter-group">
                 <label class="filter-label">{% trans "Área" %}</label>
-                <select name="area" class="filter-select">
+                <select name="area" class="filter-select" onchange="this.form.submit()">
                     {% for a in areas %}
                     <option value="{{ a.id }}" {% if area_id == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nombre }}</option>
                     {% endfor %}
@@ -25,7 +25,7 @@
 
             <div class="filter-group">
                 <label class="filter-label">{% trans "Período" %}</label>
-                <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value)" class="filter-select">
+                <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value, true)" class="filter-select">
                     <option value="semana"     {% if periodo == 'semana'     %}selected{% endif %}>{% trans "Esta semana" %}</option>
                     <option value="mes"        {% if periodo == 'mes'        %}selected{% endif %}>{% trans "Este mes" %}</option>
                     <option value="semana_num" {% if periodo == 'semana_num' %}selected{% endif %}>{% trans "Por número de semana" %}</option>
@@ -35,7 +35,7 @@
 
             <div class="filter-group">
                 <label class="filter-label">{% trans "Equipo" %}</label>
-                <select name="equipo" class="filter-select">
+                <select name="equipo" class="filter-select" onchange="this.form.submit()">
                     <option value="" {% if not equipo_sel %}selected{% endif %}>— {% trans "Indicador general" %} —</option>
                     {% for eq in equipos_periodo %}
                     <option value="{{ eq }}" {% if equipo_sel == eq %}selected{% endif %}>{{ eq }}</option>
@@ -45,21 +45,28 @@
 
             <div id="wrap-semana-num" style="display:none;" class="filter-group">
                 <label class="filter-label">{% trans "Semana" %}</label>
-                <input type="number" name="semana_num" value="{{ semana_num|default:semana_actual }}" min="1" max="53" class="filter-input filter-input-number">
+                <input type="number" name="semana_num" value="{{ semana_num|default:semana_actual }}" min="1" max="53" class="filter-input filter-input-number" onchange="this.form.submit()">
             </div>
 
             <div id="wrap-desde" style="display:none;" class="filter-group">
                 <label class="filter-label">{% trans "Desde" %}</label>
-                <input type="date" name="fecha_desde" value="{{ fecha_desde }}" class="filter-input filter-input-date">
+                <input type="date" name="fecha_desde" value="{{ fecha_desde }}" class="filter-input filter-input-date" onchange="this.form.submit()">
             </div>
 
             <div id="wrap-hasta" style="display:none;" class="filter-group">
                 <label class="filter-label">{% trans "Hasta" %}</label>
-                <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" class="filter-input filter-input-date">
+                <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" class="filter-input filter-input-date" onchange="this.form.submit()">
             </div>
 
             <input type="hidden" name="indicador" id="input-indicador" value="{{ indicador }}">
-            <button type="submit" class="btn btn-primary" style="height:33px; padding:0 18px; font-size:13px;">{% trans "Aplicar" %}</button>
+
+            <select id="sel-filtro-target" onchange="aplicarFiltroTarget()"
+                    style="padding:7px 10px; border:1px solid var(--border); border-radius:6px;
+                        font-size:13px; background:var(--white); color:var(--text); cursor:pointer;">
+                <option value="fuera">{% trans "Fuera de target" %}</option>
+                <option value="dentro">{% trans "Dentro de target" %}</option>
+                <option value="todos">{% trans "Todos" %}</option>
+            </select>
         </div>
 
         <!-- Pills de indicador -->
@@ -312,7 +319,7 @@
 
         <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
             <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Valor objetivo" %}</label>
-            <input type="number" id="input-target" value="{{ target_valor|default:'' }}" step="any" min="0"
+            <input type="number" id="input-target" value="{{ target_valor_input }}" step="any" min="0"
                    placeholder="Ej. 5"
                    style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text); width:100%; box-sizing:border-box;">
             <div style="font-size:11px; color:var(--text-3);">{% trans "Deja vacío para eliminar el target" %}</div>

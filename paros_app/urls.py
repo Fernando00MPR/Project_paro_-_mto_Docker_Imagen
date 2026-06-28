@@ -3,8 +3,9 @@ from . import views
 
 urlpatterns = [
     # ── Dashboard ─────────────────────────────────────────────────────────────
-    path('dashboard/', views.dashboard,      name='dashboard'),
-    path('analisis/',  views.analisis_paros, name='analisis_paros'),
+    path('dashboard/',      views.dashboard,      name='dashboard'),
+    path('analisis/',       views.analisis_paros, name='analisis_paros'),
+    path('dashboard/json/', views.dashboard_json, name='dashboard_json'),
 
     # ── Paros ──────────────────────────────────────────────────────────────
     path('paros/',                              views.lista_paros,             name='lista_paros'),

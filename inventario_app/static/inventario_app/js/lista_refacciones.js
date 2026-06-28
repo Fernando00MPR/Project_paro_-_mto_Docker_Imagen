@@ -3,14 +3,12 @@
 // ── Columnas ──────────────────────────────────────────────────────────────────
 const INV_COLS = [
     'inv-col-item', 'inv-col-nombre', 'inv-col-categoria', 'inv-col-unidad',
-    'inv-col-stock', 'inv-col-minimo', 'inv-col-ubicacion', 'inv-col-proveedor', 
-    'inv-col-costo', 'inv-col-creado', 'inv-col-modificado'
-];
-
-const INV_OCULTAS_DEFAULT = [
-    'inv-col-proveedor', 'inv-col-costo',
+    'inv-col-stock', 'inv-col-minimo', 'inv-col-maximo', 'inv-col-ubicacion', 
+    'inv-col-proveedor', 'inv-col-costo', 'inv-col-descripcion',
     'inv-col-creado', 'inv-col-modificado'
 ];
+
+const INV_OCULTAS_DEFAULT = ['inv-col-ubicacion', 'inv-col-proveedor', 'inv-col-costo', 'inv-col-creado', 'inv-col-modificado'];
 
 function toggleInvCol(cls, visible) {
     document.querySelectorAll('.' + cls).forEach(el => {
@@ -85,6 +83,7 @@ function abrirModalRefaccion() {
     document.getElementById('ref-unidad').value          = 'pza';
     document.getElementById('ref-stock_actual').value    = 0;
     document.getElementById('ref-stock_minimo').value    = 0;
+    document.getElementById('ref-stock_maximo').value    = 0;
     document.getElementById('ref-ubicacion').value       = '';
     document.getElementById('ref-proveedor').value       = '';
     document.getElementById('ref-costo_unitario').value  = '';
@@ -98,7 +97,7 @@ function abrirModalRefaccion() {
     document.getElementById('ref-imagenes-existentes').innerHTML = '';
 }
 
-function editarRefaccion(id, noItem, nombre, areaId, categoriaId, unidad, stockActual, stockMinimo, ubicacion, proveedor, costoUnitario, descripcion, activo) {
+function editarRefaccion(id, noItem, nombre, areaId, categoriaId, unidad, stockActual, stockMinimo, stockMaximo, ubicacion, proveedor, costoUnitario, descripcion, activo) {
     document.getElementById('modal-refaccion-titulo').textContent = 'Editar refacción';
     document.getElementById('form-refaccion').action = `/inventario/editar/${id}/`;
     document.getElementById('ref-no_item').value         = noItem;
@@ -108,6 +107,7 @@ function editarRefaccion(id, noItem, nombre, areaId, categoriaId, unidad, stockA
     document.getElementById('ref-unidad').value          = unidad;
     document.getElementById('ref-stock_actual').value    = stockActual;
     document.getElementById('ref-stock_minimo').value    = stockMinimo;
+    document.getElementById('ref-stock_maximo').value    = stockMaximo;
     document.getElementById('ref-ubicacion').value       = ubicacion;
     document.getElementById('ref-proveedor').value       = proveedor;
     document.getElementById('ref-costo_unitario').value  = costoUnitario;

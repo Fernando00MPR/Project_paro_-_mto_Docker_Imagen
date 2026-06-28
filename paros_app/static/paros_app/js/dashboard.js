@@ -30,7 +30,7 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
     };
     const cfg = Object.assign({}, defaults, opciones);
 
-    new Chart(ctx, {
+    return new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,

@@ -505,6 +505,55 @@
         [data-theme="dark"] .filter-group input[type="date"]::-webkit-calendar-picker-indicator {
             filter: none !important;
         }
+
+        #mod-mto, #mod-paros {
+            color: var(--text-2);
+        }
+        #mod-mto:hover, #mod-paros:hover {
+            background: var(--indigo-lt);
+        }
+        #mod-mto.active-modulo, #mod-paros.active-modulo {
+            background: var(--indigo-lt);
+            border-left-color: var(--indigo) !important;
+            color: var(--indigo);
+            font-weight: 600;
+        }
+
+        /* Tooltips en modo colapsado para los botones de módulo */
+        .sidebar.collapsed #mod-mto::after,
+        .sidebar.collapsed #mod-paros::after {
+            content: attr(data-tooltip);
+            position: fixed;
+            left: calc(var(--sidebar-collapsed-w) + 8px);
+            background: var(--text);
+            color: var(--white);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px; font-weight: 500;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity .15s; z-index: 9999;
+        }
+        .sidebar.collapsed #mod-mto:hover::after,
+        .sidebar.collapsed #mod-paros:hover::after { opacity: 1; }
+
+        .sidebar.collapsed div.nav-label {
+            display: none;
+        }
+
+        .sidebar.collapsed .logout-btn::after {
+            content: attr(data-tooltip);
+            position: fixed;
+            left: calc(var(--sidebar-collapsed-w) + 8px);
+            background: var(--text);
+            color: var(--white);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px; font-weight: 500;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity .15s; z-index: 9999;
+        }
+        .sidebar.collapsed .logout-btn:hover::after { opacity: 1; }
+
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -530,36 +579,33 @@
                 </svg>
             </button>
             <div class="brand-text">
-                <button id="btn-modulo" onclick="toggleModulo()"
-                        style="background:none; border:none; cursor:pointer; padding:0;
-                               display:flex; align-items:center; gap:5px; overflow:hidden;">
-                    <span class="brand-label" id="brand-label-text">{% trans "Gestión de Mantenimiento" %}</span>
-                    <svg id="brand-chevron" width="12" height="12" fill="none" stroke="var(--text-2)"
-                         viewBox="0 0 24 24" style="flex-shrink:0; transition:transform .2s;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
+                <span class="brand-label" id="brand-label-text">{% trans "Gestión de Mantenimiento" %}</span>
             </div>
         </div>
 
-        <!-- Dropdown módulos -->
         {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.activo %}
-        <div id="modulo-dropdown"
-             style="display:none; margin:4px 8px; background:var(--surface);
-                    border:1px solid var(--border); border-radius:8px; overflow:hidden;">
-            <button onclick="setModulo('mto')" id="mod-mto"
-                    style="width:100%; padding:8px 12px; text-align:left; background:none;
-                           border:none; cursor:pointer; font-family:inherit; font-size:13px;
-                           font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px;">
-                <span style="width:6px; height:6px; border-radius:50%; background:var(--indigo); flex-shrink:0;"></span>
-                {% trans "Gestión de Mantenimiento" %}
+        <div style="padding:8px; display:flex; flex-direction:column; gap:4px;">
+            <button onclick="setModulo('mto')" id="mod-mto" data-tooltip="{% trans 'Gestión de Mantenimiento' %}"
+                    style="display:flex; align-items:center; gap:10px; padding:9px 10px;
+                        background:none; border:none; border-left:2px solid transparent;
+                        cursor:pointer; font-family:inherit; font-size:13px; text-align:left; border-radius:0;
+                        transition:background .15s, border-color .15s;">
+                <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="nav-label">{% trans "Gestión de Mantenimiento" %}</span>
             </button>
-            <button onclick="setModulo('paros')" id="mod-paros"
-                    style="width:100%; padding:8px 12px; text-align:left; background:none;
-                           border:none; cursor:pointer; font-family:inherit; font-size:13px;
-                           font-weight:500; color:var(--text); display:flex; align-items:center; gap:8px;">
-                <span style="width:6px; height:6px; border-radius:50%; background:var(--red); flex-shrink:0;"></span>
-                {% trans "Paros de Producción" %}
+            <button onclick="setModulo('paros')" id="mod-paros" data-tooltip="{% trans 'Paros de Producción' %}"
+                    style="display:flex; align-items:center; gap:10px; padding:9px 10px;
+                        background:none; border:none; border-left:2px solid transparent;
+                        cursor:pointer; font-family:inherit; font-size:13px; text-align:left; border-radius:0;
+                        transition:background .15s, border-color .15s;">
+                <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <span class="nav-label">{% trans "Paros de Producción" %}</span>
             </button>
         </div>
         {% endif %}
@@ -577,7 +623,7 @@
             {% endif %}
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_dashboard %}
-            <a href="{% url 'mto:dashboard' %}"
+            <a href="{% url 'mto:dashboard' %}" data-tooltip="Dashboard"
                 class="{% if 'mto:dashboard' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -599,7 +645,7 @@
             {% endif %}
 
             
-            <div style="padding:10px 12px; margin-bottom:4px;">
+            <div class="nav-label" style="padding:10px 12px; margin-bottom:4px;">
                 <label style="font-size:10px; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px;">
                     {% trans "Área actual" %}
                 </label>
@@ -615,7 +661,8 @@
             <!-- ── Sidebar - Plan de Mantenimiento ── -->
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_plan_mantenimiento %}
-            <a href="#" id="link-plan-mantenimiento" data-base-url="{% url 'mto:lista_plan' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_plan' %}active{% endif %}">
+            <a href="#" id="link-plan-mantenimiento" data-tooltip="{% trans 'Plan de Mantenimiento' %}" data-base-url="{% url 'mto:lista_plan' %}" 
+                class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_plan' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
@@ -627,7 +674,8 @@
             <!-- ── Sidebar - Pasos rutinas ── -->
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_rutinas %}
-            <a href="#" id="link-rutinas" data-base-url="{% url 'mto:lista_pasos' %}" class="link-area-dinamico {% if 'paso' in request.resolver_match.url_name %}active{% endif %}">
+            <a href="#" id="link-rutinas" data-tooltip="{% trans 'Rutinas de Mantenimiento' %}" data-base-url="{% url 'mto:lista_pasos' %}" 
+                class="link-area-dinamico {% if 'paso' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
@@ -638,7 +686,7 @@
 
             <!-- ── Sidebar - Pasos rutinas Historial ── -->
 
-            <a href="{% url 'mto:historial_rutinas' %}" data-tooltip="Historial de rutinas"
+            <a href="{% url 'mto:historial_rutinas' %}" data-tooltip="{% trans 'Historial de rutinas' %}"
                 class="{% if request.resolver_match.url_name == 'historial_rutinas' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -651,7 +699,8 @@
             <!-- ── Sidebar - Seguimiento ── -->
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento %}
-            <a href="#" id="link-seguimientos" data-base-url="{% url 'mto:lista_seguimientos' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos' %}active{% endif %}">
+            <a href="#" id="link-seguimientos" data-tooltip="{% trans 'Seguimientos' %}" data-base-url="{% url 'mto:lista_seguimientos' %}" 
+                class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
@@ -663,7 +712,8 @@
             <!-- ── Sidebar - Responsables ── -->
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_responsables %}
-            <a href="#" id="link-responsables" data-base-url="{% url 'mto:lista_responsables' %}" class="link-area-dinamico {% if 'responsable' in request.resolver_match.url_name %}active{% endif %}">
+            <a href="#" id="link-responsables" data-tooltip="{% trans 'Responsables' %}" data-base-url="{% url 'mto:lista_responsables' %}" 
+                class="link-area-dinamico {% if 'responsable' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -675,7 +725,8 @@
             <!-- ── Sidebar - Inventario ── -->
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_inventario %}
-            <a href="#" id="link-inventario" data-base-url="{% url 'inventario:lista_refacciones' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_refacciones' %}active{% endif %}">
+            <a href="#" id="link-inventario" data-tooltip="{% trans 'Inventario' %}" data-base-url="{% url 'inventario:lista_refacciones' %}" 
+                class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_refacciones' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
@@ -687,7 +738,8 @@
             <!-- ── Sidebar - Seguimiento de refacciones ── -->
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento_refaccion %}
-            <a href="#" id="link-seguimientos-refaccion" data-base-url="{% url 'inventario:lista_seguimientos_refaccion' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos_refaccion' %}active{% endif %}">
+            <a href="#" id="link-seguimientos-refaccion" data-tooltip="{% trans 'Seguimiento de refacciones' %}" data-base-url="{% url 'inventario:lista_seguimientos_refaccion' %}" 
+                class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos_refaccion' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -700,7 +752,8 @@
 
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento_servicio %}
 
-            <a href="#" id="link-seguimientos-servicio" data-base-url="{% url 'inventario:lista_seguimientos_servicio' %}" class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos_servicio' %}active{% endif %}">
+            <a href="#" id="link-seguimientos-servicio" data-tooltip="{% trans 'Seguimiento de servicios' %}" data-base-url="{% url 'inventario:lista_seguimientos_servicio' %}" 
+                class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos_servicio' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -711,7 +764,7 @@
 
             {% if request.user.is_superuser or perfil.es_admin %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Administración" %}</div>
-            <a href="{% url 'lista_usuarios' %}" data-tooltip="Usuarios"
+            <a href="{% url 'lista_usuarios' %}" data-tooltip="{% trans 'Usuarios' %}"
                 class="{% if 'usuario' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -735,7 +788,7 @@
             {% endif %}
 
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_dashboard %}
-            <a href="{% url 'paros:dashboard' %}" data-tooltip="Dashboard"
+            <a href="{% url 'paros:dashboard' %}" data-tooltip="{% trans 'Dashboard' %}"
                class="{% if request.resolver_match.url_name == 'paros:dashboard' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -746,7 +799,7 @@
             {% endif %}
 
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_analisis %}
-            <a href="{% url 'paros:analisis_paros' %}" data-tooltip="Análisis de paros"
+            <a href="{% url 'paros:analisis_paros' %}" data-tooltip="{% trans 'Análisis de paros' %}"
                class="{% if request.resolver_match.url_name == 'paros:analisis_paros' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 20V10M12 20V4M6 20v-6"/>
@@ -756,7 +809,7 @@
             {% endif %}
 
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_todos_paros %}
-            <a href="{% url 'paros:lista_paros' %}" data-tooltip="Todos los paros"
+            <a href="{% url 'paros:lista_paros' %}" data-tooltip="{% trans 'Todos los paros' %}"
                class="{% if request.resolver_match.url_name == 'paros:lista_paros' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
@@ -766,7 +819,7 @@
             {% endif %}
 
             {% if request.user.is_superuser or perfil.es_admin or perfil.crear_paro %}
-            <a href="{% url 'paros:crear_paro' %}" data-tooltip="Nuevo paro"
+            <a href="{% url 'paros:crear_paro' %}" data-tooltip="{% trans 'Nuevo paro' %}"
                class="{% if request.resolver_match.url_name == 'paros:crear_paro' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -795,7 +848,7 @@
         <!-- ── Catalogos ── -->
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_catalogos or perfil.gestionar_catalogos or perfil.agregar_catalogo_falla or perfil.editar_catalogo_falla or perfil.eliminar_catalogo_falla or perfil.agregar_catalogo_equipo or perfil.editar_catalogo_equipo or perfil.eliminar_catalogo_equipo or perfil.agregar_catalogo_resp or perfil.editar_catalogo_resp or perfil.eliminar_catalogo_resp %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Catálogos" %}</div>
-            <a href="{% url 'paros:catalogo_fallas_general' %}" data-tooltip="Catálogo de fallas"
+            <a href="{% url 'paros:catalogo_fallas_general' %}" data-tooltip="{% trans 'Catálogo de fallas' %}"
                class="{% if 'falla' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -803,7 +856,7 @@
                 </svg>
                 <span class="nav-label">{% trans "Catálogo de fallas" %}</span>
             </a>
-            <a href="{% url 'paros:catalogo_equipos' %}" data-tooltip="Catálogo de equipos"
+            <a href="{% url 'paros:catalogo_equipos' %}" data-tooltip="{% trans 'Catálogo de equipos' %}"
                class="{% if 'equipo' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -811,7 +864,7 @@
                 </svg>
                 <span class="nav-label">{% trans "Catálogo de equipos" %}</span>
             </a>
-            <a href="{% url 'paros:catalogo_responsables' %}" data-tooltip="Catálogo de responsables"
+            <a href="{% url 'paros:catalogo_responsables' %}" data-tooltip="{% trans 'Catálogo de responsables' %}"
                class="{% if 'responsable' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -825,7 +878,7 @@
 
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_hora_hora %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Producción" %}</div>
-            <a href="{% url 'paros:hora_hora' %}" data-tooltip="Hora x hora"
+            <a href="{% url 'paros:hora_hora' %}" data-tooltip="{% trans 'Hora x hora' %}"
                class="{% if request.resolver_match.url_name == 'hora_hora' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -836,7 +889,7 @@
             {% endif %}
 
             {% if request.user.is_superuser or perfil.es_admin or perfil.areas_produccion.exists %}
-            <a href="{% url 'paros:registro_produccion' %}" data-tooltip="Tiempo de producción"
+            <a href="{% url 'paros:registro_produccion' %}" data-tooltip="{% trans 'Tiempo de producción' %}"
                class="{% if request.resolver_match.url_name == 'registro_produccion' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -846,7 +899,7 @@
             </a>
             {% endif %}
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_indicadores %}
-            <a href="{% url 'paros:indicadores_produccion' %}" data-tooltip="Indicadores"
+            <a href="{% url 'paros:indicadores_produccion' %}" data-tooltip="{% trans 'Indicadores' %}"
                class="{% if request.resolver_match.url_name == 'indicadores_produccion' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -859,7 +912,7 @@
 
             {% if request.user.is_superuser or perfil.es_admin %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Usuarios" %}</div>
-            <a href="{% url 'lista_usuarios' %}" data-tooltip="Gestión de usuarios"
+            <a href="{% url 'lista_usuarios' %}" data-tooltip="{% trans 'Gestión de usuarios' %}"
                class="{% if request.resolver_match.url_name in 'lista_usuarios,crear_usuario,editar_usuario' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -916,7 +969,7 @@
             <!-- Logout -->
             <form method="post" action="{% url 'logout' %}" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="logout-btn" onclick="localStorage.removeItem('app_modulo')">
+                <button type="submit" class="logout-btn" onclick="localStorage.removeItem('app_modulo')" data-tooltip="{% trans 'Cerrar sesión' %}">
                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -1012,18 +1065,8 @@ btnTheme.addEventListener('click', () => {
 /* ── Toggle módulo MTO / Paros ── */
 const MODULO_KEY = 'app_modulo';
 
-function toggleModulo() {
-    const dd      = document.getElementById('modulo-dropdown');
-    const chevron = document.getElementById('brand-chevron');
-    const visible = dd.style.display !== 'none';
-    dd.style.display      = visible ? 'none' : 'block';
-    chevron.style.transform = visible ? '' : 'rotate(180deg)';
-}
-
 function setModulo(modulo) {
     localStorage.setItem(MODULO_KEY, modulo);
-    document.getElementById('modulo-dropdown').style.display = 'none';
-    document.getElementById('brand-chevron').style.transform = '';
     aplicarModulo(modulo);
 }
 
@@ -1032,8 +1075,8 @@ function aplicarModulo(modulo) {
     document.getElementById('nav-mto').style.display        = esMto ? 'block' : 'none';
     document.getElementById('nav-paros').style.display      = esMto ? 'none'  : 'block';
     document.getElementById('brand-label-text').textContent = esMto ? '{% trans "Gestión de Mantenimiento" %}' : '{% trans "Paros de Producción" %}';
-    document.getElementById('mod-mto').style.fontWeight     = esMto ? '900' : '100';
-    document.getElementById('mod-paros').style.fontWeight   = esMto ? '100' : '900';
+    document.getElementById('mod-mto').classList.toggle('active-modulo', esMto);
+    document.getElementById('mod-paros').classList.toggle('active-modulo', !esMto);
 }
 
 (function() {
@@ -1045,17 +1088,6 @@ function aplicarModulo(modulo) {
     aplicarModulo(modulo);
     localStorage.setItem(MODULO_KEY, modulo);
 })();
-
-// Cerrar dropdown al hacer click fuera
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('#btn-modulo') && !e.target.closest('#modulo-dropdown')) {
-        const dd = document.getElementById('modulo-dropdown');
-        if (dd) {
-            dd.style.display = 'none';
-            document.getElementById('brand-chevron').style.transform = '';
-        }
-    }
-});
 
 // Menu mantenimiento secciones
 const AREA_MTO_KEY = 'mto_area_actual';

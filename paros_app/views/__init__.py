@@ -28,7 +28,11 @@ from .autocomplete import (
     siguiente_codigo_equipo, 
     siguiente_codigo_responsable
 )
-from .dashboard import dashboard, analisis_paros
+from .dashboard import (
+    dashboard, 
+    analisis_paros,
+    dashboard_json
+    )
 from .catalogos import (
     catalogo_fallas_general,
     catalogo_fallas,

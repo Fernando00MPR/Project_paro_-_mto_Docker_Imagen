@@ -68,7 +68,7 @@
         </div>
         <div class="filter-group">
             <label>{% trans "Buscar" %}</label>
-            <input type="text" name="q" value="{{ busqueda }}" placeholder="Codigo, equipo o rutina...">
+            <input style="width:300px;" type="text" name="q" value="{{ busqueda }}" placeholder="Codigo, equipo o rutina...">
         </div>
         <div class="filter-group" style="justify-content:flex-end; margin-top:auto;">
             <label>&nbsp;</label>
@@ -83,12 +83,12 @@
     <!-- ── Indicadores de semana ── -->
     {% if filtro_semana %}
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:16px;">
-        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
+        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Órdenes S{{ filtro_semana }}</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">{{ stats_semana.total }}</div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{{ stats_semana.completadas }} completadas</div>
         </div>
-        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
+        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Pendientes</div>
             <div style="font-size:24px; font-weight:500; line-height:1;
                         color:{% if stats_semana.pendientes > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
@@ -96,7 +96,7 @@
             </div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">sin completar esta semana</div>
         </div>
-        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
+        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Tiempo total</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">
                 {% if stats_semana.horas > 0 %}
@@ -110,7 +110,7 @@
     </div>
     {% else %}
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:16px;">
-        <div style="background:var(--surface); border-radius:var(--radius); padding:14px 16px;">
+        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
             <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Planes activos</div>
             <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">{{ planes.paginator.count }}</div>
             <div style="font-size:11px; color:var(--text-3); margin-top:4px;">en el plan de mantenimiento</div>
@@ -175,7 +175,7 @@
                     <th class="col-plan"          style="text-align:center; width:60px; ">N°<br>{% trans "Plan" %}</th>
                     <th class="col-sinicio"       style="display:none; text-align:center; width:180px;">{% trans "Semana" %}<br>{% trans "inicio" %}</th>
                     {% if filtro_semana %}
-                    <th style="text-align:center; width:180px;">{% trans "Semana" %}<br>{% trans "actual" %}</th>
+                    <th                           style="text-align:center; width:180px;">{% trans "Semana" %}<br>{% trans "actual" %}</th>
                     {% endif %}
                     <th class="col-proximo"       style="text-align:center; width:180px;">{% trans "Proximo" %}<br>{% trans "mantenimiento" %}</th>
                     {% if filtro_semana %}
@@ -192,9 +192,9 @@
             <tbody>
                 {% for p in planes %}
                 <tr>
-                    <td class="col-area">{{ p.area }}</td>
-                    <td class="col-codigo" style="text-align:center;"><strong>{{ p.codigo }}</strong></td>
-                    <td class="col-rutina" style="text-align:center;">{{ p.rutina }}</td>
+                    <td class="col-area"   style="white-space:nowrap;">{{ p.area }}</td>
+                    <td class="col-codigo" style="text-align:center; white-space:nowrap;"><strong>{{ p.codigo }}</strong></td>
+                    <td class="col-rutina" style="text-align:center; white-space:nowrap;">{{ p.rutina }}</td>
                     <td class="col-actividad">{{ p.actividad }}</td>
                     <td class="col-duracion" style="text-align:center;">
                         {% if p.duracion_minutos < 60 %}{{ p.duracion_minutos }} min
@@ -265,8 +265,8 @@
                     </td>
                     {% endif %}
 
-                    <td class="col-nombre-equipo" style="display:none;">{{ p.nombre_equipo|default:"--" }}</td>
-                    <td class="col-locacion"      style="display:none; text-align:center;">{{ p.locacion|default:"--" }}</td>
+                    <td class="col-nombre-equipo" style="display:none;                    white-space:nowrap;">{{ p.nombre_equipo|default:"--" }}</td>
+                    <td class="col-locacion"      style="display:none; text-align:center; white-space:nowrap;">{{ p.locacion|default:"--" }}</td>
                     <td class="col-tipo"          style="display:none; text-align:center;">{{ p.get_tipo_mto_display|default:"--" }}</td>
                     <td class="col-prioridad"     style="display:none; text-align:center;">{{ p.get_prioridad_display|default:"--" }}</td>
                     <td class="col-estatus"       style="display:none; text-align:center;">

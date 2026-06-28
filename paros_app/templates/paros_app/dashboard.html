@@ -19,6 +19,11 @@
         <div class="card-subtitle">
             {{ fecha_ini|date:"d/m/Y" }} — {{ fecha_fin|date:"d/m/Y" }}
             {% if area_actual %} · {{ area_actual.nombre }}{% endif %}
+            <span style="margin-left:12px;font-size:10px;color:var(--text-3);">
+                <button onclick="actualizarDashboard()" title="{% trans 'Actualizar ahora' %}"
+                        style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:13px;padding:0;line-height:1;">↻</button>
+                <span id="ultima-actualizacion"></span>
+            </span>
         </div>
     </div>
 
@@ -112,17 +117,17 @@
 
 <!-- ── KPIs ── -->
 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px;">
-    {% include 'paros_app/_kpi.html' with valor=total_paros label=lbl_total color="var(--indigo)" icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" %}
-    {% include 'paros_app/_kpi.html' with valor=total_minutos label=lbl_minutos color="#D97706" icon="M13 10V3L4 14h7v7l9-11h-7z" sufijo="min" %}
-    {% include 'paros_app/_kpi.html' with valor=promedio_min label=lbl_promedio color="#10B981" icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" sufijo="min" %}
+    {% include 'paros_app/_kpi.html' with valor=total_paros label=lbl_total color="var(--indigo)" icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" kpi_id="total_paros" %}
+    {% include 'paros_app/_kpi.html' with valor=total_minutos label=lbl_minutos color="#D97706"   icon="M13 10V3L4 14h7v7l9-11h-7z" sufijo="min" kpi_id="total_minutos" %}
+    {% include 'paros_app/_kpi.html' with valor=promedio_min label=lbl_promedio color="#10B981"   icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" sufijo="min" kpi_id="promedio_min" %}
     {% if estatus_filtro == '' or estatus_filtro == 'rojo' %}
-    {% include 'paros_app/_kpi.html' with valor=Rechazados label=lbl_Rechazados color="#EF4444" icon="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% include 'paros_app/_kpi.html' with valor=Rechazados label=lbl_Rechazados color="#EF4444" icon="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" kpi_id="rechazados" %}
     {% endif %}
     {% if estatus_filtro == '' or estatus_filtro == 'amarillo' %}
-    {% include 'paros_app/_kpi.html' with valor=Pendiente label=lbl_Pendiente color="#F59E0B" icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% include 'paros_app/_kpi.html' with valor=Pendiente label=lbl_Pendiente color="#F59E0B" icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" kpi_id="pendiente" %}
     {% endif %}
     {% if estatus_filtro == '' or estatus_filtro == 'verde' %}
-    {% include 'paros_app/_kpi.html' with valor=Aceptados label=lbl_Aceptados color="#10B981" icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" %}
+    {% include 'paros_app/_kpi.html' with valor=Aceptados label=lbl_Aceptados color="#10B981" icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" kpi_id="aceptados" %}
     {% endif %}
 </div>
 
@@ -157,7 +162,10 @@
             <div style="margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                     <span style="font-size:13px; font-weight:500;">{% trans "Turno 1" %}</span>
-                    <span style="font-size:13px; color:var(--text-2);">
+                    <span id="turno1-texto"
+                        data-singular="{% trans 'paro' %}"
+                        data-plural="{% trans 'paros' %}"
+                        style="font-size:13px; color:var(--text-2);">
                         {% blocktrans count count=turno1 %}
                             {{ count }} paro
                         {% plural %}
@@ -166,7 +174,7 @@
                     </span>
                 </div>
                 <div style="height:10px; background:var(--border); border-radius:5px; overflow:hidden;">
-                    <div style="height:100%; background:var(--indigo); border-radius:5px;
+                    <div id="turno1-bar" style="height:100%; background:var(--indigo); border-radius:5px;
                                 width:{% if total_turnos > 0 %}{% widthratio turno1 total_turnos 100 %}{% else %}0{% endif %}%;
                                 transition:width .5s;"></div>
                 </div>
@@ -175,7 +183,10 @@
             <div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                     <span style="font-size:13px; font-weight:500;">{% trans "Turno 2" %}</span>
-                    <span style="font-size:13px; color:var(--text-2);">
+                    <span id="turno2-texto"
+                        data-singular="{% trans 'paro' %}"
+                        data-plural="{% trans 'paros' %}"
+                        style="font-size:13px; color:var(--text-2);">
                         {% blocktrans count count=turno2 %}
                             {{ count }} paro
                         {% plural %}
@@ -184,7 +195,7 @@
                     </span>
                 </div>
                 <div style="height:10px; background:var(--border); border-radius:5px; overflow:hidden;">
-                    <div style="height:100%; background:#D97706; border-radius:5px;
+                    <div id="turno2-bar" style="height:100%; background:#D97706; border-radius:5px;
                                 width:{% if total_turnos > 0 %}{% widthratio turno2 total_turnos 100 %}{% else %}0{% endif %}%;
                                 transition:width .5s;"></div>
                 </div>
@@ -194,12 +205,12 @@
         <!-- Donut visual simple -->
         <div style="display:flex; gap:16px;">
             <div style="text-align:center;">
-                <div style="font-size:28px; font-weight:700; color:var(--indigo);">{{ turno1 }}</div>
+                <div id="turno1-num" style="font-size:28px; font-weight:700; color:var(--indigo);">{{ turno1 }}</div>
                 <div style="font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.06em;">{% trans "Turno 1" %}</div>
             </div>
             <div style="width:1px; background:var(--border);"></div>
             <div style="text-align:center;">
-                <div style="font-size:28px; font-weight:700; color:#D97706;">{{ turno2 }}</div>
+                <div id="turno2-num" style="font-size:28px; font-weight:700; color:#D97706;">{{ turno2 }}</div>
                 <div style="font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.06em;">{% trans "Turno 2" %}</div>
             </div>
         </div>
@@ -212,58 +223,64 @@
     <!-- Top Responsables -->
     <div class="card">
         <div style="font-weight:600; font-size:14px; margin-bottom:14px; color:var(--text);">{% trans "Top responsables" %}</div>
-        {% for r in top_responsables %}
-        <div style="margin-bottom:10px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                <span style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;">{{ r.responsable|default:lbl_sin_asignar }}</span>
-                <span style="font-size:12px; color:var(--text-2); flex-shrink:0;">{{ r.total }} · {{ r.minutos }}min</span>
+            <div id="ranking-responsables">
+                {% for r in top_responsables %}
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;">{{ r.responsable|default:lbl_sin_asignar }}</span>
+                        <span style="font-size:12px; color:var(--text-2); flex-shrink:0;">{{ r.total }} · {{ r.minutos }}min</span>
+                    </div>
+                    <div style="height:7px; background:var(--border); border-radius:4px; overflow:hidden;">
+                        <div style="height:100%; background:var(--indigo); border-radius:4px;
+                                    width:{% widthratio r.total max_resp 100 %}%;"></div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color:var(--text-3); font-size:13px;">{% trans "Sin datos" %}</p>
+                {% endfor %}
             </div>
-            <div style="height:7px; background:var(--border); border-radius:4px; overflow:hidden;">
-                <div style="height:100%; background:var(--indigo); border-radius:4px;
-                            width:{% widthratio r.total max_resp 100 %}%;"></div>
-            </div>
-        </div>
-        {% empty %}
-        <p style="color:var(--text-3); font-size:13px;">{% trans "Sin datos" %}</p>
-        {% endfor %}
     </div>
 
     <!-- Top Fallas -->
     <div class="card">
         <div style="font-weight:600; font-size:14px; margin-bottom:14px; color:var(--text);">{% trans "Top fallas" %}</div>
-        {% for f in top_fallas %}
-        <div style="margin-bottom:10px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                <span style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;">{{ f.falla|default:lbl_sin_falla }}</span>
-                <span style="font-size:12px; color:var(--text-2); flex-shrink:0;">{{ f.total }} · {{ f.minutos }}min</span>
+            <div id="ranking-fallas">
+                {% for f in top_fallas %}
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;">{{ f.falla|default:lbl_sin_falla }}</span>
+                        <span style="font-size:12px; color:var(--text-2); flex-shrink:0;">{{ f.total }} · {{ f.minutos }}min</span>
+                    </div>
+                    <div style="height:7px; background:var(--border); border-radius:4px; overflow:hidden;">
+                        <div style="height:100%; background:#EF4444; border-radius:4px;
+                                    width:{% widthratio f.total max_falla 100 %}%;"></div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color:var(--text-3); font-size:13px;">{% trans "Sin datos" %}</p>
+                {% endfor %}
             </div>
-            <div style="height:7px; background:var(--border); border-radius:4px; overflow:hidden;">
-                <div style="height:100%; background:#EF4444; border-radius:4px;
-                            width:{% widthratio f.total max_falla 100 %}%;"></div>
-            </div>
-        </div>
-        {% empty %}
-        <p style="color:var(--text-3); font-size:13px;">{% trans "Sin datos" %}</p>
-        {% endfor %}
     </div>
 
     <!-- Top Equipos -->
     <div class="card">
         <div style="font-weight:600; font-size:14px; margin-bottom:14px; color:var(--text);">{% trans "Top equipos" %}</div>
-        {% for e in top_equipos %}
-        <div style="margin-bottom:10px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                <span style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;">{{ e.equipo|default:lbl_sin_equipo }}</span>
-                <span style="font-size:12px; color:var(--text-2); flex-shrink:0;">{{ e.total }} · {{ e.minutos }}min</span>
+            <div id="ranking-equipos">
+                {% for e in top_equipos %}
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;">{{ e.equipo|default:lbl_sin_equipo }}</span>
+                        <span style="font-size:12px; color:var(--text-2); flex-shrink:0;">{{ e.total }} · {{ e.minutos }}min</span>
+                    </div>
+                    <div style="height:7px; background:var(--border); border-radius:4px; overflow:hidden;">
+                        <div style="height:100%; background:#10B981; border-radius:4px;
+                                    width:{% widthratio e.total max_equipo 100 %}%;"></div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color:var(--text-3); font-size:13px;">{% trans "Sin datos" %}</p>
+                {% endfor %}
             </div>
-            <div style="height:7px; background:var(--border); border-radius:4px; overflow:hidden;">
-                <div style="height:100%; background:#10B981; border-radius:4px;
-                            width:{% widthratio e.total max_equipo 100 %}%;"></div>
-            </div>
-        </div>
-        {% empty %}
-        <p style="color:var(--text-3); font-size:13px;">{% trans "Sin datos" %}</p>
-        {% endfor %}
     </div>
 
 </div>
@@ -277,19 +294,113 @@
 <script src="{% static 'paros_app/js/dashboard.js' %}"></script>
 <script>
 (function () {
+    let graficaTendencia = null;
+
+    {% if total_paros %}
+    const labels = [{% if es_hoy %}{% for h in paros_por_hora %}"{{ h.hora }}"{% if not forloop.last %},{% endif %}{% endfor %}{% elif es_semanas %}{% for s in paros_por_semana %}"Sem {{ s.semana }}"{% if not forloop.last %},{% endif %}{% endfor %}{% else %}{% for d in tendencia %}"{{ d.fecha|slice:'5:' }}"{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}];
+    const data   = [{% if es_hoy %}{% for h in paros_por_hora %}{{ h.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}{% elif es_semanas %}{% for s in paros_por_semana %}{{ s.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}{% else %}{% for d in tendencia %}{{ d.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}];
     {% if es_hoy %}
-    const labels = [{% for h in paros_por_hora %}"{{ h.hora }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-    const data   = [{% for h in paros_por_hora %}{{ h.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}];
-    crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 11, maxRotation: 0 });
+    graficaTendencia = crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 11, maxRotation: 0 });
     {% elif es_semanas %}
-    const labels = [{% for s in paros_por_semana %}"Sem {{ s.semana }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-    const data   = [{% for s in paros_por_semana %}{{ s.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}];
-    crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 10, maxRotation: 45 });
+    graficaTendencia = crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 10, maxRotation: 45 });
     {% else %}
-    const labels = [{% for d in tendencia %}"{{ d.fecha|slice:'5:' }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-    const data   = [{% for d in tendencia %}{{ d.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}];
-    crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 11, maxRotation: 45, autoSkip: {{ tendencia|length }} > 20 });
+    graficaTendencia = crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 11, maxRotation: 45, autoSkip: {{ tendencia|length }} > 20 });
     {% endif %}
+    {% endif %}
+
+    // ── Auto-refresh ────────────────────────────────────────────────────────
+    const _initiallyHasData = {{ total_paros }} > 0;
+    const SIN_ASIGNAR = "{% trans 'Sin asignar' %}";
+    const SIN_FALLA   = "{% trans 'Sin falla' %}";
+    const SIN_EQUIPO  = "{% trans 'Sin equipo' %}";
+    const SIN_DATOS   = "{% trans 'Sin datos' %}";
+
+    function _setKpi(id, val) {
+        const el = document.querySelector('[data-kpi-id="' + id + '"]');
+        if (el) el.textContent = val;
+    }
+
+    function _buildRanking(items, maxVal, nombreFallback, color) {
+        if (!items.length) return '<p style="color:var(--text-3);font-size:13px;">' + SIN_DATOS + '</p>';
+        return items.map(function(r) {
+            const pct = Math.round(r.total / maxVal * 100);
+            return '<div style="margin-bottom:10px;">'
+                + '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
+                + '<span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%;">' + (r.nombre || nombreFallback) + '</span>'
+                + '<span style="font-size:12px;color:var(--text-2);flex-shrink:0;">' + r.total + ' · ' + r.minutos + 'min</span>'
+                + '</div>'
+                + '<div style="height:7px;background:var(--border);border-radius:4px;overflow:hidden;">'
+                + '<div style="height:100%;background:' + color + ';border-radius:4px;width:' + pct + '%;"></div>'
+                + '</div></div>';
+        }).join('');
+    }
+
+    function actualizarDashboard() {
+        const params = new URLSearchParams(window.location.search);
+        fetch("{% url 'paros:dashboard_json' %}?" + params)
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if ((d.total_paros > 0) !== _initiallyHasData) {
+                    location.reload();
+                    return;
+                }
+
+                // KPIs
+                _setKpi('total_paros',   d.total_paros);
+                _setKpi('total_minutos', d.total_minutos);
+                _setKpi('promedio_min',  d.promedio_min);
+                _setKpi('rechazados',    d.rechazados);
+                _setKpi('pendiente',     d.pendiente);
+                _setKpi('aceptados',     d.aceptados);
+
+                if (!d.total_paros) { _marcarActualizado(); return; }
+
+                // Gráfica
+                if (graficaTendencia) {
+                    graficaTendencia.data.labels = d.chart_labels;
+                    graficaTendencia.data.datasets[0].data = d.chart_data;
+                    graficaTendencia.update();
+                }
+
+                // Turnos
+                const t1 = d.turno1, t2 = d.turno2, tt = t1 + t2;
+                const n1 = document.getElementById('turno1-num');
+                const n2 = document.getElementById('turno2-num');
+                const b1 = document.getElementById('turno1-bar');
+                const b2 = document.getElementById('turno2-bar');
+                const x1 = document.getElementById('turno1-texto');
+                const x2 = document.getElementById('turno2-texto');
+                if (n1) n1.textContent = t1;
+                if (n2) n2.textContent = t2;
+                if (b1) b1.style.width = (tt > 0 ? Math.round(t1/tt*100) : 0) + '%';
+                if (b2) b2.style.width = (tt > 0 ? Math.round(t2/tt*100) : 0) + '%';
+                if (x1) x1.textContent = t1 + ' ' + (t1 === 1 ? x1.dataset.singular : x1.dataset.plural);
+                if (x2) x2.textContent = t2 + ' ' + (t2 === 1 ? x2.dataset.singular : x2.dataset.plural);
+
+                // Rankings
+                const rR = document.getElementById('ranking-responsables');
+                const rF = document.getElementById('ranking-fallas');
+                const rE = document.getElementById('ranking-equipos');
+                if (rR) rR.innerHTML = _buildRanking(d.top_responsables, d.max_resp,   SIN_ASIGNAR, 'var(--indigo)');
+                if (rF) rF.innerHTML = _buildRanking(d.top_fallas,       d.max_falla,  SIN_FALLA,   '#EF4444');
+                if (rE) rE.innerHTML = _buildRanking(d.top_equipos,      d.max_equipo, SIN_EQUIPO,  '#10B981');
+
+                _marcarActualizado();
+            })
+            .catch(function() {});
+    }
+
+    function _marcarActualizado() {
+        const el = document.getElementById('ultima-actualizacion');
+        if (!el) return;
+        const n = new Date();
+        el.textContent = n.getHours().toString().padStart(2,'0') + ':'
+                       + n.getMinutes().toString().padStart(2,'0') + ':'
+                       + n.getSeconds().toString().padStart(2,'0');
+    }
+
+    window.actualizarDashboard = actualizarDashboard;
+    setInterval(actualizarDashboard, 60000);
 })();
 </script>
 {% endblock %}

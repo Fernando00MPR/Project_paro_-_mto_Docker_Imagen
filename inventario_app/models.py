@@ -36,6 +36,7 @@ class Refaccion(models.Model):
     unidad          = models.CharField(max_length=10, choices=UNIDAD_CHOICES, default='pza', verbose_name=_("Unidad"))
     stock_actual    = models.PositiveIntegerField(default=0, verbose_name=_("Stock actual"))
     stock_minimo    = models.PositiveIntegerField(default=0, verbose_name=_("Stock mínimo"))
+    stock_maximo    = models.PositiveIntegerField(default=0, verbose_name=_("Stock máximo"))
     ubicacion       = models.CharField(max_length=4, blank=True, verbose_name=_("Ubicación en almacén"))
     proveedor       = models.CharField(max_length=50, blank=True, verbose_name=_("Proveedor"))
     costo_unitario  = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("Costo unitario"))
@@ -46,6 +47,10 @@ class Refaccion(models.Model):
     @property
     def bajo_minimo(self):
         return self.stock_actual <= self.stock_minimo
+    
+    @property
+    def sobre_maximo(self):
+        return self.stock_maximo > 0 and self.stock_actual >= self.stock_maximo
 
     def __str__(self):
         return f"{self.no_item} — {self.nombre}"

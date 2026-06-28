@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.urls import reverse
 from mto_app.models import Area
 from ..models import Refaccion, SeguimientoRefaccion
+from datetime import date
 
 
 @login_required
@@ -26,6 +27,8 @@ def lista_seguimientos_refaccion(request):
     filtro_po      = request.GET.get('po', '').strip()
     filtro_sr      = request.GET.get('sr', '').strip()
     filtro_estatus = request.GET.get('estatus', '')
+    fecha_pr_desde = request.GET.get('fecha_pr_desde', '') or date(date.today().year, 1, 1).isoformat()
+    fecha_pr_hasta = request.GET.get('fecha_pr_hasta', '') or date.today().isoformat()
 
     seguimientos = SeguimientoRefaccion.objects.select_related('refaccion', 'refaccion__area')
 
@@ -41,9 +44,13 @@ def lista_seguimientos_refaccion(request):
         seguimientos = seguimientos.filter(numero_po__icontains=filtro_po)
     if filtro_sr:
         seguimientos = seguimientos.filter(numero_sr__icontains=filtro_sr)
-
+    if fecha_pr_desde:
+        seguimientos = seguimientos.filter(fecha_pr__gte=fecha_pr_desde)
+    if fecha_pr_hasta:
+        seguimientos = seguimientos.filter(fecha_pr__lte=fecha_pr_hasta)
     if filtro_estatus:
         seguimientos = [s for s in seguimientos if s.estatus == filtro_estatus]
+
 
     seguimientos_sin_filtro_estatus = seguimientos if not filtro_estatus else list(
         SeguimientoRefaccion.objects.select_related('refaccion', 'refaccion__area').filter(
@@ -61,8 +68,8 @@ def lista_seguimientos_refaccion(request):
     total_amarillo        = sum(1 for s in seguimientos_sin_filtro_estatus if s.estatus == 'amarillo')
     total_verde           = sum(1 for s in seguimientos_sin_filtro_estatus if s.estatus == 'verde')
 
-    per_page = request.GET.get('per_page', '20')
-    paginator = Paginator(seguimientos, int(per_page) if per_page.isdigit() else 20)
+    per_page = request.GET.get('per_page', '10')
+    paginator = Paginator(seguimientos, int(per_page) if per_page.isdigit() else 10)
     page_num = request.GET.get('page', 1)
     seguimientos_page = paginator.get_page(page_num)
 
@@ -81,6 +88,8 @@ def lista_seguimientos_refaccion(request):
         'total_rojo':          total_rojo,
         'total_amarillo':      total_amarillo,
         'total_verde':         total_verde,
+        'fecha_pr_desde':      fecha_pr_desde,
+        'fecha_pr_hasta':      fecha_pr_hasta,
         'puede_editar_seg_refaccion':   (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.editar_seguimiento_refaccion)),
         'puede_eliminar_seg_refaccion': (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.eliminar_seguimiento_refaccion)),
     }

@@ -12,6 +12,8 @@ urlpatterns = [
     path('<int:refaccion_pk>/imagenes/subir/',  views.subir_imagenes_refaccion,        name='subir_imagenes_refaccion'),
     path('<int:refaccion_pk>/imagenes/',        views.imagenes_refaccion,              name='imagenes_refaccion'),
     path('imagen/eliminar/<int:imagen_id>/',    views.eliminar_imagen_refaccion,       name='eliminar_imagen_refaccion'),
+    path('importar-stock/',                     views.importar_stock,                  name='importar_stock'),
+    path('importar-stock/plantilla/',           views.descargar_plantilla_stock,       name='descargar_plantilla_stock'),
 
     # Seguimiento de refacciones
     path('seguimientos/',                       views.lista_seguimientos_refaccion,    name='lista_seguimientos_refaccion'),

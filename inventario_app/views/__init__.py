@@ -6,6 +6,8 @@ from .inventario import (
     imagenes_refaccion,
     eliminar_imagen_refaccion,
     buscar_refacciones,
+    importar_stock,
+    descargar_plantilla_stock
 )
 from .seguimiento_refacciones import (
     lista_seguimientos_refaccion,

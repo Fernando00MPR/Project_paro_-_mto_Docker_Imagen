@@ -136,14 +136,14 @@
                     <label>{% trans "Imágenes actuales" %}</label>
                     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
                         {% for img in paro.imagenes.all %}
-                        <div style="position:relative;">
+                        <div data-img-container style="position:relative;">
                             <a href="{{ img.imagen.url }}" target="_blank">
                                 <img src="{{ img.imagen.url }}"
                                      style="width:80px; height:80px; object-fit:cover;
                                             border-radius:8px; border:1px solid var(--border);
                                             cursor:pointer;">
                             </a>
-                            <button type="button" onclick="confirmarEliminarImagen('{% url 'paros:eliminar_imagen_paro' img.id %}')"
+                            <button type="button" onclick="confirmarEliminarImagen('{% url 'paros:eliminar_imagen_paro' img.id %}', this)"
                                 style="position:absolute; top:-6px; right:-6px; width:18px; height:18px;
                                     background:var(--red); color:#fff; border-radius:50%; font-size:11px;
                                     display:flex; align-items:center; justify-content:center;
@@ -182,7 +182,7 @@
                 <script>
                 function previsualizarImagenes(input) {
                     const MAX = 4;
-                    const existentes = {{ paro.imagenes.count }};
+                    const existentes = _imagenesExistentes;
                     const disponibles = MAX - existentes;
                     const preview = document.getElementById('preview-imagenes');
 
@@ -329,9 +329,9 @@
             <button onclick="cerrarModalImagen()" class="btn btn-ghost">
                 {% trans "Cancelar" %}
             </button>
-            <form id="form-eliminar-imagen" method="post" style="margin:0;">
+            <form id="form-eliminar-imagen" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger" style="padding:8px 20px; font-size:13px;">
+                <button type="button" onclick="ejecutarEliminarImagen()" class="btn btn-danger"  style="padding:8px 20px; font-size:13px;">
                     {% trans "Sí, eliminar" %}
                 </button>
             </form>
@@ -340,12 +340,32 @@
 </div>
 
 <script>
-function confirmarEliminarImagen(url) {
-    document.getElementById('form-eliminar-imagen').action = url;
+let _imagenesExistentes = {{ paro.imagenes.count }};
+let _urlEliminarImagen  = null;
+let _elEliminarImagen   = null;
+
+function confirmarEliminarImagen(url, btn) {
+    _urlEliminarImagen = url;
+    _elEliminarImagen  = btn.closest('[data-img-container]');
     document.getElementById('modal-eliminar-imagen').style.display = 'flex';
 }
 function cerrarModalImagen() {
     document.getElementById('modal-eliminar-imagen').style.display = 'none';
+}
+function ejecutarEliminarImagen() {
+    const csrf = document.querySelector('#form-eliminar-imagen [name=csrfmiddlewaretoken]').value;
+    fetch(_urlEliminarImagen, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrf },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            if (_elEliminarImagen) _elEliminarImagen.remove();
+            _imagenesExistentes = Math.max(0, _imagenesExistentes - 1);
+            cerrarModalImagen();
+        }
+    });
 }
 document.getElementById('modal-eliminar-imagen').addEventListener('click', function(e) {
     if (e.target === this) cerrarModalImagen();

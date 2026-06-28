@@ -5,7 +5,9 @@
                 {{ label }}
             </div>
             <div style="font-size:28px; font-weight:700; color:{{ color }}; line-height:1;">
-                {{ valor }}{% if sufijo %}<span style="font-size:14px; font-weight:500; color:var(--text-3); margin-left:3px;">{{ sufijo }}</span>{% endif %}
+                <span {% if kpi_id %} data-kpi-id="{{ kpi_id }}"{% endif %}>{{ valor }}</span>
+                {% if sufijo %}
+                <span style="font-size:14px; font-weight:500; color:var(--text-3); margin-left:3px;">{{ sufijo }}</span>{% endif %}
             </div>
         </div>
         <div style="width:36px; height:36px; border-radius:8px; background:{{ color }}1a;

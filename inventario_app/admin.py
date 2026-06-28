@@ -19,8 +19,16 @@ class CategoriaRefaccionAdmin(admin.ModelAdmin):
 @admin.register(Refaccion)
 class RefaccionAdmin(admin.ModelAdmin):
     list_display = [
-        'no_item', 'nombre', 'area', 'categoria', 'unidad',
-        'stock_actual', 'stock_minimo', 'bajo_minimo_display', 'activo',
+        'no_item', 
+        'nombre', 
+        'area', 
+        'categoria', 
+        'unidad',
+        'stock_actual', 
+        'stock_minimo',
+        'stock_maximo',
+        'bajo_minimo_display', 
+        'activo',
     ]
     list_filter = ['area', 'categoria', 'unidad', 'activo']
     search_fields = ['no_item', 'nombre', 'proveedor']

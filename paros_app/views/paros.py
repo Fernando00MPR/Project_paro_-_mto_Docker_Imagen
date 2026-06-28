@@ -9,7 +9,6 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
-from ..models import Area, Paro, BitacoraParo, CatalogoFalla, CatalogoEquipo, CatalogoResponsable
 from ..forms import ParoForm
 from login_app.permisos import permiso_requerido, get_perfil
 from .utils import _aplicar_filtros
@@ -94,26 +93,25 @@ def lista_paros(request):
     page_obj   = paginator.get_page(get_params.get('page', 1))
 
     return render(request, 'paros_app/paros/lista_paros.html', {
-        'paros':          page_obj,
-        'page_obj':       page_obj,
-        'areas':          Area.objects.all(),
-        'filtros':        get_params,
-        'total_minutos':  total_minutos,
-        'por_pagina':     por_pagina,
-        'puede_crear':    es_admin_total or (perfil and perfil.crear_paro),
-        'puede_editar':   es_admin_total or (perfil and (perfil.editar_paro or perfil.editar_eliminar_paro)),
+        'paros':                    page_obj,
+        'page_obj':                 page_obj,
+        'areas':                    Area.objects.all(),
+        'filtros':                  get_params,
+        'total_minutos':            total_minutos,
+        'por_pagina':               por_pagina,
+        'puede_crear':              es_admin_total or (perfil and perfil.crear_paro),
+        'puede_editar':             es_admin_total or (perfil and (perfil.editar_paro or perfil.editar_eliminar_paro)),
         'puede_editar_comentarios': es_admin_total or (perfil and (perfil.editar_comentarios or perfil.editar_paro or perfil.editar_eliminar_paro)),
-        'puede_eliminar': es_admin_total or (perfil and perfil.editar_eliminar_paro),
-        'puede_estatus':  es_admin_total or (perfil and (perfil.cambiar_estatus_paro or perfil.editar_paro or perfil.editar_eliminar_paro)),
-        'puede_exportar': es_admin_total or (perfil and perfil.exportar_paros),
-        'puede_importar': es_admin_total or (perfil and perfil.importar_paros),
-        'total_minutos':           total_minutos,
-        'promedio_min_aceptados':  promedio_min_aceptados,
-        'paro_mayor_aceptados':    paro_mayor_aceptados,
-        'paros_aceptados':         paros_aceptados,
-        'minutos_aceptados':       minutos_aceptados,
-        'paros_sin_aceptar':       paros_sin_aceptar,
-        'minutos_sin_aceptar':     minutos_sin_aceptar,
+        'puede_eliminar':           es_admin_total or (perfil and perfil.editar_eliminar_paro),
+        'puede_estatus':            es_admin_total or (perfil and (perfil.cambiar_estatus_paro or perfil.editar_paro or perfil.editar_eliminar_paro)),
+        'puede_exportar':           es_admin_total or (perfil and perfil.exportar_paros),
+        'puede_importar':           es_admin_total or (perfil and perfil.importar_paros),
+        'promedio_min_aceptados':   promedio_min_aceptados,
+        'paro_mayor_aceptados':     paro_mayor_aceptados,
+        'paros_aceptados':          paros_aceptados,
+        'minutos_aceptados':        minutos_aceptados,
+        'paros_sin_aceptar':        paros_sin_aceptar,
+        'minutos_sin_aceptar':      minutos_sin_aceptar,
     })
 
 
@@ -458,15 +456,39 @@ def actualizar_campo_paro(request, paro_id):
                     return JsonResponse({'error': 'El tiempo no puede ser negativo'}, status=400)
             except ValueError:
                 return JsonResponse({'error': 'Debe ser un número entero'}, status=400)
-        elif campo in ('falla', 'comentarios') and len(valor) > 100:
+        elif campo in ('falla', 'comentarios', 'equipo', 'responsable') and len(valor) > 100:
             return JsonResponse({'error': 'Máximo 100 caracteres'}, status=400)
 
         valor_anterior = getattr(paro, campo)
         if hasattr(valor_anterior, 'strftime'):
             valor_anterior = valor_anterior.strftime('%d/%m/%Y') if campo == 'fecha' else valor_anterior.strftime('%H:%M')
 
-        setattr(paro, campo, valor)
+        if campo == 'falla':
+            falla_obj = CatalogoFalla.objects.filter(area=paro.area).filter(
+                Q(nombre_es=valor) | Q(nombre_en=valor)
+            ).first()
+            paro.falla_es = falla_obj.nombre_es or valor if falla_obj else valor
+            paro.falla_en = falla_obj.nombre_en or valor if falla_obj else valor
+
+        elif campo == 'equipo':
+            equipo_obj = CatalogoEquipo.objects.filter(area=paro.area).filter(
+                Q(equipo_es=valor) | Q(equipo_en=valor)
+            ).first()
+            paro.equipo_es = equipo_obj.equipo_es or valor if equipo_obj else valor
+            paro.equipo_en = equipo_obj.equipo_en or valor if equipo_obj else valor
+
+        elif campo == 'responsable':
+            resp_obj = CatalogoResponsable.objects.filter(area=paro.area).filter(
+                Q(responsable_es=valor) | Q(responsable_en=valor)
+            ).first()
+            paro.responsable_es = resp_obj.responsable_es or valor if resp_obj else valor
+            paro.responsable_en = resp_obj.responsable_en or valor if resp_obj else valor
+
+        else:
+            setattr(paro, campo, valor)  # fecha, hora, turno, tiempo, comentarios — sin traducción
+
         paro.save()
+
         _registrar_bitacora(paro, request.user, campo, str(valor_anterior), str(valor))
 
         if campo == 'fecha':
@@ -496,7 +518,6 @@ def imagenes_paro(request, paro_id):
 def eliminar_imagen_paro(request, imagen_id):
     from ..models import ImagenParo
     imagen = get_object_or_404(ImagenParo, id=imagen_id)
-    paro_id = imagen.paro_id
     imagen.imagen.delete()
     imagen.delete()
-    return redirect('paros:editar_paro', paro_id=paro_id)
+    return JsonResponse({'ok': True})
