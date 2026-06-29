@@ -24,9 +24,9 @@
 
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             {% if puede_editar_inventario %}
-            <button type="button" onclick="abrirModalRefaccion()" class="btn btn-primary">+ {% trans "Nueva refacción" %}</button>
+                <button type="button" onclick="abrirModalRefaccion()" class="btn btn-primary">+ {% trans "Nueva refacción" %}</button>
+                <a href="{% url 'inventario:importar_stock' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}" class="btn btn-ghost">↑ {% trans "Importar Excel" %}</a>
             {% endif %}
-            <a href="{% url 'inventario:importar_stock' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}" class="btn btn-ghost">↑ {% trans "Importar Excel" %}</a>
             {% include 'menu_app/_language_selector.html' %}
         </div>
     </div>
