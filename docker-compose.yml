@@ -2,8 +2,6 @@ services:
   db:
     image: 'postgres:15-alpine'
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       POSTGRES_DB: '${DB_NAME}'
       POSTGRES_USER: '${DB_USER}'
@@ -47,7 +45,7 @@ services:
 networks:
   coolify:
     external: true
-    
+
 volumes:
   paros_postgres_data:
   paros_static_volume:
