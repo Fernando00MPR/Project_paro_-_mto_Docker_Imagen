@@ -6,11 +6,13 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Sum
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.utils.translation import gettext as _
 
 from ..models import Area, Paro, CatalogoResponsable
 from ..models import CatalogoFalla as CF
 from ..models import CatalogoFalla
 from login_app.permisos import permiso_requerido, get_perfil
+
 
 
 @login_required
@@ -311,9 +313,12 @@ def analisis_paros(request):
     lista_atendio = (
         qs.values('atendio')
         .annotate(minutos=Sum('tiempo_minutos'))
-        .exclude(atendio='')
         .order_by('-minutos')
     )
+    lista_atendio = [
+        {**r, 'atendio': r['atendio'] or _('Sin quien atendio')}
+        for r in lista_atendio
+    ]
 
     # ── Aplicar exclusiones ───────────────────────────────────────────────────
     qs_graf = qs
@@ -329,7 +334,12 @@ def analisis_paros(request):
         ).values_list('nombre_en', flat=True))
         qs_graf = qs_graf.exclude(falla__in=fallas_de_tipos)
     if atendio_excluidos:
-        qs_graf = qs_graf.exclude(atendio__in=atendio_excluidos)
+        excluir_vacios = _('Sin quien atendio') in atendio_excluidos
+        atendio_excluidos_db = [v for v in atendio_excluidos if v != _('Sin quien atendio')]
+        if atendio_excluidos_db:
+            qs_graf = qs_graf.exclude(atendio__in=atendio_excluidos_db)
+        if excluir_vacios:
+            qs_graf = qs_graf.exclude(atendio='')
 
     # ── KPIs ──────────────────────────────────────────────────────────────────
     total_paros   = qs_graf.count()
@@ -406,12 +416,12 @@ def analisis_paros(request):
         nparos_p  = [t[1]['n_paros'] for t in sorted_tipos]
     elif modo_pareto == 'atendio':
         grupos_pareto = (
-            qs_graf.exclude(atendio='')
+            qs_graf
             .values('atendio')
             .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
             .order_by('-minutos')
         )
-        labels_p  = [g['atendio'] for g in grupos_pareto]
+        labels_p  = [g['atendio'] or _('Sin quien atendio') for g in grupos_pareto]
         minutos_p = [g['minutos'] or 0 for g in grupos_pareto]
         nparos_p  = [g['n_paros'] for g in grupos_pareto]
     else:
@@ -452,12 +462,12 @@ def analisis_paros(request):
         nparos_b  = [t[1]['n_paros'] for t in sorted_tipos_b]
     elif modo_barras == 'atendio':
         grupos_barras = (
-            qs_graf.exclude(atendio='')
+            qs_graf
             .values('atendio')
             .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
             .order_by('-minutos')
         )
-        labels_b  = [g['atendio'] for g in grupos_barras]
+        labels_b  = [g['atendio'] or _('Sin quien atendio') for g in grupos_barras]
         minutos_b = [g['minutos'] or 0 for g in grupos_barras]
         nparos_b  = [g['n_paros'] for g in grupos_barras]
     else:

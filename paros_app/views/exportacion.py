@@ -13,6 +13,9 @@ from ..models import Area, Paro
 from login_app.permisos import get_perfil
 from .utils import _aplicar_filtros, _parse_fecha
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def exportar_csv(request):
@@ -187,7 +190,7 @@ def importar_paros(request):
         from ..models import CatalogoFalla, CatalogoEquipo, CatalogoResponsable
         importados = 0
         fallidos = 0
-        for f in filas_list:
+        for i, f in enumerate(filas_list, start=2):
             try:
                 try:
                     area_obj = Area.objects.get(nombre_es__iexact=f['area'])
@@ -220,7 +223,8 @@ def importar_paros(request):
                     comentarios=     f.get('comentarios', ''),
                 )
                 importados += 1
-            except Exception:
+            except Exception as e:
+                logger.error("Fila %d no importada: %s | datos: %s", i, e, f)
                 fallidos += 1   # ← contar el fallo
         return importados, fallidos  # ← devolver tupla
 
