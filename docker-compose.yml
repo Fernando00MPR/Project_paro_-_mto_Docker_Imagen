@@ -29,6 +29,8 @@ services:
              gunicorn paros_project.wsgi:application --bind 0.0.0.0:8000 --workers 3"
     volumes:
       - 'paros_static_volume:/app/staticfiles'
+      - 'paros_media_volume:/app/media'
+      - 'paros_respaldos_volume:/app/respaldos'
     expose:
       - '8000'
     depends_on:
@@ -45,3 +47,5 @@ networks:
 volumes:
   paros_postgres_data:
   paros_static_volume:
+  paros_media_volume:
+  paros_respaldos_volume:
