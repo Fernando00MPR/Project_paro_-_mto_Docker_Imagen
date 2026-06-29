@@ -31,9 +31,6 @@ services:
       - 'paros_static_volume:/app/staticfiles'
     expose:
       - '8000'
-    labels:
-      - "caddy=http://w6yhce7pphv68va9tzddsmf9.200.68.174.98.sslip.io"
-      - "caddy.reverse_proxy={{upstreams 8000}}"
     depends_on:
       db:
         condition: service_healthy
