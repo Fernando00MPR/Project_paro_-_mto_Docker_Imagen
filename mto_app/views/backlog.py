@@ -84,7 +84,7 @@ def backlog_seguimientos(request):
         seg.no_orden = f"{semana:02d}{mes}{aa}{contadores[key]}"
 
         nombre = seg.responsable or 'Sin asignar'
-        dias   = (hoy - seg.fecha_compromiso).days
+        dias = (hoy - seg.fecha_compromiso).days if seg.fecha_compromiso else (hoy - seg.registro.semana_inicio).days
         personas[nombre]['ot'].append({
             'id':               seg.id,
             'no_orden':         seg.no_orden,

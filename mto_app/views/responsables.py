@@ -104,7 +104,7 @@ def eliminar_responsable(request, pk):
         messages.success(request, f"Responsable '{responsable.nombre_completo()}' eliminado.")
     return redirect(f"/mto/responsables/?area={area_pk}")
 
-
+@login_required
 def buscar_responsables_mto(request):
     q       = request.GET.get('q', '').strip()
     area_id = request.GET.get('area_id', '')
