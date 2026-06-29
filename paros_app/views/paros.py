@@ -330,8 +330,7 @@ def editar_paro(request, paro_id):
                 paro.responsable_es = texto_responsable
                 paro.responsable_en = texto_responsable
 
-            estatus_anterior = paro.estatus
-            paro.save()
+            estatus_anterior_lbl = snapshot_antes['estatus']  
 
             # Guardar nuevas imágenes
             imagenes = request.FILES.getlist('imagenes')
@@ -347,12 +346,14 @@ def editar_paro(request, paro_id):
                 for imagen in imagenes:
                     ImagenParo.objects.create(paro=paro, imagen=imagen)
 
+            ESTATUS_L = {'rojo': 'Rechazado', 'amarillo': 'Pendiente', 'verde': 'Aceptado'}
             nuevo_estatus = request.POST.get('estatus', paro.estatus)
-            if nuevo_estatus in ('rojo', 'amarillo', 'verde'):
-                if nuevo_estatus != estatus_anterior:
-                    _registrar_bitacora(paro, request.user, 'estatus', estatus_anterior, nuevo_estatus)
+            if nuevo_estatus in ESTATUS_L:
+                nuevo_estatus_lbl = ESTATUS_L[nuevo_estatus]
+                if nuevo_estatus_lbl != estatus_anterior_lbl:
+                    _registrar_bitacora(paro, request.user, 'estatus', estatus_anterior_lbl, nuevo_estatus_lbl)
                 paro.estatus = nuevo_estatus
-                paro.save(update_fields=['estatus'])
+            paro.save()
 
             snapshot_despues = _campos_paro_dict(paro)
             for campo, ant in snapshot_antes.items():

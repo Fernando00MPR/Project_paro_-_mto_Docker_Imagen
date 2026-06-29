@@ -73,41 +73,42 @@ def registro_produccion(request):
     for area in areas:
         regs             = registros_qs.filter(area=area)
         equipos_catalogo = list(CatalogoEquipo.objects.filter(area=area).values_list('equipo', flat=True))
- 
-        registros_data = []
-        total_planeado = 0
-        total_muerto   = 0
- 
+
+        paros_del_area = Paro.objects.filter(area=area, fecha=fecha) 
+
+        registros_data = []      
+        total_planeado = 0       
+        total_muerto   = 0      
+
         for reg in regs:
             equipo_nombre = reg.equipo or ''
-            paros_reg     = Paro.objects.filter(area=area, fecha=fecha)
-            muerto        = _calcular_muerto(paros_reg, equipo_nombre, reg.hora_inicio, reg.hora_fin)
-            planeado      = reg.tiempo_planeado
-            downtime      = round(muerto / planeado * 100, 1) if planeado else 0
+            muerto    = _calcular_muerto(paros_del_area, equipo_nombre, reg.hora_inicio, reg.hora_fin)
+            planeado  = reg.tiempo_planeado
+            downtime  = round(muerto / planeado * 100, 1) if planeado else 0
             total_planeado += planeado
             total_muerto   += muerto
- 
+
             kpis_mant = _calcular_kpis_mantenimiento(
-                Paro.objects.filter(area=area, fecha=fecha),
+                paros_del_area,           
                 equipo_nombre, reg.hora_inicio, reg.hora_fin, planeado
             )
  
             registros_data.append({
-                'id':             reg.id,
-                'equipo':         equipo_nombre or 'Área completa',
-                'turno':          reg.turno,
-                'hora_inicio':    reg.hora_inicio.strftime('%H:%M'),
-                'hora_fin':       reg.hora_fin.strftime('%H:%M'),
-                'hora_inicio_raw':reg.hora_inicio.strftime('%H:%M'),
-                'hora_fin_raw':   reg.hora_fin.strftime('%H:%M'),
-                'planeado':       planeado,
-                'muerto':         muerto,
-                'downtime':       downtime,
-                't_muerto_mant': kpis_mant['t_muerto'],
-                'mttr':           kpis_mant['mttr'],
-                'mtbf':           kpis_mant['mtbf'],
-                'disponibilidad': round(100 - downtime, 1) if planeado else None,
-                'n_paros_mant': kpis_mant['n_paros'],
+                'id':              reg.id,
+                'equipo':          equipo_nombre or 'Área completa',
+                'turno':           reg.turno,
+                'hora_inicio':     reg.hora_inicio.strftime('%H:%M'),
+                'hora_fin':        reg.hora_fin.strftime('%H:%M'),
+                'hora_inicio_raw': reg.hora_inicio.strftime('%H:%M'),
+                'hora_fin_raw':    reg.hora_fin.strftime('%H:%M'),
+                'planeado':        planeado,
+                'muerto':          muerto,
+                'downtime':        downtime,
+                't_muerto_mant':   kpis_mant['t_muerto'],
+                'mttr':            kpis_mant['mttr'],
+                'mtbf':            kpis_mant['mtbf'],
+                'disponibilidad':  round(100 - downtime, 1) if planeado else None,
+                'n_paros_mant':    kpis_mant['n_paros'],
             })
  
         
@@ -349,20 +350,20 @@ def indicadores_produccion(request):
             mtbf     = round((total_planeado - t_muerto_mant) / n_paros_mant / 60 / max(equipos_unicos, 1), 1) if n_paros_mant else round(total_planeado / 60 / max(equipos_unicos, 1), 1) if total_planeado else None
  
             datos_dias.append({
-                'fecha':         fecha.strftime('%d/%m/%y'),
-                'fecha_lbl':     fecha.strftime('%d/%m'),
-                'dia_semana':    date_format(fecha, 'l'),
-                'planeado':      total_planeado,
-                'muerto':        total_muerto,
-                'downtime':      downtime,
-                'disponibilidad':disp,
-                't_muerto_mant': t_muerto_mant,
-                'mttr':          mttr,
-                'mtbf':          mtbf,
-                'n_paros_mant':  n_paros_mant,
-                'tiene_registros': len(list(regs_dia)) > 0,
-                'semana': fecha.isocalendar()[1],
-                'equipos_unicos': equipos_unicos,
+                'fecha':           fecha.strftime('%d/%m/%y'),
+                'fecha_lbl':       fecha.strftime('%d/%m'),
+                'dia_semana':      date_format(fecha, 'l'),
+                'planeado':        total_planeado,
+                'muerto':          total_muerto,
+                'downtime':        downtime,
+                'disponibilidad':  disp,
+                't_muerto_mant':   t_muerto_mant,
+                'mttr':            mttr,
+                'mtbf':            mtbf,
+                'n_paros_mant':    n_paros_mant,
+                'tiene_registros': total_planeado > 0,
+                'semana':          fecha.isocalendar()[1],
+                'equipos_unicos':  equipos_unicos,
             })
  
     INDICADORES = [
@@ -388,6 +389,8 @@ def indicadores_produccion(request):
  
     target_valor = None
     targets_all  = {}
+    target_valor_input = ''
+
     if area_sel:
         # Usar el mes/año de d_desde (inicio del período seleccionado)
         for t in TargetIndicador.objects.filter(area=area_sel, anio=d_desde.year, mes=d_desde.month):

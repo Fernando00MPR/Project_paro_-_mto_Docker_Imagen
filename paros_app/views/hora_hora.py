@@ -10,6 +10,8 @@ from ..models import Area, RegistroHoraHora
 from login_app.permisos import get_perfil
 from django.shortcuts import redirect
 
+from datetime import timedelta
+
 
 HORAS_DIA   = list(range(6, 18))   # 6 a 17
 HORAS_NOCHE = list(range(18, 24)) + list(range(0, 6))  # 18 a 23 + 0 a 5
@@ -141,8 +143,6 @@ def guardar_hora_hora(request):
 
 @login_required
 def eficiencia_data(request):
-    import calendar
-    from ..models import TargetHoraHora
 
     area_id = request.GET.get('area_id')
     vista   = request.GET.get('vista', 'dia')  # dia | mes | anio
@@ -180,8 +180,7 @@ def eficiencia_data(request):
         d = f_desde
         while d <= f_hasta:
             fechas.append(d)
-            d = date(d.year, d.month, d.day + 1) if d.day < calendar.monthrange(d.year, d.month)[1] else \
-                date(d.year, d.month + 1, 1) if d.month < 12 else date(d.year + 1, 1, 1)
+            d += timedelta(days=1)
 
         for f in fechas:
             regs_dia   = registros.filter(fecha=f, turno='dia')
