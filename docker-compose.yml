@@ -33,6 +33,8 @@ services:
       - 'paros_static_volume:/app/staticfiles'
     expose:
       - '8000'
+    labels:
+      - 'traefik.http.services.web.loadbalancer.server.port=8000'
     depends_on:
       db:
         condition: service_healthy
