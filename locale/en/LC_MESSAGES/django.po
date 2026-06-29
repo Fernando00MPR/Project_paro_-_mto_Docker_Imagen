@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-28 15:37-0600\n"
+"POT-Creation-Date: 2026-06-28 19:41-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -528,9 +528,11 @@ msgstr "Expected Format"
 
 #: .\inventario_app\templates\inventario_app\importar_stock.html:93
 msgid ""
-"El archivo debe tener estas columnas en orden. La primera fila se considera encabezado y se ignora."
+"El archivo debe tener estas columnas en orden. La primera fila se considera "
+"encabezado y se ignora."
 msgstr ""
-"The file must have these columns in order. The first row is treated as a header and will be ignored."
+"The file must have these columns in order. The first row is treated as a "
+"header and will be ignored."
 
 #: .\inventario_app\templates\inventario_app\importar_stock.html:97
 #: .\mto_app\templates\mto_app\plan\importar.html:99
@@ -554,9 +556,11 @@ msgstr "ignored"
 
 #: .\inventario_app\templates\inventario_app\importar_stock.html:109
 msgid ""
-"El No. Item debe existir previamente en el área seleccionada; si no existe, esa fila se ignora."
+"El No. Item debe existir previamente en el área seleccionada; si no existe, "
+"esa fila se ignora."
 msgstr ""
-"The Item No. must already exist in the selected area; if it does not, that row will be ignored."
+"The Item No. must already exist in the selected area; if it does not, that "
+"row will be ignored."
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:4
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:13
@@ -1516,8 +1520,8 @@ msgid ""
 "Controla refacciones, stock mínimo y movimientos de almacén sin "
 "complicaciones."
 msgstr ""
-"Control spare parts, minimum stock and warehouse movements "
-"without complications."
+"Control spare parts, minimum stock and warehouse movements without "
+"complications."
 
 #: .\login_app\templates\login_app\login.html:286
 msgid "Bienvenido"
@@ -1570,8 +1574,6 @@ msgid "Área actual"
 msgstr "Current Area"
 
 #: .\menu_app\templates\menu_app\base_menu.html:664
-#, fuzzy
-#| msgid "Plan de mantenimiento"
 msgid "Plan de Mantenimiento"
 msgstr "Maintenance Plan"
 
@@ -3798,8 +3800,6 @@ msgid "Tipo de Falla (Español)"
 msgstr "Failure type (Spanish)"
 
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:128
-#, fuzzy
-#| msgid "Tipo de falla (Ingles)"
 msgid "Tipo de Falla (Ingles)"
 msgstr "Failure type (English)"
 
@@ -4551,6 +4551,12 @@ msgstr "Responsible (English)"
 #: .\paros_app\templates\paros_app\responsables\importar_responsables_por_area.html:9
 msgid "Importar responsables"
 msgstr "Import responsible parties"
+
+#: .\paros_app\views\dashboard.py:319 .\paros_app\views\dashboard.py:419 
+#: .\paros_app\views\dashboard.py:337 .\paros_app\views\dashboard.py:338
+#: .\paros_app\views\dashboard.py:465
+msgid "Sin quien atendio"
+msgstr "No attendant"
 
 #: .\paros_project\settings.py:119
 msgid "English"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-28 15:37-0600\n"
+"POT-Creation-Date: 2026-06-28 19:41-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4480,6 +4480,11 @@ msgstr ""
 #: .\paros_app\templates\paros_app\responsables\importar_responsables_por_area.html:3
 #: .\paros_app\templates\paros_app\responsables\importar_responsables_por_area.html:9
 msgid "Importar responsables"
+msgstr ""
+
+#: .\paros_app\views\dashboard.py:319 .\paros_app\views\dashboard.py:419
+#: .\paros_app\views\dashboard.py:465
+msgid "Sin quien atendio"
 msgstr ""
 
 #: .\paros_project\settings.py:119
