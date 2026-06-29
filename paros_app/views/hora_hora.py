@@ -152,11 +152,13 @@ def eficiencia_data(request):
     perfil   = get_perfil(request.user)
     es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
 
+    if not area_id or not area_id.isdigit():
+        return JsonResponse({'ok': False, 'error': 'Área requerida'}, status=400)
+
     try:
         area = Area.objects.get(id=area_id)
     except Area.DoesNotExist:
         return JsonResponse({'ok': False, 'error': 'Área no encontrada'}, status=404)
-
     if not es_admin:
         if not perfil or not perfil.areas_permitidas.filter(id=area_id).exists():
             return JsonResponse({'ok': False, 'error': 'Sin permiso'}, status=403)
