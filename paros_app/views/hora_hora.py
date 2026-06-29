@@ -164,6 +164,7 @@ def eficiencia_data(request):
             return JsonResponse({'ok': False, 'error': 'Sin permiso'}, status=403)
 
     resultado = []
+    from ..models import TargetHoraHora
 
     if vista == 'dia':
         try:
@@ -193,7 +194,7 @@ def eficiencia_data(request):
             hrs_noche  = regs_noche.filter(valor__gt=0).count()
             planeados  = (hrs_dia + hrs_noche) * 65
             eficiencia = round(corridos / planeados * 100, 1) if planeados > 0 else None
-            from ..models import TargetHoraHora
+            
             target_obj = TargetHoraHora.objects.filter(area=area, anio=f.year, mes=f.month).first()
             resultado.append({
                 'label':      f.strftime('%d/%m'),
