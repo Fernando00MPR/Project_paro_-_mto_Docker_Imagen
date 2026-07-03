@@ -15,6 +15,13 @@ def respaldar():
 
 
 def iniciar_scheduler():
+
+    from django_apscheduler.models import DjangoJob
+    try:
+        DjangoJob.objects.filter(id='respaldo_semanal').delete()
+    except Exception:
+        pass
+    
     scheduler = BackgroundScheduler()
     scheduler.add_jobstore(DjangoJobStore(), 'default')
 
