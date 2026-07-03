@@ -17,7 +17,7 @@ LOGIN_URL = '/login/'
 
 # ── Sesión — cierre automático ──────────────────────────────────────────────
 SESSION_COOKIE_AGE = 1800               # 30 minutos en segundos
-SESSION_SAVE_EVERY_REQUEST = True       # Reinicia el contador con cada acción
+SESSION_SAVE_EVERY_REQUEST = False      # Reinicia el contador con cada acción
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # También cierra al cerrar el navegador
 
 INSTALLED_APPS = [
@@ -96,6 +96,14 @@ DATABASES = {
         'PASSWORD': os.environ['DB_PASSWORD'],
         'HOST':     os.environ['DB_HOST'],
         'PORT':     os.environ['DB_PORT'],
+        'CONN_MAX_AGE': 60,
+    }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'paros-cache',
     }
 }
 

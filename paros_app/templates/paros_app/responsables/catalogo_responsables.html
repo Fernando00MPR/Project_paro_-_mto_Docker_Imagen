@@ -94,7 +94,7 @@
                 <tbody id="tbody-{{ area.id }}">
                     {% for resp in area.catalogo_responsables.all %}
                     <tr data-busqueda="{{ resp.codigo|lower }} {{ resp.responsable|lower }}">
-                        <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--indigo);">{{ resp.codigo }}</td>
+                        <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--indigo); white-space:nowrap;">{{ resp.codigo }}</td>
                         <td style="font-weight:500;">{{ resp.responsable }}</td>
                         {% if puede_editar or puede_eliminar %}
                         <td>

@@ -7,11 +7,9 @@ class ParosAppConfig(AppConfig):
 
     def ready(self):
         import sys
-        import os
+        
         comandos_skip = ['migrate', 'makemigrations', 'collectstatic', 'compilemessages', 'crear_superusuario']
         if any(cmd in sys.argv for cmd in comandos_skip):
-            return
-        if os.environ.get('RUN_MAIN') != 'true':
             return
         import threading
         def _start():
@@ -20,4 +18,4 @@ class ParosAppConfig(AppConfig):
                 iniciar_scheduler()
             except Exception:
                 pass
-        threading.Timer(1.0, _start).start()
+        threading.Timer(5.0, _start).start()

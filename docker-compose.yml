@@ -44,13 +44,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - default
-      - coolify
-
-networks:
-  coolify:
-    external: true
 
 volumes:
   paros_postgres_data:
