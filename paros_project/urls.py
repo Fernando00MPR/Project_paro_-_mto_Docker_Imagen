@@ -7,14 +7,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
 
-import time
-from django.http import HttpResponse
-
-def vista_lenta(request):
-    segundos = int(request.GET.get('s', 35))
-    time.sleep(segundos)
-    return HttpResponse(f"Respondí después de {segundos} segundos")
-
 urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
     path('', lambda request: redirect('login')),
@@ -24,6 +16,6 @@ urlpatterns = [
     path('mto/', include(('mto_app.urls', 'mto'))),
     path('inventario/', include(('inventario_app.urls', 'inventario'))),
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
-    path('test-slow/', vista_lenta),
+
 ]
 
