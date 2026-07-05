@@ -37,7 +37,7 @@ def lista_seguimientos(request):
 
     if not es_admin:
         try:
-            areas_ids = request.user.acceso_mto.areas.values_list('id', flat=True)
+            areas_ids = list(request.user.acceso_mto.areas.values_list('id', flat=True))
             qs = qs.filter(registro__plan__area__id__in=areas_ids)
         except Exception:
             qs = qs.none()
