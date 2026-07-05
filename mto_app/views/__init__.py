@@ -20,7 +20,11 @@ from .rutinas import (
     historial_rutinas
 )
 
-from .exportacion import exportar_semana_excel
+from .exportacion import (
+    exportar_semana_excel, 
+    exportar_semana_status, 
+    exportar_semana_download
+)
 
 from .responsables import (
     lista_responsables,

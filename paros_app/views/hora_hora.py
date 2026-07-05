@@ -143,6 +143,8 @@ def guardar_hora_hora(request):
 
 @login_required
 def eficiencia_data(request):
+    from collections import defaultdict
+    from django.db.models import Q
 
     area_id = request.GET.get('area_id')
     vista   = request.GET.get('vista', 'dia')  # dia | mes | anio
@@ -175,72 +177,136 @@ def eficiencia_data(request):
             f_desde = hoy.replace(day=1)
             f_hasta = hoy
 
-        registros = RegistroHoraHora.objects.filter(
+        # 1 query: todos los registros del rango
+        regs_vals = RegistroHoraHora.objects.filter(
             area=area, fecha__gte=f_desde, fecha__lte=f_hasta
-        )
+        ).values('fecha', 'turno', 'valor')
 
-        fechas = []
+        dia_sum   = defaultdict(int)
+        dia_hrs   = defaultdict(int)
+        noche_sum = defaultdict(int)
+        noche_hrs = defaultdict(int)
+        for r in regs_vals:
+            v = r['valor'] or 0
+            if r['turno'] == 'dia':
+                dia_sum[r['fecha']]   += v
+                if v > 0: dia_hrs[r['fecha']] += 1
+            else:
+                noche_sum[r['fecha']] += v
+                if v > 0: noche_hrs[r['fecha']] += 1
+
+        # 1 query: todos los targets de los meses en el rango
+        anios_meses = set()
+
         d = f_desde
         while d <= f_hasta:
-            fechas.append(d)
+            anios_meses.add((d.year, d.month))
             d += timedelta(days=1)
 
-        for f in fechas:
-            regs_dia   = registros.filter(fecha=f, turno='dia')
-            regs_noche = registros.filter(fecha=f, turno='noche')
-            corridos   = (regs_dia.aggregate(t=Sum('valor'))['t'] or 0) + \
-                         (regs_noche.aggregate(t=Sum('valor'))['t'] or 0)
-            hrs_dia    = regs_dia.filter(valor__gt=0).count()
-            hrs_noche  = regs_noche.filter(valor__gt=0).count()
-            planeados  = (hrs_dia + hrs_noche) * 65
+        q_targets = Q()
+        for (y, m) in anios_meses:
+            q_targets |= Q(anio=y, mes=m)
+        targets_map = {
+            (t.anio, t.mes): t.target_eficiencia
+            for t in TargetHoraHora.objects.filter(area=area).filter(q_targets)
+        } if anios_meses else {}
+
+        d = f_desde
+        while d <= f_hasta:
+            corridos  = dia_sum[d] + noche_sum[d]
+            planeados = (dia_hrs[d] + noche_hrs[d]) * 65
             eficiencia = round(corridos / planeados * 100, 1) if planeados > 0 else None
             
-            target_obj = TargetHoraHora.objects.filter(area=area, anio=f.year, mes=f.month).first()
             resultado.append({
-                'label':      f.strftime('%d/%m'),
+                'label':      d.strftime('%d/%m'),
                 'corridos':   corridos,
                 'planeados':  planeados,
                 'eficiencia': eficiencia,
-                'target_ef':  target_obj.target_eficiencia if target_obj else None,
+                'target_ef':  targets_map.get((d.year, d.month)),
             })
+            d += timedelta(days=1)
 
     elif vista == 'mes':
         anio      = int(request.GET.get('anio', date.today().year))
         mes_desde = int(request.GET.get('mes_desde', 1))
         mes_hasta = int(request.GET.get('mes_hasta', 12))
+
+        # 1 query: todos los registros del año/meses
+        regs_vals = RegistroHoraHora.objects.filter(
+            area=area, fecha__year=anio,
+            fecha__month__gte=mes_desde, fecha__month__lte=mes_hasta
+        ).values('fecha', 'turno', 'valor')
+
+        mes_sum = defaultdict(int)
+        mes_hrs = defaultdict(int)
+        for r in regs_vals:
+            v = r['valor'] or 0
+            mes_sum[r['fecha'].month] += v
+            if v > 0:
+                mes_hrs[r['fecha'].month] += 1
+
+        # 1 query: todos los targets del año/meses
+        targets_map = {
+            t.mes: t.target_eficiencia
+            for t in TargetHoraHora.objects.filter(
+                area=area, anio=anio,
+                mes__gte=mes_desde, mes__lte=mes_hasta
+            )
+        }
+
         meses_nombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
         for mes in range(mes_desde, mes_hasta + 1):
-            regs = RegistroHoraHora.objects.filter(
-                area=area, fecha__year=anio, fecha__month=mes
-            )
-            corridos   = regs.aggregate(t=Sum('valor'))['t'] or 0
-            planeados  = regs.filter(valor__gt=0).count() * 65
+            corridos  = mes_sum[mes]
+            planeados = mes_hrs[mes] * 65
             eficiencia = round(corridos / planeados * 100, 1) if planeados > 0 else None
-            target_obj = TargetHoraHora.objects.filter(area=area, anio=anio, mes=mes).first()
             resultado.append({
                 'label':      meses_nombres[mes - 1],
                 'corridos':   corridos,
                 'planeados':  planeados,
                 'eficiencia': eficiencia,
-                'target_ef':  target_obj.target_eficiencia if target_obj else None,
+                'target_ef':  targets_map.get(mes),
             })
 
     elif vista == 'anio':
         from ..models import TargetAnualHoraHora
         anio_desde = int(request.GET.get('anio_desde', date.today().year - 4))
         anio_hasta = int(request.GET.get('anio_hasta', date.today().year))
+
+        # 1 query: todos los registros del rango de años
+        regs_vals = RegistroHoraHora.objects.filter(
+            area=area,
+            fecha__year__gte=anio_desde,
+            fecha__year__lte=anio_hasta
+        ).values('fecha', 'turno', 'valor')
+
+        anio_sum = defaultdict(int)
+        anio_hrs = defaultdict(int)
+        for r in regs_vals:
+            v = r['valor'] or 0
+            anio_sum[r['fecha'].year] += v
+            if v > 0:
+                anio_hrs[r['fecha'].year] += 1
+
+        # 1 query: todos los targets del rango de años
+        targets_map = {
+            t.anio: t.target_eficiencia
+            for t in TargetAnualHoraHora.objects.filter(
+                area=area, anio__gte=anio_desde, anio__lte=anio_hasta
+            )
+        }
+
         for anio in range(anio_desde, anio_hasta + 1):
-            regs = RegistroHoraHora.objects.filter(area=area, fecha__year=anio)
-            corridos   = regs.aggregate(t=Sum('valor'))['t'] or 0
-            planeados  = regs.filter(valor__gt=0).count() * 65
+            
+            corridos  = anio_sum[anio]
+            planeados = anio_hrs[anio] * 65
             eficiencia = round(corridos / planeados * 100, 1) if planeados > 0 else None
-            target_obj = TargetAnualHoraHora.objects.filter(area=area, anio=anio).first()
+            
             resultado.append({
                 'label':      str(anio),
                 'corridos':   corridos,
                 'planeados':  planeados,
                 'eficiencia': eficiencia,
-                'target_ef':  target_obj.target_eficiencia if target_obj else None,
+                'target_ef':  targets_map.get(anio),
             })
 
     return JsonResponse({'ok': True, 'datos': resultado})

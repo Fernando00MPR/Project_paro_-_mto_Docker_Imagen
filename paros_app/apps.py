@@ -13,9 +13,11 @@ class ParosAppConfig(AppConfig):
             return
 
         import os
+        import tempfile
         import threading
 
-        LOCK = '/tmp/paros_scheduler.lock'
+        #LOCK = '/tmp/paros_scheduler.lock'
+        LOCK = os.path.join(tempfile.gettempdir(), 'paros_scheduler.lock')
 
         def _start():
             try:

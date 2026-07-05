@@ -1,15 +1,16 @@
+import io
 from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import HttpResponse
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.views.decorators.clickjacking import xframe_options_exempt
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
-import io
+
+from collections import defaultdict
 from .utils import areas_permitidas_mto
 from ..models import Area, PlanMantenimiento, RegistroEjecucion, Responsable
 from .utils import lunes_de_semana, INTERVALO, _frecuencia_desde_excel
@@ -50,18 +51,43 @@ def lista_plan(request):
 
     hoy         = date.today()
     anio_filtro = int(filtro_anio) if filtro_anio else hoy.year
+
+    planes_list = list(planes)
+    areas_mto   = list(areas_permitidas_mto(request))
+
+    responsables_por_area_map  = defaultdict(list)
+    responsables_por_area_dict = defaultdict(list)
+    for r in Responsable.objects.filter(activo=True).order_by('apellidos', 'nombre'):
+        responsables_por_area_map[r.area_id].append(r)
+        responsables_por_area_dict[r.area_id].append({
+            'pk': r.pk, 'nombre': r.nombre, 'apellidos': r.apellidos,
+            'numero_nomina': r.numero_nomina,
+        })
+
+    lunes_busq_pre       = None
+    registros_semana_pre = {}
+    if filtro_semana:
+        try:
+            lunes_busq_pre = lunes_de_semana(anio_filtro, int(filtro_semana))
+            registros_semana_pre = {
+                r.plan_id: r
+                for r in RegistroEjecucion.objects.select_related('responsable').filter(
+                    plan_id__in=[p.id for p in planes_list],
+                    semana_inicio=lunes_busq_pre,
+                )
+            }
+        except Exception:
+            lunes_busq_pre = None
+
     planes_con_datos = []
 
-    for plan in planes:
+    for plan in planes_list:
         plan.proximo               = None
         plan.semana_inicio_lunes   = None
         plan.semana_inicio_domingo = None
         plan.registro_semana       = None
         plan.semana_actual         = None
-        plan.responsables_area     = list(
-            Responsable.objects.filter(area=plan.area, activo=True)
-            .order_by('apellidos', 'nombre')
-        )
+        plan.responsables_area     = responsables_por_area_map[plan.area_id]
 
         if plan.semana_inicio and plan.anio_inicio:
             try:
@@ -82,31 +108,21 @@ def lista_plan(request):
                 }
 
                 if filtro_semana:
-                    semana_num = int(filtro_semana)
-                    try:
-                        lunes_busq = lunes_de_semana(anio_filtro, semana_num)
-                    except Exception:
+                    if lunes_busq_pre is None:
                         continue
+                    lunes_busq = lunes_busq_pre
                     delta   = (lunes_busq - ref_lunes).days
                     semanas = delta // 7
                     if delta < 0 or semanas % intervalo != 0:
                         continue
 
                     plan.semana_actual = {
-                        'semana':  semana_num,
+                        'semana':  int(filtro_semana),
                         'lunes':   lunes_busq,
                         'domingo': lunes_busq + timedelta(days=6),
                     }
 
-                    try:
-                        plan.registro_semana = RegistroEjecucion.objects.select_related(
-                            'responsable'
-                        ).filter(
-                            plan=plan,
-                            semana_inicio=lunes_busq
-                        ).first()
-                    except Exception:
-                        pass
+                    plan.registro_semana = registros_semana_pre.get(plan.id)
 
             except Exception:
                 if filtro_semana:
@@ -118,23 +134,11 @@ def lista_plan(request):
         planes_con_datos.append(plan)
 
     stats_semana = None
-    if filtro_semana:
-        pks = [p.pk for p in planes_con_datos]
-        try:
-            lunes_s = lunes_de_semana(anio_filtro, int(filtro_semana))
-        except Exception:
-            lunes_s = None
-
-        if lunes_s and pks:
-            registros_s = {
-                r.plan_id: r
-                for r in RegistroEjecucion.objects.filter(
-                    plan_id__in=pks, semana_inicio=lunes_s
-                )
-            }
+    if filtro_semana and lunes_busq_pre:
+            
             total         = len(planes_con_datos)
             completadas_s = sum(1 for p in planes_con_datos
-                                if registros_s.get(p.pk) and registros_s[p.pk].estado == 'completada')
+                                if registros_semana_pre.get(p.pk) and registros_semana_pre[p.pk].estado == 'completada')
             pendientes_s  = total - completadas_s
             minutos_total = sum(p.duracion_minutos or 0 for p in planes_con_datos)
             stats_semana  = {
@@ -155,8 +159,8 @@ def lista_plan(request):
     ctx = {
         'planes':        planes_page,
         'anio_actual':   hoy.year,
-        'areas':         areas_permitidas_mto(request),
-        'areas_menu':    areas_permitidas_mto(request),
+        'areas':         areas_mto,
+        'areas_menu':    areas_mto,
         'frecuencias':   PlanMantenimiento.FRECUENCIA_CHOICES,
         'filtro_area':   area_id,
         'filtro_frec':   frecuencia,
@@ -168,12 +172,8 @@ def lista_plan(request):
         'perpage_opts':  ['8', '10', '15', '20'],
         'usuarios':      User.objects.filter(is_active=True).order_by('first_name'),
         'responsables_por_area': {
-            str(a.pk): list(
-                Responsable.objects.filter(area=a, activo=True)
-                .order_by('apellidos', 'nombre')
-                .values('pk', 'nombre', 'apellidos', 'numero_nomina')
-            )
-            for a in areas_permitidas_mto(request)
+            str(a.pk): responsables_por_area_dict[a.id]
+            for a in areas_mto
         },
         'puede_editar_plan': (
             request.user.is_superuser or
@@ -273,17 +273,24 @@ def modal_plan(request, pk):
             ref_lunes   = lunes_de_semana(plan.anio_inicio, plan.semana_inicio)
             inicio_anio = date(anio, 1, 1)
             fin_anio    = date(anio, 12, 31)
+            registros_map = {
+                r.semana_inicio: r
+                for r in RegistroEjecucion.objects.filter(
+                    plan=plan,
+                    semana_inicio__gte=inicio_anio,
+                    semana_inicio__lte=fin_anio,
+                )
+            }
+
             cursor      = ref_lunes
             while cursor <= fin_anio:
                 if cursor.isocalendar()[0] == anio:
-                    registro = RegistroEjecucion.objects.filter(
-                        plan=plan, semana_inicio=cursor
-                    ).first()
+
                     fechas.append({
                         'fecha':    cursor,
                         'domingo':  cursor + timedelta(days=6),
                         'semana':   cursor.isocalendar()[1],
-                        'registro': registro,
+                        'registro': registros_map.get(cursor),
                         'pasada':   cursor < hoy,
                         'actual':   (cursor.isocalendar()[1] == hoy.isocalendar()[1]
                                      and cursor.year == hoy.year),
@@ -325,6 +332,11 @@ def importar_plan(request):
             creados = actualizados = omitidos = 0
             errores = []
 
+            codigos_existentes = {
+                p.codigo: p.area.nombre
+                for p in PlanMantenimiento.objects.select_related('area').exclude(area=area)
+            }
+
             for row in ws.iter_rows(min_row=4, values_only=True):
                 if not row or not row[1]:
                     continue
@@ -357,12 +369,9 @@ def importar_plan(request):
                         omitidos += 1
                         continue
 
-                    conflicto = PlanMantenimiento.objects.filter(
-                        codigo=codigo
-                    ).exclude(area=area).first()
-                    if conflicto:
+                    if codigo in codigos_existentes:
                         errores.append(
-                            f"Código '{codigo}' ya existe en el área '{conflicto.area.nombre}' "
+                            f"Código '{codigo}' ya existe en el área '{codigos_existentes[codigo]}' "
                             f"— omitido para evitar sobreescritura."
                         )
                         omitidos += 1
@@ -480,3 +489,4 @@ def descargar_plantilla(request):
     )
     response['Content-Disposition'] = 'attachment; filename="Plantilla_Mantenimiento.xlsx"'
     return response
+

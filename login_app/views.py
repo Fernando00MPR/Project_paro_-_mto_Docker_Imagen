@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.core.cache import cache
 from .models import PerfilUsuario
 from .permisos import solo_admin, get_perfil
 from paros_app.models import Area
@@ -252,6 +253,7 @@ def _guardar_perfil(request, user, areas):
     acceso_mto.save()
     areas_mto_ids = request.POST.getlist('areas_mto')
     acceso_mto.areas.set(areas_mto_ids)
+    cache.delete(f'areas_menu_{user.id}')
 
     return perfil
 

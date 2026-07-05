@@ -62,11 +62,12 @@ def lista_pasos(request):
     pasos_page   = paginator.get_page(page_num)
 
     primer_paso = pasos.first() if plan_trabajo else None
+    areas_mto   = list(areas_permitidas_mto(request))
 
     ctx = {
         'pasos':            pasos_page,
         'planes_con_pasos': planes_con_pasos,
-        'areas':            areas_permitidas_mto(request),
+        'areas':            areas_mto,
         'filtro_pt':        plan_trabajo,
         'filtro_area':      area_id,
         'per_page':         per_page,
@@ -119,8 +120,17 @@ def importar_pasos(request):
 
             if reemplazar:
                 PasoRutina.objects.filter(area=area, plan_trabajo=plan_trabajo).delete()
+                existentes = {}
+            else:
+                existentes = {
+                    p.secuencia: p
+                    for p in PasoRutina.objects.filter(area=area, plan_trabajo=plan_trabajo)
+                }
 
-            creados = 0
+            nuevos       = []
+            a_actualizar = []
+            creados      = 0
+
             for row in ws.iter_rows(min_row=11, values_only=True):
                 seq      = row[1]
                 desc     = row[2]
@@ -133,18 +143,31 @@ def importar_pasos(request):
                 except Exception:
                     continue
 
-                PasoRutina.objects.update_or_create(
-                    area=area,
-                    plan_trabajo=plan_trabajo,
-                    secuencia=seq,
-                    defaults={
-                        'descripcion': limpiar(desc),
-                        'detalles':    limpiar(detalles),
-                        'nombre_plan': nombre_plan,
-                        'codigo_plan': codigo_plan,
-                    }
-                )
+                paso = existentes.get(seq)
+                if paso:
+                    paso.descripcion = limpiar(desc)
+                    paso.detalles    = limpiar(detalles)
+                    paso.nombre_plan = nombre_plan
+                    paso.codigo_plan = codigo_plan
+                    a_actualizar.append(paso)
+                else:
+                    nuevos.append(PasoRutina(
+                        area=area,
+                        plan_trabajo=plan_trabajo,
+                        secuencia=seq,
+                        descripcion=limpiar(desc),
+                        detalles=limpiar(detalles),
+                        nombre_plan=nombre_plan,
+                        codigo_plan=codigo_plan,
+                    ))
                 creados += 1
+            
+            if nuevos:
+                PasoRutina.objects.bulk_create(nuevos)
+            if a_actualizar:
+                PasoRutina.objects.bulk_update(
+                    a_actualizar, ['descripcion', 'detalles', 'nombre_plan', 'codigo_plan']
+                )
 
             messages.success(request,
                 f"{creados} paso(s) importados para el plan {plan_trabajo} - {area.nombre}.")
@@ -252,3 +275,4 @@ def historial_rutinas(request):
         'h_perpage_opts': ['20', '30', '40'],
     }
     return render(request, 'mto_app/rutinas/historial_rutinas.html', ctx)
+  

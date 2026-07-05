@@ -4,7 +4,7 @@ from datetime import datetime, date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -56,7 +56,7 @@ def lista_paros(request):
             primera = perfil.areas_permitidas.first()
             return redirect('paros:lista_paros_por_area', area_id=primera.id)
 
-    paros_qs  = Paro.objects.select_related('area').all()
+    paros_qs = Paro.objects.select_related('area').prefetch_related('imagenes').all()
     ver_todos = es_admin_total or (perfil and perfil.ver_todos_paros)
     if not ver_todos and perfil:
         if perfil.areas_permitidas.exists():
@@ -72,16 +72,26 @@ def lista_paros(request):
         get_params['fecha_hasta'] = hoy
 
     paros_qs               = _aplicar_filtros(paros_qs, get_params)
-    total_minutos          = paros_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
+    
+    _agg = paros_qs.aggregate(
+        total_minutos       = Sum('tiempo_minutos'),
+        paros_aceptados     = Count('id', filter=Q(estatus='verde')),
+        minutos_aceptados   = Sum('tiempo_minutos', filter=Q(estatus='verde')),
+        paros_sin_aceptar   = Count('id', filter=Q(estatus='rojo')),
+        minutos_sin_aceptar = Sum('tiempo_minutos', filter=Q(estatus='rojo')),
+    )
+    total_minutos       = _agg['total_minutos'] or 0
+    paros_aceptados     = _agg['paros_aceptados'] or 0
+    minutos_aceptados   = _agg['minutos_aceptados'] or 0
+    paros_sin_aceptar   = _agg['paros_sin_aceptar'] or 0
+    minutos_sin_aceptar = _agg['minutos_sin_aceptar'] or 0
+
     paros_aceptados_qs     = paros_qs.filter(estatus='verde')
-    paros_aceptados        = paros_aceptados_qs.count()
-    minutos_aceptados      = paros_aceptados_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
     promedio_min_aceptados = round(minutos_aceptados / paros_aceptados, 1) if paros_aceptados else 0
     paro_mayor_aceptados   = paros_aceptados_qs.order_by('-tiempo_minutos').values('falla', 'tiempo_minutos').first()
-    paros_sin_aceptar      = paros_qs.filter(estatus='rojo').count()
-    minutos_sin_aceptar    = paros_qs.filter(estatus='rojo').aggregate(t=Sum('tiempo_minutos'))['t'] or 0
 
     por_pagina = get_params.get('por_pagina', '8')
+    
     try:
         pp = int(por_pagina)
         if pp not in (8, 10, 20):
@@ -124,7 +134,13 @@ def lista_paros_por_area(request, area_id):
             return redirect('paros:lista_paros')
 
     area     = get_object_or_404(Area, id=area_id)
-    paros_qs = Paro.objects.select_related('area').filter(area=area).order_by('fecha', 'turno', 'hora')
+    paros_qs = (
+        Paro.objects
+        .select_related('area')
+        .prefetch_related('imagenes')
+        .filter(area=area)
+        .order_by('fecha', 'turno', 'hora')
+    )
 
     hoy        = date.today().strftime('%Y-%m-%d')
     get_params = request.GET.copy()
@@ -133,15 +149,24 @@ def lista_paros_por_area(request, area_id):
     if not get_params.get('fecha_hasta'):
         get_params['fecha_hasta'] = hoy
 
-    paros_qs               = _aplicar_filtros(paros_qs, get_params)
-    total_minutos          = paros_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
-    paros_aceptados_qs     = paros_qs.filter(estatus='verde')
-    paros_aceptados        = paros_aceptados_qs.count()
-    minutos_aceptados      = paros_aceptados_qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
-    promedio_min_aceptados = round(minutos_aceptados / paros_aceptados, 1) if paros_aceptados else 0
-    paro_mayor_aceptados   = paros_aceptados_qs.order_by('-tiempo_minutos').values('falla', 'tiempo_minutos').first()
-    paros_sin_aceptar      = paros_qs.filter(estatus='rojo').count()
-    minutos_sin_aceptar    = paros_qs.filter(estatus='rojo').aggregate(t=Sum('tiempo_minutos'))['t'] or 0
+    paros_qs = _aplicar_filtros(paros_qs, get_params)
+    
+    _agg = paros_qs.aggregate(
+        total_minutos      = Sum('tiempo_minutos'),
+        paros_aceptados    = Count('id', filter=Q(estatus='verde')),
+        minutos_aceptados  = Sum('tiempo_minutos', filter=Q(estatus='verde')),
+        paros_sin_aceptar  = Count('id', filter=Q(estatus='rojo')),
+        minutos_sin_aceptar= Sum('tiempo_minutos', filter=Q(estatus='rojo')),
+    )
+    total_minutos       = _agg['total_minutos'] or 0
+    paros_aceptados     = _agg['paros_aceptados'] or 0
+    minutos_aceptados   = _agg['minutos_aceptados'] or 0
+    paros_sin_aceptar   = _agg['paros_sin_aceptar'] or 0
+    minutos_sin_aceptar = _agg['minutos_sin_aceptar'] or 0
+
+    paros_aceptados_qs      = paros_qs.filter(estatus='verde')
+    promedio_min_aceptados  = round(minutos_aceptados / paros_aceptados, 1) if paros_aceptados else 0
+    paro_mayor_aceptados    = paros_aceptados_qs.order_by('-tiempo_minutos').values('falla', 'tiempo_minutos').first()
 
     por_pagina = get_params.get('por_pagina', '8')
     try:

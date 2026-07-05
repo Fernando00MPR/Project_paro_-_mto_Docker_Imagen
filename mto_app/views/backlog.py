@@ -15,11 +15,18 @@ def backlog_seguimientos(request):
     perfil   = request.user.perfil if hasattr(request.user, 'perfil') else None
     es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
 
-    areas = Area.objects.filter(activa=True)
+    areas_list = list(Area.objects.filter(activa=True))
 
     semana_actual = hoy.isocalendar()[1]
     anio_actual   = hoy.year
     lunes_semana  = date.fromisocalendar(anio_actual, semana_actual, 1)
+
+    areas_ids = None
+    if not es_admin:
+        try:
+            areas_ids = list(request.user.acceso_mto.areas.values_list('id', flat=True))
+        except Exception:
+            areas_ids = []
 
     qs_ot = SeguimientoOT.objects.select_related(
         'registro__plan__area'
@@ -39,24 +46,16 @@ def backlog_seguimientos(request):
     )
 
     if not es_admin:
-        try:
-            areas_ids = request.user.acceso_mto.areas.values_list('id', flat=True)
+        if areas_ids:
             qs_registros = qs_registros.filter(plan__area__id__in=areas_ids)
-        except Exception:
+            qs_ot        = qs_ot.filter(registro__plan__area__id__in=areas_ids)
+        else:
             qs_registros = qs_registros.none()
+            qs_ot        = qs_ot.none()
 
     if area_id:
         qs_registros = qs_registros.filter(plan__area__id=area_id)
-
-    if not es_admin:
-        try:
-            areas_ids = request.user.acceso_mto.areas.values_list('id', flat=True)
-            qs_ot = qs_ot.filter(registro__plan__area__id__in=areas_ids)
-        except Exception:
-            qs_ot = qs_ot.none()
-
-    if area_id:
-        qs_ot = qs_ot.filter(registro__plan__area__id=area_id)
+        qs_ot        = qs_ot.filter(registro__plan__area__id=area_id)
 
     qs_manual = SeguimientoManual.objects.filter(
         fecha_compromiso__lte=hoy,
@@ -65,10 +64,9 @@ def backlog_seguimientos(request):
     if area_id:
         qs_manual = qs_manual.filter(area_id=area_id)
     if not es_admin:
-        try:
-            areas_ids = request.user.acceso_mto.areas.values_list('id', flat=True)
+        if areas_ids:
             qs_manual = qs_manual.filter(area__id__in=areas_ids)
-        except Exception:
+        else:
             qs_manual = qs_manual.none()
 
     personas = defaultdict(lambda: {'ot': [], 'manual': []})
@@ -154,16 +152,11 @@ def backlog_seguimientos(request):
     pct_ot_general = round(total_ots / total_general * 100) if total_general > 0 else 0
     pct_m_general  = 100 - pct_ot_general
 
-    area_nombre = None
-    if area_id:
-        try:
-            area_nombre = Area.objects.get(id=area_id).nombre
-        except Area.DoesNotExist:
-            pass
+    area_nombre = next((a.nombre for a in areas_list if str(a.id) == str(area_id)), None) if area_id else None
 
     return render(request, 'mto_app/seguimientos/backlog_seguimientos.html', {
         'personas':       personas_lista,
-        'areas':          areas,
+        'areas':          areas_list,
         'area_id':        area_id,
         'area_nombre':    area_nombre,
         'hoy':            hoy,
@@ -173,3 +166,4 @@ def backlog_seguimientos(request):
         'pct_ot_general': pct_ot_general,
         'pct_m_general':  pct_m_general,
     })
+

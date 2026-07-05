@@ -3,7 +3,7 @@ from collections import defaultdict
 from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.utils.translation import gettext as _
@@ -68,15 +68,24 @@ def dashboard(request):
             pass
 
     # ── KPIs ──────────────────────────────────────────────────────────────────
-    total_paros   = qs.count()
-    total_minutos = qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
+    _agg = qs.aggregate(
+    total_paros   = Count('id'),
+    total_minutos = Sum('tiempo_minutos'),
+    rechazados    = Count('id', filter=Q(estatus='rojo')),
+    pendiente     = Count('id', filter=Q(estatus='amarillo')),
+    aceptados     = Count('id', filter=Q(estatus='verde')),
+    turno1        = Count('id', filter=Q(turno=1)),
+    turno2        = Count('id', filter=Q(turno=2)),
+    )
+    total_paros   = _agg['total_paros']
+    total_minutos = _agg['total_minutos'] or 0
     total_horas   = round(total_minutos / 60, 1)
     promedio_min  = round(total_minutos / total_paros, 1) if total_paros else 0
-
+    
     # ── Estatus counts ────────────────────────────────────────────────────────
-    Rechazados  = qs.filter(estatus='rojo').count()
-    Pendiente   = qs.filter(estatus='amarillo').count()
-    Aceptados   = qs.filter(estatus='verde').count()
+    Rechazados    = _agg['rechazados']
+    Pendiente     = _agg['pendiente']
+    Aceptados     = _agg['aceptados']
 
     # ── Top responsables ──────────────────────────────────────────────────────
     top_responsables = (
@@ -100,8 +109,8 @@ def dashboard(request):
     )
 
     # ── Paros por turno ───────────────────────────────────────────────────────
-    turno1 = qs.filter(turno=1).count()
-    turno2 = qs.filter(turno=2).count()
+    turno1 = _agg['turno1']
+    turno2 = _agg['turno2']
 
     # ── Tendencia diaria ──────────────────────────────────────────────────────
     tendencia_dict = defaultdict(lambda: {'paros': 0, 'minutos': 0})

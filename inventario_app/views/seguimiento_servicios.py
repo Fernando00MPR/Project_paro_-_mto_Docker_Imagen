@@ -5,9 +5,7 @@ from django.core.paginator import Paginator
 from django.urls import reverse
 
 from mto_app.models import Area
-
 from ..models import TipoServicio, SeguimientoServicio
-
 from datetime import date
 
 
@@ -55,15 +53,13 @@ def lista_seguimientos_servicio(request):
     if fecha_pr_hasta:
         qs = qs.filter(fecha_pr__lte=fecha_pr_hasta)
 
-    seguimientos = list(qs)
-    if filtro_estatus:
-        seguimientos = [s for s in seguimientos if s.estatus == filtro_estatus]
-
     seguimientos_base  = list(qs)
-    total_rojo          = sum(1 for s in seguimientos_base if s.estatus == 'rojo')
-    total_amarillo      = sum(1 for s in seguimientos_base if s.estatus == 'amarillo')
-    total_verde         = sum(1 for s in seguimientos_base if s.estatus == 'verde')
-    total_seguimientos  = len(seguimientos_base)
+    total_rojo         = sum(1 for s in seguimientos_base if s.estatus == 'rojo')
+    total_amarillo     = sum(1 for s in seguimientos_base if s.estatus == 'amarillo')
+    total_verde        = sum(1 for s in seguimientos_base if s.estatus == 'verde')
+    total_seguimientos = len(seguimientos_base)
+
+    seguimientos = [s for s in seguimientos_base if s.estatus == filtro_estatus] if filtro_estatus else seguimientos_base
 
     per_page = request.GET.get('per_page', '10')
     paginator = Paginator(seguimientos, int(per_page) if per_page.isdigit() else 10)

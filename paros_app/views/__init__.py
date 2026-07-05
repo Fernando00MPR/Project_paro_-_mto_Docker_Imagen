@@ -15,11 +15,13 @@ from .paros        import (
     imagenes_paro,
     eliminar_imagen_paro,
 )
+
 from .exportacion  import (
     exportar_csv, 
     exportar_excel, 
     importar_paros
 )
+
 from .autocomplete import (
     buscar_fallas, 
     buscar_equipos, 
@@ -28,11 +30,13 @@ from .autocomplete import (
     siguiente_codigo_equipo, 
     siguiente_codigo_responsable
 )
+
 from .dashboard import (
     dashboard, 
     analisis_paros,
     dashboard_json
-    )
+)
+
 from .catalogos import (
     catalogo_fallas_general,
     catalogo_fallas,
@@ -63,16 +67,20 @@ from .catalogos import (
     editar_equipo,
     editar_responsable,
 )
-from .produccion import (
-    registro_produccion, 
-    agregar_registro, 
-    eliminar_registro, 
-    actualizar_registro, 
-    actualizar_orden, 
-    indicadores_produccion, 
-    guardar_target, 
-    guardar_accion_dia, 
-    get_accion_dia
+
+from .registro_produccion import (
+    registro_produccion,
+    agregar_registro,
+    eliminar_registro,
+    actualizar_registro,
+    actualizar_orden,
+)
+
+from .indicadores_produccion import (
+    indicadores_produccion,
+    guardar_target,
+    guardar_accion_dia,
+    get_accion_dia,
 )
 
 from .hora_hora import (

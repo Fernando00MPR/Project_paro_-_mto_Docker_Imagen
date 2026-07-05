@@ -72,6 +72,15 @@ def dashboard(request):
 
     areas_stats_list = sorted(areas_stats.values(), key=lambda x: -x['pct'])
 
+    pks_planes = [p.id for p in planes_list]
+    registros_existentes = set(
+        RegistroEjecucion.objects.filter(
+            plan_id__in=pks_planes,
+            semana_inicio__gte=date(anio, 1, 1),
+            semana_inicio__lt=lunes_filtro,
+        ).values_list('plan_id', 'semana_inicio')
+    )
+    
     vencidos = []
     for plan in planes_list:
         if not plan.semana_inicio or not plan.anio_inicio:
@@ -82,10 +91,7 @@ def dashboard(request):
             cursor    = ref_lunes
             while cursor < lunes_filtro:
                 if cursor >= date(anio, 1, 1):
-                    tiene = RegistroEjecucion.objects.filter(
-                        plan=plan, semana_inicio=cursor
-                    ).exists()
-                    if not tiene:
+                    if (plan.id, cursor) not in registros_existentes:
                         sem_num = cursor.isocalendar()[1]
                         sem_atraso = (lunes_filtro - cursor).days // 7
                         vencidos.append({
@@ -129,30 +135,36 @@ def dashboard(request):
     ]
 
     # ── Datos para gráfico de cumplimiento por semana ──
-    semanas_grafico  = []
-    valores_grafico  = []
 
-    planes_grafico = PlanMantenimiento.objects.select_related('area').filter(activo=True)
-    if area_id:
-        planes_grafico = planes_grafico.filter(area_id=area_id)
-    planes_grafico_list = list(planes_grafico)
+    planes_grafico_list = planes_list
 
-    totales_grafico    = []
-    completadas_grafico = []
-
+    lunes_semanas = {}
     for s in range(1, 53):
         try:
-            lunes_s = lunes_de_semana(filtro_anio, s)
+            lunes_semanas[s] = lunes_de_semana(filtro_anio, s)
         except Exception:
             continue
+
+    completados_grafico_qs = set(
+        RegistroEjecucion.objects.filter(
+            plan_id__in=[p.id for p in planes_grafico_list],
+            semana_inicio__in=lunes_semanas.values(),
+            estado='completada'
+        ).values_list('plan_id', 'semana_inicio')
+    )
+
+    semanas_grafico     = []
+    valores_grafico     = []
+    totales_grafico     = []
+    completadas_grafico = []
+
+    for s, lunes_s in lunes_semanas.items():
         planes_s = _planes_que_tocan(planes_grafico_list, lunes_s)
         if not planes_s:
             continue
-        pks_s = [p.id for p in planes_s]
-        completadas_s = RegistroEjecucion.objects.filter(
-            plan_id__in=pks_s, semana_inicio=lunes_s, estado='completada'
-        ).count()
-        pct_s = round(completadas_s * 100 / len(planes_s)) if planes_s else 0
+        pks_s = {p.id for p in planes_s}
+        completadas_s = sum(1 for pid in pks_s if (pid, lunes_s) in completados_grafico_qs)
+        pct_s = round(completadas_s * 100 / len(planes_s))
         semanas_grafico.append(f'S{s}')
         valores_grafico.append(pct_s)
         totales_grafico.append(len(planes_s))

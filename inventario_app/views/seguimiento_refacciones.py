@@ -48,28 +48,19 @@ def lista_seguimientos_refaccion(request):
         seguimientos = seguimientos.filter(fecha_pr__gte=fecha_pr_desde)
     if fecha_pr_hasta:
         seguimientos = seguimientos.filter(fecha_pr__lte=fecha_pr_hasta)
+
+    seguimientos_list = list(seguimientos)
+
+    total_seguimientos = len(seguimientos_list)
+    total_rojo         = sum(1 for s in seguimientos_list if s.estatus == 'rojo')
+    total_amarillo     = sum(1 for s in seguimientos_list if s.estatus == 'amarillo')
+    total_verde        = sum(1 for s in seguimientos_list if s.estatus == 'verde')
+
     if filtro_estatus:
-        seguimientos = [s for s in seguimientos if s.estatus == filtro_estatus]
-
-
-    seguimientos_sin_filtro_estatus = seguimientos if not filtro_estatus else list(
-        SeguimientoRefaccion.objects.select_related('refaccion', 'refaccion__area').filter(
-            **({'refaccion__area_id': area_id} if area_id else {}),
-            **({'refaccion__no_item__icontains': filtro_no_item} if filtro_no_item else {}),
-            **({'refaccion__nombre__icontains': filtro_nombre} if filtro_nombre else {}),
-            **({'numero_pr__icontains': filtro_pr} if filtro_pr else {}),
-            **({'numero_po__icontains': filtro_po} if filtro_po else {}),
-            **({'numero_sr__icontains': filtro_sr} if filtro_sr else {}),
-        )
-    )
-
-    total_seguimientos    = len(seguimientos_sin_filtro_estatus)
-    total_rojo            = sum(1 for s in seguimientos_sin_filtro_estatus if s.estatus == 'rojo')
-    total_amarillo        = sum(1 for s in seguimientos_sin_filtro_estatus if s.estatus == 'amarillo')
-    total_verde           = sum(1 for s in seguimientos_sin_filtro_estatus if s.estatus == 'verde')
+         seguimientos_list = [s for s in seguimientos_list if s.estatus == filtro_estatus]
 
     per_page = request.GET.get('per_page', '10')
-    paginator = Paginator(seguimientos, int(per_page) if per_page.isdigit() else 10)
+    paginator = Paginator(seguimientos_list, int(per_page) if per_page.isdigit() else 10)
     page_num = request.GET.get('page', 1)
     seguimientos_page = paginator.get_page(page_num)
 
@@ -169,3 +160,4 @@ def eliminar_seguimiento_refaccion(request, pk):
         seguimiento.delete()
         messages.success(request, "Seguimiento eliminado.")
     return redirect(f"{reverse('inventario:lista_seguimientos_refaccion')}?area={area_id}")
+

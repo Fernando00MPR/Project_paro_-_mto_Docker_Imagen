@@ -3,19 +3,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.urls import reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 
 from openpyxl import Workbook
+from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 import io
 
 from mto_app.models import Area
-
 from ..models import Refaccion, CategoriaRefaccion, ImagenRefaccion
-
-from openpyxl import load_workbook
 
 
 @login_required
@@ -260,10 +258,6 @@ def importar_stock(request):
     if not puede_editar:
         messages.error(request, "No tienes permiso para importar inventario.")
         return redirect('inventario:lista_refacciones')
-    
-
-
-
 
     area_id = request.GET.get('area', '') or request.POST.get('area', '')
 
@@ -283,6 +277,9 @@ def importar_stock(request):
             actualizados = 0
             ignorados = 0
 
+            refacciones_dict = {r.no_item: r for r in Refaccion.objects.filter(area=area)}
+            a_actualizar = []
+            
             for row in ws.iter_rows(min_row=2, values_only=True):
                 no_item = row[0]
                 stock_actual = row[2]
@@ -301,13 +298,15 @@ def importar_stock(request):
                     ignorados += 1
                     continue
 
-                refaccion = Refaccion.objects.filter(area=area, no_item=no_item).first()
+                refaccion = refacciones_dict.get(no_item)
                 if refaccion:
                     refaccion.stock_actual = stock_actual
-                    refaccion.save()
+                    a_actualizar.append(refaccion)
                     actualizados += 1
                 else:
                     ignorados += 1
+            if a_actualizar:
+                Refaccion.objects.bulk_update(a_actualizar, ['stock_actual'])
 
             messages.success(request, f"Importación completada: {actualizados} actualizado(s), {ignorados} ignorado(s).")
             return redirect(f"{reverse('inventario:lista_refacciones')}?area={area.pk}")
@@ -352,3 +351,4 @@ def descargar_plantilla_stock(request):
     )
     response['Content-Disposition'] = 'attachment; filename="Plantilla_Stock.xlsx"'
     return response
+
