@@ -39,7 +39,7 @@ class TimingMiddleware:
         response = self.get_response(request)
         ms = (time.perf_counter() - t0) * 1000
 
-        if ms > 100:  # solo loguea requests lentos
+        if ms > 10:  # solo loguea requests lentos
             logger.warning(f'[SLOW] {request.method} {request.path} → {ms:.1f} ms')
 
         return response
