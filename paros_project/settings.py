@@ -49,8 +49,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-if True:
-    MIDDLEWARE.append('paros_project.middleware.TimingMiddleware')
+MIDDLEWARE.append('paros_project.middleware.TimingMiddleware')
 
 STORAGES = {
     "default": {
@@ -169,6 +168,11 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'ERROR',
             'propagate': True,
+        },
+        'timing': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
         },
     },
 }
