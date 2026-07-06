@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # ── Dependencias del sistema ───────────────────────────────────────────────────
-RUN apt-get update && apt-get install -y \
+RUN apt-get update -o Acquire::Retries=3 && apt-get install -y \
     gettext \
     curl \
     gnupg \
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
     > /etc/apt/sources.list.d/pgdg.list \
-    && apt-get update \
+    && apt-get update -o Acquire::Retries=3 \
     && apt-get install -y postgresql-client-17 \
     && apt-get remove -y curl gnupg lsb-release \
     && apt-get autoremove -y \
