@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-if DEBUG:
+if True:
     MIDDLEWARE.append('paros_project.middleware.TimingMiddleware')
 
 STORAGES = {
