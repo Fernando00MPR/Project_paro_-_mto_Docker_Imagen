@@ -15,7 +15,7 @@ RUN apt-get update -o Acquire::Retries=3 && apt-get install -y \
     && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
     > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update -o Acquire::Retries=3 \
-    && apt-get install -y postgresql-client-17 \
+    && apt-get install -y postgresql-client-15 \
     && apt-get remove -y curl gnupg lsb-release \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
