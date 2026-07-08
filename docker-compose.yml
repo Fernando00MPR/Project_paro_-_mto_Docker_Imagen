@@ -28,7 +28,15 @@ services:
              python manage.py collectstatic --noinput &&
              python manage.py compilemessages &&
              python manage.py crear_superusuario &&
-             gunicorn paros_project.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 120"
+             gunicorn paros_project.wsgi:application \
+             --bind 0.0.0.0:8000 \
+             --worker-class gthread \
+             --workers 3 --threads 4 \
+             --worker-tmp-dir /dev/shm \
+             --timeout 120 \
+             --graceful-timeout 30 \
+             --max-requests 1000 \
+             --max-requests-jitter 100"
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/login/')\""]
       interval: 30s
@@ -43,6 +51,22 @@ services:
       - '8000'
     depends_on:
       db:
+        condition: service_healthy
+    networks:
+      - default
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    restart: unless-stopped
+    volumes:
+      - 'paros_static_volume:/app/staticfiles:ro'
+      - 'paros_media_volume:/app/media:ro'
+    expose:
+      - '80'
+    depends_on:
+      web:
         condition: service_healthy
     networks:
       - default

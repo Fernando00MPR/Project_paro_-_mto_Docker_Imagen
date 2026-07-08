@@ -123,10 +123,7 @@ def lista_seguimientos(request):
 
     area_nombre = None
     if area_id:
-        try:
-            area_nombre = Area.objects.get(id=area_id).nombre
-        except Area.DoesNotExist:
-            pass
+        area_nombre = next((a.nombre for a in areas if a.id == int(area_id)), None)
 
     return render(request, 'mto_app/seguimientos/lista_seguimientos.html', {
         'seguimientos':          seguimientos_pagina,

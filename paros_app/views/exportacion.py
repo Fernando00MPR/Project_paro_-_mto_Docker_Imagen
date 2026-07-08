@@ -1,7 +1,9 @@
 import csv
 import json
 import io
+import unicodedata
 import openpyxl
+from collections import defaultdict
 from openpyxl.styles import Font, PatternFill, Alignment
 
 from django.contrib import messages
@@ -185,24 +187,51 @@ def importar_paros(request):
                 areas_permitidas_ids = set()
         else:
             areas_permitidas_ids = user_areas if user_areas else set()
+    def _sin_acentos(s):
+        return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+
+    _areas_map = {}
+    for _a in Area.objects.all():
+        for _n in filter(None, [_a.nombre, getattr(_a, 'nombre_es', None), getattr(_a, 'nombre_en', None)]):
+            _areas_map[_n.lower()] = _a
+            _areas_map[_sin_acentos(_n).lower()] = _a
+
 
     def _crear_paros(filas_list):
         from ..models import CatalogoFalla, CatalogoEquipo, CatalogoResponsable
+        
+        fallas_map = defaultdict(dict)
+        for cf in CatalogoFalla.objects.all():
+            if cf.nombre_es:
+                fallas_map[cf.area_id][cf.nombre_es.lower()] = cf
+
+        equipos_map = defaultdict(dict)
+        for ce in CatalogoEquipo.objects.all():
+            if ce.equipo_es:
+                equipos_map[ce.area_id][ce.equipo_es.lower()] = ce
+
+        responsables_map = defaultdict(dict)
+        for cr in CatalogoResponsable.objects.all():
+            if cr.responsable_es:
+                responsables_map[cr.area_id][cr.responsable_es.lower()] = cr
+        
         importados = 0
         fallidos = 0
         for i, f in enumerate(filas_list, start=2):
             try:
-                try:
-                    area_obj = Area.objects.get(nombre_es__iexact=f['area'])
-                except Area.DoesNotExist:
-                    area_obj = Area.objects.get(nombre__iexact=f['area'])
+                area_obj = _areas_map.get((f['area'] or '').lower()) or \
+                           _areas_map.get(_sin_acentos(f['area'] or '').lower())
+                if area_obj is None:
+                    logger.error("Fila %d: área '%s' no encontrada", i, f['area'])
+                    fallidos += 1
+                    continue
 
                 if areas_permitidas_ids is not None and area_obj.id not in areas_permitidas_ids:
                     continue
 
-                falla_obj       = CatalogoFalla.objects.filter(area=area_obj, nombre_es__iexact=f['falla']).first()
-                equipo_obj      = CatalogoEquipo.objects.filter(area=area_obj, equipo_es__iexact=f['equipo']).first()
-                responsable_obj = CatalogoResponsable.objects.filter(area=area_obj, responsable_es__iexact=f['responsable']).first()
+                falla_obj       = fallas_map[area_obj.id].get((f['falla'] or '').lower())
+                equipo_obj      = equipos_map[area_obj.id].get((f['equipo'] or '').lower())
+                responsable_obj = responsables_map[area_obj.id].get((f['responsable'] or '').lower())
 
                 Paro.objects.create(
                     area=            area_obj,
@@ -225,7 +254,7 @@ def importar_paros(request):
                 importados += 1
             except Exception as e:
                 logger.error("Fila %d no importada: %s | datos: %s", i, e, f)
-                fallidos += 1   # ← contar el fallo
+                fallidos += 1        # ← contar el fallo
         return importados, fallidos  # ← devolver tupla
 
     if request.method == 'POST':
@@ -276,7 +305,7 @@ def importar_paros(request):
                                 filas_raw.append((i, d))
 
                 elif nombre.endswith('.csv'):
-                    import unicodedata as _ud
+                    
                     try:
                         contenido = archivo.read().decode('utf-8-sig')
                     except UnicodeDecodeError:
@@ -286,7 +315,7 @@ def importar_paros(request):
                     raw_headers = reader.fieldnames or []
 
                     def _norm_h(s):
-                        s = ''.join(c for c in _ud.normalize('NFD', str(s)) if _ud.category(c) != 'Mn')
+                        s = ''.join(c for c in unicodedata.normalize('NFD', str(s)) if unicodedata.category(c) != 'Mn')
                         return s.strip().lower()
 
                     col_norm = {_norm_h(c): c for c in COLUMNAS}
@@ -306,22 +335,9 @@ def importar_paros(request):
             if not errores and filas_raw:
                 for i, d in filas_raw:
                     area_nombre = (d.get('Área') or d.get('Area') or d.get('ÁREA') or d.get('AREA') or '').strip()
-                    import unicodedata
-                    def sin_acentos(s):
-                        return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
-
-                    area = (
-                        Area.objects.filter(nombre__iexact=area_nombre).first() or
-                        Area.objects.filter(nombre_es__iexact=area_nombre).first() or
-                        Area.objects.filter(nombre_en__iexact=area_nombre).first()
-                    )
-                    if area is None:
-                        for a in Area.objects.all():
-                            if (sin_acentos(a.nombre).lower()    == sin_acentos(area_nombre).lower() or
-                                sin_acentos(a.nombre_es or '').lower() == sin_acentos(area_nombre).lower() or
-                                sin_acentos(a.nombre_en or '').lower() == sin_acentos(area_nombre).lower()):
-                                area = a
-                                break
+                    
+                    area = _areas_map.get(area_nombre.lower()) or _areas_map.get(_sin_acentos(area_nombre).lower())
+                    
                     if area is None:
                         errores.append(f"Fila {i}: área '{area_nombre}' no existe en el sistema.")
                         continue

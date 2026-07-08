@@ -106,13 +106,37 @@ def eliminar_responsable(request, pk):
 
 @login_required
 def buscar_responsables_mto(request):
+    from django.db import models
     q       = request.GET.get('q', '').strip()
-    area_id = request.GET.get('area_id', '')
-    qs      = Responsable.objects.filter(activo=True)
+    area_id = request.GET.get('area_id', '').strip()
+
+    qs = Responsable.objects.select_related('area').filter(activo=True)
+
     if area_id:
-        qs = qs.filter(area_id=area_id)
+        try:
+            from paros_app.models import Area as AreaParos
+            area_paros = AreaParos.objects.get(pk=area_id)
+            nombres_posibles = set(filter(None, [
+                getattr(area_paros, 'nombre_es', None),
+                getattr(area_paros, 'nombre_en', None),
+                area_paros.nombre,
+            ]))
+        except Exception:
+            nombres_posibles = set()
+
+        if nombres_posibles:
+            from mto_app.models import Area as AreaMto
+            q_nombres = models.Q()
+            for nombre in nombres_posibles:
+                q_nombres |= models.Q(nombre__iexact=nombre)
+            area_mto = AreaMto.objects.filter(q_nombres).first()
+            qs = qs.filter(area=area_mto) if area_mto else qs.none()
+        else:
+            qs = qs.none()
+
     if q:
-        qs = qs.filter(nombre__icontains=q) | qs.filter(apellidos__icontains=q)
+        qs = (qs.filter(nombre__icontains=q) | qs.filter(apellidos__icontains=q))
+
     data = [
         {
             'codigo':      r.numero_nomina,

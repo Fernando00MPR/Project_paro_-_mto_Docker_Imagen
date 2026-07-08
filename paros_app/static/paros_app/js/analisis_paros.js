@@ -21,76 +21,82 @@ window.addEventListener('resize', ajustarLayout);
 const red = '#EF4444';
 
 // ── Pareto ────────────────────────────────────────────────────────────────────
-new Chart(document.getElementById('chartPareto'), {
-    data: {
-        labels: LABELS_P,
-        datasets: [
-            { type:'bar',  data:MINUTOS_P, backgroundColor:'#4F46E5', borderRadius:4, yAxisID:'y',  label:'Minutos' },
-            { type:'line', data:ACUM_P, borderColor:red, borderWidth:2.5, pointBackgroundColor:red, pointRadius:4, fill:false, tension:0.1, yAxisID:'y1', label:'%' }
-        ]
-    },
-    options: {
-        responsive:true, maintainAspectRatio:false, layout:{padding:{top:24}},
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===0 ? ` ${ctx.raw} min` : ` ${ctx.raw}%` }}},
-        scales:{
-            y:  { beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#9CA3AF'} },
-            y1: { beginAtZero:true, max:100, position:'right', grid:{display:false}, ticks:{font:{size:11},color:red,callback:v=>v+'%'} },
-            x:  { grid:{display:false}, ticks:{font:{size:10},color:'#9CA3AF',maxRotation:45} }
-        }
-    },
-    plugins:[{ id:'paretoLabels', afterDatasetsDraw(chart) {
-        const {ctx} = chart;
-        chart.getDatasetMeta(0).data.forEach((bar,i) => {
-            ctx.save(); 
-            ctx.textAlign='center';           
-            if(LABELS_P.length > 14){
-                ctx.font='bold 10px Segoe UI,sans-serif'; 
-                ctx.fillStyle='#4F46E5';
-                ctx.fillText(MINUTOS_P[i], bar.x, bar.y - 5);
-            }else{
-                ctx.font='bold 10px Segoe UI,sans-serif'; 
-                ctx.fillStyle='#4F46E5';
-                ctx.fillText(''+MINUTOS_P[i]+' min', bar.x, bar.y - 5);
+function crearGraficaPareto(canvasId) {
+    return new Chart(document.getElementById(canvasId), {
+        data: {
+            labels: LABELS_P,
+            datasets: [
+                { type:'bar',  data:MINUTOS_P, backgroundColor:'#4F46E5', borderRadius:4, yAxisID:'y',  label:'Minutos' },
+                { type:'line', data:ACUM_P, borderColor:red, borderWidth:2.5, pointBackgroundColor:red, pointRadius:4, fill:false, tension:0.1, yAxisID:'y1', label:'%' }
+            ]
+        },
+        options: {
+            responsive:true, maintainAspectRatio:false, layout:{padding:{top:24}},
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===0 ? ` ${ctx.raw} min` : ` ${ctx.raw}%` }}},
+            scales:{
+                y:  { beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#9CA3AF'} },
+                y1: { beginAtZero:true, max:100, position:'right', grid:{display:false}, ticks:{font:{size:11},color:red,callback:v=>v+'%'} },
+                x:  { grid:{display:false}, ticks:{font:{size:10},color:'#9CA3AF',maxRotation:45} }
             }
-            ctx.restore();
-        });
-    }}]
-});
+        },
+        plugins:[{ id:'paretoLabels', afterDatasetsDraw(chart) {
+            const {ctx} = chart;
+            chart.getDatasetMeta(0).data.forEach((bar,i) => {
+                ctx.save(); 
+                ctx.textAlign='center';           
+                if(LABELS_P.length > 14){
+                    ctx.font='bold 10px Segoe UI,sans-serif'; 
+                    ctx.fillStyle='#4F46E5';
+                    ctx.fillText(MINUTOS_P[i], bar.x, bar.y - 5);
+                }else{
+                    ctx.font='bold 10px Segoe UI,sans-serif'; 
+                    ctx.fillStyle='#4F46E5';
+                    ctx.fillText(''+MINUTOS_P[i]+' min', bar.x, bar.y - 5);
+                }
+                ctx.restore();
+            });
+        }}]
+    });
+}
+const chartParetoOriginal = crearGraficaPareto('chartPareto');
 
 // ── Barras ────────────────────────────────────────────────────────────────────
-new Chart(document.getElementById('chartBarras'), {
-    type:'bar',
-    data:{ labels:LABELS_B, datasets:[{data:MINUTOS_B, backgroundColor:'#4F46E5', borderRadius:5, label:'Minutos'}] },
-    options:{
-        responsive:true, maintainAspectRatio:false, layout:{padding:{top:30}},
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} min (${NPAROS_B[ctx.dataIndex]} paros)` }}},
-        scales:{
-            y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#9CA3AF'} },
-            x:{ grid:{display:false}, ticks:{font:{size:10},color:'#9CA3AF',maxRotation:45} }
-        }
-    },
-    plugins:[{ id:'topLabels', afterDatasetsDraw(chart) {
-        const {ctx} = chart;
-        chart.getDatasetMeta(0).data.forEach((bar,i) => {
-            ctx.save(); 
-            ctx.textAlign='center';           
-            if(LABELS_B.length > 14){
-                ctx.font='bold 10px Segoe UI,sans-serif'; 
-                ctx.fillStyle='#4F46E5';
-                ctx.fillText(MINUTOS_B[i], bar.x, bar.y - 14);
-                ctx.font='10px Segoe UI,sans-serif'; ctx.fillStyle='#9CA3AF';
-                ctx.fillText('('+NPAROS_B[i]+')', bar.x, bar.y - 3);
-            }else{
-                ctx.font='bold 10px Segoe UI,sans-serif'; 
-                ctx.fillStyle='#4F46E5';
-                ctx.fillText(''+MINUTOS_B[i]+' min', bar.x, bar.y - 14);
-                ctx.font='10px Segoe UI,sans-serif'; ctx.fillStyle='#9CA3AF';
-                ctx.fillText(''+NPAROS_B[i]+' Paros', bar.x, bar.y - 3);
+function crearGraficaBarrasAnalisis(canvasId) {
+    return new Chart(document.getElementById(canvasId), {
+        type:'bar',
+        data:{ labels:LABELS_B, datasets:[{data:MINUTOS_B, backgroundColor:'#4F46E5', borderRadius:5, label:'Minutos'}] },
+        options:{
+            responsive:true, maintainAspectRatio:false, layout:{padding:{top:30}},
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} min (${NPAROS_B[ctx.dataIndex]} paros)` }}},
+            scales:{
+                y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#9CA3AF'} },
+                x:{ grid:{display:false}, ticks:{font:{size:10},color:'#9CA3AF',maxRotation:45} }
             }
-            ctx.restore();
-        });
-    }}]
-});
+        },
+        plugins:[{ id:'topLabels', afterDatasetsDraw(chart) {
+            const {ctx} = chart;
+            chart.getDatasetMeta(0).data.forEach((bar,i) => {
+                ctx.save(); 
+                ctx.textAlign='center';           
+                if(LABELS_B.length > 14){
+                    ctx.font='bold 10px Segoe UI,sans-serif'; 
+                    ctx.fillStyle='#4F46E5';
+                    ctx.fillText(MINUTOS_B[i], bar.x, bar.y - 14);
+                    ctx.font='10px Segoe UI,sans-serif'; ctx.fillStyle='#9CA3AF';
+                    ctx.fillText('('+NPAROS_B[i]+')', bar.x, bar.y - 3);
+                }else{
+                    ctx.font='bold 10px Segoe UI,sans-serif'; 
+                    ctx.fillStyle='#4F46E5';
+                    ctx.fillText(''+MINUTOS_B[i]+' min', bar.x, bar.y - 14);
+                    ctx.font='10px Segoe UI,sans-serif'; ctx.fillStyle='#9CA3AF';
+                    ctx.fillText(''+NPAROS_B[i]+' Paros', bar.x, bar.y - 3);
+                }
+                ctx.restore();
+            });
+        }}]
+    });
+}
+const chartBarrasOriginal = crearGraficaBarrasAnalisis('chartBarras');
 
 // ── Tendecia ──────────────────────────────────────────────────────────────────
 function crearGraficaTendencia(canvasId, labels, data, opciones) {
@@ -261,3 +267,64 @@ function descargarGrafico(canvasId, nombre) {
     a.download = nombre + '_' + new Date().toLocaleDateString('es-MX').replace(/[/]/g, '-') + '.png';
     a.click();
 }
+
+// ── Modal de gráfico expandido ────────────────────────────────────────────────
+let chartModalInstancia = null;
+
+const CONFIG_MODAL_GRAFICO = {
+    pareto: {
+        titulo: 'Diagrama de Pareto',
+        subtitulo: () => document.querySelector('#bp-falla')?.parentElement.previousElementSibling?.querySelector('div:nth-child(2)')?.textContent || '',
+        crear: crearGraficaPareto,
+        nombreDescarga: 'Pareto'
+    },
+    barras: {
+        titulo: 'Tendencia de paros',
+        subtitulo: () => 'Ordenado por tiempo acumulado — mayor a menor',
+        crear: crearGraficaBarrasAnalisis,
+        nombreDescarga: 'Tendencia'
+    }
+};
+
+function abrirModalGrafico(tipo) {
+    const cfg = CONFIG_MODAL_GRAFICO[tipo];
+    if (!cfg) return;
+
+    document.getElementById('modal-grafico-titulo').textContent = cfg.titulo;
+    document.getElementById('modal-grafico-subtitulo').textContent =
+        tipo === 'pareto'
+            ? document.querySelector('#chartPareto').closest('.card').querySelector('div > div:nth-child(2)').textContent
+            : document.querySelector('#chartBarras').closest('.card').querySelector('div > div:nth-child(2)').textContent;
+
+    document.getElementById('modal-grafico').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    if (chartModalInstancia) {
+        chartModalInstancia.destroy();
+        chartModalInstancia = null;
+    }
+    chartModalInstancia = cfg.crear('chartGraficoModal');
+
+    document.getElementById('modal-grafico-descargar').onclick = function () {
+        descargarGrafico('chartGraficoModal', cfg.nombreDescarga);
+    };
+}
+
+function cerrarModalGrafico() {
+    document.getElementById('modal-grafico').style.display = 'none';
+    document.body.style.overflow = '';
+    if (chartModalInstancia) {
+        chartModalInstancia.destroy();
+        chartModalInstancia = null;
+    }
+}
+
+document.getElementById('modal-grafico').addEventListener('click', function (e) {
+    if (e.target === this) cerrarModalGrafico();
+});
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.getElementById('modal-grafico').style.display === 'flex') {
+        cerrarModalGrafico();
+    }
+});

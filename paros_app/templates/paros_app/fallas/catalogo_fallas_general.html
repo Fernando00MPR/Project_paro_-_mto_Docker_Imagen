@@ -54,7 +54,7 @@
 
         <div style="display:flex; align-items:center; gap:8px; margin-left:auto;" onclick="event.stopPropagation()">
             <span id="cnt-{{ area.id }}" style="font-size:12px; color:var(--text-3); white-space:nowrap;">
-                {% blocktrans count count=area.catalogo_fallas.count %}
+                {% blocktrans count count=area.num_fallas %}
                     {{ count }} falla
                 {% plural %}
                     {{ count }} fallas
@@ -64,7 +64,7 @@
             {% if puede_gestionar %}
                 <a href="{% url 'paros:importar_fallas_por_area' area.id %}" class="btn btn-primary btn-sm">↑ {% trans "Importar" %}</a>
             {% endif %}
-                {% if puede_gestionar and area.catalogo_fallas.count > 0 %}
+                {% if puede_gestionar and area.num_fallas > 0 %}
                     <button type="button" class="btn btn-sm"
                             style="border-color:var(--red); color:var(--red); background:transparent;"
                             onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'fallas')">

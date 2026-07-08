@@ -35,7 +35,7 @@ class Paro(models.Model):
     equipo         = models.CharField(max_length=100, verbose_name="Equipo")
     hora           = models.TimeField(verbose_name="Hora (HH:MM)")
     tiempo_minutos = models.PositiveIntegerField(validators=[MinValueValidator(0)], verbose_name="Tiempo (minutos)")
-    estatus        = models.CharField(max_length=10, choices=ESTATUS_CHOICES, default='rojo', verbose_name="Estatus")
+    estatus        = models.CharField(max_length=10, choices=ESTATUS_CHOICES, default='rojo', verbose_name="Estatus", db_index=True)
     atendio        = models.CharField(max_length=100, blank=True, default='', verbose_name="Atendió la falla")
     comentarios    = models.CharField(max_length=100, blank=True, verbose_name="Comentarios")
 
@@ -46,6 +46,9 @@ class Paro(models.Model):
         verbose_name = "Paro"
         verbose_name_plural = "Paros"
         ordering = ['-fecha', '-hora']
+        indexes = [
+            models.Index(fields=['area', 'fecha'], name='paro_area_fecha_idx'),
+        ]
 
 # Catalogos
 class CatalogoFalla(models.Model):

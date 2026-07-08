@@ -15,7 +15,12 @@ urlpatterns = [
     path('', include(('paros_app.urls', 'paros'))),
     path('mto/', include(('mto_app.urls', 'mto'))),
     path('inventario/', include(('inventario_app.urls', 'inventario'))),
-    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    #re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]
 

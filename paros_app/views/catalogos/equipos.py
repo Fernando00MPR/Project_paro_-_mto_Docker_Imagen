@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -22,7 +22,7 @@ from openpyxl.styles import Alignment
 def catalogo_equipos_general(request):
     perfil = get_perfil(request.user)
     q     = request.GET.get('q', '').strip()
-    areas = Area.objects.prefetch_related('catalogo_equipos').all()
+    areas = Area.objects.prefetch_related('catalogo_equipos').annotate(num_equipos=Count('catalogo_equipos')).all()
     if not (request.user.is_superuser or (perfil and perfil.es_admin)):
         if perfil and perfil.areas_permitidas.exists():
             areas = areas.filter(id__in=perfil.areas_permitidas.all())

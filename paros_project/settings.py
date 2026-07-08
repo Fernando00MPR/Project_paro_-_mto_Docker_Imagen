@@ -48,8 +48,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-MIDDLEWARE.append('paros_project.middleware.TimingMiddleware')
+if DEBUG:
+    MIDDLEWARE.append('paros_project.middleware.TimingMiddleware')
 
 STORAGES = {
     "default": {
