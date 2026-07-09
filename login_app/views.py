@@ -10,6 +10,7 @@ from mto_app.models import AccesoMto
 from mto_app.models import Area as AreaMto
 from django.utils.translation import gettext as _
 from django.core.paginator import Paginator
+from django.db.models import Q
 
 _CAMPOS_DASHBOARD = [
     ('ver_dashboard', 'Ver dashboard', 'Acceso al dashboard de indicadores'),
@@ -57,8 +58,17 @@ def _build_permisos(campos, perfil, post):
 @login_required
 @solo_admin
 def lista_usuarios(request):
-    usuarios = User.objects.select_related('perfil').all().order_by('username')
-    q = request.GET.get('q', '').strip()
+
+    q       = request.GET.get('q', '').strip()
+    area_id = request.GET.get('filtro_area', '').strip()
+
+    usuarios = (
+        User.objects
+        .select_related('perfil')
+        .prefetch_related('perfil__areas_permitidas', 'acceso_mto__areas')
+        .order_by('username')
+    )
+
     if q:
         usuarios = usuarios.filter(
             username__icontains=q
@@ -67,12 +77,24 @@ def lista_usuarios(request):
         ) | usuarios.filter(
             last_name__icontains=q
         )
+    if area_id == 'admin':
+        usuarios = usuarios.filter(Q(perfil__es_admin=True) | Q(is_superuser=True))
+    elif area_id:
+        usuarios = usuarios.filter(
+            Q(perfil__areas_permitidas__id=area_id) |
+            Q(perfil__es_admin=True) |
+            Q(is_superuser=True)
+        )
+
+    areas     = Area.objects.order_by('nombre')
     paginator = Paginator(usuarios, 15)
     page_obj  = paginator.get_page(request.GET.get('page', 1))
     return render(request, 'login_app/lista_usuarios.html', {
         'usuarios': page_obj,
         'page_obj': page_obj,
         'busqueda': q,
+        'areas':    areas,
+        'area_sel': area_id,
     })
  
 

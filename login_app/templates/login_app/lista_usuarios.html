@@ -20,9 +20,9 @@
     </div>
 </div>
 
-<form method="get" style="padding:12px 16px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px;">
-    <div style="position:relative; max-width:320px;">
-        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none;"
+<form method="get" style="padding:12px 16px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+    <div style="position:relative; min-width:320px;">
+        <svg style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-3); pointer-events:none;"
              width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
         </svg>
@@ -32,6 +32,22 @@
                       background:var(--white); color:var(--text); outline:none;"
                onchange="this.form.submit()">
     </div>
+    <select name="filtro_area" onchange="this.form.submit()"
+            style="height:33px; border:1px solid var(--border); border-radius:7px;
+                   padding:0 10px; font-size:13px; font-family:inherit;
+                   background:var(--white); color:var(--text); min-width:250px;">
+        <option value="">
+            {% trans "Todas las áreas" %}
+        </option>
+        <option value="admin" {% if area_sel == 'admin' %}selected{% endif %}>
+            {% trans "Administradores" %}
+        </option>
+        {% for area in areas %}
+        <option value="{{ area.id }}" {% if area_sel == area.id|stringformat:'s' %}selected{% endif %}>
+            {{ area.nombre }}
+        </option>
+        {% endfor %}
+    </select>
 </form>
 
 
@@ -189,7 +205,7 @@
 {% if page_obj.has_other_pages %}
 <div style="display:flex; justify-content:center; align-items:center; gap:4px; margin-top:16px;">
     {% if page_obj.has_previous %}
-    <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}page={{ page_obj.previous_page_number }}"
+    <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}{% if area_sel %}filtro_area={{ area_sel }}&{% endif %}page={{ page_obj.previous_page_number }}"
        style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
               border:1px solid var(--border); border-radius:6px; color:var(--text-2);
               text-decoration:none; font-size:13px;">‹</a>
@@ -202,7 +218,7 @@
             {{ num }}
         </span>
         {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-        <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}page={{ num }}"
+        <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}{% if area_sel %}filtro_area={{ area_sel }}&{% endif %}page={{ num }}"
            style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
                   border:1px solid var(--border); border-radius:6px; color:var(--text-2);
                   text-decoration:none; font-size:13px;">{{ num }}</a>
@@ -210,7 +226,7 @@
     {% endfor %}
 
     {% if page_obj.has_next %}
-    <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}page={{ page_obj.next_page_number }}"
+    <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}{% if area_sel %}filtro_area={{ area_sel }}&{% endif %}page={{ page_obj.next_page_number }}"
        style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
               border:1px solid var(--border); border-radius:6px; color:var(--text-2);
               text-decoration:none; font-size:13px;">›</a>

@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234F46E5' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='8' r='4'/><path d='M4 21c0-4 4-6 8-6s8 2 8 6'/></svg>">
     <title>{% trans "Iniciar sesión || Gestión de Paros" %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -26,7 +27,6 @@
             max-width: 860px;
             background: #fff;
             border-radius: 16px;
-            border: 1px solid #E5E4F0;
             overflow: hidden;
             box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.3);
         }
@@ -352,14 +352,14 @@
             {% csrf_token %}
             <input name="next" type="hidden" value="{{ request.path }}">
             <button type="submit" name="language" value="es"
-                    style="padding:5px 10px; border-radius:7px; border:1px solid #E5E4F0;
+                    style="padding:5px 10px; border-radius:7px; border:1px solid rgba(255,255,255,0.15);
                         background:{% if request.LANGUAGE_CODE == 'es' %}#4F46E5{% else %}transparent{% endif %};
                         color:{% if request.LANGUAGE_CODE == 'es' %}#fff{% else %}#6B7280{% endif %};
                         cursor:pointer; font-family:inherit; font-size:12px; font-weight:600;">
                 🇲🇽 ES
             </button>
             <button type="submit" name="language" value="en"
-                    style="padding:5px 10px; border-radius:7px; border:1px solid #E5E4F0;
+                    style="padding:5px 10px; border-radius:7px; border:1px solid rgba(255,255,255,0.15);
                         background:{% if request.LANGUAGE_CODE == 'en' %}#4F46E5{% else %}transparent{% endif %};
                         color:{% if request.LANGUAGE_CODE == 'en' %}#fff{% else %}#6B7280{% endif %};
                         cursor:pointer; font-family:inherit; font-size:12px; font-weight:600;">

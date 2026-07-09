@@ -224,7 +224,7 @@
                 {% for paro in paros %}
                 <tr data-id="{{ paro.id }}">
                     <td style="padding:0;width:4px;background:{% if paro.estatus == 'rojo' %}#EF4444{% elif paro.estatus == 'amarillo' %}#F59E0B{% else %}#10B981{% endif %};"></td>
-                    <td class="area" data-campo="area">{{ paro.area.nombre }}</td>
+                    <td class="area" data-campo="area" style="white-space: nowrap;">{{ paro.area.nombre }}</td>
                     <td class="{% if puede_editar %}editable-fecha{% endif %}" data-campo="fecha" data-iso="{{ paro.fecha|date:'Y-m-d' }}" style="text-align:center;font-family:'DM Mono',monospace;font-size:12.5px;">{{ paro.fecha|date:"d/m/y" }}</td>
                     <td data-semana style="text-align:center;font-family:'DM Mono',monospace;font-size:12.5px;color:var(--text-2);">{{ paro.fecha|semana_iso }}</td>
                     <td data-campo="turno" data-valor="{{ paro.turno }}">
@@ -368,8 +368,11 @@
      background:rgba(30,27,75,.45); z-index:2000; align-items:center; justify-content:center;">
     <div style="background:var(--white); border-radius:14px; padding:24px;
                 max-width:700px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del paro" %}</div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+            <div>
+                <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del paro" %}</div>
+                <div id="lightbox-meta" style="font-size:12px; color:var(--text-3); margin-top:3px;"></div>
+            </div>
             <div style="display:flex; gap:10px; align-items:center;">
                 <button onclick="descargarImagenActual()" title="{% trans 'Descargar' %}"
                         style="background:none; border:none; cursor:pointer; color:var(--text-2); display:flex; align-items:center;">
@@ -379,7 +382,10 @@
                     </svg>
                 </button>
                 <button onclick="cerrarModalImagenes()"
-                        style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
+                        onmouseover="this.style.color='var(--red)'"
+                        onmouseout="this.style.color='var(--text-3)'"
+                        style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕
+                </button>
             </div>
         </div>
 
@@ -388,8 +394,7 @@
                     height:420px; display:flex; align-items:center; justify-content:center;
                     overflow:hidden; margin-bottom:12px;">
             <img id="lightbox-img-principal" src="" alt=""
-                 style="max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-in;"
-                 onclick="window.open(this.src, '_blank')">
+                style="max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-in;">
 
             <button onclick="lightboxAnterior()" title="{% trans 'Anterior' %}"
                     style="position:absolute; left:8px; top:50%; transform:translateY(-50%);
@@ -403,30 +408,63 @@
                            display:flex; align-items:center; justify-content:center; font-size:16px;">›</button>
         </div>
 
+        <!-- Contador -->
+        <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+            <span id="lightbox-contador" style="font-size:11px; color:var(--text-3);"></span>
+        </div>
+
         <!-- Miniaturas -->
-        <div id="lightbox-miniaturas" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"></div>
+        <div id="lightbox-miniaturas" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+        </div>
     </div>
 </div>
 
 <script>
 let lightboxImagenes = [];
-let lightboxIndice = 0;
+let lightboxIndice   = 0;
+let zoomLevel        = 1;
+
+let panX = 0, panY = 0;
+let isDragging = false, dragStartX = 0, dragStartY = 0, dragMoved = false;
+
+const ESTATUS_BADGE = {
+    verde:    {label:'Aceptado',  bg:'#D1FAE5', color:'#065F46'},
+    amarillo: {label:'Pendiente', bg:'#FEF3C7', color:'#92400E'},
+    rojo:     {label:'Rechazado', bg:'#FEE2E2', color:'#991B1B'},
+};
 
 function verImagenes(paroId) {
     fetch(`/paros/${paroId}/imagenes/`)
         .then(r => r.json())
         .then(data => {
             lightboxImagenes = data.imagenes;
-            lightboxIndice = 0;
+            lightboxIndice   = 0;
+
+            const est   = ESTATUS_BADGE[data.estatus] || {};
+            const badge = est.label
+                ? ` &nbsp;<span style="display:inline-flex;align-items:center;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;background:${est.bg};color:${est.color};">&#11044; ${est.label}</span>`
+                : '';
+            document.getElementById('lightbox-meta').innerHTML =
+                [data.area, data.fecha].filter(Boolean).join('  -  ') + badge;
+
             renderLightbox();
             document.getElementById('modal-imagenes').style.display = 'flex';
         });
 }
 
+function resetZoom() {
+    zoomLevel = 1; panX = 0; panY = 0;
+    const img = document.getElementById('lightbox-img-principal');
+    img.style.transform = 'translate(0,0) scale(1)';
+    img.style.cursor    = 'zoom-in';
+}
+
 function renderLightbox() {
     if (!lightboxImagenes.length) return;
 
+    resetZoom();
     document.getElementById('lightbox-img-principal').src = lightboxImagenes[lightboxIndice].url;
+    document.getElementById('lightbox-contador').textContent = `Imagen ${lightboxIndice + 1} de ${lightboxImagenes.length}`;
 
     const cont = document.getElementById('lightbox-miniaturas');
     cont.innerHTML = '';
@@ -477,6 +515,45 @@ function descargarImagenActual() {
     a.click();
     document.body.removeChild(a);
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const img = document.getElementById('lightbox-img-principal');
+
+    img.addEventListener('wheel', function(e) {
+        if (document.getElementById('modal-imagenes').style.display !== 'flex') return;
+        e.preventDefault();
+        zoomLevel = Math.min(3, Math.max(1, zoomLevel + (e.deltaY < 0 ? 0.15 : -0.15)));
+        if (zoomLevel === 1) { panX = 0; panY = 0; }
+        img.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+        img.style.cursor    = zoomLevel > 1 ? 'grab' : 'zoom-in';
+    }, { passive: false });
+
+    img.addEventListener('mousedown', function(e) {
+        if (zoomLevel <= 1) return;
+        isDragging = true; dragMoved = false;
+        dragStartX = e.clientX - panX; dragStartY = e.clientY - panY;
+        img.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        panX = e.clientX - dragStartX; panY = e.clientY - dragStartY;
+        dragMoved = true;
+        img.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (!isDragging) return;
+        isDragging = false;
+        img.style.cursor = zoomLevel > 1 ? 'grab' : 'zoom-in';
+    });
+
+    img.addEventListener('click', function() {
+        if (!dragMoved) window.open(img.src, '_blank');
+        dragMoved = false;
+    });
+});
 
 </script>
 

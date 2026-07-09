@@ -534,9 +534,14 @@ def actualizar_campo_paro(request, paro_id):
 
 @login_required
 def imagenes_paro(request, paro_id):
-    paro = get_object_or_404(Paro, id=paro_id)
+    paro = get_object_or_404(Paro.objects.select_related('area'), id=paro_id)
     imagenes = [{'url': img.imagen.url} for img in paro.imagenes.all()]
-    return JsonResponse({'imagenes': imagenes})
+    return JsonResponse({
+        'imagenes': imagenes,
+        'area':     paro.area.nombre,
+        'fecha':    paro.fecha.strftime('%d/%m/%Y'),
+        'estatus':  paro.estatus,
+    })
 
 
 @login_required
