@@ -78,7 +78,7 @@ def lista_seguimientos(request):
     if tipo_filtro == 'ot':
         seguimientos_manuales = SeguimientoManual.objects.none()
     else:
-        seguimientos_manuales = SeguimientoManual.objects.all()
+        seguimientos_manuales = SeguimientoManual.objects.select_related('area').all()
         if area_id:
             seguimientos_manuales = seguimientos_manuales.filter(area_id=area_id)
         if estatus:
@@ -133,7 +133,10 @@ def lista_seguimientos(request):
 
     area_nombre = None
     if area_id:
-        area_nombre = next((a.nombre for a in areas if a.id == int(area_id)), None)
+        try:
+            area_nombre = next((a.nombre for a in areas if a.id == int(area_id)), None)
+        except (ValueError, TypeError):
+            area_nombre = None
 
     return render(request, 'mto_app/seguimientos/lista_seguimientos.html', {
         'seguimientos':          seguimientos_pagina,

@@ -246,7 +246,6 @@ def _guardar_perfil(request, user, areas):
         'agregar_catalogo_equipo', 'editar_catalogo_equipo', 'eliminar_catalogo_equipo',
         'agregar_catalogo_resp', 'editar_catalogo_resp', 'eliminar_catalogo_resp',
         'ver_indicadores', 'ver_hora_hora', 
-        'ver_seguimiento_servicio', 'editar_seguimiento_servicio', 'eliminar_seguimiento_servicio',
     ]
     for campo in campos_bool:
         setattr(perfil, campo, campo in request.POST)
@@ -271,6 +270,8 @@ def _guardar_perfil(request, user, areas):
         'ver_bitacora', 'editar_bitacora', 'eliminar_bitacora',
         'ver_inventario', 'editar_inventario', 'eliminar_inventario',
         'ver_seguimiento_refaccion', 'editar_seguimiento_refaccion', 'eliminar_seguimiento_refaccion',
+        'ver_seguimiento_servicio', 'editar_seguimiento_servicio', 'eliminar_seguimiento_servicio',
+
     ]
     for campo in campos_mto:
         setattr(acceso_mto, campo, campo in request.POST)

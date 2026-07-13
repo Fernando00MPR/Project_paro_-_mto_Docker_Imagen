@@ -142,18 +142,15 @@ def importar_fallas_v2(request):
                 creados = actualizados = omitidos = 0
                 areas_borradas   = set()
                 errores_guardado = []
+                areas_cache = {a.nombre_es.lower(): a for a in Area.objects.filter(activa=True) if a.nombre_es}
                 try:
                     with transaction.atomic():
                         for codigo, nombre_area, falla_es, falla_en, tipo_falla, tipo_falla_en, area_origen in filas:
-                            try:
-                                area = Area.objects.get(nombre_es__iexact=nombre_area)
-                            except Area.DoesNotExist:
-                                try:
-                                    area = Area.objects.get(nombre__iexact=nombre_area)
-                                except Area.DoesNotExist:
-                                    errores_guardado.append(f"Área '{nombre_area}' no existe.")
-                                    omitidos += 1
-                                    continue
+                            area = areas_cache.get(nombre_area.lower())
+                            if not area:
+                                errores_guardado.append(f"Área '{nombre_area}' no existe.")
+                                omitidos += 1
+                                continue
                             if modo == 'reemplazar' and area.id not in areas_borradas:
                                 CatalogoFalla.objects.filter(area=area).delete()
                                 areas_borradas.add(area.id)
@@ -249,6 +246,7 @@ def importar_fallas_por_area(request, area_id):
                         area_col = (row_lower.get('área') or row_lower.get('area') or '').strip()
                         if area_col and area_col.lower() != area.nombre.lower():
                             continue
+                        codigo        = (row_lower.get('codigo') or row_lower.get('código') or '').strip()
                         falla_es      = (row_lower.get('falla_es')    or row_lower.get('falla') or '').strip()
                         falla_en      = (row_lower.get('falla_en')    or '').strip()
                         tipo_falla    = (row_lower.get('tipo_falla_es') or row_lower.get('tipo_falla') or '').strip()

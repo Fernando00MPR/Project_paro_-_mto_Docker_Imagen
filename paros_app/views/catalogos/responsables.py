@@ -109,18 +109,15 @@ def importar_responsables(request):
                 creados = actualizados = omitidos = 0
                 areas_borradas   = set()
                 errores_guardado = []
+                areas_cache = {a.nombre_es.lower(): a for a in Area.objects.filter(activa=True) if a.nombre_es}
                 try:
                     with transaction.atomic():
                         for codigo, nombre_area, resp_es, resp_en in filas:
-                            try:
-                                area = Area.objects.get(nombre_es__iexact=nombre_area)
-                            except Area.DoesNotExist:
-                                try:
-                                    area = Area.objects.get(nombre__iexact=nombre_area)
-                                except Area.DoesNotExist:
-                                    errores_guardado.append(f"Área '{nombre_area}' no existe.")
-                                    omitidos += 1
-                                    continue
+                            area = areas_cache.get(nombre_area.lower())
+                            if not area:
+                                errores_guardado.append(f"Área '{nombre_area}' no existe.")
+                                omitidos += 1
+                                continue
                             if modo == 'reemplazar' and area.id not in areas_borradas:
                                 CatalogoResponsable.objects.filter(area=area).delete()
                                 areas_borradas.add(area.id)

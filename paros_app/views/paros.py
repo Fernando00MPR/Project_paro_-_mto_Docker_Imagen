@@ -4,6 +4,7 @@ from datetime import datetime, date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Sum, Q, Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -419,11 +420,14 @@ def eliminar_paro(request, paro_id):
     paro    = get_object_or_404(Paro, id=paro_id)
     area_id = paro.area.id
     next_url = request.GET.get('next', '')
-    BitacoraParo.objects.create(
-        paro=paro, usuario=request.user,
-        campo='eliminado', valor_anterior='', valor_nuevo=''
-    )
-    paro.delete()
+    
+    with transaction.atomic():
+        BitacoraParo.objects.create(
+            paro=paro, usuario=request.user,
+            campo='eliminado', valor_anterior='', valor_nuevo=''
+        )
+        paro.delete()
+
     if next_url and next_url.startswith('/'):
         return redirect(next_url)
     return redirect('paros:lista_paros_por_area', area_id=area_id)
@@ -497,7 +501,7 @@ def actualizar_campo_paro(request, paro_id):
                     return JsonResponse({'error': 'El tiempo no puede ser negativo'}, status=400)
             except ValueError:
                 return JsonResponse({'error': 'Debe ser un número entero'}, status=400)
-        elif campo in ('falla', 'comentarios', 'equipo', 'responsable') and len(valor) > 100:
+        elif campo in ('falla', 'comentarios', 'equipo', 'responsable') and len(valor or '') > 100:
             return JsonResponse({'error': 'Máximo 100 caracteres'}, status=400)
 
         valor_anterior = getattr(paro, campo)
