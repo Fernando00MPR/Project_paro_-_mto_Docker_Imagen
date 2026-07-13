@@ -20,6 +20,7 @@
 
     <div class="card">
         <form method="post" enctype="multipart/form-data" novalidate>
+            <input type="hidden" name="next" value="{{ next_url }}">
             {% csrf_token %}
             <div class="form-grid">
 
@@ -199,50 +200,11 @@
                     <div id="preview-imagenes" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
                 </div>
 
-                <script>
-                function previsualizarImagenes(input) {
-                    const MAX = 4;
-                    const preview = document.getElementById('preview-imagenes');
-
-                    if (input.files.length > MAX) {
-                        showToast('Máximo 4 imágenes por paro.', 'warning');
-                        input.value = '';
-                        preview.innerHTML = '';
-                        document.getElementById('zona-texto').textContent = '{% trans "Haz clic para seleccionar imágenes" %}';
-                        return;
-                    }
-
-                    preview.innerHTML = '';
-                    Array.from(input.files).forEach(file => {
-                        const reader = new FileReader();
-                        reader.onload = e => {
-                            const div = document.createElement('div');
-                            div.style.cssText = 'position:relative;';
-                            div.innerHTML = `
-                                <img src="${e.target.result}"
-                                    style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
-                                <div style="position:absolute;bottom:4px;left:0;right:0;text-align:center;
-                                            font-size:9px;color:#fff;background:rgba(0,0,0,.4);
-                                            border-radius:0 0 8px 8px;padding:2px 4px;
-                                            overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
-                                    ${file.name}
-                                </div>`;
-                            preview.appendChild(div);
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                    const count = input.files.length;
-                    document.getElementById('zona-texto').textContent = count === 1
-                        ? `1 {% trans "imagen seleccionada" %}`
-                        : `${count} {% trans "imágenes seleccionadas" %}`;
-                }
-                </script>
-
             </div>
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">{% trans "Guardar paro" %}</button>
-                <a href="{% url 'paros:lista_paros' %}" class="btn btn-ghost">{% trans "Cancelar" %}</a>
+                <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'paros:lista_paros' %}{% endif %}" class="btn btn-ghost">{% trans "Cancelar" %}</a>
             </div>
         </form>
     </div>
@@ -251,6 +213,13 @@
 
 {% block extra_js %}
 {% load static %}
+<script>
+window.CREAR_PARO_I18N = {
+    seleccionarImagenes:   "{% trans 'Haz clic para seleccionar imágenes' %}",
+    imagenSeleccionada:    "{% trans 'imagen seleccionada' %}",
+    imagenesSeleccionadas: "{% trans 'imágenes seleccionadas' %}",
+};
+</script>
 <script src="{% static 'paros_app/js/autocomplete.js' %}" defer></script>
-<script src="{% static 'paros_app/js/crear_paro.js' %}" defer></script>
+<script src="{% static 'paros_app/js/crear_paro.js' %}"></script>
 {% endblock %}

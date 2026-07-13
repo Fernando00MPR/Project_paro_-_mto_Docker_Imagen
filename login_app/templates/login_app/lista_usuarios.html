@@ -81,7 +81,7 @@
                     <!-- Nombre Completo -->
                     <td style="color:var(--text-2);">{{ u.get_full_name|default:"—" }}</td>
                     <!-- Rol -->
-                    <td>
+                    <td style="text-align: center;">
                         {% if u.is_superuser %}
                             <span class="badge" style="background:#FEF3C7;color:#92400E;">{% trans "Super usuario" %}</span>
                         {% elif u.perfil.es_admin %}

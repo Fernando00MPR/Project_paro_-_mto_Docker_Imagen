@@ -25,6 +25,7 @@
             {% trans "Editar paro" %}
         </div>
         <form method="post" enctype="multipart/form-data" novalidate>
+            <input type="hidden" name="next" value="{{ next_url }}">
             {% csrf_token %}
             <div class="form-grid">
 
@@ -223,7 +224,7 @@
             </div>
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">{% trans "Guardar cambios" %}</button>
-                <a href="{% url 'paros:lista_paros_por_area' paro.area.id %}" class="btn btn-ghost">{% trans "Cancelar" %}</a>
+                <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'paros:lista_paros_por_area' paro.area.id %}{% endif %}" class="btn btn-ghost">{% trans "Cancelar" %}</a>
             </div>
         </form>
     </div>

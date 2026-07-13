@@ -20,7 +20,7 @@
 
 <!-- Filtros -->
 <div style="padding:10px 14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px;">
-    <form method="get" style="display:flex; gap:10px; align-items:flex-end;">
+    <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
         {% if area_filtro %}<input type="hidden" name="area" value="{{ area_filtro }}">{% endif %}
         <div class="filter-group">
             <label>{% trans "Estatus" %}</label>
@@ -66,6 +66,18 @@
                 <option value="1" {% if filtro_validado == '1' %}selected{% endif %}>{% trans "Validado" %}</option>
                 <option value="0" {% if filtro_validado == '0' %}selected{% endif %}>{% trans "Pendiente" %}</option>
             </select>
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Creado desde" %}</label>
+            <input type="date" name="fecha_desde" value="{{ filtro_fecha_desde }}"
+                onchange="this.form.submit()"
+                style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Creado hasta" %}</label>
+            <input type="date" name="fecha_hasta" value="{{ filtro_fecha_hasta }}"
+                onchange="this.form.submit()"
+                style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
         </div>
     </form>
 </div>
@@ -113,7 +125,7 @@
         <table>
             <thead>
                 <tr>
-                    <th class="seg-col-orden"       style="text-align:center; width:100px;">
+                    <th class="seg-col-orden"       style="text-align:center; width:120px;">
                         <a href="?{% for k,v in request.GET.items %}{% if k != 'orden_por' and k != 'direccion' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden_por=no_orden&direccion={% if orden_por == 'no_orden' and direccion == 'desc' %}asc{% else %}desc{% endif %}"
                         style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if orden_por == 'no_orden' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if orden_por == 'no_orden' %}600{% else %}500{% endif %};">
                             {% trans "No. Orden" %}
@@ -199,7 +211,7 @@
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
 
                             {% if seg.imagenes.exists %}
-                                <button onclick="verImagenesSeg('ot', {{ seg.id }})"
+                                <button onclick="verImagenesSeg('ot', {{ seg.id }}, '{{ seg.fecha_creacion|date:"d/m/Y" }}', '{{ seg.registro.plan.area.nombre|escapejs }}', '{{ seg.estatus }}', '{{ seg.get_estatus_display|escapejs }}')"
                                         title="{% trans 'Ver imágenes' %}"
                                         style="display:inline-flex; align-items:center; justify-content:center;
                                             width:32px; height:30px; border-radius:6px; border:1px solid var(--border);
@@ -290,7 +302,7 @@
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
 
                             {% if seg.imagenes.exists %}
-                                <button onclick="verImagenesSeg('manual', {{ seg.id }})"
+                                <button onclick="verImagenesSeg('manual', {{ seg.id }}, '{{ seg.fecha_creacion|date:"d/m/Y" }}', '{{ seg.area.nombre|escapejs }}', '{{ seg.estatus }}', '{{ seg.get_estatus_display|escapejs }}')"
                                         title="{% trans 'Ver imágenes' %}"
                                         style="display:inline-flex; align-items:center; justify-content:center;
                                             width:32px; height:30px; border-radius:6px; border:1px solid var(--border);
@@ -352,21 +364,21 @@
         <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
             <div class="pagination" style="margin:0;">
                 {% if combinados_page.has_previous %}
-                <a href="?area={{ area_filtro }}&per_page={{ per_page }}&page={{ combinados_page.previous_page_number }}">‹</a>
+                    <a href="?area={{ area_filtro }}&estatus={{ estatus_filtro }}&tipo={{ tipo_filtro }}&orden={{ filtro_orden }}&problema={{ filtro_problema }}&accion={{ filtro_accion }}&validado={{ filtro_validado }}&fecha_desde={{ filtro_fecha_desde }}&fecha_hasta={{ filtro_fecha_hasta }}&per_page={{ per_page }}&page={{ combinados_page.previous_page_number }}">‹</a>
                 {% else %}
-                <span class="disabled">‹</span>
+                    <span class="disabled">‹</span>
                 {% endif %}
                 {% for num in combinados_page.paginator.page_range %}
                     {% if combinados_page.number == num %}
-                    <span class="current">{{ num }}</span>
+                        <span class="current">{{ num }}</span>
                     {% elif num > combinados_page.number|add:'-3' and num < combinados_page.number|add:'3' %}
-                    <a href="?area={{ area_filtro }}&per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
+                        <a href="?area={{ area_filtro }}&estatus={{ estatus_filtro }}&tipo={{ tipo_filtro }}&orden={{ filtro_orden }}&problema={{ filtro_problema }}&accion={{ filtro_accion }}&validado={{ filtro_validado }}&fecha_desde={{ filtro_fecha_desde }}&fecha_hasta={{ filtro_fecha_hasta }}&per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
                 {% if combinados_page.has_next %}
-                <a href="?area={{ area_filtro }}&per_page={{ per_page }}&page={{ combinados_page.next_page_number }}">›</a>
+                    <a href="?area={{ area_filtro }}&estatus={{ estatus_filtro }}&tipo={{ tipo_filtro }}&orden={{ filtro_orden }}&problema={{ filtro_problema }}&accion={{ filtro_accion }}&validado={{ filtro_validado }}&fecha_desde={{ filtro_fecha_desde }}&fecha_hasta={{ filtro_fecha_hasta }}&per_page={{ per_page }}&page={{ combinados_page.next_page_number }}">›</a>
                 {% else %}
-                <span class="disabled">›</span>
+                    <span class="disabled">›</span>
                 {% endif %}
             </div>
         </div>
@@ -482,18 +494,27 @@
      background:rgba(30,27,75,.45); z-index:5000; align-items:center; justify-content:center;">
     <div style="background:var(--white); border-radius:14px; padding:24px;
                 max-width:700px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del seguimiento" %}</div>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <button onclick="descargarImagenSegActual()" title="{% trans 'Descargar' %}"
-                        style="background:none; border:none; cursor:pointer; color:var(--text-2); display:flex; align-items:center;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-6l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                </button>
-                <button onclick="cerrarModalImagenesSeg()"
-                        style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
+        
+        <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del seguimiento" %}</div>
+                    <div id="lightbox-seg-meta" style="display:flex; gap:10px; margin-top:5px; font-size:12px; color:var(--text-2); flex-wrap:wrap; align-items:center;"></div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center; flex-shrink:0; margin-left:12px;">
+                   
+                    <button onclick="descargarImagenSegActual()" title="{% trans 'Descargar' %}"
+                            style="background:none; border:none; cursor:pointer; color:var(--text-2); display:flex; align-items:center;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-6l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                    </button>
+                    <button onclick="cerrarModalImagenesSeg()"
+                            onmouseover="this.style.color='#EF4444'"
+                            onmouseout="this.style.color='var(--text-3)'"
+                            style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
+                </div>
             </div>
         </div>
 
@@ -516,20 +537,29 @@
                            display:flex; align-items:center; justify-content:center; font-size:16px;">›</button>
         </div>
 
+        <!-- Contador -->
+        <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+            <span id="lightbox-seg-contador" style="font-size:11px; color:var(--text-3);"></span>
+        </div>
+
         <div id="lightbox-seg-miniaturas" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"></div>
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <!-- Variables Django para el JS -->
 <script>
-const CSRF_SM    = '{{ csrf_token }}';
-const AREA_ID_SM = '{{ area_filtro }}';
-const URL_SM_ADD = "{% url 'mto:agregar_seguimiento_manual' %}";
-const URL_SM_EDIT = "/mto/seguimiento-manual/editar/";
-const URL_SM_DEL  = "/mto/seguimiento-manual/eliminar/";
-const URL_OT_EDIT = "/mto/seguimiento/editar/";
-const URL_OT_DEL  = "/mto/seguimiento/eliminar/";
+    const CSRF_SM    = '{{ csrf_token }}';
+    const AREA_ID_SM = '{{ area_filtro }}';
+    const AREA_NOMBRE_SM = '{{ area_nombre|default:""|escapejs }}';
+    const URL_SM_ADD = "{% url 'mto:agregar_seguimiento_manual' %}";
+    const URL_SM_EDIT = "/mto/seguimiento-manual/editar/";
+    const URL_SM_DEL  = "/mto/seguimiento-manual/eliminar/";
+    const URL_OT_EDIT = "/mto/seguimiento/editar/";
+    const URL_OT_DEL  = "/mto/seguimiento/eliminar/";
+    const CONTADOR_SEG_TPL = "{% trans 'Imagen {n} de {total}' %}";
 </script>
 <script src="{% static 'mto_app/js/lista_seguimientos.js' %}"></script>
-
 {% endblock %}

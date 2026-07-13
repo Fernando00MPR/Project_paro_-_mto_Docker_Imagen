@@ -4,96 +4,97 @@
 {% block title %}{% trans "Pasos de rutina" %}{% endblock %}
 {% block content %}
 
-<div class="card">
-
-    <div class="card-header" style="gap:16px;">
-        <div style="min-width:0; flex:1;">
-            <div class="card-title">
-                {% trans "Rutinas de mantenimiento" %}
-                {% if filtro_area %}
-                    {% for a in areas %}
-                        {% if a.pk|stringformat:"s" == filtro_area %}
-                            — {{ a.nombre }}
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-            </div>
+<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div style="min-width:0; flex:1;">
+        <div class="card-title">
+            {% trans "Rutinas de mantenimiento" %}
+            {% if filtro_area %}
+                {% for a in areas %}
+                    {% if a.pk|stringformat:"s" == filtro_area %}
+                        — {{ a.nombre }}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
         </div>
-        {% if puede_editar_rutinas %}
-            <a href="{% url 'mto:importar_pasos' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm" style="flex-shrink:0; white-space:nowrap;">
-                + {% trans "Agregar Rutina de mantenimiento" %}
-            </a>
-        {% endif %}
-        {% include 'menu_app/_language_selector.html' %}
+        <div class="card-subtitle">{% trans "Pasos de rutina por plan de trabajo" %}</div>
     </div>
+    {% if puede_editar_rutinas %}
+        <a href="{% url 'mto:importar_pasos' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm" style="flex-shrink:0; white-space:nowrap;">
+            + {% trans "Agregar Rutina de mantenimiento" %}
+        </a>
+    {% endif %}
+    {% include 'menu_app/_language_selector.html' %}
+</div>
 
 <!-- Filtro por plan -->
-<div style="margin-bottom:16px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);">
-    <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-        
-        <input type="hidden" name="area" value="{{ filtro_area }}">
-        <div class="filter-group">
-            <label>{% trans "N° Plan de trabajo" %}</label>
-            <select name="pt" style="width:160px; appearance:none; -webkit-appearance:none;
-                background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");
-                background-repeat:no-repeat; background-position:right 10px center; background-color:var(--white);">
-                <option value="">{% trans "Seleccione un plan" %}</option>
-                {% for pt in planes_con_pasos %}
-                <option value="{{ pt.plan_trabajo }}" {% if filtro_pt == pt.plan_trabajo %}selected{% endif %}>
-                    {% trans "Plan" %} {{ pt.plan_trabajo }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        {% if not filtro_pt %}
-        <div class="filter-group">
-            <label>{% trans "Código del Plan" %}</label>
-            <input type="text" name="codigo" value="{{ filtro_codigo|default:'' }}" 
-                placeholder="Buscar código…"
-                style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
-        </div>
-
-        <div class="filter-group">
-            <label>{% trans "Nombre del Plan" %}</label>
-            <input type="text" name="nombre" value="{{ filtro_nombre|default:'' }}"
-                placeholder="Buscar nombre…"
-                style="height:33px; width:500px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
-        </div>
-        {% endif %}
-        
-        <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
-        <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
-
-        <!-- Nombre y Codigo del plan -->
-        {% if filtro_pt and primer_paso %}
-        {% if primer_paso.codigo_plan or primer_paso.nombre_plan %}
-        <div style="display:flex; flex-direction:column; justify-content:center; margin-left:8px;">
-            <span style="font-size:17px; font-weight:600; color:var(--text);">{{ primer_paso.codigo_plan }}</span>
-            <span style="font-size:16px; color:var(--text-2);">{{ primer_paso.nombre_plan }}</span>
-        </div>
-        {% endif %}
-        {% endif %}
-
-
-        <!-- Boton Eliminar -->
-        {% if filtro_pt and filtro_area %}
-            <div style="margin-left:auto;">
-                {% if puede_eliminar_rutinas %}
-                <button type="button" class="btn btn-ghost btn-sm"
-                    style="color:var(--danger, #DC2626); border-color:var(--danger, #DC2626);"
-                    onclick="document.getElementById('modal-eliminar-pasos').style.display='flex';">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    {% trans "Eliminar Plan" %} {{ filtro_pt }}
-                </button>
-                {% endif %}
+<div class="card">
+    <div style="margin-bottom:16px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);">
+        <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            
+            <input type="hidden" name="area" value="{{ filtro_area }}">
+            <div class="filter-group">
+                <label>{% trans "N° Plan de trabajo" %}</label>
+                <select name="pt" style="width:160px; appearance:none; -webkit-appearance:none;
+                    background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");
+                    background-repeat:no-repeat; background-position:right 10px center; background-color:var(--white);">
+                    <option value="">{% trans "Seleccione un plan" %}</option>
+                    {% for pt in planes_con_pasos %}
+                    <option value="{{ pt.plan_trabajo }}" {% if filtro_pt == pt.plan_trabajo %}selected{% endif %}>
+                        {% trans "Plan" %} {{ pt.plan_trabajo }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
-        {% endif %}
 
-    </form>
+            {% if not filtro_pt %}
+            <div class="filter-group">
+                <label>{% trans "Código del Plan" %}</label>
+                <input type="text" name="codigo" value="{{ filtro_codigo|default:'' }}" 
+                    placeholder="Buscar código…"
+                    style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+
+            <div class="filter-group">
+                <label>{% trans "Nombre del Plan" %}</label>
+                <input type="text" name="nombre" value="{{ filtro_nombre|default:'' }}"
+                    placeholder="Buscar nombre…"
+                    style="height:33px; width:500px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            </div>
+            {% endif %}
+            
+            <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
+            <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
+
+            <!-- Nombre y Codigo del plan -->
+            {% if filtro_pt and primer_paso %}
+            {% if primer_paso.codigo_plan or primer_paso.nombre_plan %}
+            <div style="display:flex; flex-direction:column; justify-content:center; margin-left:8px;">
+                <span style="font-size:17px; font-weight:600; color:var(--text);">{{ primer_paso.codigo_plan }}</span>
+                <span style="font-size:16px; color:var(--text-2);">{{ primer_paso.nombre_plan }}</span>
+            </div>
+            {% endif %}
+            {% endif %}
+
+
+            <!-- Boton Eliminar -->
+            {% if filtro_pt and filtro_area %}
+                <div style="margin-left:auto;">
+                    {% if puede_eliminar_rutinas %}
+                    <button type="button" class="btn btn-ghost btn-sm"
+                        style="color:var(--danger, #DC2626); border-color:var(--danger, #DC2626);"
+                        onclick="document.getElementById('modal-eliminar-pasos').style.display='flex';">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        {% trans "Eliminar Plan" %} {{ filtro_pt }}
+                    </button>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+        </form>
+    </div>
 </div>
 
 {% if filtro_pt and filtro_area %}
@@ -104,8 +105,6 @@
     <input type="hidden" name="motivo" id="motivo-eliminar-hidden">
 </form>
 {% endif %}
-
-</div>
 
 <div class="card" style="overflow:hidden;">
 

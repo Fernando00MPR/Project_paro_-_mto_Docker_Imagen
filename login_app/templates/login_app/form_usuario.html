@@ -418,6 +418,22 @@
                                 style="width:16px; height:16px; accent-color:var(--indigo);">
                         </td>
                     </tr>
+
+                     <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Bitácora" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="ver_bitacora" {% if permisos_mto.ver_bitacora %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_bitacora" {% if permisos_mto.editar_bitacora %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_bitacora" {% if permisos_mto.eliminar_bitacora %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
         
                     <tr>
                         <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Inventario" %}</td>

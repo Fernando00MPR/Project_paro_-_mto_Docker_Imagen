@@ -28,6 +28,8 @@ def lista_seguimientos(request):
     filtro_problema = request.GET.get('problema', '').strip()
     filtro_accion   = request.GET.get('accion', '').strip()
     filtro_validado = request.GET.get('validado', '')
+    filtro_fecha_desde = request.GET.get('fecha_desde', '').strip()
+    filtro_fecha_hasta = request.GET.get('fecha_hasta', '').strip()
     orden_por  = request.GET.get('orden_por', 'no_orden')
     direccion  = request.GET.get('direccion', 'desc')
 
@@ -52,6 +54,10 @@ def lista_seguimientos(request):
         qs = qs.filter(accion__icontains=filtro_accion)
     if filtro_validado != '':
         qs = qs.filter(validado=filtro_validado == '1')
+    if filtro_fecha_desde:
+        qs = qs.filter(fecha_creacion__date__gte=filtro_fecha_desde)
+    if filtro_fecha_hasta:
+        qs = qs.filter(fecha_creacion__date__lte=filtro_fecha_hasta)
 
     seguimientos = []
     contadores = {}
@@ -83,6 +89,10 @@ def lista_seguimientos(request):
             seguimientos_manuales = seguimientos_manuales.filter(accion__icontains=filtro_accion)
         if filtro_validado != '':
             seguimientos_manuales = seguimientos_manuales.filter(validado=filtro_validado == '1')
+        if filtro_fecha_desde:
+            seguimientos_manuales = seguimientos_manuales.filter(fecha_creacion__date__gte=filtro_fecha_desde)
+        if filtro_fecha_hasta:
+            seguimientos_manuales = seguimientos_manuales.filter(fecha_creacion__date__lte=filtro_fecha_hasta)
         if filtro_orden:
             orden_limpio = filtro_orden.upper().lstrip('M').lstrip('0') or '0'
             try:
@@ -137,6 +147,8 @@ def lista_seguimientos(request):
         'filtro_problema':       filtro_problema,
         'filtro_accion':         filtro_accion,
         'filtro_validado':       filtro_validado,
+        'filtro_fecha_desde': filtro_fecha_desde,
+        'filtro_fecha_hasta': filtro_fecha_hasta,
         'orden_por':             orden_por,
         'direccion':             direccion,
         'areas':                 areas,

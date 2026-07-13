@@ -180,6 +180,11 @@ class AccesoMto(models.Model):
     editar_responsables   = models.BooleanField(default=False, verbose_name=_("Editar responsables"))
     eliminar_responsables = models.BooleanField(default=False, verbose_name=_("Eliminar responsables"))
 
+    # ── Bitácora ──
+    ver_bitacora      = models.BooleanField(default=False, verbose_name=_("Ver bitácora"))
+    editar_bitacora   = models.BooleanField(default=False, verbose_name=_("Editar bitácora"))
+    eliminar_bitacora = models.BooleanField(default=False, verbose_name=_("Eliminar bitácora"))
+
     # ── Inventario ──
     ver_inventario      = models.BooleanField(default=False, verbose_name=_("Ver inventario"))
     editar_inventario   = models.BooleanField(default=False, verbose_name=_("Editar inventario"))
@@ -322,3 +327,21 @@ class ImagenSeguimiento(models.Model):
 def borrar_archivo_imagen_seguimiento(sender, instance, **kwargs):
     if instance.imagen:
         instance.imagen.delete(save=False)
+
+class Bitacora(models.Model):
+    area                = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name=_("Área"))
+    fecha               = models.DateField(verbose_name=_("Fecha"))
+    equipo              = models.CharField(max_length=100, blank=True, verbose_name=_("Equipo"))
+    actividad_realizada = models.CharField(max_length=300, verbose_name=_("Actividad realizada"))
+    pendiente           = models.CharField(max_length=200, blank=True, verbose_name=_("Pendiente"))
+    responsable         = models.CharField(max_length=200, blank=True, verbose_name=_("Responsable"))
+    creado_en           = models.DateTimeField(auto_now_add=True)
+    modificado_en       = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.fecha} — {self.actividad_realizada[:50]}"
+
+    class Meta:
+        verbose_name        = _("Bitácora")
+        verbose_name_plural = _("Bitácoras")
+        ordering            = ['-fecha', '-creado_en']

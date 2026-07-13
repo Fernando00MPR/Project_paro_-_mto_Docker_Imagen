@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-28 19:41-0600\n"
+"POT-Creation-Date: 2026-07-12 20:45-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -92,7 +92,7 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:324
 #: .\login_app\templates\login_app\form_usuario.html:45 .\mto_app\models.py:134
 #: .\mto_app\templates\mto_app\responsables\form.html:25
-#: .\paros_app\models.py:54
+#: .\paros_app\models.py:57
 msgid "Nombre"
 msgstr ""
 
@@ -100,22 +100,23 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:127
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:150
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:371
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:120
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:119
 msgid "Descripción"
 msgstr ""
 
 #: .\inventario_app\models.py:35 .\inventario_app\models.py:139
 #: .\inventario_app\templates\inventario_app\importar_stock.html:32
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:310
-#: .\mto_app\models.py:213 .\mto_app\models.py:273
+#: .\mto_app\models.py:218 .\mto_app\models.py:278 .\mto_app\models.py:332
+#: .\mto_app\templates\mto_app\bitacora\lista.html:176
 #: .\mto_app\templates\mto_app\dashboard.html:30
 #: .\mto_app\templates\mto_app\plan\form.html:25
-#: .\mto_app\templates\mto_app\plan\lista.html:169
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:54
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:117
+#: .\mto_app\templates\mto_app\plan\lista.html:170
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:56
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:116
 #: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:18
-#: .\paros_app\models.py:15 .\paros_app\models.py:52 .\paros_app\models.py:68
-#: .\paros_app\models.py:83
+#: .\paros_app\models.py:15 .\paros_app\models.py:55 .\paros_app\models.py:71
+#: .\paros_app\models.py:86
 #: .\paros_app\templates\paros_app\analisis_paros.html:42
 #: .\paros_app\templates\paros_app\dashboard.html:34
 #: .\paros_app\templates\paros_app\equipos\importar_equipos.html:97
@@ -123,12 +124,12 @@ msgstr ""
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:124
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:18
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:114
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:28
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:32
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:29
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:33
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:179
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:69
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:174
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:210
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:71
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:176
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:212
 #: .\paros_app\templates\paros_app\responsables\importar_responsables.html:76
 #: .\paros_app\templates\paros_app\responsables\importar_responsables.html:102
 msgid "Área"
@@ -301,11 +302,11 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:169
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:192
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:379
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:168
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:128
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:169
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:129
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:189
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:183
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:219
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:185
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:221
 msgid "Comentarios"
 msgstr ""
 
@@ -499,8 +500,8 @@ msgid "Ubicación"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\importar_stock.html:83
-#: .\mto_app\models.py:207 .\mto_app\templates\mto_app\plan\importar.html:85
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:73
+#: .\mto_app\models.py:212 .\mto_app\templates\mto_app\plan\importar.html:85
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:75
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:61
 #: .\paros_app\templates\paros_app\equipos\importar_equipos.html:113
 #: .\paros_app\templates\paros_app\equipos\importar_equipos_por_area.html:90
@@ -574,19 +575,19 @@ msgstr ""
 msgid "Nueva refacción"
 msgstr ""
 
-#: .\inventario_app\templates\inventario_app\lista_refacciones.html:29
-#: .\mto_app\templates\mto_app\plan\lista.html:37
+#: .\inventario_app\templates\inventario_app\lista_refacciones.html:28
+#: .\mto_app\templates\mto_app\plan\lista.html:38
 msgid "Importar Excel"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:45
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:61
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:71
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:73
 msgid "Todas"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:53
-#: .\mto_app\templates\mto_app\plan\lista.html:70
+#: .\mto_app\templates\mto_app\plan\lista.html:71
 msgid "Buscar"
 msgstr ""
 
@@ -617,13 +618,14 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:72
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:84
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:94
+#: .\mto_app\templates\mto_app\bitacora\lista.html:68
 #: .\mto_app\templates\mto_app\dashboard.html:52
-#: .\mto_app\templates\mto_app\plan\lista.html:78
+#: .\mto_app\templates\mto_app\plan\lista.html:79
 #: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:41
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:66
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:67
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:71
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:116
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:118
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:67
 msgid "Limpiar"
 msgstr ""
@@ -642,18 +644,18 @@ msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:104
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:147
-#: .\mto_app\templates\mto_app\plan\lista.html:134
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:85
+#: .\mto_app\templates\mto_app\plan\lista.html:135
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:97
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:147
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:166
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:168
 msgid "Columnas"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:112
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:155
-#: .\mto_app\templates\mto_app\plan\lista.html:142
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:93
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:173
+#: .\mto_app\templates\mto_app\plan\lista.html:143
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:105
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:175
 msgid "Mostrar columnas"
 msgstr ""
 
@@ -677,17 +679,17 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:151
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:143
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:193
-#: .\login_app\templates\login_app\lista_usuarios.html:52
-#: .\mto_app\templates\mto_app\plan\lista.html:189
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:155
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:220
+#: .\login_app\templates\login_app\lista_usuarios.html:68
+#: .\mto_app\templates\mto_app\plan\lista.html:190
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:167
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:222
 msgid "Acciones"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:183
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:203
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:294
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:290
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:215
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:306
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:292
 msgid "Ver imágenes"
 msgstr ""
 
@@ -695,19 +697,20 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:174
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:227
 #: .\login_app\templates\login_app\form_usuario.html:352
-#: .\login_app\templates\login_app\lista_usuarios.html:116
-#: .\login_app\templates\login_app\lista_usuarios.html:167
-#: .\login_app\views.py:187 .\login_app\views.py:196
+#: .\login_app\templates\login_app\lista_usuarios.html:132
+#: .\login_app\templates\login_app\lista_usuarios.html:183
+#: .\login_app\views.py:211 .\login_app\views.py:220
+#: .\mto_app\templates\mto_app\bitacora\lista.html:121
 #: .\mto_app\templates\mto_app\plan\detalle.html:19
 #: .\mto_app\templates\mto_app\plan\form.html:3
-#: .\mto_app\templates\mto_app\plan\lista.html:287
+#: .\mto_app\templates\mto_app\plan\lista.html:288
 #: .\mto_app\templates\mto_app\responsables\lista.html:82
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:226
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:317
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:238
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:329
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:108
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:205
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:114
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:265
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:267
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:105
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:196
 msgid "Editar"
@@ -717,17 +720,18 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:188
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:241
 #: .\login_app\templates\login_app\form_usuario.html:353
-#: .\login_app\templates\login_app\lista_usuarios.html:117
-#: .\login_app\templates\login_app\lista_usuarios.html:171
-#: .\mto_app\models.py:208 .\mto_app\templates\mto_app\plan\lista.html:292
+#: .\login_app\templates\login_app\lista_usuarios.html:133
+#: .\login_app\templates\login_app\lista_usuarios.html:187
+#: .\mto_app\models.py:213 .\mto_app\templates\mto_app\bitacora\lista.html:136
+#: .\mto_app\templates\mto_app\plan\lista.html:293
 #: .\mto_app\templates\mto_app\responsables\lista.html:97
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:78
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:241
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:331
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:80
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:253
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:343
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:114
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas.html:46
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:120
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:278
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:280
 #: .\paros_app\templates\paros_app\registro_produccion.html:206
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:111
 msgid "Eliminar"
@@ -757,16 +761,18 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:330
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:292
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:386
-#: .\login_app\templates\login_app\form_usuario.html:481
-#: .\login_app\templates\login_app\lista_usuarios.html:243
+#: .\login_app\templates\login_app\form_usuario.html:497
+#: .\login_app\templates\login_app\lista_usuarios.html:259
+#: .\mto_app\templates\mto_app\bitacora\lista.html:235
+#: .\mto_app\templates\mto_app\bitacora\lista.html:251
 #: .\mto_app\templates\mto_app\plan\form.html:128
-#: .\mto_app\templates\mto_app\plan\lista.html:361
-#: .\mto_app\templates\mto_app\plan\lista.html:445
+#: .\mto_app\templates\mto_app\plan\lista.html:362
+#: .\mto_app\templates\mto_app\plan\lista.html:446
 #: .\mto_app\templates\mto_app\responsables\form.html:52
 #: .\mto_app\templates\mto_app\responsables\lista.html:125
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:245
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:452
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:471
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:244
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:464
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:483
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:148
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:195
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:237
@@ -776,10 +782,10 @@ msgstr ""
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:263
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:285
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:332
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:245
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:226
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:330
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:360
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:207
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:227
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:331
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:362
 #: .\paros_app\templates\paros_app\registro_produccion.html:260
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:148
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:186
@@ -791,22 +797,23 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:278
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:242
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:295
-#: .\login_app\templates\login_app\lista_usuarios.html:248
+#: .\login_app\templates\login_app\lista_usuarios.html:264
+#: .\mto_app\templates\mto_app\bitacora\lista.html:255
 #: .\mto_app\templates\mto_app\responsables\lista.html:128
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:241
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:474
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:240
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:486
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:254
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:280
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:335
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:356
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:336
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:358
 #: .\paros_app\templates\paros_app\registro_produccion.html:259
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:237
 msgid "Sí, eliminar"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:312
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:30
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:34
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:31
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:35
 msgid "Selecciona un área"
 msgstr ""
 
@@ -823,8 +830,8 @@ msgid "Se resaltará en amarillo si el stock excede este valor"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:385
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:434
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:179
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:446
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:180
 msgid "Imágenes"
 msgstr ""
 
@@ -833,52 +840,61 @@ msgid "máximo 2"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:395
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:444
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:456
 msgid "Arrastra imágenes aquí o haz clic para seleccionar"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:405
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:331
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:387
+#: .\mto_app\templates\mto_app\bitacora\lista.html:236
 #: .\mto_app\templates\mto_app\plan\form.html:127
-#: .\mto_app\templates\mto_app\plan\lista.html:447
+#: .\mto_app\templates\mto_app\plan\lista.html:448
 #: .\mto_app\templates\mto_app\responsables\form.html:50
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:453
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:465
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:335
 msgid "Guardar"
 msgstr ""
 
-#: .\inventario_app\templates\inventario_app\lista_refacciones.html:417
+#: .\inventario_app\templates\inventario_app\lista_refacciones.html:419
 msgid "Imágenes de la refacción"
 msgstr ""
 
-#: .\inventario_app\templates\inventario_app\lista_refacciones.html:419
+#: .\inventario_app\templates\inventario_app\lista_refacciones.html:423
 #: .\mto_app\templates\mto_app\dashboard.html:129
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:488
-#: .\paros_app\templates\paros_app\analisis_paros.html:124
-#: .\paros_app\templates\paros_app\analisis_paros.html:151
-#: .\paros_app\templates\paros_app\analisis_paros.html:168
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:506
+#: .\paros_app\templates\paros_app\analisis_paros.html:128
+#: .\paros_app\templates\paros_app\analisis_paros.html:159
+#: .\paros_app\templates\paros_app\analisis_paros.html:176
+#: .\paros_app\templates\paros_app\analisis_paros.html:304
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:123
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:374
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:379
 msgid "Descargar"
 msgstr ""
 
-#: .\inventario_app\templates\inventario_app\lista_refacciones.html:438
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:507
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:394
+#: .\inventario_app\templates\inventario_app\lista_refacciones.html:445
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:528
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:401
 msgid "Anterior"
 msgstr ""
 
-#: .\inventario_app\templates\inventario_app\lista_refacciones.html:443
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:512
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:399
+#: .\inventario_app\templates\inventario_app\lista_refacciones.html:450
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:533
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:406
 msgid "Siguiente"
+msgstr ""
+
+#: .\inventario_app\templates\inventario_app\lista_refacciones.html:472
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:562
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:441
+#, python-brace-format
+msgid "Imagen {n} de {total}"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:4
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:13
-#: .\login_app\templates\login_app\form_usuario.html:439
-#: .\menu_app\templates\menu_app\base_menu.html:741
+#: .\login_app\templates\login_app\form_usuario.html:455
+#: .\menu_app\templates\menu_app\base_menu.html:755
 msgid "Seguimiento de refacciones"
 msgstr ""
 
@@ -890,9 +906,9 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:256
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:27
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:309
-#: .\mto_app\templates\mto_app\plan\lista.html:397
+#: .\mto_app\templates\mto_app\plan\lista.html:398
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:17
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:384
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:396
 msgid "Nuevo seguimiento"
 msgstr ""
 
@@ -908,23 +924,23 @@ msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:72
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:82
-#: .\mto_app\models.py:67 .\mto_app\models.py:248
+#: .\mto_app\models.py:67 .\mto_app\models.py:253
 #: .\mto_app\templates\mto_app\plan\form.html:95
 #: .\mto_app\templates\mto_app\plan\importar.html:114
-#: .\mto_app\templates\mto_app\plan\lista.html:158
-#: .\mto_app\templates\mto_app\plan\lista.html:188
-#: .\mto_app\templates\mto_app\plan\lista.html:425
+#: .\mto_app\templates\mto_app\plan\lista.html:159
+#: .\mto_app\templates\mto_app\plan\lista.html:189
+#: .\mto_app\templates\mto_app\plan\lista.html:426
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:26
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:103
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:137
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:413
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:115
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:149
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:425
 #: .\paros_app\templates\paros_app\analisis_paros.html:85
 #: .\paros_app\templates\paros_app\dashboard.html:79
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:196
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:200
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:204
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:118
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:271
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:119
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:272
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:188
 msgid "Estatus"
 msgstr ""
@@ -990,27 +1006,27 @@ msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:197
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:250
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:344
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:356
 msgid "No hay seguimientos registrados."
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:236
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:289
 #: .\mto_app\models.py:176
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:465
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:477
 msgid "Eliminar seguimiento"
 msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:237
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:290
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:227
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:468
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:226
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:480
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:142
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:248
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:147
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:274
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:325
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:351
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:326
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:353
 #: .\paros_app\templates\paros_app\registro_produccion.html:256
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:139
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:231
@@ -1035,8 +1051,8 @@ msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:4
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:13
-#: .\login_app\templates\login_app\form_usuario.html:455
-#: .\menu_app\templates\menu_app\base_menu.html:755
+#: .\login_app\templates\login_app\form_usuario.html:471
+#: .\menu_app\templates\menu_app\base_menu.html:769
 msgid "Seguimiento de servicios"
 msgstr ""
 
@@ -1046,8 +1062,8 @@ msgstr ""
 
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:161
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:184
-#: .\mto_app\models.py:218
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:59
+#: .\mto_app\models.py:223
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:61
 msgid "Motivo"
 msgstr ""
 
@@ -1072,9 +1088,9 @@ msgid "Datos del usuario"
 msgstr ""
 
 #: .\login_app\templates\login_app\form_usuario.html:26
-#: .\login_app\templates\login_app\lista_usuarios.html:43
-#: .\login_app\templates\login_app\login.html:296 .\mto_app\models.py:211
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:53
+#: .\login_app\templates\login_app\lista_usuarios.html:59
+#: .\login_app\templates\login_app\login.html:301 .\mto_app\models.py:216
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:55
 msgid "Usuario"
 msgstr ""
 
@@ -1091,7 +1107,7 @@ msgid "Apellido"
 msgstr ""
 
 #: .\login_app\templates\login_app\form_usuario.html:58
-#: .\login_app\templates\login_app\login.html:300
+#: .\login_app\templates\login_app\login.html:305
 msgid "Contraseña"
 msgstr ""
 
@@ -1112,13 +1128,13 @@ msgid "Repite la contraseña"
 msgstr ""
 
 #: .\login_app\templates\login_app\form_usuario.html:111
-#: .\login_app\templates\login_app\lista_usuarios.html:45
+#: .\login_app\templates\login_app\lista_usuarios.html:61
 msgid "Rol"
 msgstr ""
 
 #: .\login_app\templates\login_app\form_usuario.html:117
-#: .\login_app\templates\login_app\lista_usuarios.html:72
-#: .\menu_app\templates\menu_app\base_menu.html:945
+#: .\login_app\templates\login_app\lista_usuarios.html:88
+#: .\menu_app\templates\menu_app\base_menu.html:959
 msgid "Administrador"
 msgstr ""
 
@@ -1228,8 +1244,8 @@ msgid "El usuario puede ingresar al módulo de mantenimiento"
 msgstr ""
 
 #: .\login_app\templates\login_app\form_usuario.html:298
-#: .\menu_app\templates\menu_app\base_menu.html:622
-#: .\menu_app\templates\menu_app\base_menu.html:787
+#: .\menu_app\templates\menu_app\base_menu.html:623
+#: .\menu_app\templates\menu_app\base_menu.html:801
 msgid "General"
 msgstr ""
 
@@ -1264,13 +1280,13 @@ msgid "Sección"
 msgstr ""
 
 #: .\login_app\templates\login_app\form_usuario.html:351
-#: .\login_app\templates\login_app\lista_usuarios.html:114
-#: .\mto_app\templates\mto_app\plan\lista.html:284
+#: .\login_app\templates\login_app\lista_usuarios.html:130
+#: .\mto_app\templates\mto_app\plan\lista.html:285
 msgid "Ver"
 msgstr ""
 
 #: .\login_app\templates\login_app\form_usuario.html:359
-#: .\menu_app\templates\menu_app\base_menu.html:670 .\mto_app\models.py:77
+#: .\menu_app\templates\menu_app\base_menu.html:671 .\mto_app\models.py:77
 #: .\mto_app\templates\mto_app\plan\lista.html:4
 #: .\mto_app\templates\mto_app\plan\lista.html:13
 msgid "Plan de mantenimiento"
@@ -1285,8 +1301,8 @@ msgid "Seguimiento"
 msgstr ""
 
 #: .\login_app\templates\login_app\form_usuario.html:407
-#: .\menu_app\templates\menu_app\base_menu.html:715
-#: .\menu_app\templates\menu_app\base_menu.html:721 .\mto_app\models.py:149
+#: .\menu_app\templates\menu_app\base_menu.html:716
+#: .\menu_app\templates\menu_app\base_menu.html:722 .\mto_app\models.py:149
 #: .\mto_app\templates\mto_app\responsables\lista.html:3
 #: .\mto_app\templates\mto_app\responsables\lista.html:9
 #: .\paros_app\templates\paros_app\analisis_paros.html:108
@@ -1294,27 +1310,35 @@ msgid "Responsables"
 msgstr ""
 
 #: .\login_app\templates\login_app\form_usuario.html:423
-#: .\menu_app\templates\menu_app\base_menu.html:728
-#: .\menu_app\templates\menu_app\base_menu.html:734
+#: .\menu_app\templates\menu_app\base_menu.html:729
+#: .\menu_app\templates\menu_app\base_menu.html:735 .\mto_app\models.py:345
+#: .\mto_app\templates\mto_app\bitacora\lista.html:4
+#: .\mto_app\templates\mto_app\bitacora\lista.html:23
+msgid "Bitácora"
+msgstr ""
+
+#: .\login_app\templates\login_app\form_usuario.html:439
+#: .\menu_app\templates\menu_app\base_menu.html:742
+#: .\menu_app\templates\menu_app\base_menu.html:748
 msgid "Inventario"
 msgstr ""
 
-#: .\login_app\templates\login_app\form_usuario.html:479
+#: .\login_app\templates\login_app\form_usuario.html:495
 msgid "Crear usuario"
 msgstr ""
 
-#: .\login_app\templates\login_app\form_usuario.html:479
+#: .\login_app\templates\login_app\form_usuario.html:495
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:234
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:259
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:225
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:226
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:216
 msgid "Guardar cambios"
 msgstr ""
 
 #: .\login_app\templates\login_app\lista_usuarios.html:8
-#: .\menu_app\templates\menu_app\base_menu.html:773
-#: .\menu_app\templates\menu_app\base_menu.html:915
-#: .\menu_app\templates\menu_app\base_menu.html:921
+#: .\menu_app\templates\menu_app\base_menu.html:787
+#: .\menu_app\templates\menu_app\base_menu.html:929
+#: .\menu_app\templates\menu_app\base_menu.html:935
 msgid "Gestión de usuarios"
 msgstr ""
 
@@ -1336,191 +1360,204 @@ msgstr[2] ""
 msgid "Nuevo usuario"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:44
+#: .\login_app\templates\login_app\lista_usuarios.html:40
+#: .\mto_app\templates\mto_app\dashboard.html:32
+#: .\mto_app\templates\mto_app\dashboard.html:111
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:20
+#: .\paros_app\templates\paros_app\analisis_paros.html:44
+#: .\paros_app\templates\paros_app\dashboard.html:38
+msgid "Todas las áreas"
+msgstr ""
+
+#: .\login_app\templates\login_app\lista_usuarios.html:43
+msgid "Administradores"
+msgstr ""
+
+#: .\login_app\templates\login_app\lista_usuarios.html:60
 msgid "Nombre completo"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:46
+#: .\login_app\templates\login_app\lista_usuarios.html:62
 msgid "Dashboard y"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:46
-#: .\login_app\templates\login_app\lista_usuarios.html:84
-#: .\login_app\templates\login_app\lista_usuarios.html:89
+#: .\login_app\templates\login_app\lista_usuarios.html:62
+#: .\login_app\templates\login_app\lista_usuarios.html:100
+#: .\login_app\templates\login_app\lista_usuarios.html:105
 msgid "Análisis"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:47
+#: .\login_app\templates\login_app\lista_usuarios.html:63
 msgid "Áreas de Paros"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:48
+#: .\login_app\templates\login_app\lista_usuarios.html:64
 msgid "Permisos"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:48
+#: .\login_app\templates\login_app\lista_usuarios.html:64
 msgid "de paros"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:49
-#: .\menu_app\templates\menu_app\base_menu.html:850
+#: .\login_app\templates\login_app\lista_usuarios.html:65
+#: .\menu_app\templates\menu_app\base_menu.html:864
 msgid "Catálogos"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:50
-#: .\menu_app\templates\menu_app\base_menu.html:880
+#: .\login_app\templates\login_app\lista_usuarios.html:66
+#: .\menu_app\templates\menu_app\base_menu.html:894
 msgid "Producción"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:51
+#: .\login_app\templates\login_app\lista_usuarios.html:67
 msgid "Gestión de MTO"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:62
+#: .\login_app\templates\login_app\lista_usuarios.html:78
 msgid "(tú)"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:70
+#: .\login_app\templates\login_app\lista_usuarios.html:86
 msgid "Super usuario"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:74
-#: .\menu_app\templates\menu_app\base_menu.html:947
+#: .\login_app\templates\login_app\lista_usuarios.html:90
+#: .\menu_app\templates\menu_app\base_menu.html:961
 msgid "Rol Especifico"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:80
-#: .\login_app\templates\login_app\lista_usuarios.html:97
-#: .\login_app\templates\login_app\lista_usuarios.html:111
-#: .\login_app\templates\login_app\lista_usuarios.html:126
-#: .\login_app\templates\login_app\lista_usuarios.html:139
-#: .\login_app\templates\login_app\lista_usuarios.html:151
+#: .\login_app\templates\login_app\lista_usuarios.html:96
+#: .\login_app\templates\login_app\lista_usuarios.html:113
+#: .\login_app\templates\login_app\lista_usuarios.html:127
+#: .\login_app\templates\login_app\lista_usuarios.html:142
+#: .\login_app\templates\login_app\lista_usuarios.html:155
+#: .\login_app\templates\login_app\lista_usuarios.html:167
 msgid "Acceso total"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:83
-#: .\login_app\templates\login_app\lista_usuarios.html:87
-#: .\menu_app\templates\menu_app\base_menu.html:632
-#: .\menu_app\templates\menu_app\base_menu.html:791
-#: .\menu_app\templates\menu_app\base_menu.html:797
+#: .\login_app\templates\login_app\lista_usuarios.html:99
+#: .\login_app\templates\login_app\lista_usuarios.html:103
+#: .\menu_app\templates\menu_app\base_menu.html:633
+#: .\menu_app\templates\menu_app\base_menu.html:805
+#: .\menu_app\templates\menu_app\base_menu.html:811
 #: .\mto_app\templates\mto_app\dashboard.html:3
 #: .\mto_app\templates\mto_app\dashboard.html:12
 msgid "Dashboard"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:91
-#: .\login_app\templates\login_app\lista_usuarios.html:105
-#: .\login_app\templates\login_app\lista_usuarios.html:133
-#: .\login_app\templates\login_app\lista_usuarios.html:145
+#: .\login_app\templates\login_app\lista_usuarios.html:107
+#: .\login_app\templates\login_app\lista_usuarios.html:121
+#: .\login_app\templates\login_app\lista_usuarios.html:149
 #: .\login_app\templates\login_app\lista_usuarios.html:161
+#: .\login_app\templates\login_app\lista_usuarios.html:177
 #: .\paros_app\templates\paros_app\hora_hora.html:266
 msgid "Sin acceso"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:115
-#: .\login_app\views.py:154 .\login_app\views.py:166
+#: .\login_app\templates\login_app\lista_usuarios.html:131
+#: .\login_app\views.py:178 .\login_app\views.py:190
 msgid "Crear"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:120
+#: .\login_app\templates\login_app\lista_usuarios.html:136
 msgid "Sin permisos"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:129
+#: .\login_app\templates\login_app\lista_usuarios.html:145
 msgid "Ver catalogos"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:130
+#: .\login_app\templates\login_app\lista_usuarios.html:146
 msgid "Importar y Exportar"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:142
-#: .\menu_app\templates\menu_app\base_menu.html:902
-#: .\menu_app\templates\menu_app\base_menu.html:908
+#: .\login_app\templates\login_app\lista_usuarios.html:158
+#: .\menu_app\templates\menu_app\base_menu.html:916
+#: .\menu_app\templates\menu_app\base_menu.html:922
 msgid "Indicadores"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:157
+#: .\login_app\templates\login_app\lista_usuarios.html:173
 msgid "Acceso a MTO"
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:180
+#: .\login_app\templates\login_app\lista_usuarios.html:196
 msgid "No hay usuarios registrados."
 msgstr ""
 
-#: .\login_app\templates\login_app\lista_usuarios.html:236
+#: .\login_app\templates\login_app\lista_usuarios.html:252
 msgid "¿Eliminar usuario?"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:7
+#: .\login_app\templates\login_app\login.html:8
 msgid "Iniciar sesión || Gestión de Paros"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:221
+#: .\login_app\templates\login_app\login.html:226
 msgid "Gestión de Paros"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:235
+#: .\login_app\templates\login_app\login.html:240
 msgid "Control de paros de producción"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:236
+#: .\login_app\templates\login_app\login.html:241
 msgid ""
 "Registra, consulta y analiza los paros por área, turno y tiempo de manera "
 "rápida."
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:247
+#: .\login_app\templates\login_app\login.html:252
 msgid "Mantenimiento bajo control"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:248
+#: .\login_app\templates\login_app\login.html:253
 msgid ""
 "Planea, ejecuta y da seguimiento a las rutinas de mantenimiento preventivo y "
 "correctivo."
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:258
+#: .\login_app\templates\login_app\login.html:263
 msgid "Indicadores en tiempo real"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:259
+#: .\login_app\templates\login_app\login.html:264
 msgid ""
 "Visualiza tendencias, tiempos perdidos y desempeño por área al instante."
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:270
+#: .\login_app\templates\login_app\login.html:275
 msgid "Inventario siempre actualizado"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:271
+#: .\login_app\templates\login_app\login.html:276
 msgid ""
 "Controla refacciones, stock mínimo y movimientos de almacén sin "
 "complicaciones."
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:286
+#: .\login_app\templates\login_app\login.html:291
 msgid "Bienvenido"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:287
+#: .\login_app\templates\login_app\login.html:292
 msgid "Ingresa tus credenciales para continuar"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:290
+#: .\login_app\templates\login_app\login.html:295
 msgid "Usuario o contraseña incorrectos. Inténtalo de nuevo."
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:334
+#: .\login_app\templates\login_app\login.html:339
 msgid "Entrar"
 msgstr ""
 
-#: .\login_app\templates\login_app\login.html:337
+#: .\login_app\templates\login_app\login.html:342
 msgid "Versión"
 msgstr ""
 
 #: .\menu_app\templates\menu_app\_language_selector.html:14
-#: .\paros_project\settings.py:118
+#: .\paros_project\settings.py:128
 msgid "Español"
 msgstr ""
 
@@ -1528,137 +1565,137 @@ msgstr ""
 msgid "Inglés"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:582
-#: .\menu_app\templates\menu_app\base_menu.html:588
-#: .\menu_app\templates\menu_app\base_menu.html:597
-#: .\menu_app\templates\menu_app\base_menu.html:1077
+#: .\menu_app\templates\menu_app\base_menu.html:583
+#: .\menu_app\templates\menu_app\base_menu.html:589
+#: .\menu_app\templates\menu_app\base_menu.html:598
+#: .\menu_app\templates\menu_app\base_menu.html:1091
 msgid "Gestión de Mantenimiento"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:599
-#: .\menu_app\templates\menu_app\base_menu.html:608
-#: .\menu_app\templates\menu_app\base_menu.html:1077
+#: .\menu_app\templates\menu_app\base_menu.html:600
+#: .\menu_app\templates\menu_app\base_menu.html:609
+#: .\menu_app\templates\menu_app\base_menu.html:1091
 msgid "Paros de Producción"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:643
+#: .\menu_app\templates\menu_app\base_menu.html:644
 msgid "Backlog"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:650
+#: .\menu_app\templates\menu_app\base_menu.html:651
 msgid "Área actual"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:664
+#: .\menu_app\templates\menu_app\base_menu.html:665
 msgid "Plan de Mantenimiento"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:677
-#: .\menu_app\templates\menu_app\base_menu.html:683
+#: .\menu_app\templates\menu_app\base_menu.html:678
+#: .\menu_app\templates\menu_app\base_menu.html:684
 msgid "Rutinas de Mantenimiento"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:689
-#: .\menu_app\templates\menu_app\base_menu.html:695 .\mto_app\models.py:226
+#: .\menu_app\templates\menu_app\base_menu.html:690
+#: .\menu_app\templates\menu_app\base_menu.html:696 .\mto_app\models.py:231
 #: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:3
 msgid "Historial de rutinas"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:702
-#: .\menu_app\templates\menu_app\base_menu.html:708
+#: .\menu_app\templates\menu_app\base_menu.html:703
+#: .\menu_app\templates\menu_app\base_menu.html:709
 msgid "Seguimientos"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:747
+#: .\menu_app\templates\menu_app\base_menu.html:761
 msgid "Seg. de refacciones"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:761
+#: .\menu_app\templates\menu_app\base_menu.html:775
 msgid "Seg. de servicios"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:766
+#: .\menu_app\templates\menu_app\base_menu.html:780
 msgid "Administración"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:767
-#: .\menu_app\templates\menu_app\base_menu.html:914
+#: .\menu_app\templates\menu_app\base_menu.html:781
+#: .\menu_app\templates\menu_app\base_menu.html:928
 msgid "Usuarios"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:802
-#: .\menu_app\templates\menu_app\base_menu.html:807
+#: .\menu_app\templates\menu_app\base_menu.html:816
+#: .\menu_app\templates\menu_app\base_menu.html:821
 #: .\paros_app\templates\paros_app\analisis_paros.html:3
 #: .\paros_app\templates\paros_app\analisis_paros.html:8
 msgid "Análisis de paros"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:812
-#: .\menu_app\templates\menu_app\base_menu.html:817
+#: .\menu_app\templates\menu_app\base_menu.html:826
+#: .\menu_app\templates\menu_app\base_menu.html:831
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:27
 msgid "Todos los paros"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:822
-#: .\menu_app\templates\menu_app\base_menu.html:827
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:58
+#: .\menu_app\templates\menu_app\base_menu.html:836
+#: .\menu_app\templates\menu_app\base_menu.html:841
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:59
 msgid "Nuevo paro"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:835 .\paros_app\models.py:16
+#: .\menu_app\templates\menu_app\base_menu.html:849 .\paros_app\models.py:16
 msgid "Áreas"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:851
-#: .\menu_app\templates\menu_app\base_menu.html:857 .\paros_app\models.py:63
+#: .\menu_app\templates\menu_app\base_menu.html:865
+#: .\menu_app\templates\menu_app\base_menu.html:871 .\paros_app\models.py:66
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas.html:8
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:8
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:13
 msgid "Catálogo de fallas"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:859
-#: .\menu_app\templates\menu_app\base_menu.html:865 .\paros_app\models.py:78
+#: .\menu_app\templates\menu_app\base_menu.html:873
+#: .\menu_app\templates\menu_app\base_menu.html:879 .\paros_app\models.py:81
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:8
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:13
 msgid "Catálogo de equipos"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:867
-#: .\menu_app\templates\menu_app\base_menu.html:873 .\paros_app\models.py:92
+#: .\menu_app\templates\menu_app\base_menu.html:881
+#: .\menu_app\templates\menu_app\base_menu.html:887 .\paros_app\models.py:95
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:8
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:13
 msgid "Catálogo de responsables"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:881
-#: .\menu_app\templates\menu_app\base_menu.html:887
+#: .\menu_app\templates\menu_app\base_menu.html:895
+#: .\menu_app\templates\menu_app\base_menu.html:901
 #: .\paros_app\templates\paros_app\hora_hora.html:4
 #: .\paros_app\templates\paros_app\hora_hora.html:9
 msgid "Hora x hora"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:892
-#: .\menu_app\templates\menu_app\base_menu.html:898
+#: .\menu_app\templates\menu_app\base_menu.html:906
+#: .\menu_app\templates\menu_app\base_menu.html:912
 msgid "Tiempo de producción"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:943
+#: .\menu_app\templates\menu_app\base_menu.html:957
 msgid "Superusuario"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:966
+#: .\menu_app\templates\menu_app\base_menu.html:980
 msgid "Modo oscuro"
 msgstr ""
 
-#: .\menu_app\templates\menu_app\base_menu.html:972
-#: .\menu_app\templates\menu_app\base_menu.html:977
+#: .\menu_app\templates\menu_app\base_menu.html:986
+#: .\menu_app\templates\menu_app\base_menu.html:991
 msgid "Cerrar sesión"
 msgstr ""
 
 #: .\mto_app\models.py:9 .\mto_app\models.py:16 .\mto_app\models.py:49
 #: .\mto_app\models.py:114 .\mto_app\models.py:132
-#: .\mto_app\templates\mto_app\plan\lista.html:145
+#: .\mto_app\templates\mto_app\plan\lista.html:146
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:156
 msgid "Area"
 msgstr ""
@@ -1691,11 +1728,11 @@ msgstr ""
 msgid "Anual"
 msgstr ""
 
-#: .\mto_app\models.py:32 .\mto_app\templates\mto_app\plan\lista.html:274
+#: .\mto_app\models.py:32 .\mto_app\templates\mto_app\plan\lista.html:275
 msgid "Abierta"
 msgstr ""
 
-#: .\mto_app\models.py:33 .\mto_app\templates\mto_app\plan\lista.html:276
+#: .\mto_app\models.py:33 .\mto_app\templates\mto_app\plan\lista.html:277
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:250
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:262
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:274
@@ -1704,8 +1741,8 @@ msgstr ""
 
 #: .\mto_app\models.py:34 .\mto_app\models.py:87
 #: .\mto_app\templates\mto_app\dashboard.html:205
-#: .\mto_app\templates\mto_app\plan\lista.html:261
-#: .\mto_app\templates\mto_app\plan\lista.html:278
+#: .\mto_app\templates\mto_app\plan\lista.html:262
+#: .\mto_app\templates\mto_app\plan\lista.html:279
 msgid "Cancelada"
 msgstr ""
 
@@ -1738,7 +1775,7 @@ msgstr ""
 msgid "Predictivo"
 msgstr ""
 
-#: .\mto_app\models.py:50 .\mto_app\templates\mto_app\plan\lista.html:146
+#: .\mto_app\models.py:50 .\mto_app\templates\mto_app\plan\lista.html:147
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:123
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:155
 msgid "Codigo"
@@ -1747,8 +1784,8 @@ msgstr ""
 #: .\mto_app\models.py:52 .\mto_app\templates\mto_app\plan\form.html:52
 #: .\mto_app\templates\mto_app\plan\importar.html:73
 #: .\mto_app\templates\mto_app\plan\importar.html:105
-#: .\mto_app\templates\mto_app\plan\lista.html:147
-#: .\mto_app\templates\mto_app\plan\lista.html:171
+#: .\mto_app\templates\mto_app\plan\lista.html:148
+#: .\mto_app\templates\mto_app\plan\lista.html:172
 msgid "Rutina"
 msgstr ""
 
@@ -1759,9 +1796,9 @@ msgstr ""
 #: .\mto_app\models.py:54 .\mto_app\templates\mto_app\plan\form.html:36
 #: .\mto_app\templates\mto_app\plan\importar.html:76
 #: .\mto_app\templates\mto_app\plan\importar.html:108
-#: .\mto_app\templates\mto_app\plan\lista.html:61
-#: .\mto_app\templates\mto_app\plan\lista.html:150
-#: .\mto_app\templates\mto_app\plan\lista.html:174
+#: .\mto_app\templates\mto_app\plan\lista.html:62
+#: .\mto_app\templates\mto_app\plan\lista.html:151
+#: .\mto_app\templates\mto_app\plan\lista.html:175
 msgid "Frecuencia"
 msgstr ""
 
@@ -1778,21 +1815,23 @@ msgstr ""
 msgid "Anio de inicio"
 msgstr ""
 
-#: .\mto_app\models.py:60 .\mto_app\templates\mto_app\plan\form.html:63
+#: .\mto_app\models.py:60 .\mto_app\models.py:334
+#: .\mto_app\templates\mto_app\bitacora\lista.html:193
+#: .\mto_app\templates\mto_app\plan\form.html:63
 #: .\mto_app\templates\mto_app\plan\importar.html:74
 #: .\mto_app\templates\mto_app\plan\importar.html:110
-#: .\mto_app\templates\mto_app\plan\lista.html:154
-#: .\mto_app\templates\mto_app\plan\lista.html:184 .\paros_app\models.py:70
+#: .\mto_app\templates\mto_app\plan\lista.html:155
+#: .\mto_app\templates\mto_app\plan\lista.html:185 .\paros_app\models.py:73
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:90
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:37
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:151
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:178
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:128
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:90
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:129
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:91
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:185
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:110
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:180
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:216
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:112
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:182
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:218
 #: .\paros_app\templates\paros_app\registro_produccion.html:114
 msgid "Equipo"
 msgstr ""
@@ -1803,14 +1842,14 @@ msgstr ""
 
 #: .\mto_app\models.py:63 .\mto_app\templates\mto_app\plan\form.html:75
 #: .\mto_app\templates\mto_app\plan\importar.html:112
-#: .\mto_app\templates\mto_app\plan\lista.html:156
+#: .\mto_app\templates\mto_app\plan\lista.html:157
 msgid "Tipo de mantenimiento"
 msgstr ""
 
 #: .\mto_app\models.py:65 .\mto_app\templates\mto_app\plan\form.html:85
 #: .\mto_app\templates\mto_app\plan\importar.html:113
-#: .\mto_app\templates\mto_app\plan\lista.html:157
-#: .\mto_app\templates\mto_app\plan\lista.html:187
+#: .\mto_app\templates\mto_app\plan\lista.html:158
+#: .\mto_app\templates\mto_app\plan\lista.html:188
 msgid "Prioridad"
 msgstr ""
 
@@ -1821,38 +1860,39 @@ msgstr ""
 #: .\mto_app\models.py:84 .\mto_app\templates\mto_app\dashboard.html:199
 #: .\mto_app\templates\mto_app\plan\detalle.html:88
 #: .\mto_app\templates\mto_app\plan\detalle.html:123
-#: .\mto_app\templates\mto_app\plan\lista.html:255
+#: .\mto_app\templates\mto_app\plan\lista.html:256
 msgid "Completada"
 msgstr ""
 
-#: .\mto_app\models.py:85 .\mto_app\models.py:234 .\mto_app\models.py:267
+#: .\mto_app\models.py:85 .\mto_app\models.py:239 .\mto_app\models.py:272
+#: .\mto_app\models.py:336 .\mto_app\templates\mto_app\bitacora\lista.html:225
 #: .\mto_app\templates\mto_app\dashboard.html:201
-#: .\mto_app\templates\mto_app\plan\lista.html:257
-#: .\mto_app\templates\mto_app\plan\lista.html:428
+#: .\mto_app\templates\mto_app\plan\lista.html:258
+#: .\mto_app\templates\mto_app\plan\lista.html:429
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:67
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:180
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:271
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:416
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:192
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:283
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:428
 #: .\paros_app\models.py:26 .\paros_app\templates\paros_app\dashboard.html:9
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:250
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:262
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:274
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:122
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:254
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:259
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:493
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:123
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:256
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:261
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:434
 msgid "Pendiente"
 msgstr ""
 
 #: .\mto_app\models.py:86 .\mto_app\templates\mto_app\dashboard.html:203
 #: .\mto_app\templates\mto_app\plan\detalle.html:94
 #: .\mto_app\templates\mto_app\plan\detalle.html:139
-#: .\mto_app\templates\mto_app\plan\lista.html:259
+#: .\mto_app\templates\mto_app\plan\lista.html:260
 msgid "Reagendada"
 msgstr ""
 
 #: .\mto_app\models.py:90 .\mto_app\templates\mto_app\plan\importar.html:77
-#: .\mto_app\templates\mto_app\plan\lista.html:175
+#: .\mto_app\templates\mto_app\plan\lista.html:176
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:43
 msgid "Plan"
 msgstr ""
@@ -1873,25 +1913,27 @@ msgstr ""
 msgid "Estado"
 msgstr ""
 
-#: .\mto_app\models.py:98 .\mto_app\models.py:148 .\mto_app\models.py:246
-#: .\mto_app\models.py:277 .\mto_app\templates\mto_app\plan\lista.html:182
-#: .\mto_app\templates\mto_app\plan\lista.html:411
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:101
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:135
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:399
-#: .\paros_app\models.py:85
+#: .\mto_app\models.py:98 .\mto_app\models.py:148 .\mto_app\models.py:251
+#: .\mto_app\models.py:282 .\mto_app\models.py:337
+#: .\mto_app\templates\mto_app\bitacora\lista.html:204
+#: .\mto_app\templates\mto_app\plan\lista.html:183
+#: .\mto_app\templates\mto_app\plan\lista.html:412
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:113
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:147
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:411
+#: .\paros_app\models.py:88
 #: .\paros_app\templates\paros_app\analisis_paros.html:114
-#: .\paros_app\templates\paros_app\analisis_paros.html:141
+#: .\paros_app\templates\paros_app\analisis_paros.html:145
 #: .\paros_app\templates\paros_app\dashboard.html:68
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:166
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:190
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:278
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:109
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:79
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:110
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:80
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:184
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:106
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:179
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:215
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:108
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:181
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:217
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:89
 msgid "Responsable"
 msgstr ""
@@ -1912,15 +1954,15 @@ msgstr ""
 msgid "Registros de ejecucion"
 msgstr ""
 
-#: .\mto_app\models.py:115 .\mto_app\models.py:214
+#: .\mto_app\models.py:115 .\mto_app\models.py:219
 #: .\mto_app\templates\mto_app\plan\form.html:20
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:36
 msgid "N° Plan de trabajo"
 msgstr ""
 
-#: .\mto_app\models.py:116 .\mto_app\models.py:216
+#: .\mto_app\models.py:116 .\mto_app\models.py:221
 #: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:33
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:57
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:59
 msgid "Nombre del plan"
 msgstr ""
 
@@ -1937,7 +1979,7 @@ msgid "Descripcion"
 msgstr ""
 
 #: .\mto_app\models.py:120
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:121
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:120
 msgid "Detalles"
 msgstr ""
 
@@ -2021,50 +2063,62 @@ msgid "Eliminar responsables"
 msgstr ""
 
 #: .\mto_app\models.py:184
-msgid "Ver inventario"
+msgid "Ver bitácora"
 msgstr ""
 
 #: .\mto_app\models.py:185
-msgid "Editar inventario"
+msgid "Editar bitácora"
 msgstr ""
 
 #: .\mto_app\models.py:186
-msgid "Eliminar inventario"
+msgid "Eliminar bitácora"
 msgstr ""
 
 #: .\mto_app\models.py:189
-msgid "Ver seguimiento de refacciones"
+msgid "Ver inventario"
 msgstr ""
 
 #: .\mto_app\models.py:190
-msgid "Editar seguimiento de refacciones"
+msgid "Editar inventario"
 msgstr ""
 
 #: .\mto_app\models.py:191
-msgid "Eliminar seguimiento de refacciones"
+msgid "Eliminar inventario"
 msgstr ""
 
 #: .\mto_app\models.py:194
-msgid "Ver seguimiento de servicios"
+msgid "Ver seguimiento de refacciones"
 msgstr ""
 
 #: .\mto_app\models.py:195
-msgid "Editar seguimiento de servicios"
+msgid "Editar seguimiento de refacciones"
 msgstr ""
 
 #: .\mto_app\models.py:196
+msgid "Eliminar seguimiento de refacciones"
+msgstr ""
+
+#: .\mto_app\models.py:199
+msgid "Ver seguimiento de servicios"
+msgstr ""
+
+#: .\mto_app\models.py:200
+msgid "Editar seguimiento de servicios"
+msgstr ""
+
+#: .\mto_app\models.py:201
 msgid "Eliminar seguimiento de servicios"
 msgstr ""
 
-#: .\mto_app\models.py:202
+#: .\mto_app\models.py:207
 msgid "Acceso MTO"
 msgstr ""
 
-#: .\mto_app\models.py:212
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:52
+#: .\mto_app\models.py:217
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:54
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:56
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:100
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:134
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:112
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:146
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:93
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas.html:32
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:98
@@ -2075,151 +2129,219 @@ msgstr ""
 msgid "Acción"
 msgstr ""
 
-#: .\mto_app\models.py:215
+#: .\mto_app\models.py:220
 msgid "Código del plan"
 msgstr ""
 
-#: .\mto_app\models.py:217
+#: .\mto_app\models.py:222
 msgid "Pasos afectados"
 msgstr ""
 
-#: .\mto_app\models.py:219
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:51
+#: .\mto_app\models.py:224
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:53
 msgid "Fecha y hora"
 msgstr ""
 
-#: .\mto_app\models.py:225
+#: .\mto_app\models.py:230
 msgid "Historial de rutina"
 msgstr ""
 
-#: .\mto_app\models.py:231 .\mto_app\models.py:264
+#: .\mto_app\models.py:236 .\mto_app\models.py:269
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:164
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:188
 msgid "Correctiva"
 msgstr ""
 
-#: .\mto_app\models.py:235 .\mto_app\models.py:268
-#: .\mto_app\templates\mto_app\plan\lista.html:430
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:182
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:273
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:418
+#: .\mto_app\models.py:240 .\mto_app\models.py:273
+#: .\mto_app\templates\mto_app\plan\lista.html:431
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:194
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:285
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:430
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:250
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:262
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:274
 msgid "En proceso"
 msgstr ""
 
-#: .\mto_app\models.py:236 .\mto_app\models.py:269
-#: .\mto_app\templates\mto_app\plan\lista.html:432
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:184
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:275
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:420
+#: .\mto_app\models.py:241 .\mto_app\models.py:274
+#: .\mto_app\templates\mto_app\plan\lista.html:433
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:196
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:287
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:432
 msgid "Completado"
 msgstr ""
 
-#: .\mto_app\models.py:241
+#: .\mto_app\models.py:246
 msgid "Registro de ejecución"
 msgstr ""
 
-#: .\mto_app\models.py:243 .\mto_app\templates\mto_app\plan\lista.html:186
+#: .\mto_app\models.py:248 .\mto_app\templates\mto_app\plan\lista.html:187
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:35
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:98
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:132
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:110
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:144
 msgid "Tipo"
 msgstr ""
 
-#: .\mto_app\models.py:244 .\mto_app\models.py:275
-#: .\mto_app\templates\mto_app\plan\lista.html:401
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:389
+#: .\mto_app\models.py:249 .\mto_app\models.py:280
+#: .\mto_app\templates\mto_app\plan\lista.html:402
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:401
 msgid "Problema encontrado"
 msgstr ""
 
-#: .\mto_app\models.py:245 .\mto_app\models.py:276
-#: .\mto_app\templates\mto_app\plan\lista.html:406
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:394
+#: .\mto_app\models.py:250 .\mto_app\models.py:281
+#: .\mto_app\templates\mto_app\plan\lista.html:407
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:406
 msgid "Acción realizada"
 msgstr ""
 
-#: .\mto_app\models.py:247 .\mto_app\models.py:278
-#: .\mto_app\templates\mto_app\plan\lista.html:420
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:408
+#: .\mto_app\models.py:252 .\mto_app\models.py:283
+#: .\mto_app\templates\mto_app\plan\lista.html:421
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:420
 msgid "Fecha compromiso"
 msgstr ""
 
-#: .\mto_app\models.py:249 .\mto_app\models.py:280
-#: .\mto_app\templates\mto_app\plan\lista.html:439
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:427
+#: .\mto_app\models.py:254 .\mto_app\models.py:285
+#: .\mto_app\templates\mto_app\plan\lista.html:440
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:439
 msgid "Notas adicionales"
 msgstr ""
 
-#: .\mto_app\models.py:250
+#: .\mto_app\models.py:255
 msgid "Creado por"
 msgstr ""
 
-#: .\mto_app\models.py:251
+#: .\mto_app\models.py:256
 msgid "Fecha de creación"
 msgstr ""
 
-#: .\mto_app\models.py:252 .\mto_app\models.py:283
+#: .\mto_app\models.py:257 .\mto_app\models.py:288
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:66
 msgid "Validado"
 msgstr ""
 
-#: .\mto_app\models.py:256
+#: .\mto_app\models.py:261
 msgid "Seguimiento de OT"
 msgstr ""
 
-#: .\mto_app\models.py:257
+#: .\mto_app\models.py:262
 msgid "Seguimientos de OT"
 msgstr ""
 
-#: .\mto_app\models.py:272
+#: .\mto_app\models.py:277
 msgid "Consecutivo"
 msgstr ""
 
-#: .\mto_app\models.py:287
+#: .\mto_app\models.py:292
 msgid "Seguimiento manual"
 msgstr ""
 
-#: .\mto_app\models.py:288
+#: .\mto_app\models.py:293
 msgid "Seguimientos manuales"
+msgstr ""
+
+#: .\mto_app\models.py:333 .\mto_app\templates\mto_app\bitacora\lista.html:47
+#: .\mto_app\templates\mto_app\bitacora\lista.html:188
+#: .\paros_app\templates\paros_app\indicadores_produccion.html:176
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:67
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:56
+#: .\paros_app\templates\paros_app\paros\importar_paros.html:180
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:177
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:213
+#: .\paros_app\templates\paros_app\registro_produccion.html:13
+msgid "Fecha"
+msgstr ""
+
+#: .\mto_app\models.py:335 .\mto_app\templates\mto_app\bitacora\lista.html:216
+msgid "Actividad realizada"
+msgstr ""
+
+#: .\mto_app\models.py:346
+msgid "Bitácoras"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:34
+#: .\mto_app\templates\mto_app\bitacora\lista.html:165
+msgid "Nuevo registro"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:56
+msgid "Equipo o Responsable"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:59
+msgid "Buscar equipo o resposable"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:65
+#: .\mto_app\templates\mto_app\dashboard.html:51
+#: .\mto_app\templates\mto_app\plan\lista.html:77
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:40
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:65
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:116
+msgid "Filtrar"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:79
+msgid "FECHA"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:80
+msgid "EQUIPO"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:81
+msgid "ACTIVIDAD REALIZADA"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:82
+msgid "PENDIENTE"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:83
+msgid "RESPONSABLE"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:85
+#: .\mto_app\templates\mto_app\responsables\lista.html:41
+msgid "ACCIONES"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:127
+msgid "¿Eliminar el registro del"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:146
+msgid "No hay registros para esta área."
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:195
+#: .\mto_app\templates\mto_app\bitacora\lista.html:206
+msgid "Escribe para buscar…"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\bitacora\lista.html:248
+msgid "Eliminar registro"
 msgstr ""
 
 #: .\mto_app\templates\mto_app\dashboard.html:20
 #: .\mto_app\templates\mto_app\dashboard.html:41
-#: .\mto_app\templates\mto_app\plan\lista.html:51
-#: .\mto_app\templates\mto_app\plan\lista.html:176
-#: .\mto_app\templates\mto_app\plan\lista.html:178
+#: .\mto_app\templates\mto_app\plan\lista.html:52
+#: .\mto_app\templates\mto_app\plan\lista.html:177
+#: .\mto_app\templates\mto_app\plan\lista.html:179
 #: .\paros_app\templates\paros_app\analisis_paros.html:63
 #: .\paros_app\templates\paros_app\dashboard.html:62
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:47
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:79
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:176
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:81
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:178
 msgid "Semana"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\dashboard.html:32
-#: .\mto_app\templates\mto_app\dashboard.html:111
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:20
-#: .\paros_app\templates\paros_app\analisis_paros.html:44
-#: .\paros_app\templates\paros_app\dashboard.html:38
-msgid "Todas las áreas"
-msgstr ""
-
 #: .\mto_app\templates\mto_app\dashboard.html:46
-#: .\mto_app\templates\mto_app\plan\lista.html:56
+#: .\mto_app\templates\mto_app\plan\lista.html:57
 #: .\paros_app\templates\paros_app\hora_hora.html:26
 #: .\paros_app\templates\paros_app\hora_hora.html:319
 #: .\paros_app\templates\paros_app\hora_hora.html:343
 msgid "Año"
-msgstr ""
-
-#: .\mto_app\templates\mto_app\dashboard.html:51
-#: .\mto_app\templates\mto_app\plan\lista.html:76
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:40
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:65
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:114
-msgid "Filtrar"
 msgstr ""
 
 #: .\mto_app\templates\mto_app\dashboard.html:60
@@ -2415,10 +2537,10 @@ msgstr ""
 #: .\mto_app\templates\mto_app\plan\form.html:16
 #: .\mto_app\templates\mto_app\plan\importar.html:72
 #: .\mto_app\templates\mto_app\plan\importar.html:104
-#: .\mto_app\templates\mto_app\plan\lista.html:170
+#: .\mto_app\templates\mto_app\plan\lista.html:171
 #: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:26
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:56
-#: .\paros_app\models.py:53 .\paros_app\models.py:69 .\paros_app\models.py:84
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:58
+#: .\paros_app\models.py:56 .\paros_app\models.py:72 .\paros_app\models.py:87
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:89
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:162
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:209
@@ -2444,8 +2566,8 @@ msgstr ""
 
 #: .\mto_app\templates\mto_app\plan\form.html:47
 #: .\mto_app\templates\mto_app\plan\importar.html:106
-#: .\mto_app\templates\mto_app\plan\lista.html:148
-#: .\mto_app\templates\mto_app\plan\lista.html:172
+#: .\mto_app\templates\mto_app\plan\lista.html:149
+#: .\mto_app\templates\mto_app\plan\lista.html:173
 msgid "Actividad"
 msgstr ""
 
@@ -2455,8 +2577,8 @@ msgstr ""
 
 #: .\mto_app\templates\mto_app\plan\form.html:69
 #: .\mto_app\templates\mto_app\plan\importar.html:111
-#: .\mto_app\templates\mto_app\plan\lista.html:155
-#: .\mto_app\templates\mto_app\plan\lista.html:185
+#: .\mto_app\templates\mto_app\plan\lista.html:156
+#: .\mto_app\templates\mto_app\plan\lista.html:186
 msgid "Locación"
 msgstr ""
 
@@ -2490,7 +2612,7 @@ msgid "Opcional. Se usa si la columna G del Excel está vacía."
 msgstr ""
 
 #: .\mto_app\templates\mto_app\plan\importar.html:75
-#: .\mto_app\templates\mto_app\plan\lista.html:149
+#: .\mto_app\templates\mto_app\plan\lista.html:150
 msgid "Duración"
 msgstr ""
 
@@ -2508,87 +2630,91 @@ msgstr ""
 msgid "Mapeo de frecuencias:"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:34
+#: .\mto_app\templates\mto_app\plan\lista.html:22
+msgid "Planes registrados por área y semana"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\plan\lista.html:35
 msgid "Exportar Excel S"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:38
+#: .\mto_app\templates\mto_app\plan\lista.html:39
 msgid "Nueva tarea"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:151
+#: .\mto_app\templates\mto_app\plan\lista.html:152
 #: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:19
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:55
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:118
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:142
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:57
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:117
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:141
 msgid "N° Plan"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:152
+#: .\mto_app\templates\mto_app\plan\lista.html:153
 msgid "Semana inicio"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:153
+#: .\mto_app\templates\mto_app\plan\lista.html:154
 msgid "Proximo mantenimiento"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:173
+#: .\mto_app\templates\mto_app\plan\lista.html:174
 msgid "Dur."
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:176
+#: .\mto_app\templates\mto_app\plan\lista.html:177
 msgid "inicio"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:178
+#: .\mto_app\templates\mto_app\plan\lista.html:179
 msgid "actual"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:180
+#: .\mto_app\templates\mto_app\plan\lista.html:181
 msgid "Proximo"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:180
+#: .\mto_app\templates\mto_app\plan\lista.html:181
 msgid "mantenimiento"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:186
+#: .\mto_app\templates\mto_app\plan\lista.html:187
 msgid "Mantenimiento"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:300
+#: .\mto_app\templates\mto_app\plan\lista.html:301
 msgid "No hay tareas registradas."
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:300
+#: .\mto_app\templates\mto_app\plan\lista.html:301
 msgid "Agregar primera tarea"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:330
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:143
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:199
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:341
+#: .\mto_app\templates\mto_app\plan\lista.html:331
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:145
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:198
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:343
 msgid "Mostrar"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:358
+#: .\mto_app\templates\mto_app\plan\lista.html:359
 msgid "Eliminar plan"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:359
+#: .\mto_app\templates\mto_app\plan\lista.html:360
 msgid ""
 "Esta accion no se puede deshacer. ¿Confirmas que deseas eliminar este plan?"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:364
+#: .\mto_app\templates\mto_app\plan\lista.html:365
 msgid "Si, eliminar"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:385
+#: .\mto_app\templates\mto_app\plan\lista.html:386
 msgid "Calculando planes..."
 msgstr ""
 
-#: .\mto_app\templates\mto_app\plan\lista.html:386
+#: .\mto_app\templates\mto_app\plan\lista.html:387
 msgid "Esto puede tomar unos segundos"
 msgstr ""
 
@@ -2637,10 +2763,6 @@ msgstr ""
 msgid "ULTIMA EDICIÓN"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\responsables\lista.html:41
-msgid "ACCIONES"
-msgstr ""
-
 #: .\mto_app\templates\mto_app\responsables\lista.html:60
 msgid "Inactivo"
 msgstr ""
@@ -2653,27 +2775,31 @@ msgstr ""
 msgid "Eliminar responsable"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:9
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:8
 msgid "Historial de acciones"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:10
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:9
 msgid "Importaciones y eliminaciones de rutinas, todas las áreas"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:58
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:60
 msgid "Pasos"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:104
+#: .\mto_app\templates\mto_app\rutinas\historial_rutinas.html:106
 msgid "Aún no hay acciones registradas."
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:12
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:10
 msgid "Rutinas de mantenimiento"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:24
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:19
+msgid "Pasos de rutina por plan de trabajo"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:23
 msgid "Agregar Rutina de mantenimiento"
 msgstr ""
 
@@ -2693,23 +2819,23 @@ msgstr ""
 msgid "Eliminar Plan"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:119
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:118
 msgid "Seq"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:143
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:142
 msgid "Codigo del Plan de Trabajo"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:144
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:143
 msgid "Nombre del Plan de Trabajo"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:224
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:223
 msgid "¿Eliminar este plan?"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:231
+#: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:230
 msgid "Motivo de eliminación"
 msgstr ""
 
@@ -2795,54 +2921,62 @@ msgid "Acciones correctivas registradas por orden de trabajo"
 msgstr ""
 
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:43
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:96
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:119
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:108
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:131
 msgid "No. Orden"
 msgstr ""
 
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:49
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:99
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:133
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:111
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:145
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:150
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:177
 msgid "Problema"
 msgstr ""
 
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:63
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:106
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:154
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:118
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:166
 msgid "Validación"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:97
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:131
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:71
+msgid "Creado desde"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:77
+msgid "Creado hasta"
+msgstr ""
+
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:109
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:143
 msgid "Código plan"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:102
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:136
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:114
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:148
 msgid "Compromiso"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:104
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:141
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:116
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:153
 msgid "Creado"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:105
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:153
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:117
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:165
 msgid "Notas"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:386
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:398
 msgid "Seguimiento independiente de OTs"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:434
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:446
 msgid "máximo 4"
 msgstr ""
 
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:486
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:501
 msgid "Imágenes del seguimiento"
 msgstr ""
 
@@ -2854,8 +2988,8 @@ msgstr ""
 #: .\paros_app\templates\paros_app\analisis_paros.html:80
 #: .\paros_app\templates\paros_app\dashboard.html:164
 #: .\paros_app\templates\paros_app\dashboard.html:209
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:88
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:490
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:90
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:431
 #: .\paros_app\templates\paros_app\registro_produccion.html:23
 msgid "Turno 1"
 msgstr ""
@@ -2864,37 +2998,37 @@ msgstr ""
 #: .\paros_app\templates\paros_app\analisis_paros.html:81
 #: .\paros_app\templates\paros_app\dashboard.html:185
 #: .\paros_app\templates\paros_app\dashboard.html:214
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:89
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:491
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:91
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:432
 #: .\paros_app\templates\paros_app\registro_produccion.html:24
 msgid "Turno 2"
 msgstr ""
 
 #: .\paros_app\models.py:25
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:121
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:254
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:259
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:492
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:122
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:256
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:261
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:433
 msgid "Rechazado"
 msgstr ""
 
 #: .\paros_app\models.py:27
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:123
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:254
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:259
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:494
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:124
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:256
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:261
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:435
 msgid "Aceptado"
 msgstr ""
 
-#: .\paros_app\models.py:55
+#: .\paros_app\models.py:58
 #: .\paros_app\templates\paros_app\analisis_paros.html:116
-#: .\paros_app\templates\paros_app\analisis_paros.html:143
+#: .\paros_app\templates\paros_app\analisis_paros.html:147
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas.html:31
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:95
 msgid "Tipo de falla"
 msgstr ""
 
-#: .\paros_app\models.py:56
+#: .\paros_app\models.py:59
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:96
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:202
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:253
@@ -2903,20 +3037,20 @@ msgstr ""
 msgid "Área de origen"
 msgstr ""
 
-#: .\paros_app\models.py:62
+#: .\paros_app\models.py:65
 msgid "Falla de catálogo"
 msgstr ""
 
-#: .\paros_app\models.py:71
+#: .\paros_app\models.py:74
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:91
 msgid "Sub área"
 msgstr ""
 
-#: .\paros_app\models.py:77
+#: .\paros_app\models.py:80
 msgid "Equipo de catálogo"
 msgstr ""
 
-#: .\paros_app\models.py:91
+#: .\paros_app\models.py:94
 msgid "Responsable de catálogo"
 msgstr ""
 
@@ -2991,7 +3125,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\dashboard.html:91
 #: .\paros_app\templates\paros_app\hora_hora.html:330
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:52
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:93
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:95
 msgid "Desde"
 msgstr ""
 
@@ -2999,17 +3133,17 @@ msgstr ""
 #: .\paros_app\templates\paros_app\dashboard.html:97
 #: .\paros_app\templates\paros_app\hora_hora.html:335
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:57
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:97
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:99
 msgid "Hasta"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\analisis_paros.html:77
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:47
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:45
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:48
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:46
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:182
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:85
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:177
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:213
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:87
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:179
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:215
 #: .\paros_app\templates\paros_app\registro_produccion.html:19
 #: .\paros_app\templates\paros_app\registro_produccion.html:115
 #: .\paros_app\templates\paros_app\registro_produccion.html:145
@@ -3053,107 +3187,116 @@ msgid "que generan el 80%% del tiempo perdido"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\analisis_paros.html:112
-#: .\paros_app\templates\paros_app\analisis_paros.html:139
+#: .\paros_app\templates\paros_app\analisis_paros.html:143
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas.html:30
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:94
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:86
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:69
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:87
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:70
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:183
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:102
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:178
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:214
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:104
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:180
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:216
 msgid "Falla"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\analisis_paros.html:118
-#: .\paros_app\templates\paros_app\analisis_paros.html:145
+#: .\paros_app\templates\paros_app\analisis_paros.html:149
 msgid "Atendió"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:134
+#: .\paros_app\templates\paros_app\analisis_paros.html:124
+#: .\paros_app\templates\paros_app\analisis_paros.html:155
+msgid "Expandir"
+msgstr ""
+
+#: .\paros_app\templates\paros_app\analisis_paros.html:138
 msgid "Tendencia de paros"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:135
+#: .\paros_app\templates\paros_app\analisis_paros.html:139
 msgid "Ordenado por tiempo acumulado — mayor a menor"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:163
+#: .\paros_app\templates\paros_app\analisis_paros.html:171
 #: .\paros_app\templates\paros_app\dashboard.html:148
 msgid "Tendencia diaria de paros"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:164
+#: .\paros_app\templates\paros_app\analisis_paros.html:172
 msgid "Minutos perdidos por día en el período seleccionado"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:188
+#: .\paros_app\templates\paros_app\analisis_paros.html:196
 msgid "Filtrar fallas"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:189
+#: .\paros_app\templates\paros_app\analisis_paros.html:197
 msgid "Desmarca las que no quieres ver en los gráficos"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:190
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:103
+#: .\paros_app\templates\paros_app\analisis_paros.html:198
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:105
 msgid "Buscar falla…"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:203
-#: .\paros_app\templates\paros_app\analisis_paros.html:227
-#: .\paros_app\templates\paros_app\analisis_paros.html:250
-#: .\paros_app\templates\paros_app\analisis_paros.html:274
+#: .\paros_app\templates\paros_app\analisis_paros.html:211
+#: .\paros_app\templates\paros_app\analisis_paros.html:235
+#: .\paros_app\templates\paros_app\analisis_paros.html:258
+#: .\paros_app\templates\paros_app\analisis_paros.html:282
 #: .\paros_app\templates\paros_app\dashboard.html:239
 #: .\paros_app\templates\paros_app\dashboard.html:260
 #: .\paros_app\templates\paros_app\dashboard.html:281
-#: .\paros_app\templates\paros_app\dashboard.html:316
+#: .\paros_app\templates\paros_app\dashboard.html:302
 msgid "Sin datos"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:206
-#: .\paros_app\templates\paros_app\analisis_paros.html:230
-#: .\paros_app\templates\paros_app\analisis_paros.html:253
-#: .\paros_app\templates\paros_app\analisis_paros.html:277
+#: .\paros_app\templates\paros_app\analisis_paros.html:214
+#: .\paros_app\templates\paros_app\analisis_paros.html:238
+#: .\paros_app\templates\paros_app\analisis_paros.html:261
+#: .\paros_app\templates\paros_app\analisis_paros.html:285
 msgid "Seleccionar todo"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:207
-#: .\paros_app\templates\paros_app\analisis_paros.html:231
-#: .\paros_app\templates\paros_app\analisis_paros.html:254
-#: .\paros_app\templates\paros_app\analisis_paros.html:278
+#: .\paros_app\templates\paros_app\analisis_paros.html:215
+#: .\paros_app\templates\paros_app\analisis_paros.html:239
+#: .\paros_app\templates\paros_app\analisis_paros.html:262
+#: .\paros_app\templates\paros_app\analisis_paros.html:286
 msgid "Ninguno"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:212
+#: .\paros_app\templates\paros_app\analisis_paros.html:220
 msgid "Filtrar responsables"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:213
-#: .\paros_app\templates\paros_app\analisis_paros.html:237
-#: .\paros_app\templates\paros_app\analisis_paros.html:260
+#: .\paros_app\templates\paros_app\analisis_paros.html:221
+#: .\paros_app\templates\paros_app\analisis_paros.html:245
+#: .\paros_app\templates\paros_app\analisis_paros.html:268
 msgid "Desmarca los que no quieres ver en los gráficos"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:214
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:107
+#: .\paros_app\templates\paros_app\analisis_paros.html:222
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:109
 msgid "Buscar responsable…"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:236
+#: .\paros_app\templates\paros_app\analisis_paros.html:244
 msgid "Filtrar tipo de falla"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:238
+#: .\paros_app\templates\paros_app\analisis_paros.html:246
 msgid "Buscar tipo…"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:259
+#: .\paros_app\templates\paros_app\analisis_paros.html:267
 msgid "Filtrar quién atendió"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:261
+#: .\paros_app\templates\paros_app\analisis_paros.html:269
 msgid "Buscar…"
+msgstr ""
+
+#: .\paros_app\templates\paros_app\analisis_paros.html:306
+msgid "Cerrar"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\dashboard.html:5
@@ -3165,17 +3308,17 @@ msgid "Minutos perdidos"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\dashboard.html:11
-#: .\paros_app\templates\paros_app\dashboard.html:313
+#: .\paros_app\templates\paros_app\dashboard.html:299
 msgid "Sin asignar"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\dashboard.html:12
-#: .\paros_app\templates\paros_app\dashboard.html:314
+#: .\paros_app\templates\paros_app\dashboard.html:300
 msgid "Sin falla"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\dashboard.html:13
-#: .\paros_app\templates\paros_app\dashboard.html:315
+#: .\paros_app\templates\paros_app\dashboard.html:301
 msgid "Sin equipo"
 msgstr ""
 
@@ -3958,16 +4101,6 @@ msgstr ""
 msgid "Preventiva"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\indicadores_produccion.html:176
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:66
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:55
-#: .\paros_app\templates\paros_app\paros\importar_paros.html:180
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:175
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:211
-#: .\paros_app\templates\paros_app\registro_produccion.html:13
-msgid "Fecha"
-msgstr ""
-
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:194
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:198
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:202
@@ -4034,82 +4167,82 @@ msgstr ""
 msgid "Completa todos los campos obligatorios"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:49
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:50
 msgid "Selecciona"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:76
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:62
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:77
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:63
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:186
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:181
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:217
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:183
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:219
 msgid "Hora"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:89
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:112
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:131
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:71
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:82
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:93
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:90
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:113
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:132
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:72
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:83
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:94
 msgid "Escribe para buscar en el catálogo…"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:92
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:93
 msgid "Selecciona un área primero para filtrar el catálogo de fallas."
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:114
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:133
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:84
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:95
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:115
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:134
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:85
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:96
 msgid "Selecciona un área primero para filtrar."
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:147
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:148
 msgid "Tiempo perdido (minutos)"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:156
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:107
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:157
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:108
 msgid "Atendió la falla"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:159
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:171
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:110
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:160
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:172
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:111
 msgid "Opcional…"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:179
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:159
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:180
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:160
 msgid "Opcional — puedes subir varias"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:192
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:211
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:172
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:193
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:193
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:218
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:173
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:194
 msgid "Haz clic para seleccionar imágenes"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:193
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:173
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:194
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:174
 msgid "JPG, PNG, WEBP — puedes seleccionar varias"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:236
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:218
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:206
+msgid "Guardar paro"
+msgstr ""
+
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:219
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:219
 msgid "imagen seleccionada"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:237
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:219
+#: .\paros_app\templates\paros_app\paros\crear_paro.html:220
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:220
 msgid "imágenes seleccionadas"
-msgstr ""
-
-#: .\paros_app\templates\paros_app\paros\crear_paro.html:244
-msgid "Guardar paro"
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:8
@@ -4121,27 +4254,27 @@ msgstr ""
 msgid "Editar paro"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:73
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:74
 msgid "Busca en el catálogo del área seleccionada o escribe libremente."
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:101
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:102
 msgid "Tiempo (minutos)"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:136
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:137
 msgid "Imágenes actuales"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:159
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:160
 msgid "Agregar imágenes"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:234
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:235
 msgid "Historial de cambios"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:236
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:237
 #, python-format
 msgid ""
 "\n"
@@ -4155,19 +4288,19 @@ msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:260
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:261
 msgid "Sistema"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:268
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:269
 msgid "Paro creado"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:300
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:301
 msgid "Sin cambios registrados aún"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:322
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:323
 msgid "¿Eliminar imagen?"
 msgstr ""
 
@@ -4222,7 +4355,7 @@ msgid ""
 msgstr ""
 
 #: .\paros_app\templates\paros_app\paros\importar_paros.html:181
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:212
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:214
 msgid "Sem."
 msgstr ""
 
@@ -4238,79 +4371,79 @@ msgstr ""
 msgid "Doble clic en celda para editar · Clic en estatus para cambiar"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:87
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:89
 msgid "Ambos"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:111
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:113
 msgid "Buscar equipo…"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:125
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:127
 msgid " Paros encontrados"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:127
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:129
 msgid "totales"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:130
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:132
 msgid "Paros aceptados"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:133
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:135
 msgid "aceptados"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:138
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:140
 msgid "promedio"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:149
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:151
 msgid "Paros sin aceptar"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:152
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:154
 msgid "sin aceptar"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:182
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:218
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:184
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:220
 msgid "Tiempo"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:251
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:495
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:253
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:436
 msgid "Rechazado → Pendiente"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:251
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:496
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:253
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:437
 msgid "Pendiente → Aceptado"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:251
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:497
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:253
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:438
 msgid "Aceptado → Rechazado"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:306
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:308
 msgid "No hay paros registrados con los filtros actuales."
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:351
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:353
 msgid "¿Eliminar este paro?"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:372
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:375
 msgid "Imágenes del paro"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:498
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:439
 msgid "Estatus actualizado"
 msgstr ""
 
-#: .\paros_app\templates\paros_app\paros\lista_paros.html:499
+#: .\paros_app\templates\paros_app\paros\lista_paros.html:440
 msgid "Error al cambiar estatus"
 msgstr ""
 
@@ -4482,11 +4615,12 @@ msgstr ""
 msgid "Importar responsables"
 msgstr ""
 
-#: .\paros_app\views\dashboard.py:319 .\paros_app\views\dashboard.py:419
-#: .\paros_app\views\dashboard.py:465
+#: .\paros_app\views\dashboard.py:328 .\paros_app\views\dashboard.py:346
+#: .\paros_app\views\dashboard.py:347 .\paros_app\views\dashboard.py:433
+#: .\paros_app\views\dashboard.py:479
 msgid "Sin quien atendio"
 msgstr ""
 
-#: .\paros_project\settings.py:119
+#: .\paros_project\settings.py:129
 msgid "English"
 msgstr ""

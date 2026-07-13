@@ -214,8 +214,10 @@ document.addEventListener('DOMContentLoaded', refInicializarDropzone);
 // ── Lightbox de imágenes de refacción ─────────────────────────────────────────
 let lightboxRefImagenes = [];
 let lightboxRefIndice   = 0;
+let lightboxRefMeta = {};
 
-function verImagenesRefaccion(refId) {
+function verImagenesRefaccion(refId, area, descripcion) {
+    lightboxRefMeta = { area: area || '', nombre: descripcion || '' };
     fetch(`/inventario/${refId}/imagenes/`)
         .then(r => r.json())
         .then(data => {
@@ -229,6 +231,12 @@ function verImagenesRefaccion(refId) {
 function renderLightboxRef() {
     if (!lightboxRefImagenes.length) return;
     document.getElementById('lightbox-ref-img-principal').src = lightboxRefImagenes[lightboxRefIndice].url;
+
+    document.getElementById('lightbox-ref-contador').textContent =
+        CONTADOR_REF_TPL.replace('{n}', lightboxRefIndice + 1).replace('{total}', lightboxRefImagenes.length);
+
+    document.getElementById('lightbox-ref-meta').innerHTML =
+        [lightboxRefMeta.area, lightboxRefMeta.nombre].filter(Boolean).join('  -  ');
 
     const cont = document.getElementById('lightbox-ref-miniaturas');
     cont.innerHTML = '';

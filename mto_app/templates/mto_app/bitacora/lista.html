@@ -1,0 +1,275 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n static %}
+
+{% block title %}{% trans "Bitácora" %}{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div style="margin-bottom:16px;">
+    {% for msg in messages %}
+    <div style="padding:10px 16px; border-radius:8px; font-size:13px; margin-bottom:8px;
+        {% if msg.tags == 'success' %}background:#D1FAE5; color:#065F46;{% else %}background:#FEE2E2; color:#991B1B;{% endif %}">
+        {{ msg }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div>
+        <div class="card-title">
+            {% trans "Bitácora" %}
+            {% if filtro_area %}
+                {% for a in areas %}{% if a.pk|stringformat:"s" == filtro_area %} — {{ a.nombre }}{% endif %}{% endfor %}
+            {% endif %}
+        </div>
+        <div class="card-subtitle">
+            {{ registros.count }} registro(s)
+        </div>
+    </div>
+    {% if puede_editar %}
+    <button onclick="abrirModalBitacora()" class="btn btn-primary btn-sm">
+        + {% trans "Nuevo registro" %}
+    </button>
+    {% endif %}
+    
+</div>
+
+<div class="card">
+    <div style="margin-bottom:16px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);">
+        <form method="get" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+                <input type="hidden" name="area" value="{{ filtro_area }}">
+
+                <div>
+                    <label style="display:block; font-size:12px; color:var(--text-3); margin-bottom:4px;">
+                        {% trans "Fecha" %}
+                    </label>
+                    <input type="date" name="fecha" value="{{ filtro_fecha }}"
+                        style="padding:7px 10px; border-radius:7px; border:1px solid var(--border);
+                                background:var(--white); color:var(--text); font-size:13px; font-family:inherit; ">
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:12px; color:var(--text-3); margin-bottom:4px;">
+                        {% trans "Equipo o Responsable" %}
+                    </label>
+                    <input type="text" name="q" value="{{ filtro_q }}"
+                        placeholder="{% trans 'Buscar equipo o resposable' %}"
+                        style="padding:7px 10px; border-radius:7px; border:1px solid var(--border);
+                                background:var(--white); color:var(--text); font-size:13px;
+                                font-family:inherit; min-width:250px;">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
+
+                {% if filtro_fecha or filtro_q %}
+                <a href="?area={{ filtro_area }}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
+                {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap" style="overflow-x:auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:100px;">{% trans "FECHA" %}</th>
+                    <th style="width:160px;">{% trans "EQUIPO" %}</th>
+                    <th style="width:260px;">{% trans "ACTIVIDAD REALIZADA" %}</th>
+                    <th style="width:200px;">{% trans "PENDIENTE" %}</th>
+                    <th style="width:160px;">{% trans "RESPONSABLE" %}</th>
+                    {% if puede_editar or puede_eliminar %}
+                    <th style="width:160px; text-align:center; padding-right:16px;">{% trans "ACCIONES" %}</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in registros %}
+                <tr>
+                    <td style="white-space:nowrap;">{{ r.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ r.equipo|default:"—" }}</td>
+                    <td style="max-width:260px; text-align:justify;">
+                        {{ r.actividad_realizada }}
+                    </td>
+                    <td style="max-width:200px; text-align:justify;">
+                        {{ r.pendiente|default:"—" }}
+                    </td>
+                    <td>{{ r.responsable|default:"—" }}</td>
+                    {% if puede_editar or puede_eliminar %}
+                    <td style="text-align:center; padding-right:16px; white-space:nowrap;">
+                        <div style="display:flex; gap:8px; justify-content:center;">
+                            {% if puede_editar %}
+                            <button type="button"
+                                data-url="{% url 'mto:editar_bitacora' r.pk %}"
+                                data-area="{{ r.area_id }}"
+                                data-fecha="{{ r.fecha|date:'Y-m-d' }}"
+                                data-equipo="{{ r.equipo|escapejs }}"
+                                data-actividad="{{ r.actividad_realizada|escapejs }}"
+                                data-pendiente="{{ r.pendiente|escapejs }}"
+                                data-responsable="{{ r.responsable|escapejs }}"
+                                onclick="abrirModalEditar(this.dataset)"
+                                style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                    font-size:12px; border-radius:6px; border:1px solid var(--border);
+                                    background:var(--surface); color:var(--text); cursor:pointer; white-space:nowrap;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                {% trans "Editar" %}
+                            </button>
+                            {% endif %}
+                            {% if puede_eliminar %}
+                            <button type="button"
+                                data-url="{% url 'mto:eliminar_bitacora' r.pk %}"
+                                data-texto="{% trans '¿Eliminar el registro del' %} {{ r.fecha|date:'d/m/Y' }}?"
+                                onclick="confirmarEliminarBitacora(this.dataset.url, this.dataset.texto)"
+                                style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
+                                    font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
+                                    background:#FFF5F5; color:#DC2626; cursor:pointer; white-space:nowrap;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                {% trans "Eliminar" %}
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center; color:var(--muted); padding:32px;">
+                        {% trans "No hay registros para esta área." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ── Modal crear / editar ── -->
+<div id="modal-bitacora"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+                width:100%; max-width:580px; max-height:90vh; overflow-y:auto;
+                box-shadow:0 8px 40px rgba(0,0,0,.18);">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div id="modal-titulo-bitacora" style="font-size:16px; font-weight:600; color:var(--text);">
+                {% trans "Nuevo registro" %}
+            </div>
+            <button onclick="cerrarModalBitacora()"
+                    style="background:none; border:none; cursor:pointer; color:var(--text-3); font-size:20px; line-height:1;">✕</button>
+        </div>
+
+        <form id="form-bitacora" method="post" action="{% url 'mto:nuevo_bitacora' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+
+                <div class="form-field">
+                    <label for="bit-area">{% trans "Área" %} <span style="color:var(--red)">*</span></label>
+                    <select name="area" id="bit-area" required>
+                        {% for a in areas %}
+                        <option value="{{ a.pk }}"
+                            {% if a.pk|stringformat:"s" == filtro_area %}selected{% endif %}>
+                            {{ a.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="bit-fecha">{% trans "Fecha" %} <span style="color:var(--red)">*</span></label>
+                    <input type="date" name="fecha" id="bit-fecha" required>
+                </div>
+
+                <div class="form-field full" style="position:relative;">
+                    <label for="bit-equipo">{% trans "Equipo" %}</label>
+                    <input type="text" name="equipo" id="bit-equipo" autocomplete="off" maxlength="100"
+                           placeholder="{% trans 'Escribe para buscar…' %}">
+                    <div id="equipo-dropdown-bit"
+                         style="display:none; position:absolute; left:0; right:0; top:100%; z-index:600;
+                                background:var(--white); border:1px solid var(--indigo); border-top:none;
+                                border-radius:0 0 7px 7px; box-shadow:var(--shadow-md);
+                                max-height:180px; overflow-y:auto;"></div>
+                </div>
+
+                <div class="form-field" style="position:relative;">
+                    <label for="bit-responsable">{% trans "Responsable" %}</label>
+                    <input type="text" name="responsable" id="bit-responsable" autocomplete="off" maxlength="200"
+                           placeholder="{% trans 'Escribe para buscar…' %}">
+                    <div id="responsable-dropdown-bit"
+                         style="display:none; position:absolute; left:0; right:0; top:100%; z-index:600;
+                                background:var(--white); border:1px solid var(--indigo); border-top:none;
+                                border-radius:0 0 7px 7px; box-shadow:var(--shadow-md);
+                                max-height:180px; overflow-y:auto;"></div>
+                </div>
+
+                <div class="form-field full">
+                    <label for="bit-actividad">
+                        {% trans "Actividad realizada" %} <span style="color:var(--red)">*</span>
+                        <span id="cnt-actividad" style="font-size:11px; color:var(--text-3); font-weight:400; margin-left:6px;">0/300</span>
+                    </label>
+                    <textarea name="actividad_realizada" id="bit-actividad"
+                              maxlength="300" rows="3" style="resize:vertical;" required></textarea>
+                </div>
+
+                <div class="form-field full">
+                    <label for="bit-pendiente">
+                        {% trans "Pendiente" %}
+                        <span id="cnt-pendiente" style="font-size:11px; color:var(--text-3); font-weight:400; margin-left:6px;">0/200</span>
+                    </label>
+                    <textarea name="pendiente" id="bit-pendiente"
+                              maxlength="200" rows="2" style="resize:vertical;"></textarea>
+                </div>
+
+            </div>
+
+            <div class="form-actions" style="margin-top:20px;">
+                <button type="button" onclick="cerrarModalBitacora()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+                <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Modal confirmar eliminar ── -->
+<div id="modal-eliminar-bitacora"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2100; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+                min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar registro" %}</div>
+        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;" id="texto-eliminar-bitacora"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="cerrarModalEliminarBitacora()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <form id="form-eliminar-bitacora" method="post" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger"
+                        style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.BITACORA_CFG = {
+    hoy:                   "{{ today|date:'Y-m-d' }}",
+    filtroArea:            "{{ filtro_area }}",
+    urlNuevo:              "{% url 'mto:nuevo_bitacora' %}",
+    urlBuscarEquipos:      "{% url 'mto:buscar_equipos_bitacora' %}",
+    urlBuscarResponsables: "{% url 'mto:buscar_responsables_bitacora' %}",
+};
+</script>
+{% load static %}
+<script src="{% static 'mto_app/js/bitacora.js' %}"></script>
+{% endblock %}

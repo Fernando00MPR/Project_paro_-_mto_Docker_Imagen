@@ -206,6 +206,7 @@ def lista_paros_por_area(request, area_id):
 @login_required
 @permiso_requerido('crear_paro')
 def crear_paro(request):
+    next_url = request.GET.get('next', '') or request.POST.get('next', '')
     if request.method == 'POST':
         form = ParoForm(request.POST)
         if form.is_valid():
@@ -284,11 +285,15 @@ def crear_paro(request):
                 campo='creado', valor_anterior='', valor_nuevo=''
             )
             messages.success(request, f"Paro registrado correctamente en {paro.area.nombre}.")
+            if next_url and next_url.startswith('/'):
+                return redirect(next_url)
             return redirect('paros:lista_paros_por_area', area_id=paro.area.id)
     else:
         form = ParoForm()
     return render(request, 'paros_app/paros/crear_paro.html', {
-        'form': form, 'areas': Area.objects.all()
+        'form': form, 
+        'areas': Area.objects.all(),
+        'next_url': next_url
     })
 
 
@@ -296,6 +301,8 @@ def crear_paro(request):
 @permiso_requerido('editar_paro')
 def editar_paro(request, paro_id):
     paro = get_object_or_404(Paro, id=paro_id)
+    next_url = request.GET.get('next', '') or request.POST.get('next', '')
+
     if request.method == 'POST':
         snapshot_antes = _campos_paro_dict(paro)
         form = ParoForm(request.POST, instance=paro)
@@ -388,6 +395,8 @@ def editar_paro(request, paro_id):
                 _registrar_bitacora(paro, request.user, campo, ant, nue)
 
             messages.success(request, "Paro actualizado correctamente.")
+            if next_url and next_url.startswith('/'):
+                return redirect(next_url)
             return redirect('paros:lista_paros_por_area', area_id=paro.area.id)
     else:
         form = ParoForm(instance=paro, initial={
@@ -396,7 +405,10 @@ def editar_paro(request, paro_id):
         })
     bitacora = paro.bitacora.select_related('usuario').all()
     return render(request, 'paros_app/paros/editar_paro.html', {
-        'form': form, 'paro': paro, 'bitacora': bitacora
+        'form': form, 
+        'paro': paro, 
+        'bitacora': bitacora,
+        'next_url': next_url
     })
 
 
@@ -406,11 +418,14 @@ def editar_paro(request, paro_id):
 def eliminar_paro(request, paro_id):
     paro    = get_object_or_404(Paro, id=paro_id)
     area_id = paro.area.id
+    next_url = request.GET.get('next', '')
     BitacoraParo.objects.create(
         paro=paro, usuario=request.user,
         campo='eliminado', valor_anterior='', valor_nuevo=''
     )
     paro.delete()
+    if next_url and next_url.startswith('/'):
+        return redirect(next_url)
     return redirect('paros:lista_paros_por_area', area_id=area_id)
 
 

@@ -2,28 +2,28 @@
 {% load i18n %}
 {% block title %}{% trans "Responsables" %}{% endblock %}
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <div>
-            <div class="card-title">
-                {% trans "Responsables" %}
-                {% if filtro_area %}
-                    {% for a in areas %}
-                        {% if a.pk|stringformat:"s" == filtro_area %}
-                            — {{ a.nombre }}
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-            </div>
-            <div class="card-subtitle">
-                {{ responsables.count }} responsable(s) registrado(s)
-            </div>
+
+<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div>
+        <div class="card-title">
+            {% trans "Responsables" %}
+            {% if filtro_area %}
+                {% for a in areas %}
+                    {% if a.pk|stringformat:"s" == filtro_area %}
+                        — {{ a.nombre }}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
         </div>
-        <a href="{% url 'mto:nuevo_responsable' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm">
-            + {% trans "Agregar responsable" %}
-        </a>
+        <div class="card-subtitle">
+            {{ responsables.count }} responsable(s) registrado(s)
+        </div>
     </div>
+    <a href="{% url 'mto:nuevo_responsable' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm">
+        + {% trans "Agregar responsable" %}
+    </a>
 </div>
+ 
 
 <div class="card">
     <div class="table-wrap" style="overflow-x:auto;">

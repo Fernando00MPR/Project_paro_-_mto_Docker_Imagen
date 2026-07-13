@@ -1,6 +1,9 @@
-/* dashboard.js — Controles de filtros y gráfica de tendencia */
+/* dashboard.js — Controles de filtros, gráfica de tendencia y auto-refresh de KPIs */
 
 // ── Toggle rangos de fecha ────────────────────────────────────────────────────
+// Llamado desde onchange del <select> de rango. Muestra u oculta los campos
+// extra (semana específica o rango custom) según la opción elegida.
+// Si el valor no requiere campos extra se hace submit automático del formulario.
 function toggleCustom(val) {
     const wrapSemana = document.getElementById('wrap-semana');
     const wrapDesde  = document.getElementById('wrap-desde');
@@ -12,12 +15,15 @@ function toggleCustom(val) {
     if (wrapHasta)  wrapHasta.style.display  = val === 'custom'     ? 'flex' : 'none';
     if (btnSemana)  btnSemana.style.display  = val === 'semana_num' ? 'flex' : 'none';
     if (btnCustom)  btnCustom.style.display  = val === 'custom'     ? 'flex' : 'none';
+    // Opciones simples (hoy, semana, mes…) no necesitan botón "Aplicar": submit inmediato
     if (val !== 'semana_num' && val !== 'custom') {
         document.getElementById('rango-select').closest('form').submit();
     }
 }
 
 // ── Fábrica de gráfica de tendencia ──────────────────────────────────────────
+// Crea y retorna una instancia de Chart.js (barras) en el canvas indicado.
+// `opciones` sobreescribe los defaults: fontSize, autoSkip, maxRotation.
 function crearGraficaTendencia(canvasId, labels, data, opciones) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return;
@@ -70,6 +76,9 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
                 }
             },
             animation: {
+                // Dibuja el valor encima de cada barra usando el canvas 2D directamente,
+                // ya que Chart.js no tiene una opción nativa para etiquetas sobre barras.
+                // Con ≥ 25 etiquetas se omite "min" para evitar solapamiento.
                 onComplete: function () {
                     const chart = this;
                     const ctx2  = chart.ctx;
@@ -80,11 +89,10 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
                     chart.data.datasets[0].data.forEach((val, i) => {
                         if (val === 0) return;
                         const bar = chart.getDatasetMeta(0).data[i];
-                        
-                        if(labels.length >= 25){
+                        if (labels.length >= 25) {
                             ctx2.fillText(val, bar.x, bar.y - 6);
                         } else {
-                            ctx2.fillText(''+val+' min', bar.x, bar.y - 6);
+                            ctx2.fillText('' + val + ' min', bar.x, bar.y - 6);
                         }
                     });
                     ctx2.restore();
@@ -93,3 +101,115 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
         }
     });
 }
+
+// ── Auto-refresh y KPIs ───────────────────────────────────────────────────────
+// IIFE para encapsular el estado (graficaTendencia) sin contaminar el scope global.
+// Lee la configuración inyectada por Django en window.DASHBOARD_CFG (dashboard.html).
+(function () {
+    const cfg = window.DASHBOARD_CFG || {};
+    let graficaTendencia = null;
+
+    // Crear la gráfica con los datos iniciales del servidor (render SSR).
+    // El auto-refresh la actualizará sin recargar la página.
+    if (cfg.chartLabels && cfg.chartLabels.length) {
+        graficaTendencia = crearGraficaTendencia('chartTendencia', cfg.chartLabels, cfg.chartData, cfg.chartOpts);
+    }
+
+    // Actualiza el texto de un KPI en el DOM buscando su atributo data-kpi-id.
+    function _setKpi(id, val) {
+        const el = document.querySelector('[data-kpi-id="' + id + '"]');
+        if (el) el.textContent = val;
+    }
+
+    // Genera el HTML de una lista de ranking con barras de progreso proporcionales.
+    // `maxVal` es el valor del ítem con más minutos (base del 100 %).
+    // `nombreFallback` se usa cuando r.nombre es nulo (sin asignar, sin falla, etc.).
+    function _buildRanking(items, maxVal, nombreFallback, color) {
+        if (!items.length) return '<p style="color:var(--text-3);font-size:13px;">' + (cfg.sinDatos || 'Sin datos') + '</p>';
+        return items.map(function(r) {
+            const pct = Math.round(r.total / maxVal * 100);
+            return '<div style="margin-bottom:10px;">'
+                + '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
+                + '<span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%;">' + (r.nombre || nombreFallback) + '</span>'
+                + '<span style="font-size:12px;color:var(--text-2);flex-shrink:0;">' + r.total + ' · ' + r.minutos + 'min</span>'
+                + '</div>'
+                + '<div style="height:7px;background:var(--border);border-radius:4px;overflow:hidden;">'
+                + '<div style="height:100%;background:' + color + ';border-radius:4px;width:' + pct + '%;"></div>'
+                + '</div></div>';
+        }).join('');
+    }
+
+    // Consulta el endpoint JSON con los mismos filtros activos en la URL.
+    // Si el estado "hay datos / no hay datos" cambia respecto al render inicial,
+    // recarga la página completa para mostrar u ocultar la sección de gráficas.
+    function actualizarDashboard() {
+        const params = new URLSearchParams(window.location.search);
+        fetch((cfg.jsonUrl || '') + '?' + params)
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                // Recarga si aparecieron o desaparecieron paros (cambia la estructura del HTML)
+                if ((d.total_paros > 0) !== cfg.initiallyHasData) {
+                    location.reload();
+                    return;
+                }
+
+                // KPIs superiores
+                _setKpi('total_paros',   d.total_paros);
+                _setKpi('total_minutos', d.total_minutos);
+                _setKpi('promedio_min',  d.promedio_min);
+                _setKpi('rechazados',    d.rechazados);
+                _setKpi('pendiente',     d.pendiente);
+                _setKpi('aceptados',     d.aceptados);
+
+                // Sin paros: solo actualizar timestamp y salir
+                if (!d.total_paros) { _marcarActualizado(); return; }
+
+                // Actualizar gráfica de tendencia con los nuevos datos
+                if (graficaTendencia) {
+                    graficaTendencia.data.labels = d.chart_labels;
+                    graficaTendencia.data.datasets[0].data = d.chart_data;
+                    graficaTendencia.update();
+                }
+
+                // Barras de turnos — los data-attributes singular/plural vienen del HTML
+                const t1 = d.turno1, t2 = d.turno2, tt = t1 + t2;
+                const n1 = document.getElementById('turno1-num');
+                const n2 = document.getElementById('turno2-num');
+                const b1 = document.getElementById('turno1-bar');
+                const b2 = document.getElementById('turno2-bar');
+                const x1 = document.getElementById('turno1-texto');
+                const x2 = document.getElementById('turno2-texto');
+                if (n1) n1.textContent = t1;
+                if (n2) n2.textContent = t2;
+                if (b1) b1.style.width = (tt > 0 ? Math.round(t1/tt*100) : 0) + '%';
+                if (b2) b2.style.width = (tt > 0 ? Math.round(t2/tt*100) : 0) + '%';
+                if (x1) x1.textContent = t1 + ' ' + (t1 === 1 ? x1.dataset.singular : x1.dataset.plural);
+                if (x2) x2.textContent = t2 + ' ' + (t2 === 1 ? x2.dataset.singular : x2.dataset.plural);
+
+                // Rankings de responsables, fallas y equipos
+                const rR = document.getElementById('ranking-responsables');
+                const rF = document.getElementById('ranking-fallas');
+                const rE = document.getElementById('ranking-equipos');
+                if (rR) rR.innerHTML = _buildRanking(d.top_responsables, d.max_resp,   cfg.sinAsignar || 'Sin asignar', 'var(--indigo)');
+                if (rF) rF.innerHTML = _buildRanking(d.top_fallas,       d.max_falla,  cfg.sinFalla   || 'Sin falla',   '#EF4444');
+                if (rE) rE.innerHTML = _buildRanking(d.top_equipos,      d.max_equipo, cfg.sinEquipo  || 'Sin equipo',  '#10B981');
+
+                _marcarActualizado();
+            })
+            .catch(function() {});  // Errores de red se ignoran silenciosamente
+    }
+
+    // Muestra la hora de la última actualización en formato HH:MM:SS.
+    function _marcarActualizado() {
+        const el = document.getElementById('ultima-actualizacion');
+        if (!el) return;
+        const n = new Date();
+        el.textContent = n.getHours().toString().padStart(2,'0') + ':'
+                       + n.getMinutes().toString().padStart(2,'0') + ':'
+                       + n.getSeconds().toString().padStart(2,'0');
+    }
+
+    // Exponer para el botón "Actualizar ahora" del HTML y programar refresh cada 60 s
+    window.actualizarDashboard = actualizarDashboard;
+    setInterval(actualizarDashboard, 60000);
+})();

@@ -110,6 +110,7 @@ def _build_permisos_mto(usuario):
             'ver_rutinas', 'editar_rutinas', 'eliminar_rutinas',
             'ver_seguimiento', 'editar_seguimiento', 'eliminar_seguimiento',
             'ver_responsables', 'editar_responsables', 'eliminar_responsables',
+            'ver_bitacora', 'editar_bitacora', 'eliminar_bitacora',
             'ver_inventario', 'editar_inventario', 'eliminar_inventario',
             'ver_seguimiento_refaccion', 'editar_seguimiento_refaccion', 'eliminar_seguimiento_refaccion',
             'ver_seguimiento_servicio', 'editar_seguimiento_servicio', 'eliminar_seguimiento_servicio',
@@ -267,6 +268,7 @@ def _guardar_perfil(request, user, areas):
         'ver_rutinas', 'editar_rutinas', 'eliminar_rutinas',
         'ver_seguimiento', 'editar_seguimiento', 'eliminar_seguimiento',
         'ver_responsables', 'editar_responsables', 'eliminar_responsables',
+        'ver_bitacora', 'editar_bitacora', 'eliminar_bitacora',
         'ver_inventario', 'editar_inventario', 'eliminar_inventario',
         'ver_seguimiento_refaccion', 'editar_seguimiento_refaccion', 'eliminar_seguimiento_refaccion',
     ]

@@ -291,116 +291,71 @@
 {% block extra_js %}
 {% load static %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="{% static 'paros_app/js/dashboard.js' %}"></script>
+
 <script>
-(function () {
-    let graficaTendencia = null;
+
+    // Datos de Django que dashboard.js no puede leer directamente
+window.DASHBOARD_CFG = {
+    sinAsignar:       "{% trans 'Sin asignar' %}",
+    sinFalla:         "{% trans 'Sin falla' %}",
+    sinEquipo:        "{% trans 'Sin equipo' %}",
+    sinDatos:         "{% trans 'Sin datos' %}",
+    jsonUrl:          "{% url 'paros:dashboard_json' %}",
+    initiallyHasData: {{ total_paros|default:0 }} > 0,
 
     {% if total_paros %}
-    const labels = [{% if es_hoy %}{% for h in paros_por_hora %}"{{ h.hora }}"{% if not forloop.last %},{% endif %}{% endfor %}{% elif es_semanas %}{% for s in paros_por_semana %}"Sem {{ s.semana }}"{% if not forloop.last %},{% endif %}{% endfor %}{% else %}{% for d in tendencia %}"{{ d.fecha|slice:'5:' }}"{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}];
-    const data   = [{% if es_hoy %}{% for h in paros_por_hora %}{{ h.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}{% elif es_semanas %}{% for s in paros_por_semana %}{{ s.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}{% else %}{% for d in tendencia %}{{ d.minutos }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}];
-    {% if es_hoy %}
-    graficaTendencia = crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 11, maxRotation: 0 });
-    {% elif es_semanas %}
-    graficaTendencia = crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 10, maxRotation: 45 });
+    chartLabels: [
+        {% if es_hoy %}
+            {% for h in paros_por_hora %}
+                "{{ h.hora }}"
+                {% if not forloop.last %},{% endif %}   
+            {% endfor %}
+        {% elif es_semanas %}
+            {% for s in paros_por_semana %}
+                "Sem {{ s.semana }}"
+                {% if not forloop.last %},{% endif %}
+            {% endfor %}
+        {% else %}
+            {% for d in tendencia %}
+                "{{ d.fecha|slice:'5:' }}"
+                {% if not forloop.last %},{% endif %}
+            {% endfor %}
+        {% endif %}],
+
+    chartData:   [
+        {% if es_hoy %}
+            {% for h in paros_por_hora %}
+                {{ h.minutos }}
+                {% if not forloop.last %},{% endif %}
+            {% endfor %}
+        {% elif es_semanas %}
+            {% for s in paros_por_semana %}
+                {{ s.minutos }}
+                {% if not forloop.last %},{% endif %}
+            {% endfor %}
+        {% else %}
+            {% for d in tendencia %}
+                {{ d.minutos }}
+                {% if not forloop.last %},{% endif %}
+            {% endfor %}
+        {% endif %}],
+
+    chartOpts:  
+        {% if es_hoy %}
+            { fontSize: 11, maxRotation: 0 }
+        {% elif es_semanas %}
+            { fontSize: 10, maxRotation: 45 }
+        {% else %}
+            { fontSize: 11, maxRotation: 45, autoSkip: {{ tendencia|length }} > 20 }
+        {% endif %},
+
     {% else %}
-    graficaTendencia = crearGraficaTendencia('chartTendencia', labels, data, { fontSize: 11, maxRotation: 45, autoSkip: {{ tendencia|length }} > 20 });
+        chartLabels: [],
+        chartData:   [],
+        chartOpts:   {},
     {% endif %}
-    {% endif %}
+};
 
-    // ── Auto-refresh ────────────────────────────────────────────────────────
-    const _initiallyHasData = {{ total_paros }} > 0;
-    const SIN_ASIGNAR = "{% trans 'Sin asignar' %}";
-    const SIN_FALLA   = "{% trans 'Sin falla' %}";
-    const SIN_EQUIPO  = "{% trans 'Sin equipo' %}";
-    const SIN_DATOS   = "{% trans 'Sin datos' %}";
-
-    function _setKpi(id, val) {
-        const el = document.querySelector('[data-kpi-id="' + id + '"]');
-        if (el) el.textContent = val;
-    }
-
-    function _buildRanking(items, maxVal, nombreFallback, color) {
-        if (!items.length) return '<p style="color:var(--text-3);font-size:13px;">' + SIN_DATOS + '</p>';
-        return items.map(function(r) {
-            const pct = Math.round(r.total / maxVal * 100);
-            return '<div style="margin-bottom:10px;">'
-                + '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
-                + '<span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%;">' + (r.nombre || nombreFallback) + '</span>'
-                + '<span style="font-size:12px;color:var(--text-2);flex-shrink:0;">' + r.total + ' · ' + r.minutos + 'min</span>'
-                + '</div>'
-                + '<div style="height:7px;background:var(--border);border-radius:4px;overflow:hidden;">'
-                + '<div style="height:100%;background:' + color + ';border-radius:4px;width:' + pct + '%;"></div>'
-                + '</div></div>';
-        }).join('');
-    }
-
-    function actualizarDashboard() {
-        const params = new URLSearchParams(window.location.search);
-        fetch("{% url 'paros:dashboard_json' %}?" + params)
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                if ((d.total_paros > 0) !== _initiallyHasData) {
-                    location.reload();
-                    return;
-                }
-
-                // KPIs
-                _setKpi('total_paros',   d.total_paros);
-                _setKpi('total_minutos', d.total_minutos);
-                _setKpi('promedio_min',  d.promedio_min);
-                _setKpi('rechazados',    d.rechazados);
-                _setKpi('pendiente',     d.pendiente);
-                _setKpi('aceptados',     d.aceptados);
-
-                if (!d.total_paros) { _marcarActualizado(); return; }
-
-                // Gráfica
-                if (graficaTendencia) {
-                    graficaTendencia.data.labels = d.chart_labels;
-                    graficaTendencia.data.datasets[0].data = d.chart_data;
-                    graficaTendencia.update();
-                }
-
-                // Turnos
-                const t1 = d.turno1, t2 = d.turno2, tt = t1 + t2;
-                const n1 = document.getElementById('turno1-num');
-                const n2 = document.getElementById('turno2-num');
-                const b1 = document.getElementById('turno1-bar');
-                const b2 = document.getElementById('turno2-bar');
-                const x1 = document.getElementById('turno1-texto');
-                const x2 = document.getElementById('turno2-texto');
-                if (n1) n1.textContent = t1;
-                if (n2) n2.textContent = t2;
-                if (b1) b1.style.width = (tt > 0 ? Math.round(t1/tt*100) : 0) + '%';
-                if (b2) b2.style.width = (tt > 0 ? Math.round(t2/tt*100) : 0) + '%';
-                if (x1) x1.textContent = t1 + ' ' + (t1 === 1 ? x1.dataset.singular : x1.dataset.plural);
-                if (x2) x2.textContent = t2 + ' ' + (t2 === 1 ? x2.dataset.singular : x2.dataset.plural);
-
-                // Rankings
-                const rR = document.getElementById('ranking-responsables');
-                const rF = document.getElementById('ranking-fallas');
-                const rE = document.getElementById('ranking-equipos');
-                if (rR) rR.innerHTML = _buildRanking(d.top_responsables, d.max_resp,   SIN_ASIGNAR, 'var(--indigo)');
-                if (rF) rF.innerHTML = _buildRanking(d.top_fallas,       d.max_falla,  SIN_FALLA,   '#EF4444');
-                if (rE) rE.innerHTML = _buildRanking(d.top_equipos,      d.max_equipo, SIN_EQUIPO,  '#10B981');
-
-                _marcarActualizado();
-            })
-            .catch(function() {});
-    }
-
-    function _marcarActualizado() {
-        const el = document.getElementById('ultima-actualizacion');
-        if (!el) return;
-        const n = new Date();
-        el.textContent = n.getHours().toString().padStart(2,'0') + ':'
-                       + n.getMinutes().toString().padStart(2,'0') + ':'
-                       + n.getSeconds().toString().padStart(2,'0');
-    }
-
-    window.actualizarDashboard = actualizarDashboard;
-    setInterval(actualizarDashboard, 60000);
-})();
 </script>
+<script src="{% static 'paros_app/js/dashboard.js' %}"></script>
 {% endblock %}

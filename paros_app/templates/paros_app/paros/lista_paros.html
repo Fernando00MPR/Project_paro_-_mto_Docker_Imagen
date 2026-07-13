@@ -54,9 +54,11 @@
             </div>
         </div>
         {% endif %}
+       
         {% if puede_crear %}
-        <a href="{% url 'paros:crear_paro' %}" class="btn btn-primary btn-sm">+ {% trans "Nuevo paro" %}</a>
+            <a href="{% url 'paros:crear_paro' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">+ {% trans "Nuevo paro" %}</a>
         {% endif %}
+
         {% include 'menu_app/_language_selector.html' %}
     </div>
 </div>
@@ -224,7 +226,7 @@
                 {% for paro in paros %}
                 <tr data-id="{{ paro.id }}">
                     <td style="padding:0;width:4px;background:{% if paro.estatus == 'rojo' %}#EF4444{% elif paro.estatus == 'amarillo' %}#F59E0B{% else %}#10B981{% endif %};"></td>
-                    <td class="area" data-campo="area" style="white-space: nowrap;">{{ paro.area.nombre }}</td>
+                    <td class="area" data-campo="area">{{ paro.area.nombre }}</td>
                     <td class="{% if puede_editar %}editable-fecha{% endif %}" data-campo="fecha" data-iso="{{ paro.fecha|date:'Y-m-d' }}" style="text-align:center;font-family:'DM Mono',monospace;font-size:12.5px;">{{ paro.fecha|date:"d/m/y" }}</td>
                     <td data-semana style="text-align:center;font-family:'DM Mono',monospace;font-size:12.5px;color:var(--text-2);">{{ paro.fecha|semana_iso }}</td>
                     <td data-campo="turno" data-valor="{{ paro.turno }}">
@@ -261,7 +263,7 @@
                             {% endif %}
                             <!-- Editar -->
                             {% if puede_editar %}
-                            <a href="{% url 'paros:editar_paro' paro.id %}"
+                            <a href="{% url 'paros:editar_paro' paro.id %}?next={{ request.get_full_path|urlencode }}"
                                title="{% trans 'Editar' %}"
                                style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; min-width:32px; flex-shrink:0; border-radius:6px; border:none; background:#4F46E5; cursor:pointer; text-decoration:none;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -274,7 +276,7 @@
                             {% if puede_eliminar %}
                             <button type="button" class="btn-eliminar-icono"
                                     data-id="{{ paro.id }}"
-                                    data-url="{% url 'paros:eliminar_paro' paro.id %}"
+                                    data-url="{% url 'paros:eliminar_paro' paro.id %}?next={{ request.get_full_path|urlencode }}"
                                     title="{% trans 'Eliminar' %}"
                                     style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; min-width:32px; flex-shrink:0; border-radius:6px; border:none; background:#EF4444; cursor:pointer;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -419,144 +421,6 @@
     </div>
 </div>
 
-<script>
-let lightboxImagenes = [];
-let lightboxIndice   = 0;
-let zoomLevel        = 1;
-
-let panX = 0, panY = 0;
-let isDragging = false, dragStartX = 0, dragStartY = 0, dragMoved = false;
-
-const ESTATUS_BADGE = {
-    verde:    {label:'Aceptado',  bg:'#D1FAE5', color:'#065F46'},
-    amarillo: {label:'Pendiente', bg:'#FEF3C7', color:'#92400E'},
-    rojo:     {label:'Rechazado', bg:'#FEE2E2', color:'#991B1B'},
-};
-
-function verImagenes(paroId) {
-    fetch(`/paros/${paroId}/imagenes/`)
-        .then(r => r.json())
-        .then(data => {
-            lightboxImagenes = data.imagenes;
-            lightboxIndice   = 0;
-
-            const est   = ESTATUS_BADGE[data.estatus] || {};
-            const badge = est.label
-                ? ` &nbsp;<span style="display:inline-flex;align-items:center;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;background:${est.bg};color:${est.color};">&#11044; ${est.label}</span>`
-                : '';
-            document.getElementById('lightbox-meta').innerHTML =
-                [data.area, data.fecha].filter(Boolean).join('  -  ') + badge;
-
-            renderLightbox();
-            document.getElementById('modal-imagenes').style.display = 'flex';
-        });
-}
-
-function resetZoom() {
-    zoomLevel = 1; panX = 0; panY = 0;
-    const img = document.getElementById('lightbox-img-principal');
-    img.style.transform = 'translate(0,0) scale(1)';
-    img.style.cursor    = 'zoom-in';
-}
-
-function renderLightbox() {
-    if (!lightboxImagenes.length) return;
-
-    resetZoom();
-    document.getElementById('lightbox-img-principal').src = lightboxImagenes[lightboxIndice].url;
-    document.getElementById('lightbox-contador').textContent = `Imagen ${lightboxIndice + 1} de ${lightboxImagenes.length}`;
-
-    const cont = document.getElementById('lightbox-miniaturas');
-    cont.innerHTML = '';
-    lightboxImagenes.forEach((img, i) => {
-        const thumb = document.createElement('img');
-        thumb.src = img.url;
-        thumb.onclick = () => { lightboxIndice = i; renderLightbox(); };
-        thumb.style.cssText = `
-            width:70px; height:70px; object-fit:cover; border-radius:8px; cursor:pointer;
-            border:2px solid ${i === lightboxIndice ? 'var(--indigo)' : 'transparent'};
-        `;
-        cont.appendChild(thumb);
-    });
-}
-
-function lightboxAnterior() {
-    lightboxIndice = (lightboxIndice - 1 + lightboxImagenes.length) % lightboxImagenes.length;
-    renderLightbox();
-}
-
-function lightboxSiguiente() {
-    lightboxIndice = (lightboxIndice + 1) % lightboxImagenes.length;
-    renderLightbox();
-}
-
-function cerrarModalImagenes() {
-    document.getElementById('modal-imagenes').style.display = 'none';
-}
-
-document.getElementById('modal-imagenes').addEventListener('click', function(e) {
-    if (e.target === this) cerrarModalImagenes();
-});
-
-document.addEventListener('keydown', function(e) {
-    if (document.getElementById('modal-imagenes').style.display === 'flex') {
-        if (e.key === 'ArrowLeft') lightboxAnterior();
-        if (e.key === 'ArrowRight') lightboxSiguiente();
-        if (e.key === 'Escape') cerrarModalImagenes();
-    }
-});
-
-function descargarImagenActual() {
-    const img = lightboxImagenes[lightboxIndice];
-    const a = document.createElement('a');
-    a.href = img.url;
-    a.download = img.url.split('/').pop();
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const img = document.getElementById('lightbox-img-principal');
-
-    img.addEventListener('wheel', function(e) {
-        if (document.getElementById('modal-imagenes').style.display !== 'flex') return;
-        e.preventDefault();
-        zoomLevel = Math.min(3, Math.max(1, zoomLevel + (e.deltaY < 0 ? 0.15 : -0.15)));
-        if (zoomLevel === 1) { panX = 0; panY = 0; }
-        img.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
-        img.style.cursor    = zoomLevel > 1 ? 'grab' : 'zoom-in';
-    }, { passive: false });
-
-    img.addEventListener('mousedown', function(e) {
-        if (zoomLevel <= 1) return;
-        isDragging = true; dragMoved = false;
-        dragStartX = e.clientX - panX; dragStartY = e.clientY - panY;
-        img.style.cursor = 'grabbing';
-        e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', function(e) {
-        if (!isDragging) return;
-        panX = e.clientX - dragStartX; panY = e.clientY - dragStartY;
-        dragMoved = true;
-        img.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
-    });
-
-    document.addEventListener('mouseup', function() {
-        if (!isDragging) return;
-        isDragging = false;
-        img.style.cursor = zoomLevel > 1 ? 'grab' : 'zoom-in';
-    });
-
-    img.addEventListener('click', function() {
-        if (!dragMoved) window.open(img.src, '_blank');
-        dragMoved = false;
-    });
-});
-
-</script>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -568,15 +432,17 @@ document.addEventListener('DOMContentLoaded', function() {
         turno2: "{% trans 'Turno 2' %}",
         Rechazado: "{% trans 'Rechazado' %}",
         Pendiente: "{% trans 'Pendiente' %}",
-        Aceptado: "{% trans 'Aceptado' %}",
+        Aceptado:  "{% trans 'Aceptado' %}",
         RechazadoTitulo: "{% trans 'Rechazado → Pendiente' %}",
         PendienteTitulo: "{% trans 'Pendiente → Aceptado' %}",
-        AceptadoTitulo: "{% trans 'Aceptado → Rechazado' %}",
+        AceptadoTitulo:  "{% trans 'Aceptado → Rechazado' %}",
         estatusActualizado: "{% trans 'Estatus actualizado' %}",
         errorEstatus: "{% trans 'Error al cambiar estatus' %}",
+        imagenDe: "{% trans 'Imagen {n} de {total}' %}",
     };
 </script>
 <script src="{% static 'paros_app/js/lista_paros.js' %}" defer></script>
+
 <style>
 .col-toggle-item {
     display: flex; align-items: center; gap: 8px;

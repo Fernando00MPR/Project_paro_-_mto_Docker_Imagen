@@ -218,7 +218,7 @@ function agregarFilaManual(data) {
         <td style="text-align:center;">
             <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
                 ${data.imagenes_count > 0 ? `
-                <button onclick="verImagenesSeg('manual', ${data.id})"
+                <button onclick="verImagenesSeg('manual', ${data.id}, '${data.fecha_creacion}', '${AREA_NOMBRE_SM}', '${data.estatus}', '${data.estatus_display}')"
                         title="Ver imágenes"
                         style="display:inline-flex; align-items:center; justify-content:center;
                             width:32px; height:32px; border-radius:6px; border:1px solid var(--border);
@@ -453,8 +453,10 @@ smInicializarDropzone();
 // ── Lightbox de imágenes de seguimiento ───────────────────────────────────────
 let lightboxSegImagenes = [];
 let lightboxSegIndice   = 0;
+let lightboxSegMeta     = {};
 
-function verImagenesSeg(tipo, segId) {
+function verImagenesSeg(tipo, segId, fecha, area, estatus, estatusLabel) {
+    lightboxSegMeta = { fecha: fecha || '', area: area || '', estatus: estatus || '', label: estatusLabel || '' };
     fetch(`/mto/seguimiento/${tipo}/${segId}/imagenes/`)
         .then(r => r.json())
         .then(data => {
@@ -469,6 +471,23 @@ function renderLightboxSeg() {
     if (!lightboxSegImagenes.length) return;
 
     document.getElementById('lightbox-seg-img-principal').src = lightboxSegImagenes[lightboxSegIndice].url;
+
+    // Contador
+    document.getElementById('lightbox-seg-contador').textContent =
+        CONTADOR_SEG_TPL.replace('{n}', lightboxSegIndice + 1).replace('{total}', lightboxSegImagenes.length);
+
+    // Meta: fecha, área, estatus
+    const estilosBadge = {
+        pendiente:  { bg:'#FAEEDA', color:'#854F0B' },
+        en_proceso: { bg:'#E6F1FB', color:'#185FA5' },
+        completado: { bg:'#EAF3DE', color:'#3B6D11' },
+    };
+    const est = estilosBadge[lightboxSegMeta.estatus] || { bg:'', color:'' };
+    const badge = lightboxSegMeta.label
+        ? ` &nbsp;<span style="display:inline-flex;align-items:center;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;background:${est.bg};color:${est.color};">&#11044; ${lightboxSegMeta.label}</span>`
+        : '';
+    document.getElementById('lightbox-seg-meta').innerHTML =
+        [lightboxSegMeta.area, lightboxSegMeta.fecha].filter(Boolean).join('  -  ') + badge;
 
     const cont = document.getElementById('lightbox-seg-miniaturas');
     cont.innerHTML = '';
@@ -554,9 +573,12 @@ document.addEventListener('DOMContentLoaded', function() {
         el.querySelector('input').style.accentColor = 'var(--indigo)';
     });
 
+    const DEFAULT_HIDDEN = new Set(['seg-col-creado', 'seg-col-tipo']);
+
     const prefs = JSON.parse(localStorage.getItem('mto_seg_cols') || '{}');
     SEG_COLS.forEach(cls => {
-        const visible = prefs[cls] !== false;
+        const defaultVisible = !DEFAULT_HIDDEN.has(cls);
+        const visible = prefs[cls] !== undefined ? prefs[cls] : defaultVisible;
         toggleSegCol(cls, visible);
         const input = document.querySelector('[data-col="' + cls + '"] input');
         if (input) input.checked = visible;
