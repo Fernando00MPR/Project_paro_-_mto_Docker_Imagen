@@ -1089,8 +1089,10 @@ function aplicarModulo(modulo) {
     document.getElementById('nav-mto').style.display        = esMto ? 'block' : 'none';
     document.getElementById('nav-paros').style.display      = esMto ? 'none'  : 'block';
     document.getElementById('brand-label-text').textContent = esMto ? '{% trans "Gestión de Mantenimiento" %}' : '{% trans "Paros de Producción" %}';
-    document.getElementById('mod-mto').classList.toggle('active-modulo', esMto);
-    document.getElementById('mod-paros').classList.toggle('active-modulo', !esMto);
+    const modMto   = document.getElementById('mod-mto');
+    const modParos = document.getElementById('mod-paros');
+    if (modMto)   modMto.classList.toggle('active-modulo', esMto);
+    if (modParos) modParos.classList.toggle('active-modulo', !esMto);
 }
 
 (function() {
