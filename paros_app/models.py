@@ -1,8 +1,16 @@
+import os
+import io
+import logging
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _ 
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.core.files.base import ContentFile
+from PIL import Image, ImageOps
+from PIL import UnidentifiedImageError
+
+logger = logging.getLogger(__name__)
 
 # Areas
 class Area(models.Model):
@@ -312,9 +320,74 @@ class TargetAnualHoraHora(models.Model):
     def __str__(self):
         return f"{self.area.nombre} — {self.anio} — {self.target_eficiencia}%"
 
-
 def imagen_paro_upload_path(instance, filename):
     return f'paros/{instance.paro_id}/{filename}'
+
+# Límites de compresión — compartidos por ImagenParo.save() y por un futuro
+# comando de gestión retroactivo (si se llega a correr sobre imágenes ya existentes).
+IMG_MAX_LADO      = 1600             # px, lado más largo permitido
+IMG_CALIDAD_JPEG  = 82               # 80-85%
+IMG_LIMITE_LIGERO = 500 * 1024       # 500 KB — bajo esto y bajo IMG_MAX_LADO, no se toca
+
+def comprimir_imagen_pil(archivo):
+    """
+    Redimensiona (máx. IMG_MAX_LADO por lado, manteniendo proporción) y recomprime
+    a JPEG ~IMG_CALIDAD_JPEG% un archivo de imagen. Corrige orientación EXIF.
+
+    `archivo` debe ser un objeto file-like abierto en modo binario, posicionado
+    en 0 (o se reposiciona internamente).
+
+    Devuelve una tupla (bytes_jpeg, nuevo_nombre_con_extension_jpg) si se
+    reprocesó, o (None, None) si la imagen ya era ligera y no hizo falta tocarla,
+    O si el archivo no se pudo procesar (no es una imagen válida, está corrupto,
+    tiene dimensiones absurdas, o cualquier otro error de Pillow) — en ese caso
+    se guarda el archivo original tal cual, en vez de romper la vista que está
+    creando el Paro.
+    """
+    tamano_original = archivo.size if hasattr(archivo, 'size') else None
+
+    try:
+        archivo.seek(0)
+        img = Image.open(archivo)
+        img.load()                          # fuerza la decodificación completa aquí,
+                                             # no perezosa — así cualquier corrupción
+                                             # se detecta ya, dentro del try.
+        img = ImageOps.exif_transpose(img)  # corrige rotación de fotos de celular
+    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as e:
+        logger.warning(
+            "No se pudo procesar la imagen '%s' (%s) — se guarda sin comprimir.",
+            getattr(archivo, 'name', '?'), e,
+        )
+        archivo.seek(0)
+        return None, None
+
+    ya_es_ligera = (
+        tamano_original is not None
+        and tamano_original < IMG_LIMITE_LIGERO
+        and img.width  <= IMG_MAX_LADO
+        and img.height <= IMG_MAX_LADO
+    )
+    if ya_es_ligera:
+        archivo.seek(0)
+        return None, None
+
+    if img.mode not in ('RGB', 'L'):
+        img = img.convert('RGB')
+
+    if img.width > IMG_MAX_LADO or img.height > IMG_MAX_LADO:
+        img.thumbnail((IMG_MAX_LADO, IMG_MAX_LADO), Image.LANCZOS)
+
+    try:
+        buffer = io.BytesIO()
+        img.save(buffer, format='JPEG', quality=IMG_CALIDAD_JPEG, optimize=True)
+        return buffer.getvalue(), None
+    except OSError as e:
+        logger.warning(
+            "Fallo al re-codificar la imagen '%s' (%s) — se guarda sin comprimir.",
+            getattr(archivo, 'name', '?'), e,
+        )
+        archivo.seek(0)
+        return None, None
 
 
 class ImagenParo(models.Model):
@@ -330,7 +403,18 @@ class ImagenParo(models.Model):
 
     def __str__(self):
         return f'Imagen paro #{self.paro_id} — {self.subida_en:%d/%m/%Y}'
-    
+
+    def save(self, *args, **kwargs):
+        # Solo reprocesar cuando hay un archivo NUEVO sin guardar todavía en el
+        # storage (no en cada re-save de un registro existente con la misma imagen).
+        if self.imagen and not self.imagen._committed:
+            contenido_jpeg, _ = comprimir_imagen_pil(self.imagen)
+            if contenido_jpeg is not None:
+                nombre_base  = os.path.splitext(self.imagen.name)[0]
+                nuevo_nombre = f'{nombre_base}.jpg'
+                self.imagen.save(nuevo_nombre, ContentFile(contenido_jpeg), save=False)
+        super().save(*args, **kwargs)
+
 @receiver(post_delete, sender=ImagenParo)
 def borrar_archivo_imagen(sender, instance, **kwargs):
     """Borra el archivo físico cuando se elimina el registro ImagenParo."""

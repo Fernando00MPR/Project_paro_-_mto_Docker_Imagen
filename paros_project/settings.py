@@ -8,6 +8,7 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # En producción: DEBUG=False y agrega tu dominio a ALLOWED_HOSTS
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+ENABLE_REQUEST_TIMING = os.environ.get('ENABLE_REQUEST_TIMING', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 CSRF_TRUSTED_ORIGINS = [origin for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin]
@@ -48,8 +49,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-if DEBUG:
-    MIDDLEWARE.append('paros_project.middleware.TimingMiddleware')
+if DEBUG or ENABLE_REQUEST_TIMING:
+     MIDDLEWARE.append('paros_project.middleware.TimingMiddleware')
 
 STORAGES = {
     "default": {
@@ -99,6 +100,14 @@ DATABASES = {
         'HOST':     os.environ['DB_HOST'],
         'PORT':     os.environ['DB_PORT'],
         'CONN_MAX_AGE': 60,
+        'CONN_HEALTH_CHECKS': True,
+        'OPTIONS': {
+            'connect_timeout': 5,
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 3,
+        },
     }
 }
 

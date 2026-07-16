@@ -47,6 +47,7 @@
                         {% trans "Fecha" %}
                     </label>
                     <input type="date" name="fecha" value="{{ filtro_fecha }}"
+                        onchange="this.form.submit()"
                         style="padding:7px 10px; border-radius:7px; border:1px solid var(--border);
                                 background:var(--white); color:var(--text); font-size:13px; font-family:inherit; ">
                 </div>
@@ -62,9 +63,22 @@
                                 font-family:inherit; min-width:250px;">
                 </div>
 
+                <div>
+                    <label style="display:block; font-size:12px; color:var(--text-3); margin-bottom:4px;">
+                        {% trans "Pendiente" %}
+                    </label>
+                    <select name="pendiente" onchange="this.form.submit()"
+                        style="padding:7px 10px; border-radius:7px; border:1px solid var(--border);
+                               background:var(--white); color:var(--text); font-size:13px; font-family:inherit;">
+                        <option value="" {% if not filtro_pendiente %}selected{% endif %}>{% trans "Todos" %}</option>
+                        <option value="1" {% if filtro_pendiente == '1' %}selected{% endif %}>{% trans "Con pendiente" %}</option>
+                        <option value="0" {% if filtro_pendiente == '0' %}selected{% endif %}>{% trans "Sin pendiente" %}</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
 
-                {% if filtro_fecha or filtro_q %}
+                {% if filtro_fecha or filtro_q or filtro_pendiente %}
                 <a href="?area={{ filtro_area }}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
                 {% endif %}
         </form>
@@ -77,6 +91,7 @@
             <thead>
                 <tr>
                     <th style="width:100px;">{% trans "FECHA" %}</th>
+                    <th style="width:70px; text-align: center;">{% trans "SEMANA" %}</th>
                     <th style="width:160px;">{% trans "EQUIPO" %}</th>
                     <th style="width:260px;">{% trans "ACTIVIDAD REALIZADA" %}</th>
                     <th style="width:200px;">{% trans "PENDIENTE" %}</th>
@@ -90,11 +105,12 @@
                 {% for r in registros %}
                 <tr>
                     <td style="white-space:nowrap;">{{ r.fecha|date:"d/m/Y" }}</td>
+                    <td style="white-space:nowrap; text-align: center;">{{ r.fecha|date:"W" }}</td>
                     <td>{{ r.equipo|default:"—" }}</td>
                     <td style="max-width:260px; text-align:justify;">
                         {{ r.actividad_realizada }}
                     </td>
-                    <td style="max-width:200px; text-align:justify;">
+                    <td style="max-width:200px; text-align:justify;{% if r.pendiente %} background:#FEF9C3; color:#854D0E;{% endif %}">
                         {{ r.pendiente|default:"—" }}
                     </td>
                     <td>{{ r.responsable|default:"—" }}</td>
@@ -142,7 +158,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" style="text-align:center; color:var(--muted); padding:32px;">
+                    <td colspan="7" style="text-align:center; color:var(--muted); padding:32px;">
                         {% trans "No hay registros para esta área." %}
                     </td>
                 </tr>
@@ -200,7 +216,7 @@
                                 max-height:180px; overflow-y:auto;"></div>
                 </div>
 
-                <div class="form-field" style="position:relative;">
+                <div class="form-field full" style="position:relative;">
                     <label for="bit-responsable">{% trans "Responsable" %}</label>
                     <input type="text" name="responsable" id="bit-responsable" autocomplete="off" maxlength="200"
                            placeholder="{% trans 'Escribe para buscar…' %}">

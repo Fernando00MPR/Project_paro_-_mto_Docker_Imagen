@@ -519,7 +519,9 @@ function cargarFila(tr) {
             centrarTextoTextarea(el);
         });
     })
-    .catch(() => {});
+    .catch(() => {
+        console.warn(`cargarFila: fallo al cargar fila ${fecha}`);
+    });
 }
 
 // ── Modal Target ──────────────────────────────────────────────

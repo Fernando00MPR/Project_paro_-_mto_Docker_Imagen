@@ -205,6 +205,7 @@ function setVistaEf(vista, btn) {
 
 function cargarEficiencia() {
     const area_id = document.getElementById('ef-area').value;
+    if (!area_id) return; 
     let url = `${cfg.urlEficiencia}?area_id=${area_id}&vista=${vistaEf}`;
 
     let tAnio = cfg.anio;

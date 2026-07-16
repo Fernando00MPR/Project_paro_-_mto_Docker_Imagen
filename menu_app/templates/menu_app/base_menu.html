@@ -349,6 +349,23 @@
         .badge-t2 { background: var(--amber-lt); color: #92400E; }
         [data-theme="dark"] .badge-t2 { color: #FCD34D; }
 
+        /* ── Placeholder de carga para imágenes (ImagenParo y similares) ── */
+        .img-loading-wrap { position: relative; display: inline-block; }
+        .img-loading-wrap .img-skeleton {
+            position: absolute; inset: 0; border-radius: 8px;
+            background: linear-gradient(90deg, var(--border) 25%, var(--surface) 37%, var(--border) 63%);
+            background-size: 400% 100%;
+            animation: img-skeleton-shine 1.4s ease infinite;
+        }
+        .img-loading-wrap img.img-fade-in {
+            position: relative; opacity: 0; transition: opacity .25s ease;
+        }
+        .img-loading-wrap img.img-fade-in.loaded { opacity: 1; }
+        @keyframes img-skeleton-shine {
+            0%   { background-position: 100% 50%; }
+            100% { background-position: 0%   50%; }
+        }
+
         /* ── Filtros ── */
         .filters {
             display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;

@@ -137,9 +137,13 @@
                     <label>{% trans "Imágenes actuales" %}</label>
                     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
                         {% for img in paro.imagenes.all %}
-                        <div data-img-container style="position:relative;">
+                        <div data-img-container class="img-loading-wrap" style="position:relative; width:80px; height:80px;">
+                            <div class="img-skeleton"></div>
                             <a href="{{ img.imagen.url }}" target="_blank">
                                 <img src="{{ img.imagen.url }}"
+                                     loading="lazy"
+                                     class="img-fade-in"
+                                     onload="this.classList.add('loaded'); this.closest('[data-img-container]').querySelector('.img-skeleton').style.display='none';"
                                      style="width:80px; height:80px; object-fit:cover;
                                             border-radius:8px; border:1px solid var(--border);
                                             cursor:pointer;">

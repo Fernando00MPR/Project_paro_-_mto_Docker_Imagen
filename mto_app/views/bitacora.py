@@ -25,6 +25,7 @@ def lista_bitacora(request):
     area_id   = request.GET.get('area', '').strip()
     filtro_fecha = request.GET.get('fecha', '').strip()
     filtro_q     = request.GET.get('q', '').strip()
+    filtro_pendiente = request.GET.get('pendiente', '').strip()
 
     registros = Bitacora.objects.select_related('area')
     if area_id:
@@ -35,16 +36,21 @@ def lista_bitacora(request):
         registros = registros.filter(
             Q(equipo__icontains=filtro_q) | Q(responsable__icontains=filtro_q)
         )
+    if filtro_pendiente == '1':
+        registros = registros.exclude(pendiente='').exclude(pendiente__isnull=True)
+    elif filtro_pendiente == '0':
+        registros = registros.filter(Q(pendiente='') | Q(pendiente__isnull=True))
 
     ctx = {
-        'registros':       registros,
-        'areas':           areas_permitidas_mto(request),
-        'filtro_area':     area_id,
-        'today':           date.today(),
-        'puede_editar':    (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.editar_bitacora)),
-        'puede_eliminar':  (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.eliminar_bitacora)),
-        'filtro_fecha':    filtro_fecha,
-        'filtro_q':        filtro_q,
+        'registros':         registros,
+        'areas':             areas_permitidas_mto(request),
+        'filtro_area':       area_id,
+        'today':             date.today(),
+        'puede_editar':      (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.editar_bitacora)),
+        'puede_eliminar':    (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.eliminar_bitacora)),
+        'filtro_fecha':      filtro_fecha,
+        'filtro_q':          filtro_q,
+        'filtro_pendiente':  filtro_pendiente,
     }
     return render(request, 'mto_app/bitacora/lista.html', ctx)
 
