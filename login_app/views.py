@@ -1,8 +1,13 @@
+import json
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.core.cache import cache
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from .models import PerfilUsuario
 from .permisos import solo_admin, get_perfil
 from paros_app.models import Area
@@ -283,3 +288,33 @@ def _guardar_perfil(request, user, areas):
     return perfil
 
 
+@login_required
+@require_http_methods(["POST"])
+def cambiar_mi_password(request):
+    """
+    Permite a cualquier usuario autenticado cambiar su propia contraseña.
+
+    A diferencia de editar_usuario() (que es @solo_admin y opera sobre un
+    user_id recibido en la URL), esta vista siempre opera sobre request.user
+    y valida la contraseña actual — no hay forma de que alguien cambie la
+    contraseña de otro usuario por aquí.
+    """
+    try:
+        datos = json.loads(request.body)
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse(
+            {'success': False, 'errors': {'__all__': ['Solicitud inválida.']}},
+            status=400,
+        )
+
+    form = PasswordChangeForm(user=request.user, data=datos)
+    if form.is_valid():
+        form.save()
+        update_session_auth_hash(request, form.user)  # no cierra la sesión activa
+        return JsonResponse({
+            'success': True,
+            'message': 'Contraseña actualizada correctamente.',
+        })
+
+    errores = {campo: [str(e) for e in errs] for campo, errs in form.errors.items()}
+    return JsonResponse({'success': False, 'errors': errores}, status=400)

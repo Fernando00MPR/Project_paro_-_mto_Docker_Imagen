@@ -7,8 +7,11 @@ urlpatterns = [
     path('logout/',  auth_views.LogoutView.as_view(next_page='login'),                   name='logout'),
 
     # Gestión de usuarios
-    path('usuarios/',                        views.lista_usuarios,   name='lista_usuarios'),
-    path('usuarios/nuevo/',                  views.crear_usuario,    name='crear_usuario'),
-    path('usuarios/editar/<int:user_id>/',   views.editar_usuario,   name='editar_usuario'),
-    path('usuarios/eliminar/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
+    path('usuarios/',                         views.lista_usuarios,      name='lista_usuarios'),
+    path('usuarios/nuevo/',                   views.crear_usuario,       name='crear_usuario'),
+    path('usuarios/editar/<int:user_id>/',    views.editar_usuario,      name='editar_usuario'),
+    path('usuarios/eliminar/<int:user_id>/',  views.eliminar_usuario,    name='eliminar_usuario'),
+
+    # Autoservicio — cualquier usuario autenticado sobre sí mismo
+    path('mi-cuenta/cambiar-password/',       views.cambiar_mi_password, name='cambiar_mi_password'),
 ]

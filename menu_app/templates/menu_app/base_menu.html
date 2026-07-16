@@ -572,6 +572,12 @@
         }
         .sidebar.collapsed .logout-btn:hover::after { opacity: 1; }
 
+        /* ── Ocultar el ícono nativo de "mostrar contraseña" del navegador ── */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear { display: none; }
+        input[type="password"]::-webkit-contacts-auto-fill-button,
+        input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidden; }
+
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -959,13 +965,18 @@
 
         <div class="sidebar-footer">
             <!-- Usuario actual -->
-            <div style="padding:8px 12px 4px; display:flex; align-items:center; gap:8px; overflow:hidden;">
+            <button type="button" onclick="abrirModalUsuario()"
+                    style="all:unset; cursor:pointer; display:flex; align-items:center; gap:8px;
+                           overflow:hidden; padding:8px 12px 4px; width:100%; box-sizing:border-box;
+                           border-radius:7px; transition:background .15s;"
+                    onmouseover="this.style.background='var(--indigo-lt)'"
+                    onmouseout="this.style.background='transparent'">
                 <div style="width:28px; height:28px; border-radius:50%; background:var(--indigo);
                             display:flex; align-items:center; justify-content:center;
                             font-size:12px; font-weight:700; color:#fff; flex-shrink:0;">
                     {{ request.user.username|slice:":1"|upper }}
                 </div>
-                <div style="overflow:hidden; opacity:1; transition:opacity var(--tr);" class="nav-label">
+                <div style="overflow:hidden; opacity:1; transition:opacity var(--tr); text-align:left;" class="nav-label">
                     <div style="font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                         {% if request.user.get_full_name %}{{ request.user.get_full_name }}{% else %}{{ request.user.username }}{% endif %}
                     </div>
@@ -979,7 +990,7 @@
                         {% endif %}
                     </div>
                 </div>
-            </div>
+            </button>
             <hr style="border:none; border-top:1px solid var(--border); margin:6px 8px;">
 
             <!-- Dark mode toggle -->
@@ -1010,6 +1021,141 @@
             </form>
         </div>
     </aside>
+
+    <!-- Modal de usuario: cambiar contraseña / cerrar sesión -->
+    <div id="modal-usuario" style="display:none; position:fixed; inset:0;
+         background:rgba(30,27,75,.45); z-index:8000; align-items:center; justify-content:center;">
+        <div style="background:var(--white); border-radius:14px; padding:24px 28px;
+                    min-width:320px; max-width:400px; width:90%;
+                    box-shadow:0 8px 40px rgba(0,0,0,.18);">
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div style="font-size:15px; font-weight:600; color:var(--text);">
+                    {% if request.user.get_full_name %}{{ request.user.get_full_name }}{% else %}{{ request.user.username }}{% endif %}
+                </div>
+                <button onclick="cerrarModalUsuario()"
+                        onmouseover="this.style.color='var(--red)'"
+                        onmouseout="this.style.color='var(--text-3)'"
+                        style="background:none; border:none; cursor:pointer; color:var(--text-3); font-size:20px; line-height:1;">✕</button>
+            </div>
+
+            <!-- Vista menú -->
+            <div id="modal-usuario-menu">
+                <button type="button" onclick="mostrarFormPassword()"
+                        style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px;
+                               border:1px solid var(--border); border-radius:8px; background:transparent;
+                               color:var(--text); font-family:inherit; font-size:13px; cursor:pointer;
+                               margin-bottom:8px; text-align:left;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    {% trans "Cambiar contraseña" %}
+                </button>
+
+                <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" onclick="localStorage.removeItem('app_modulo')"
+                            style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px;
+                                   border:1px solid var(--border); border-radius:8px; background:transparent;
+                                   color:var(--red); font-family:inherit; font-size:13px; cursor:pointer;
+                                   text-align:left;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        {% trans "Cerrar sesión" %}
+                    </button>
+                </form>
+            </div>
+
+            <!-- Vista formulario (oculta inicialmente) -->
+            <div id="modal-usuario-form" style="display:none;">
+                <button type="button" onclick="volverAMenuUsuario()"
+                        style="background:none; border:none; cursor:pointer; color:var(--text-2);
+                               font-size:12px; margin-bottom:14px; padding:0; display:flex; align-items:center; gap:4px;">
+                    ← {% trans "Volver" %}
+                </button>
+
+                <!-- Contraseña Actual -->
+                <div class="form-field" style="margin-bottom:12px;">
+                    <label style="font-size:12px; font-weight:600; color:var(--text-2);">{% trans "Contraseña actual" %}</label>
+                    <div style="position:relative;">
+                        <input type="password" id="pwd-actual" autocomplete="current-password"
+                            style="width:100%; box-sizing:border-box; padding:8px 42px 8px 10px; border:1px solid var(--border);
+                                    border-radius:7px; font-family:inherit; font-size:13px; background:var(--white); color:var(--text);">
+                        <button type="button" onclick="toggleModalPwd('pwd-actual', 'eye-actual-on', 'eye-actual-off')"
+                                style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none;
+                                    cursor:pointer; padding:4px; color:#9CA3AF; display:flex; align-items:center;">
+                            <svg id="eye-actual-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg id="eye-actual-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="pwd-error" data-field="old_password" style="color:var(--red); font-size:11px; margin-top:3px;"></div>
+                </div>
+
+                <!-- Contraseña Nueva -->
+                <div class="form-field" style="margin-bottom:12px;">
+                    <label style="font-size:12px; font-weight:600; color:var(--text-2);">{% trans "Nueva contraseña" %}</label>
+                    <div style="position:relative;">
+                        <input type="password" id="pwd-nueva1" autocomplete="new-password"
+                            style="width:100%; box-sizing:border-box; padding:8px 42px 8px 10px; border:1px solid var(--border);
+                                    border-radius:7px; font-family:inherit; font-size:13px; background:var(--white); color:var(--text);">
+                        <button type="button" onclick="toggleModalPwd('pwd-nueva1', 'eye-nueva1-on', 'eye-nueva1-off')"
+                                style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none;
+                                    cursor:pointer; padding:4px; color:#9CA3AF; display:flex; align-items:center;">
+                            <svg id="eye-nueva1-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg id="eye-nueva1-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="pwd-error" data-field="new_password1" style="color:var(--red); font-size:11px; margin-top:3px;"></div>
+                </div>
+
+                <!-- Confirmar Contraseña Nueva -->
+                <div class="form-field" style="margin-bottom:16px;">
+                    <label style="font-size:12px; font-weight:600; color:var(--text-2);">{% trans "Confirmar nueva contraseña" %}</label>
+                    <div style="position:relative;">
+                        <input type="password" id="pwd-nueva2" autocomplete="new-password"
+                            style="width:100%; box-sizing:border-box; padding:8px 42px 8px 10px; border:1px solid var(--border);
+                                    border-radius:7px; font-family:inherit; font-size:13px; background:var(--white); color:var(--text);">
+                        <button type="button" onclick="toggleModalPwd('pwd-nueva2', 'eye-nueva2-on', 'eye-nueva2-off')"
+                                style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none;
+                                    cursor:pointer; padding:4px; color:#9CA3AF; display:flex; align-items:center;">
+                            <svg id="eye-nueva2-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg id="eye-nueva2-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="pwd-error" data-field="new_password2" style="color:var(--red); font-size:11px; margin-top:3px;"></div>
+                </div>
+
+                <div class="pwd-error" data-field="__all__" style="color:var(--red); font-size:12px; margin-bottom:10px;"></div>
+
+                <div style="display:flex; gap:8px; justify-content:flex-end;">
+                    <button type="button" onclick="volverAMenuUsuario()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+                    <button type="button" id="btn-guardar-password" onclick="guardarPassword()" class="btn btn-primary">{% trans "Guardar" %}</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
     <!-- Contenido -->
     <main class="main">
@@ -1092,6 +1238,7 @@ btnTheme.addEventListener('click', () => {
     localStorage.setItem('app_theme', next);
 });
 </script>
+
 <script>
 /* ── Toggle módulo MTO / Paros ── */
 const MODULO_KEY = 'app_modulo';
@@ -1161,6 +1308,86 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<!-- Cambiar Constraseña -->
+<script>
+const CSRF_USUARIO = '{{ csrf_token }}';
+const URL_CAMBIAR_PASSWORD = '{% url "cambiar_mi_password" %}';
+
+function abrirModalUsuario() {
+    volverAMenuUsuario();
+    document.getElementById('modal-usuario').style.display = 'flex';
+}
+function cerrarModalUsuario() {
+    document.getElementById('modal-usuario').style.display = 'none';
+}
+function mostrarFormPassword() {
+    document.getElementById('modal-usuario-menu').style.display = 'none';
+    document.getElementById('modal-usuario-form').style.display = 'block';
+}
+function volverAMenuUsuario() {
+    document.getElementById('modal-usuario-form').style.display = 'none';
+    document.getElementById('modal-usuario-menu').style.display = 'block';
+    document.getElementById('pwd-actual').value = '';
+    document.getElementById('pwd-nueva1').value = '';
+    document.getElementById('pwd-nueva2').value = '';
+    document.querySelectorAll('.pwd-error').forEach(el => el.textContent = '');
+}
+
+function toggleModalPwd(inputId, eyeOnId, eyeOffId) {
+    const input  = document.getElementById(inputId);
+    const eyeOn  = document.getElementById(eyeOnId);
+    const eyeOff = document.getElementById(eyeOffId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        eyeOn.style.display  = 'block';
+        eyeOff.style.display = 'none';
+    } else {
+        input.type = 'password';
+        eyeOn.style.display  = 'none';
+        eyeOff.style.display = 'block';
+    }
+}
+
+function guardarPassword() {
+    document.querySelectorAll('.pwd-error').forEach(el => el.textContent = '');
+
+    const boton = document.getElementById('btn-guardar-password');
+    boton.disabled = true;
+
+    fetch(URL_CAMBIAR_PASSWORD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_USUARIO },
+        body: JSON.stringify({
+            old_password:  document.getElementById('pwd-actual').value,
+            new_password1: document.getElementById('pwd-nueva1').value,
+            new_password2: document.getElementById('pwd-nueva2').value,
+        }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        boton.disabled = false;
+        if (data.success) {
+            cerrarModalUsuario();
+            showToast(data.message);
+        } else {
+            Object.entries(data.errors).forEach(([campo, mensajes]) => {
+                const el = document.querySelector(`.pwd-error[data-field="${campo}"]`);
+                if (el) el.textContent = mensajes.join(' ');
+            });
+        }
+    })
+    .catch(() => {
+        boton.disabled = false;
+        showToast('Error de conexión. Inténtalo de nuevo.', 'error');
+    });
+}
+
+document.getElementById('modal-usuario').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalUsuario();
+});
+</script>
+
 {% block extra_js %}
 {% endblock %}
 </body>
