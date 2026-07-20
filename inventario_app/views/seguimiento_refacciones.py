@@ -6,6 +6,8 @@ from django.urls import reverse
 from mto_app.models import Area
 from ..models import Refaccion, SeguimientoRefaccion
 from datetime import date
+import openpyxl
+from paros_app.views.utils import _excel_response, _estilo_cabecera
 
 
 @login_required
@@ -161,3 +163,75 @@ def eliminar_seguimiento_refaccion(request, pk):
         messages.success(request, "Seguimiento eliminado.")
     return redirect(f"{reverse('inventario:lista_seguimientos_refaccion')}?area={area_id}")
 
+
+@login_required
+def exportar_seguimientos_refaccion(request):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_ver = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.ver_seguimiento_refaccion)
+    )
+    if not puede_ver:
+        messages.error(request, "No tienes permiso para exportar.")
+        return redirect('inventario:lista_seguimientos_refaccion')
+
+    area_id        = request.GET.get('area', '')
+    filtro_no_item = request.GET.get('no_item', '').strip()
+    filtro_nombre  = request.GET.get('nombre', '').strip()
+    filtro_pr      = request.GET.get('pr', '').strip()
+    filtro_po      = request.GET.get('po', '').strip()
+    filtro_sr      = request.GET.get('sr', '').strip()
+    filtro_estatus = request.GET.get('estatus', '')
+    fecha_pr_desde = request.GET.get('fecha_pr_desde', '') or date(date.today().year, 1, 1).isoformat()
+    fecha_pr_hasta = request.GET.get('fecha_pr_hasta', '') or date.today().isoformat()
+
+    seguimientos = SeguimientoRefaccion.objects.select_related('refaccion', 'refaccion__area')
+    if area_id:
+        seguimientos = seguimientos.filter(refaccion__area_id=area_id)
+    if filtro_no_item:
+        seguimientos = seguimientos.filter(refaccion__no_item__icontains=filtro_no_item)
+    if filtro_nombre:
+        seguimientos = seguimientos.filter(refaccion__nombre__icontains=filtro_nombre)
+    if filtro_pr:
+        seguimientos = seguimientos.filter(numero_pr__icontains=filtro_pr)
+    if filtro_po:
+        seguimientos = seguimientos.filter(numero_po__icontains=filtro_po)
+    if filtro_sr:
+        seguimientos = seguimientos.filter(numero_sr__icontains=filtro_sr)
+    if fecha_pr_desde:
+        seguimientos = seguimientos.filter(fecha_pr__gte=fecha_pr_desde)
+    if fecha_pr_hasta:
+        seguimientos = seguimientos.filter(fecha_pr__lte=fecha_pr_hasta)
+
+    seguimientos_lista = list(seguimientos)
+    if filtro_estatus:
+        seguimientos_lista = [s for s in seguimientos_lista if s.estatus == filtro_estatus]
+
+    ESTATUS_L = {'rojo': 'Sin PO', 'amarillo': 'Sin SR', 'verde': 'Completado'}
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Seguimiento Refacciones'
+    cabeceras = ['No. Item', 'Nombre', 'Área', 'Cantidad', 'No. PR', 'Fecha PR',
+                 'No. PO', 'Fecha PO', 'No. SR', 'Fecha SR', 'Estatus', 'Comentarios']
+    _estilo_cabecera(ws, cabeceras, [12, 30, 18, 10, 14, 12, 14, 12, 14, 12, 14, 40])
+
+    for s in seguimientos_lista:
+        ws.append([
+            s.refaccion.no_item,
+            s.refaccion.nombre,
+            s.refaccion.area.nombre,
+            s.cantidad,
+            s.numero_pr,
+            s.fecha_pr.strftime('%d/%m/%Y') if s.fecha_pr else '',
+            s.numero_po,
+            s.fecha_po.strftime('%d/%m/%Y') if s.fecha_po else '',
+            s.numero_sr,
+            s.fecha_sr.strftime('%d/%m/%Y') if s.fecha_sr else '',
+            ESTATUS_L.get(s.estatus, s.estatus),
+            s.comentarios,
+        ])
+
+    response = _excel_response('Seguimiento_Refacciones.xlsx')
+    wb.save(response)
+    return response

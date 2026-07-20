@@ -1,8 +1,11 @@
+import os
 from django.db import models
 from mto_app.models import Area
 from django.utils.translation import gettext_lazy as _ 
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.core.files.base import ContentFile
+from paros_app.models import comprimir_imagen_pil
 
 
 class CategoriaRefaccion(models.Model):
@@ -77,6 +80,15 @@ class ImagenRefaccion(models.Model):
 
     def __str__(self):
         return f"Imagen — {self.refaccion.no_item}"
+
+    def save(self, *args, **kwargs):
+        if self.imagen and not self.imagen._committed:
+            contenido_jpeg, _ = comprimir_imagen_pil(self.imagen)
+            if contenido_jpeg is not None:
+                nombre_base  = os.path.splitext(self.imagen.name)[0]
+                nuevo_nombre = f'{nombre_base}.jpg'
+                self.imagen.save(nuevo_nombre, ContentFile(contenido_jpeg), save=False)
+        super().save(*args, **kwargs)
 
 @receiver(post_delete, sender=ImagenRefaccion)
 def borrar_archivo_imagen_refaccion(sender, instance, **kwargs):

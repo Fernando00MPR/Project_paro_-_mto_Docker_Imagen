@@ -26,8 +26,8 @@ function crearGraficaPareto(canvasId) {
         data: {
             labels: LABELS_P,
             datasets: [
-                { type:'bar',  data:MINUTOS_P, backgroundColor:'#4F46E5', borderRadius:4, yAxisID:'y',  label:'Minutos' },
-                { type:'line', data:ACUM_P, borderColor:red, borderWidth:2.5, pointBackgroundColor:red, pointRadius:4, fill:false, tension:0.1, yAxisID:'y1', label:'%' }
+                { type:'bar',  data:MINUTOS_P, backgroundColor:'#4F46E5', borderRadius:4, yAxisID:'y',  label:'Minutos', order:2 },
+                { type:'line', data:ACUM_P, borderColor:red, borderWidth:2.5, pointBackgroundColor:red, pointRadius:4, fill:false, tension:0.1, yAxisID:'y1', label:'%', order:1 }
             ]
         },
         options: {

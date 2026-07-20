@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Seguimientos de OTs" %}{% endblock %}
+
 {% block content %}
 
 <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
@@ -122,7 +123,7 @@
     </div>
 
     <div class="table-wrap" style="overflow-x:auto;">
-        <table>
+        <table id="tabla-seguimientos-ot" class="sticky-actions-col">
             <thead>
                 <tr>
                     <th class="seg-col-orden"       style="text-align:center; width:120px;">

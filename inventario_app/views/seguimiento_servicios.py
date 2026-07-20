@@ -7,6 +7,8 @@ from django.urls import reverse
 from mto_app.models import Area
 from ..models import TipoServicio, SeguimientoServicio
 from datetime import date
+import openpyxl
+from paros_app.views.utils import _excel_response, _estilo_cabecera
 
 
 @login_required
@@ -173,3 +175,81 @@ def eliminar_seguimiento_servicio(request, pk):
         seguimiento.delete()
         messages.success(request, "Seguimiento de servicio eliminado.")
     return redirect(f"{reverse('inventario:lista_seguimientos_servicio')}?area={area_id}")
+
+
+@login_required
+def exportar_seguimientos_servicio(request):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_ver = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.ver_seguimiento_servicio)
+    )
+    if not puede_ver:
+        messages.error(request, "No tienes permiso para exportar.")
+        return redirect('inventario:lista_seguimientos_servicio')
+
+    area_id        = request.GET.get('area', '')
+    filtro_no_item = request.GET.get('no_item', '').strip()
+    filtro_nombre  = request.GET.get('nombre', '').strip()
+    filtro_tipo    = request.GET.get('tipo', '')
+    filtro_pr      = request.GET.get('pr', '').strip()
+    filtro_po      = request.GET.get('po', '').strip()
+    filtro_sr      = request.GET.get('sr', '').strip()
+    filtro_estatus = request.GET.get('estatus', '')
+    fecha_pr_desde = request.GET.get('fecha_pr_desde', '') or date(date.today().year, 1, 1).isoformat()
+    fecha_pr_hasta = request.GET.get('fecha_pr_hasta', '') or date.today().isoformat()
+
+    qs = SeguimientoServicio.objects.select_related('area', 'tipo_servicio')
+    if area_id:
+        qs = qs.filter(area_id=area_id)
+    if filtro_no_item:
+        qs = qs.filter(no_item__icontains=filtro_no_item)
+    if filtro_nombre:
+        qs = qs.filter(nombre__icontains=filtro_nombre)
+    if filtro_tipo:
+        qs = qs.filter(tipo_servicio_id=filtro_tipo)
+    if filtro_pr:
+        qs = qs.filter(numero_pr__icontains=filtro_pr)
+    if filtro_po:
+        qs = qs.filter(numero_po__icontains=filtro_po)
+    if filtro_sr:
+        qs = qs.filter(numero_sr__icontains=filtro_sr)
+    if fecha_pr_desde:
+        qs = qs.filter(fecha_pr__gte=fecha_pr_desde)
+    if fecha_pr_hasta:
+        qs = qs.filter(fecha_pr__lte=fecha_pr_hasta)
+
+    seguimientos_lista = list(qs)
+    if filtro_estatus:
+        seguimientos_lista = [s for s in seguimientos_lista if s.estatus == filtro_estatus]
+
+    ESTATUS_L = {'rojo': 'Sin PO', 'amarillo': 'Sin SR', 'verde': 'Completado'}
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Seguimiento Servicios'
+    cabeceras = ['No. Item', 'Nombre', 'Área', 'Cantidad', 'Motivo', 'Tipo de servicio', 'No. PR', 'Fecha PR',
+                 'No. PO', 'Fecha PO', 'No. SR', 'Fecha SR', 'Estatus', 'Comentarios']
+    _estilo_cabecera(ws, cabeceras, [12, 30, 18, 10, 30, 18, 14, 12, 14, 12, 14, 12, 14, 40])
+
+    for s in seguimientos_lista:
+        ws.append([
+            s.no_item,
+            s.nombre,
+            s.area.nombre,
+            s.cantidad,
+            s.motivo_servicio,
+            s.tipo_servicio.nombre,
+            s.numero_pr,
+            s.fecha_pr.strftime('%d/%m/%Y') if s.fecha_pr else '',
+            s.numero_po,
+            s.fecha_po.strftime('%d/%m/%Y') if s.fecha_po else '',
+            s.numero_sr,
+            s.fecha_sr.strftime('%d/%m/%Y') if s.fecha_sr else '',
+            ESTATUS_L.get(s.estatus, s.estatus),
+            s.comentarios,
+        ])
+
+    response = _excel_response('Seguimiento_Servicios.xlsx')
+    wb.save(response)
+    return response

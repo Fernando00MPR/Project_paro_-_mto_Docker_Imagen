@@ -12,7 +12,7 @@ from django.views.decorators.http import require_http_methods
 
 from ..forms import ParoForm
 from login_app.permisos import permiso_requerido, get_perfil
-from .utils import _aplicar_filtros
+from .utils import _aplicar_filtros, _aplicar_orden
 from ..models import Area, Paro, BitacoraParo, CatalogoFalla, CatalogoEquipo, CatalogoResponsable, ImagenParo
 
 # ── Helpers internos ──────────────────────────────────────────────────────────
@@ -73,6 +73,7 @@ def lista_paros(request):
         get_params['fecha_hasta'] = hoy
 
     paros_qs               = _aplicar_filtros(paros_qs, get_params)
+    paros_qs               = _aplicar_orden(paros_qs, get_params, default=['-fecha', '-hora'])
     
     _agg = paros_qs.aggregate(
         total_minutos       = Sum('tiempo_minutos'),
@@ -91,14 +92,14 @@ def lista_paros(request):
     promedio_min_aceptados = round(minutos_aceptados / paros_aceptados, 1) if paros_aceptados else 0
     paro_mayor_aceptados   = paros_aceptados_qs.order_by('-tiempo_minutos').values('falla', 'tiempo_minutos').first()
 
-    por_pagina = get_params.get('por_pagina', '8')
-    
+    por_pagina = get_params.get('por_pagina', '10')
+
     try:
         pp = int(por_pagina)
-        if pp not in (8, 10, 20):
-            pp = 8
+        if pp not in (10, 20, 30):
+            pp = 10
     except (ValueError, TypeError):
-        pp = 8
+        pp = 10
     por_pagina = str(pp)
     paginator  = Paginator(paros_qs, pp)
     page_obj   = paginator.get_page(get_params.get('page', 1))
@@ -140,7 +141,6 @@ def lista_paros_por_area(request, area_id):
         .select_related('area')
         .prefetch_related('imagenes')
         .filter(area=area)
-        .order_by('fecha', 'turno', 'hora')
     )
 
     hoy        = date.today().strftime('%Y-%m-%d')
@@ -150,7 +150,8 @@ def lista_paros_por_area(request, area_id):
     if not get_params.get('fecha_hasta'):
         get_params['fecha_hasta'] = hoy
 
-    paros_qs = _aplicar_filtros(paros_qs, get_params)
+    paros_qs               = _aplicar_filtros(paros_qs, get_params)
+    paros_qs = _aplicar_orden(paros_qs, get_params, default=['fecha', 'turno', 'hora'])    
     
     _agg = paros_qs.aggregate(
         total_minutos      = Sum('tiempo_minutos'),
@@ -169,13 +170,13 @@ def lista_paros_por_area(request, area_id):
     promedio_min_aceptados  = round(minutos_aceptados / paros_aceptados, 1) if paros_aceptados else 0
     paro_mayor_aceptados    = paros_aceptados_qs.order_by('-tiempo_minutos').values('falla', 'tiempo_minutos').first()
 
-    por_pagina = get_params.get('por_pagina', '8')
+    por_pagina = get_params.get('por_pagina', '10')
     try:
         pp = int(por_pagina)
-        if pp not in (8, 10, 20):
-            pp = 8
+        if pp not in (10, 20, 30):
+            pp = 10
     except (ValueError, TypeError):
-        pp = 8
+        pp = 10
     por_pagina = str(pp)
     paginator  = Paginator(paros_qs, pp)
     page_obj   = paginator.get_page(get_params.get('page', 1))

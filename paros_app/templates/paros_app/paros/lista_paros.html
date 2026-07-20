@@ -122,80 +122,111 @@
 
 <!-- ── Stats + selector paginación ── -->
 <div class="stat-bar">
-    <div style="display:flex;gap:16px;flex-wrap:wrap;">
-        <div class="stat-item">
-            <b>{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ paros|length }}{% endif %}</b>{% trans " Paros encontrados" %}
-        </div>
-        <div class="stat-item"><b>{{ total_minutos }}</b> min {% trans "totales" %}</div>
-        
-        <div class="stat-item" style="border-left:3px solid #10B981;">
-            <b>{{ paros_aceptados }}</b> {% trans "Paros aceptados" %}
-        </div>
-        <div class="stat-item" style="border-left:3px solid #10B981;">
-            <b>{{ minutos_aceptados }}</b> min {% trans "aceptados" %}
-        </div>
-        
-        {% if promedio_min_aceptados %}
-            <div class="stat-item" style="border-left:3px solid #10B981;">
+    <div id="indicadores-bar" style="display:flex;gap:16px;flex-wrap:wrap;">
+        {% if page_obj.paginator.count %}
+            <div id="stat-encontrados" class="stat-item" style="display:none;">
+                <b>{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ paros|length }}{% endif %}</b>{% trans " Paros encontrados" %}
+            </div>
+            <div id="stat-min-totales" class="stat-item" style="display:none;"><b>{{ total_minutos }}</b> min {% trans "totales" %}</div>
+
+            <div id="stat-paros-aceptados" class="stat-item" style="border-left:3px solid #10B981;">
+                <b>{{ paros_aceptados }}</b> {% trans "Paros aceptados" %}
+            </div>
+            <div id="stat-min-aceptados" class="stat-item" style="border-left:3px solid #10B981;">
+                <b>{{ minutos_aceptados }}</b> min {% trans "aceptados" %}
+            </div>
+
+            <div id="stat-min-promedio" class="stat-item" style="border-left:3px solid #10B981;">
                 <b>{{ promedio_min_aceptados }}</b> min {% trans "promedio" %}
             </div>
         {% endif %}
 
         {% if paro_mayor_aceptados %}
-        <div class="stat-item" style="border-left:3px solid #10B981;">
+        <div id="stat-paro-mayor" class="stat-item" style="border-left:3px solid #10B981;">
             <b>{{ paro_mayor_aceptados.tiempo_minutos }}</b> min - <span style="font-size:12px; color:var(--text-2);">{{ paro_mayor_aceptados.falla }}</span>
         </div>
         {% endif %}
 
-        <div class="stat-item" style="border-left:3px solid #EF4444;">
+        <div id="stat-paros-sin-aceptar" class="stat-item" style="border-left:3px solid #EF4444; display:none;">
             <b>{{ paros_sin_aceptar }}</b> {% trans "Paros sin aceptar" %}
         </div>
-        <div class="stat-item" style="border-left:3px solid #EF4444;">
+        <div id="stat-min-sin-aceptar" class="stat-item" style="border-left:3px solid #EF4444; display:none;">
             <b>{{ minutos_sin_aceptar }}</b> min {% trans "sin aceptar" %}
         </div>
     </div>
-    <!-- ── Filtro Columnas ── -->
-    <div style="position:relative; margin-left:auto;">
-        <button id="btn-columnas" onclick="toggleDropdownColumnas()"
-                style="display:flex; align-items:center; gap:6px; padding:6px 12px;
-                    border:1px solid var(--border); border-radius:7px;
-                    background:var(--white); color:var(--text); font-size:12px;
-                    cursor:pointer; font-family:inherit;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
-            </svg>
-            {% trans "Columnas" %}
-        </button>
-        <div id="dropdown-columnas" style="display:none; position:absolute; right:0; top:36px;
-                                        background:var(--white); border:1px solid var(--border);
-                                        border-radius:10px; padding:8px 0; width:180px; z-index:100;">
-            <div style="font-size:11px; font-weight:600; color:var(--text-3); padding:4px 14px 8px;
-                        text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border);
-                        margin-bottom:4px;">{% trans "Mostrar columnas" %}</div>
-            <label class="col-toggle-item"><input type="checkbox" checked disabled>{% trans "Área" %}</label>
-            <label class="col-toggle-item"><input type="checkbox" checked data-col="2" onchange="toggleColumna(this)"> {% trans "Fecha" %}</label>
-            <label class="col-toggle-item"><input type="checkbox" checked data-col="3" onchange="toggleColumna(this)"> {% trans "Semana" %}</label>
-            <label class="col-toggle-item"><input type="checkbox" checked data-col="4" onchange="toggleColumna(this)"> {% trans "Turno" %}</label>
-            <label class="col-toggle-item"><input type="checkbox" checked data-col="5" onchange="toggleColumna(this)"> {% trans "Falla" %}</label>
-            <label class="col-toggle-item"><input type="checkbox" checked data-col="6" onchange="toggleColumna(this)"> {% trans "Responsable" %}</label>
-            <label class="col-toggle-item"><input type="checkbox" checked data-col="7" onchange="toggleColumna(this)"> {% trans "Equipo" %}</label>
-            <label class="col-toggle-item"><input type="checkbox" checked data-col="8" onchange="toggleColumna(this)"> {% trans "Hora" %}</label>
-            <label class="col-toggle-item"><input type="checkbox" checked data-col="9" onchange="toggleColumna(this)"> {% trans "Tiempo" %}</label>
-            <label class="col-toggle-item"><input type="checkbox" checked data-col="10" onchange="toggleColumna(this)">{% trans "Comentarios" %}</label>
+
+    <!-- ── Filtro Indicadores + Columnas ── -->
+    <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+        <div style="position:relative;">
+            <button id="btn-indicadores" onclick="toggleDropdownIndicadores()"
+                    style="display:flex; align-items:center; gap:6px; padding:6px 12px;
+                        border:1px solid var(--border); border-radius:7px;
+                        background:var(--white); color:var(--text); font-size:12px;
+                        cursor:pointer; font-family:inherit;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 3a8 8 0 100 16 8 8 0 000-16zM3 3l18 18"/>
+                </svg>
+                {% trans "Indicadores" %}
+            </button>
+            <div id="dropdown-indicadores" style="display:none; position:absolute; right:0; top:36px;
+                                                background:var(--white); border:1px solid var(--border);
+                                                border-radius:10px; padding:8px 0; width:200px; z-index:100;">
+                    <div style="font-size:11px; font-weight:600; color:var(--text-3); padding:4px 14px 8px;
+                                text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border);
+                                margin-bottom:4px;">{% trans "Mostrar indicadores" %}</div>
+                    <label class="col-toggle-item"><input type="checkbox" data-target="stat-encontrados" onchange="toggleIndicador(this)"> {% trans "Paros encontrados" %}</label>
+                    <label class="col-toggle-item"><input type="checkbox" data-target="stat-min-totales" onchange="toggleIndicador(this)"> {% trans "Min totales" %}</label>
+                    <label class="col-toggle-item"><input type="checkbox" checked data-target="stat-paros-aceptados" onchange="toggleIndicador(this)"> {% trans "Paros aceptados" %}</label>
+                    <label class="col-toggle-item"><input type="checkbox" checked data-target="stat-min-aceptados" onchange="toggleIndicador(this)"> {% trans "Min aceptados" %}</label>
+                    <label class="col-toggle-item"><input type="checkbox" checked data-target="stat-min-promedio" onchange="toggleIndicador(this)"> {% trans "Min promedio" %}</label>
+                    <label class="col-toggle-item"><input type="checkbox" checked data-target="stat-paro-mayor" onchange="toggleIndicador(this)"> {% trans "Paro más largo" %}</label>
+                    <label class="col-toggle-item"><input type="checkbox" data-target="stat-paros-sin-aceptar" onchange="toggleIndicador(this)"> {% trans "Paros sin aceptar" %}</label>
+                    <label class="col-toggle-item"><input type="checkbox" data-target="stat-min-sin-aceptar" onchange="toggleIndicador(this)"> {% trans "Min sin aceptar" %}</label>
+            </div>
+        </div>
+        <div style="position:relative;">
+            <button id="btn-columnas" onclick="toggleDropdownColumnas()"
+                    style="display:flex; align-items:center; gap:6px; padding:6px 12px;
+                        border:1px solid var(--border); border-radius:7px;
+                        background:var(--white); color:var(--text); font-size:12px;
+                        cursor:pointer; font-family:inherit;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+                </svg>
+                {% trans "Columnas" %}
+            </button>
+            <div id="dropdown-columnas" style="display:none; position:absolute; right:0; top:36px;
+                                            background:var(--white); border:1px solid var(--border);
+                                            border-radius:10px; padding:8px 0; width:180px; z-index:100;">
+                <div style="font-size:11px; font-weight:600; color:var(--text-3); padding:4px 14px 8px;
+                            text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border);
+                            margin-bottom:4px;">{% trans "Mostrar columnas" %}</div>
+                <label class="col-toggle-item"><input type="checkbox" data-col="1" onchange="toggleColumna(this)">{% trans "Área" %}</label>
+                <label class="col-toggle-item"><input type="checkbox" checked data-col="2" onchange="toggleColumna(this)"> {% trans "Fecha" %}</label>
+                <label class="col-toggle-item"><input type="checkbox" checked data-col="3" onchange="toggleColumna(this)"> {% trans "Semana" %}</label>
+                <label class="col-toggle-item"><input type="checkbox" checked data-col="4" onchange="toggleColumna(this)"> {% trans "Turno" %}</label>
+                <label class="col-toggle-item"><input type="checkbox" checked data-col="5" onchange="toggleColumna(this)"> {% trans "Falla" %}</label>
+                <label class="col-toggle-item"><input type="checkbox" checked data-col="6" onchange="toggleColumna(this)"> {% trans "Responsable" %}</label>
+                <label class="col-toggle-item"><input type="checkbox" checked data-col="7" onchange="toggleColumna(this)"> {% trans "Equipo" %}</label>
+                <label class="col-toggle-item"><input type="checkbox" checked data-col="8" onchange="toggleColumna(this)"> {% trans "Hora" %}</label>
+                <label class="col-toggle-item"><input type="checkbox" checked data-col="9" onchange="toggleColumna(this)"> {% trans "Tiempo" %}</label>
+                <label class="col-toggle-item"><input type="checkbox" checked data-col="10" onchange="toggleColumna(this)">{% trans "Comentarios" %}</label>
+            </div>
         </div>
     </div>
-    <!-- ── Filtro Columnas ── -->
+
 </div>
 
 <!-- ── Tabla ── -->
 <div class="card" style="padding:0; overflow:hidden;">
     <div class="table-wrap">
-        <table id="tabla-paros">
+        <table id="tabla-paros" class="sticky-actions-col">
             <colgroup>
                 <col style="width:4px">
                 <col style="width:90px">
-                <col style="width:70px">
+                <col style="width:80px">
                 <col style="width:55px">
                 <col style="width:80px">
                 <col style="width:150px">
@@ -210,14 +241,14 @@
                 <tr>
                     <th style="padding:0;width:4px;"></th>
                     <th>{% trans "Área" %}</th>
-                    <th style="text-align:center;">{% trans "Fecha" %}</th>
+                    <th style="text-align:center;cursor:pointer;user-select:none;" onclick="cambiarOrden('fecha')">{% trans "Fecha" %}{% if filtros.orden == 'fecha' %} ▲{% elif filtros.orden == '-fecha' %} ▼{% endif %}</th>
                     <th style="text-align:center;">{% trans "Sem." %}</th>
                     <th>{% trans "Turno" %}</th>
                     <th>{% trans "Falla" %}</th>
                     <th>{% trans "Responsable" %}</th>
                     <th>{% trans "Equipo" %}</th>
-                    <th style="text-align:center;">{% trans "Hora" %}</th>
-                    <th style="text-align:center;">{% trans "Tiempo" %}</th>
+                    <th style="text-align:center;cursor:pointer;user-select:none;" onclick="cambiarOrden('hora')">{% trans "Hora" %}{% if filtros.orden == 'hora' %} ▲{% elif filtros.orden == '-hora' %} ▼{% endif %}</th>
+                    <th style="text-align:center;cursor:pointer;user-select:none;" onclick="cambiarOrden('tiempo_minutos')">{% trans "Tiempo" %}{% if filtros.orden == 'tiempo_minutos' %} ▲{% elif filtros.orden == '-tiempo_minutos' %} ▼{% endif %}</th>
                     <th>{% trans "Comentarios" %}</th>
                     <th>{% trans "Acciones" %}</th>
                 </tr>
@@ -341,9 +372,9 @@
     </div>
     <div style="display:flex; align-items:center; gap:4px;">
         <span style="font-size:13px; font-weight:500; color:var(--text-2); margin-right:4px;">{% trans "Mostrar" %}</span>
-        <a onclick="cambiarPorPagina('8')" style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:7px;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;border:1px solid var(--border);background:{% if por_pagina == '8' %}var(--indigo){% else %}var(--white){% endif %};color:{% if por_pagina == '8' %}#fff{% else %}var(--text-2){% endif %};">8</a>
         <a onclick="cambiarPorPagina('10')" style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:7px;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;border:1px solid var(--border);background:{% if por_pagina == '10' %}var(--indigo){% else %}var(--white){% endif %};color:{% if por_pagina == '10' %}#fff{% else %}var(--text-2){% endif %};">10</a>
         <a onclick="cambiarPorPagina('20')" style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:7px;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;border:1px solid var(--border);background:{% if por_pagina == '20' %}var(--indigo){% else %}var(--white){% endif %};color:{% if por_pagina == '20' %}#fff{% else %}var(--text-2){% endif %};">20</a>
+        <a onclick="cambiarPorPagina('30')" style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:7px;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;border:1px solid var(--border);background:{% if por_pagina == '30' %}var(--indigo){% else %}var(--white){% endif %};color:{% if por_pagina == '30' %}#fff{% else %}var(--text-2){% endif %};">30</a>
     </div>
 </div>
 

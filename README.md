@@ -47,7 +47,6 @@ DJANGO_SUPERUSER_USERNAME=admin
 DJANGO_SUPERUSER_EMAIL=admin@empresa.com
 DJANGO_SUPERUSER_PASSWORD=tu-password-seguro
 
-PGDUMP_PATH=pg_dump
 ```
 
 > ⚠️ Nunca subas el archivo `.env` al repositorio.
@@ -98,7 +97,6 @@ Verifica que los contenedores estén corriendo:
 | `DJANGO_SUPERUSER_USERNAME` | Usuario administrador inicial | `admin` |
 | `DJANGO_SUPERUSER_EMAIL` | Email del administrador | `admin@empresa.com` |
 | `DJANGO_SUPERUSER_PASSWORD` | Contraseña del administrador | `password-seguro` |
-| `PGDUMP_PATH` | Ruta a pg_dump | `pg_dump` |
 
 ### Volúmenes persistentes requeridos
 
@@ -107,36 +105,8 @@ Configurar en Coolify → Persistent Storage:
 | Source Path (servidor) | Destination Path (contenedor) | Descripción |
 |---|---|---|
 | `/opt/paros/media` | `/app/media` | Imágenes subidas por usuarios |
-| `/opt/paros/respaldos` | `/app/respaldos` | Respaldos automáticos de BD |
 
-> Sin estos volúmenes las imágenes y respaldos se pierden en cada redeploy.
-
----
-
-## Respaldos automáticos
-
-El sistema genera respaldos automáticamente cada **lunes a las 2 AM**:
-
-- Respaldo completo de la base de datos con `pg_dump`
-- Respaldo de todas las imágenes subidas (`media/`)
-- Conserva los **últimos 2 respaldos** — los anteriores se eliminan automáticamente
-
-Los respaldos se guardan en `/opt/paros/respaldos/` en el servidor:
-
-```
-respaldos/
-├── respaldo_2026_06_09_0200.dump   ← respaldo anterior
-├── respaldo_2026_06_16_0200.dump   ← respaldo más reciente
-└── media_backup/                   ← copia de imágenes
-```
-
-Para ejecutar un respaldo manualmente:
-
-```bash
-python manage.py respaldar_bd
-```
-
----
+> Sin este volumen las imágenes se pierden en cada redeploy.
 
 ## Comandos útiles
 
@@ -146,9 +116,6 @@ docker logs -f <nombre-contenedor>
 
 # Ejecutar migraciones manualmente
 python manage.py migrate
-
-# Crear respaldo manual
-python manage.py respaldar_bd
 
 # Compilar traducciones
 python manage.py compilemessages
@@ -162,16 +129,21 @@ python manage.py collectstatic --noinput
 ## Estructura del proyecto
 
 ```
-├── login_app/        # Autenticación y usuarios
-├── menu_app/         # Menú y navegación
-├── paros_app/        # Registro de paros
+├── login_app/         # Autenticación y usuarios
+├── menu_app/          # Menú y navegación
+├── paros_app/         # Registro de paros
 │   └── management/
 │       └── commands/
-│           ├── respaldar_bd.py       # Comando de respaldo
 │           └── crear_superusuario.py # Comando de superusuario
-├── mto_app/          # Gestión de mantenimiento
-├── paros_project/    # Configuración Django
-├── Dockerfile
+├── mto_app/           # Gestión de mantenimiento
+├── inventario_app/    # Inventario de refacciones
+├── paros_project/     # Configuración Django
+├── locale/            # Traducciones (en/es)
+├── media/             # Imágenes subidas (generado en runtime, no versionado)
+├── Dockerfile          # Imagen de la app Django
+├── Dockerfile.nginx    # Imagen de nginx
+├── docker-compose.yml  # Orquestación de servicios (db, web, nginx)
+├── nginx.conf          # Configuración de nginx
 ├── requirements.txt
 └── env.example
 ```
@@ -194,7 +166,6 @@ python manage.py collectstatic --noinput
 | `DJANGO_SUPERUSER_USERNAME` | Usuario administrador inicial | `admin` |
 | `DJANGO_SUPERUSER_EMAIL` | Email del administrador | `admin@empresa.com` |
 | `DJANGO_SUPERUSER_PASSWORD` | Contraseña del administrador | `password-seguro` |
-| `PGDUMP_PATH` | Ruta a pg_dump | `pg_dump` |
 
 ---
 
@@ -203,5 +174,4 @@ python manage.py collectstatic --noinput
 - `DB_HOST` debe ser el nombre del contenedor de PostgreSQL en Coolify, no `localhost`.
 - El superusuario se crea automáticamente en el primer deploy — en deploys posteriores no hace nada si ya existe.
 - El archivo `.env` nunca debe subirse al repositorio — está en `.gitignore`.
-- `PGDUMP_PATH=pg_dump` funciona en Coolify/Linux. En Windows local usa la ruta completa al ejecutable.
 - Los archivos de traducción `.mo` se generan automáticamente en cada deploy — no subir al repositorio.

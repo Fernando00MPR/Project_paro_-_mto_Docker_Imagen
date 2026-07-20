@@ -7,15 +7,20 @@ from .inventario import (
     eliminar_imagen_refaccion,
     buscar_refacciones,
     importar_stock,
-    descargar_plantilla_stock
+    descargar_plantilla_stock,
+    exportar_refacciones,
 )
+
 from .seguimiento_refacciones import (
     lista_seguimientos_refaccion,
     guardar_seguimiento_refaccion,
     eliminar_seguimiento_refaccion,
+    exportar_seguimientos_refaccion,
 )
+
 from .seguimiento_servicios import (
     lista_seguimientos_servicio,
     guardar_seguimiento_servicio,
     eliminar_seguimiento_servicio,
+    exportar_seguimientos_servicio,
 )

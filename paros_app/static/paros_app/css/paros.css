@@ -11,7 +11,7 @@
 
 /* ── lista_paros ───────────────────────────────────────────────────────────── */
 #tabla-paros {
-    table-layout: fixed;
+    table-layout: auto;
     width: 100%;
 }
 #tabla-paros th,
@@ -21,15 +21,29 @@
     white-space: nowrap;
     vertical-align: middle;
 }
+#tabla-paros td[data-campo="fecha"],
+#tabla-paros td[data-campo="equipo"] {
+    overflow: visible;
+    text-overflow: clip;
+}
 #tabla-paros td[data-campo="area"],
 #tabla-paros td[data-campo="falla"],
-#tabla-paros td[data-campo="equipo"],
 #tabla-paros td[data-campo="responsable"],
 #tabla-paros td[data-campo="comentarios"] {
     white-space: normal;
     word-break: break-word;
     line-height: 1.35;
 }
+
+#tabla-paros td[data-campo="falla"],
+#tabla-paros td[data-campo="comentarios"] {
+    min-width: 300px;
+}
+
+#tabla-paros td[data-semana] {
+    max-width: 30px;
+}
+
 .table-wrap { overflow-x: auto; }
 
 /* Colores de estatus */

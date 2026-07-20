@@ -17,7 +17,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Gestión de Paros{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='14' width='8' height='16' rx='2' fill='%234F46E5'/><rect x='12' y='8' width='8' height='22' rx='2' fill='%234F46E5' opacity='.7'/><rect x='22' y='2' width='8' height='28' rx='2' fill='%234F46E5' opacity='.4'/></svg>">
+    {% block favicon %}
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='14' width='8' height='16' rx='2' fill='%234F46E5'/><rect x='12' y='8' width='8' height='22' rx='2' fill='%234F46E5' opacity='.7'/><rect x='22' y='2' width='8' height='28' rx='2' fill='%234F46E5' opacity='.4'/></svg>">
+    {% endblock %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -131,6 +133,7 @@
             .sidebar:not(.collapsed) .logout-label,
             .sidebar:not(.collapsed) .theme-label { display: none !important; }
             .sidebar:not(.collapsed) .brand-icon { margin: 0 auto; }
+            .sidebar:not(.collapsed) .user-menu-btn { justify-content: center; }
             .sidebar:not(.collapsed) .btn-collapse svg { transform: rotate(180deg); }
         }
         .brand-text {
@@ -148,7 +151,7 @@
             justify-content: center; flex-shrink: 0;
             transition: background var(--tr);
         }
-        .sidebar.collapsed .brand-icon { margin: 0 auto; }
+        .sidebar.collapsed .user-menu-btn { justify-content: center; }
         .sidebar.collapsed .brand-text { display: none; }
         .sidebar.collapsed .sidebar-brand {
             flex-direction: column; justify-content: center;
@@ -295,18 +298,6 @@
         .table-wrap { overflow-x: auto; margin-top: 4px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
 
-        /* Anchos fijos por columna */
-        #tabla-paros th:nth-child(1)  { width: 200px; }
-        #tabla-paros th:nth-child(2)  { width: 110px; }
-        #tabla-paros th:nth-child(3)  { width: 115px; }
-        #tabla-paros th:nth-child(4)  { width: 200px; }
-        #tabla-paros th:nth-child(5)  { width: 120px; }
-        #tabla-paros th:nth-child(6)  { width: 120px; }
-        #tabla-paros th:nth-child(7)  { width: 72px;  }
-        #tabla-paros th:nth-child(8)  { width: 80px;  }
-        #tabla-paros th:nth-child(9)  { width: auto;  }
-        #tabla-paros th:nth-child(10) { width: 100px; }
-
         thead th {
             background: var(--surface); color: var(--text-3);
             font-size: 11px; font-weight: 600; letter-spacing: .06em;
@@ -324,6 +315,17 @@
         }
         tbody tr:last-child td { border-bottom: none; }
         tbody tr:hover td { background: var(--indigo-lt); }
+
+        /* Columna de Acciones fija al hacer scroll horizontal — aplicar con class="sticky-actions-col" en <table> */
+        .sticky-actions-col th:last-child,
+        .sticky-actions-col td:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 2;
+        }
+        .sticky-actions-col th:last-child { background: var(--surface); }
+        .sticky-actions-col td:last-child { background: var(--white); }
+        .sticky-actions-col tbody tr:hover td:last-child { background: var(--indigo-lt); }
 
         /* Celdas editables */
         .editable, .editable-fecha, .editable-hora {
@@ -482,8 +484,6 @@
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
-            .sidebar { width: var(--sidebar-collapsed-w) !important; }
-            .brand-label, .nav-label, .logout-label, .theme-label, .sidebar-section { opacity: 0 !important; }
             .main { padding: 16px; }
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -965,15 +965,15 @@
 
         <div class="sidebar-footer">
             <!-- Usuario actual -->
-            <button type="button" onclick="abrirModalUsuario()"
-                    style="all:unset; cursor:pointer; display:flex; align-items:center; gap:8px;
-                           overflow:hidden; padding:8px 12px 4px; width:100%; box-sizing:border-box;
-                           border-radius:7px; transition:background .15s;"
+            <button type="button" onclick="abrirModalUsuario()" class="user-menu-btn"
+                        style="all:unset; cursor:pointer; display:flex; align-items:center; gap:8px;
+                        overflow:hidden; padding:8px 12px 4px; width:100%; box-sizing:border-box;
+                        border-radius:7px; transition:background .15s;"
                     onmouseover="this.style.background='var(--indigo-lt)'"
                     onmouseout="this.style.background='transparent'">
-                <div style="width:28px; height:28px; border-radius:50%; background:var(--indigo);
-                            display:flex; align-items:center; justify-content:center;
-                            font-size:12px; font-weight:700; color:#fff; flex-shrink:0;">
+                <div class="user-avatar" style="width:28px; height:28px; border-radius:50%; background:var(--indigo);
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:12px; font-weight:700; color:#fff; flex-shrink:0;">
                     {{ request.user.username|slice:":1"|upper }}
                 </div>
                 <div style="overflow:hidden; opacity:1; transition:opacity var(--tr); text-align:left;" class="nav-label">

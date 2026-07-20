@@ -22,6 +22,17 @@ services:
 
   web:
     build: .
+    environment:
+      DB_NAME: '${DB_NAME}'
+      DB_USER: '${DB_USER}'
+      DB_PASSWORD: '${DB_PASSWORD}'
+      DB_HOST: 'db'
+      DB_PORT: '5432'
+      DJANGO_SECRET_KEY: '${DJANGO_SECRET_KEY}'
+      DJANGO_DEBUG: '${DJANGO_DEBUG:-False}'
+      DJANGO_ALLOWED_HOSTS: '${DJANGO_ALLOWED_HOSTS}'
+      CSRF_TRUSTED_ORIGINS: '${CSRF_TRUSTED_ORIGINS}'
+      ENABLE_REQUEST_TIMING: '${ENABLE_REQUEST_TIMING:-False}'
     restart: unless-stopped
     command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py compilemessages && python manage.py crear_superusuario && gunicorn paros_project.wsgi:application --bind 0.0.0.0:8000 --worker-class gthread --workers 3 --threads 4 --worker-tmp-dir /dev/shm --timeout 120 --graceful-timeout 30 --max-requests 1000 --max-requests-jitter 100"
     healthcheck:
@@ -68,3 +79,4 @@ volumes:
   paros_static_volume:
   paros_media_volume:
   paros_respaldos_volume:
+  

@@ -26,6 +26,7 @@
             {% if puede_editar_seg_refaccion %}
                 <button type="button" onclick="abrirModalSeg()" class="btn btn-primary">+ {% trans "Nuevo seguimiento" %}</button>
             {% endif %}
+                <a href="{% url 'inventario:exportar_seguimientos_refaccion' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn btn-ghost">↓ {% trans "Exportar" %}</a>
             {% include 'menu_app/_language_selector.html' %}
         </div>
     </div>

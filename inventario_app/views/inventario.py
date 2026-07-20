@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
+import openpyxl
+from paros_app.views.utils import _excel_response, _estilo_cabecera
 from django.views.decorators.http import require_POST
 
 from openpyxl import Workbook
@@ -352,3 +354,67 @@ def descargar_plantilla_stock(request):
     response['Content-Disposition'] = 'attachment; filename="Plantilla_Stock.xlsx"'
     return response
 
+
+@login_required
+def exportar_refacciones(request):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_ver = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.ver_inventario)
+    )
+    if not puede_ver:
+        messages.error(request, "No tienes permiso para exportar.")
+        return redirect('inventario:lista_refacciones')
+
+    area_id       = request.GET.get('area', '')
+    categoria_id  = request.GET.get('categoria', '')
+    busqueda      = request.GET.get('q', '').strip()
+    estatus_stock = request.GET.get('estatus_stock', '')
+
+    refacciones_qs = Refaccion.objects.select_related('area', 'categoria').filter(activo=True)
+    if area_id:
+        refacciones_qs = refacciones_qs.filter(area_id=area_id)
+    if categoria_id:
+        refacciones_qs = refacciones_qs.filter(categoria_id=categoria_id)
+    if busqueda:
+        refacciones_qs = (refacciones_qs.filter(nombre__icontains=busqueda)  |
+                          refacciones_qs.filter(no_item__icontains=busqueda) |
+                          refacciones_qs.filter(descripcion__icontains=busqueda))
+
+    refacciones_lista = list(refacciones_qs)
+    if estatus_stock == 'bajo_minimo':
+        refacciones_lista = [r for r in refacciones_lista if r.bajo_minimo]
+    elif estatus_stock == 'sobre_maximo':
+        refacciones_lista = [r for r in refacciones_lista if r.sobre_maximo]
+    elif estatus_stock == 'en_rango':
+        refacciones_lista = [r for r in refacciones_lista if not r.bajo_minimo and not r.sobre_maximo and r.stock_actual > 0]
+    elif estatus_stock == 'sin_stock':
+        refacciones_lista = [r for r in refacciones_lista if r.stock_actual == 0]
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Inventario'
+    cabeceras = ['No. Item', 'Nombre', 'Descripción', 'Categoría', 'Área', 'Unidad',
+                 'Stock actual', 'Stock mínimo', 'Stock máximo', 'Ubicación', 'Proveedor', 'Costo unitario']
+    _estilo_cabecera(ws, cabeceras, [12, 30, 40, 20, 18, 10, 12, 12, 12, 12, 20, 14])
+
+    for r in refacciones_lista:
+        ws.append([
+            r.no_item,
+            r.nombre,
+            r.descripcion,
+            r.categoria.nombre if r.categoria else '',
+            r.area.nombre,
+            r.get_unidad_display(),
+            r.stock_actual,
+            r.stock_minimo,
+            r.stock_maximo,
+            r.ubicacion,
+            r.proveedor,
+            float(r.costo_unitario) if r.costo_unitario is not None else '',
+        ])
+
+    response = _excel_response('Inventario.xlsx')
+    wb.save(response)
+    return response

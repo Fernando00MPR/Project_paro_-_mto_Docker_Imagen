@@ -50,6 +50,23 @@ def _aplicar_filtros(qs, get_params):
     return qs
 
 
+ORDEN_PERMITIDO = {
+    'fecha': 'fecha', '-fecha': '-fecha',
+    'hora': 'hora', '-hora': '-hora',
+    'tiempo_minutos': 'tiempo_minutos', '-tiempo_minutos': '-tiempo_minutos',
+}
+
+
+def _aplicar_orden(qs, get_params, default=None):
+    """Ordena por el campo pedido en ?orden=; si no es válido, usa `default`."""
+    campo = ORDEN_PERMITIDO.get(get_params.get('orden', ''))
+    if campo:
+        return qs.order_by(campo)
+    if default:
+        return qs.order_by(*default)
+    return qs
+
+
 def _parse_fecha(s):
     """
     Parsea fecha desde string dd/mm/yyyy, dd/mm/yy, dd-mm-yy

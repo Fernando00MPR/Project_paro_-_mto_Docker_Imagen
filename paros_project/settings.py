@@ -34,8 +34,6 @@ INSTALLED_APPS = [
     'menu_app',
     'mto_app',
     'inventario_app',
-    'django_apscheduler',
-    'dbbackup',
 ]
 
 MIDDLEWARE = [
@@ -58,12 +56,6 @@ STORAGES = {
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-    "dbbackup": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-        "OPTIONS": {
-            "location": str(BASE_DIR / "respaldos"),
-        },
     },
 }
 

@@ -26,6 +26,7 @@
             {% if puede_editar_seg_servicio %}
             <button type="button" onclick="abrirModalServ()" class="btn btn-primary">+ {% trans "Nuevo seguimiento" %}</button>
             {% endif %}
+                <a href="{% url 'inventario:exportar_seguimientos_servicio' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn btn-ghost">↓ {% trans "Exportar" %}</a>
             {% include 'menu_app/_language_selector.html' %}
         </div>
     </div>

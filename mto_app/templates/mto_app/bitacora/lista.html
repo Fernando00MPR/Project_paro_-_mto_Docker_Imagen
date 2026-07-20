@@ -3,6 +3,10 @@
 
 {% block title %}{% trans "Bitácora" %}{% endblock %}
 
+{% block favicon %}
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='4' y='3' width='24' height='26' rx='3' fill='%234F46E5'/><rect x='9' y='9' width='14' height='2.5' rx='1' fill='white'/><rect x='9' y='15' width='14' height='2.5' rx='1' fill='white'/><rect x='9' y='21' width='9' height='2.5' rx='1' fill='white'/></svg>">
+{% endblock %}
+
 {% block content %}
 
 {% if messages %}
@@ -87,7 +91,7 @@
 
 <div class="card">
     <div class="table-wrap" style="overflow-x:auto;">
-        <table class="data-table">
+        <table class="data-table sticky-actions-col" id="tabla-bitacora">
             <thead>
                 <tr>
                     <th style="width:100px;">{% trans "FECHA" %}</th>

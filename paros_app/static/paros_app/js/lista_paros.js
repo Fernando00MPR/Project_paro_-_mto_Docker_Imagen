@@ -40,6 +40,7 @@ function toggleExportMenu() {
     const menu = document.getElementById('export-menu');
     menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
+
 document.addEventListener('click', function(e) {
     const wrap = document.getElementById('export-wrap');
     if (wrap && !wrap.contains(e.target)) {
@@ -54,6 +55,25 @@ document.addEventListener('click', function(e) {
 function cambiarPorPagina(valor) {
     const url = new URL(window.location.href);
     url.searchParams.set('por_pagina', valor);
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+}
+
+// ── Ordenar columnas ──────────────────────────────────────────────────────────
+// Alterna asc/desc para el campo indicado al hacer clic en el encabezado,
+// preservando los demás filtros activos en la URL; resetea a la página 1.
+function cambiarOrden(campo) {
+    const url = new URL(window.location.href);
+    const actual = url.searchParams.get('orden');
+    let nuevo;
+    if (actual === campo) {
+        nuevo = '-' + campo;
+    } else if (actual === '-' + campo) {
+        nuevo = campo;
+    } else {
+        nuevo = campo;
+    }
+    url.searchParams.set('orden', nuevo);
     url.searchParams.delete('page');
     window.location.href = url.toString();
 }
@@ -290,9 +310,11 @@ document.querySelectorAll('.btn-eliminar-icono').forEach(btn => {
         modal.style.display = 'flex';
     });
 });
+
 document.getElementById('btn-cancelar-modal').addEventListener('click', () => {
     modal.style.display = 'none';
 });
+
 // Cerrar el modal haciendo clic en el fondo oscuro
 modal.addEventListener('click', e => {
     if (e.target === modal) modal.style.display = 'none';
@@ -312,6 +334,11 @@ document.addEventListener('click', function(e) {
     const dd  = document.getElementById('dropdown-columnas');
     if (!btn.contains(e.target) && !dd.contains(e.target)) {
         dd.style.display = 'none';
+    }
+    const btnI = document.getElementById('btn-indicadores');
+    const ddI  = document.getElementById('dropdown-indicadores');
+    if (!btnI.contains(e.target) && !ddI.contains(e.target)) {
+        ddI.style.display = 'none';
     }
 });
 
@@ -337,21 +364,57 @@ function guardarColumnas() {
     localStorage.setItem('paros-columnas', JSON.stringify(estado));
 }
 
+// ── Filtro Indicadores ────────────────────────────────────────────────────────
+// Dropdown que permite mostrar u ocultar tarjetas de indicadores individuales.
+// El estado se persiste en localStorage para mantenerlo entre recargas.
+function toggleDropdownIndicadores() {
+    const d = document.getElementById('dropdown-indicadores');
+    d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+
+// Oculta o muestra la tarjeta de indicador indicada
+function toggleIndicador(cb) {
+    const el = document.getElementById(cb.dataset.target);
+    if (el) el.style.display = cb.checked ? '' : 'none';
+    guardarIndicadores();
+}
+
+// Serializa el estado de todos los checkboxes en localStorage
+function guardarIndicadores() {
+    const estado = {};
+    document.querySelectorAll('#dropdown-indicadores input[data-target]').forEach(cb => {
+        estado[cb.dataset.target] = cb.checked;
+    });
+    localStorage.setItem('paros-indicadores-lista', JSON.stringify(estado));
+}
+
+// Al cargar la página aplica el estado guardado (o el checked por defecto del HTML si no hay nada guardado)
+function restaurarIndicadores() {
+    const guardado = localStorage.getItem('paros-indicadores-lista');
+    const estado = guardado ? JSON.parse(guardado) : {};
+    document.querySelectorAll('#dropdown-indicadores input[data-target]').forEach(cb => {
+        const key = cb.dataset.target;
+        const visible = estado.hasOwnProperty(key) ? estado[key] : cb.checked;
+        cb.checked = visible;
+        const el = document.getElementById(key);
+        if (el) el.style.display = visible ? '' : 'none';
+    });
+}
+
 // Al cargar la página aplica el estado guardado para respetar la preferencia del usuario
 function restaurarColumnas() {
     const guardado = localStorage.getItem('paros-columnas');
-    if (!guardado) return;
-    const estado = JSON.parse(guardado);
-    Object.entries(estado).forEach(([col, visible]) => {
-        const cb = document.querySelector(`#dropdown-columnas input[data-col="${col}"]`);
-        if (cb && !visible) {
-            cb.checked = false;
-            toggleColumna(cb);
-        }
+    const estado = guardado ? JSON.parse(guardado) : {};
+    document.querySelectorAll('#dropdown-columnas input[data-col]').forEach(cb => {
+        const col = cb.dataset.col;
+        const visible = estado.hasOwnProperty(col) ? estado[col] : cb.checked;
+        cb.checked = visible;
+        if (!visible) toggleColumna(cb);
     });
 }
 
 restaurarColumnas();
+restaurarIndicadores();
 
 // ── Lightbox de imágenes ───────────────────────────────────────────────────────
 // Estado global: array de imágenes del paro activo e índice de la imagen visible.
