@@ -8,7 +8,7 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # En producción: DEBUG=False y agrega tu dominio a ALLOWED_HOSTS
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
-ENABLE_REQUEST_TIMING = os.environ.get('ENABLE_REQUEST_TIMING', 'True') == 'True'
+ENABLE_REQUEST_TIMING = os.environ.get('ENABLE_REQUEST_TIMING', 'False') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 CSRF_TRUSTED_ORIGINS = [origin for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin]
@@ -47,6 +47,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 if DEBUG or ENABLE_REQUEST_TIMING:
      MIDDLEWARE.append('paros_project.middleware.TimingMiddleware')
 

@@ -33,6 +33,9 @@ services:
       DJANGO_ALLOWED_HOSTS: '${DJANGO_ALLOWED_HOSTS}'
       CSRF_TRUSTED_ORIGINS: '${CSRF_TRUSTED_ORIGINS}'
       ENABLE_REQUEST_TIMING: '${ENABLE_REQUEST_TIMING:-False}'
+      DJANGO_SUPERUSER_USERNAME: '${DJANGO_SUPERUSER_USERNAME}'
+      DJANGO_SUPERUSER_EMAIL: '${DJANGO_SUPERUSER_EMAIL}'
+      DJANGO_SUPERUSER_PASSWORD: '${DJANGO_SUPERUSER_PASSWORD}'
     restart: unless-stopped
     command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py compilemessages && python manage.py crear_superusuario && gunicorn paros_project.wsgi:application --bind 0.0.0.0:8000 --worker-class gthread --workers 3 --threads 4 --worker-tmp-dir /dev/shm --timeout 120 --graceful-timeout 30 --max-requests 1000 --max-requests-jitter 100"
     healthcheck:

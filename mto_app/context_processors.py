@@ -8,9 +8,9 @@ def areas_menu(request):
     cache_key = f'areas_menu_{request.user.id}'
     areas = cache.get(cache_key)
     if areas is None:
-        t0    = time.perf_counter()
+        #t0    = time.perf_counter()
         areas = list(areas_permitidas_mto(request).order_by('nombre'))
-        ms    = (time.perf_counter() - t0) * 1000
+        #ms    = (time.perf_counter() - t0) * 1000
         cache.set(cache_key, areas, 300)
-        print(f"[CTX] cache miss user {request.user.id}  →  {ms:.1f} ms")
+        #print(f"[CTX] cache miss user {request.user.id}  →  {ms:.1f} ms")
     return {'areas_menu': areas}

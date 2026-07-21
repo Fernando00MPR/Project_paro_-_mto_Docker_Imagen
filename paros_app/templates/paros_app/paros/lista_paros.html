@@ -273,8 +273,8 @@
                     <td data-campo="equipo">{{ paro.equipo }}</td>
 
                     <td class="{% if puede_editar %}editable-hora{% endif %}" data-campo="hora" style="font-family:'DM Mono',monospace;font-size:12.5px;text-align:center;">{{ paro.hora|time:"H:i" }}</td>
-                    <td class="{% if puede_editar %}editable{% endif %}" data-campo="tiempo_minutos" style="font-family:'DM Mono',monospace;font-size:12.5px;text-align:center;">{{ paro.tiempo_minutos }}</td>
-                    <td class="{% if puede_editar or puede_editar_comentarios %}editable{% endif %}" data-campo="comentarios" style="color:var(--text-2);">{{ paro.comentarios }}</td>
+                    <td class="{% if puede_editar %}editable{% endif %}" data-campo="tiempo_minutos" title="{% if puede_editar %}Doble clic para editar{% endif %}" style="font-family:'DM Mono',monospace;font-size:12.5px;text-align:center;">{{ paro.tiempo_minutos }}</td>
+                    <td class="{% if puede_editar or puede_editar_comentarios %}editable{% endif %}" data-campo="comentarios" title="{% if puede_editar or puede_editar_comentarios %}Doble clic para editar{% endif %}" style="color:var(--text-2);">{{ paro.comentarios }}</td>
                     <td style="padding:6px 12px;">
                         <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">
                             <!-- Estatus -->
