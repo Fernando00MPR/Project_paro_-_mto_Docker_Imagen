@@ -17,8 +17,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - default
 
   web:
     build: .
@@ -53,8 +51,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - default
 
   nginx:
     build:
@@ -69,13 +65,6 @@ services:
     depends_on:
       web:
         condition: service_healthy
-    networks:
-      - default
-      - coolify
-
-networks:
-  coolify:
-    external: true
 
 volumes:
   paros_postgres_data:
