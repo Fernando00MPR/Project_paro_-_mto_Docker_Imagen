@@ -8,9 +8,11 @@ from .planes import (
     lista_plan,
     form_plan,
     eliminar_plan,
+    eliminar_todos_planes_area,
     modal_plan,
     importar_plan,
     descargar_plantilla,
+    exportar_plan,
 )
 
 from .rutinas import (

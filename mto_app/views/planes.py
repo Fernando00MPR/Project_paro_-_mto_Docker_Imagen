@@ -13,7 +13,9 @@ from openpyxl.utils import get_column_letter
 from collections import defaultdict
 from .utils import areas_permitidas_mto
 from ..models import Area, PlanMantenimiento, RegistroEjecucion, Responsable
+from django.urls import reverse
 from .utils import lunes_de_semana, INTERVALO, _frecuencia_desde_excel
+
 
 @login_required
 def lista_plan(request):
@@ -185,6 +187,11 @@ def lista_plan(request):
             (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
             (acceso and acceso.eliminar_plan_mantenimiento)
         ),
+        'puede_eliminar_todos_planes': (
+            request.user.is_superuser or
+            (hasattr(request.user, 'perfil') and request.user.perfil.es_admin)
+        ),
+        'total_planes_area': PlanMantenimiento.objects.filter(area_id=area_id).count() if area_id else 0,
     }
     return render(request, 'mto_app/plan/lista.html', ctx)
 
@@ -257,6 +264,109 @@ def eliminar_plan(request, pk):
             messages.error(request,
                 f"No se puede eliminar '{plan.codigo}' porque tiene registros asociados.")
     return redirect('mto:lista_plan')
+
+
+@login_required
+def eliminar_todos_planes_area(request):
+    es_admin_total = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin)
+    )
+    if not es_admin_total:
+        messages.error(request, "No tienes permiso para eliminar todos los planes del área.")
+        return redirect('mto:lista_plan')
+
+    area_id = request.POST.get('area')
+    if request.method == 'POST' and area_id:
+        area = get_object_or_404(Area, pk=area_id)
+        cantidad = PlanMantenimiento.objects.filter(area=area).count()
+        PlanMantenimiento.objects.filter(area=area).delete()
+        messages.success(
+            request,
+            f"Se eliminaron los {cantidad} planes de mantenimiento del área '{area.nombre}' y su historial de ejecuciones."
+        )
+    return redirect(f"{reverse('mto:lista_plan')}?area={area_id}")
+
+
+@login_required
+def exportar_plan(request):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_ver = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.ver_plan_mantenimiento)
+    )
+    if not puede_ver:
+        messages.error(request, "No tienes permiso para exportar planes de mantenimiento.")
+        return redirect('mto:lista_plan')
+
+    area_id = request.GET.get('area') or request.session.get('lista_plan_area_id', '')
+    planes  = PlanMantenimiento.objects.select_related('area').filter(activo=True)
+    if area_id:
+        planes = planes.filter(area_id=area_id)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Plan de mantenimiento"
+
+    # Mismas columnas que descargar_plantilla, en el mismo orden que lee importar_plan.
+    headers = [
+        '', 'CODIGO', 'RUTINA', 'EQUIPO (descripcion tarea)', 'Duracion (horas)',
+        'Frecuencia', 'Plan de Trabajo', 'Equipo (nombre corto)', 'Locacion',
+        'Tipo de mantenimiento', 'Prioridad', 'Status', 'Semana inicio', 'Anio inicio'
+    ]
+    ws.append([])  # Fila 1
+    ws.append([])  # Fila 2
+    ws.append(headers)  # Fila 3
+
+    for plan in planes.order_by('codigo'):
+        codigo_frecuencia = f"{INTERVALO.get(plan.frecuencia, 4)}S"
+        ws.append([
+            '',
+            plan.codigo,
+            plan.rutina,
+            plan.actividad,
+            round(plan.duracion_minutos / 60, 2),
+            codigo_frecuencia,
+            plan.plan_trabajo,
+            plan.nombre_equipo,
+            plan.locacion,
+            plan.tipo_mto,
+            plan.prioridad,
+            plan.estatus,
+            plan.semana_inicio or '',
+            plan.anio_inicio or '',
+        ])
+
+    for cell in ws[3][1:]:
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = PatternFill(fill_type='solid', fgColor='4F46E5')
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws.row_dimensions[3].height = 30
+
+    # Centrar todas las filas de datos (una por plan)
+    for row in ws.iter_rows(min_row=4, max_row=ws.max_row):
+        for cell in row:
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    anchos = [5, 14, 18, 40, 16, 12, 14, 30, 25, 22, 12, 12, 14, 12]
+    for i, ancho in enumerate(anchos, 1):
+        ws.column_dimensions[get_column_letter(i)].width = ancho
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    from django.http import HttpResponse
+    nombre_area = Area.objects.filter(id=area_id).first() if area_id else None
+    filename = f"Planes_{nombre_area.nombre.replace(' ','_')}.xlsx" if nombre_area else "Planes_Mantenimiento.xlsx"
+
+    response = HttpResponse(
+        buffer,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 @login_required
@@ -336,6 +446,14 @@ def importar_plan(request):
                 p.codigo: p.area.nombre
                 for p in PlanMantenimiento.objects.select_related('area').exclude(area=area)
             }
+            planes_del_area   = {p.codigo: p for p in PlanMantenimiento.objects.filter(area=area)}
+            nuevos_por_codigo = {}
+            a_actualizar_por_pk = {}
+            campos_actualizables = [
+                'area', 'actividad', 'rutina', 'duracion_minutos', 'frecuencia', 'plan_trabajo',
+                'nombre_equipo', 'locacion', 'tipo_mto', 'prioridad', 'estatus', 'activo',
+                'semana_inicio', 'anio_inicio',
+            ]
 
             for row in ws.iter_rows(min_row=4, values_only=True):
                 if not row or not row[1]:
@@ -411,16 +529,29 @@ def importar_plan(request):
                     if anio_inicio:
                         defaults['anio_inicio'] = anio_inicio
 
-                    _, created = PlanMantenimiento.objects.update_or_create(
-                        codigo=codigo, area=area, defaults=defaults
-                    )
-                    if created:
-                        creados += 1
-                    else:
+                    plan_existente = planes_del_area.get(codigo)
+                    ya_pendiente    = nuevos_por_codigo.get(codigo)
+
+                    if plan_existente:
+                        for campo, valor in defaults.items():
+                            setattr(plan_existente, campo, valor)
+                        a_actualizar_por_pk[plan_existente.pk] = plan_existente
                         actualizados += 1
+                    elif ya_pendiente:
+                        # Mismo código repetido en el archivo — la última fila gana, sin contarlo dos veces.
+                        for campo, valor in defaults.items():
+                            setattr(ya_pendiente, campo, valor)
+                    else:
+                        nuevos_por_codigo[codigo] = PlanMantenimiento(codigo=codigo, **defaults)
+                        creados += 1
 
                 except Exception as e:
                     errores.append(f"Fila con codigo '{row[1]}': {e}")
+
+            if nuevos_por_codigo:
+                PlanMantenimiento.objects.bulk_create(nuevos_por_codigo.values())
+            if a_actualizar_por_pk:
+                PlanMantenimiento.objects.bulk_update(a_actualizar_por_pk.values(), campos_actualizables)
 
             resumen = f"{creados} creado(s), {actualizados} actualizado(s), {omitidos} omitido(s)."
             if errores:
@@ -445,8 +576,10 @@ def descargar_plantilla(request):
     ws = wb.active
     ws.title = "Plan de mantenimiento"
 
+    # Estas columnas deben coincidir exactamente, en orden, con los índices que
+    # lee importar_plan() (row[1]=codigo, row[2]=rutina, ... row[13]=anio_inicio).
     headers = [
-        '','#', 'CODIGO', 'RUTINA', 'EQUIPO (descripcion tarea)', 'Duracion (horas)',
+        '', 'CODIGO', 'RUTINA', 'EQUIPO (descripcion tarea)', 'Duracion (horas)',
         'Frecuencia', 'Plan de Trabajo', 'Equipo (nombre corto)', 'Locacion',
         'Tipo de mantenimiento', 'Prioridad', 'Status', 'Semana inicio', 'Anio inicio'
     ]
@@ -455,7 +588,7 @@ def descargar_plantilla(request):
     ws.append([])  # Fila 2
     ws.append(headers)
     ws.append([
-        '',1, 'SWC-001', 'RMAS001-00P', 'Mantenimiento Mecanico a Transportador # 1',
+        '', 'SWC-001', 'RMAS001-00P', 'Mantenimiento Mecanico a Transportador # 1',
         1.0, '16S', '1', 'Mesa Fija Conveyor # 01', 'Automatic Warehouse',
         'Preventivo', 'Baja', 'Abierta', 1, 2025
     ])
@@ -474,7 +607,7 @@ def descargar_plantilla(request):
 
     ws.row_dimensions[3].height = 30
 
-    anchos = [5,5, 14, 18, 40, 16, 12, 14, 30, 25, 22, 12, 12, 14, 12]
+    anchos = [5, 14, 18, 40, 16, 12, 14, 30, 25, 22, 12, 12, 14, 12]
     for i, ancho in enumerate(anchos, 1):
         ws.column_dimensions[get_column_letter(i)].width = ancho
 
@@ -489,4 +622,5 @@ def descargar_plantilla(request):
     )
     response['Content-Disposition'] = 'attachment; filename="Plantilla_Mantenimiento.xlsx"'
     return response
+
 
