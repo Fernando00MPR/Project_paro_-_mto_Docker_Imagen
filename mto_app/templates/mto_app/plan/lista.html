@@ -36,6 +36,7 @@
             </a>
             {% endif %}
             <a href="{% url 'mto:importar_plan' %}" class="btn btn-ghost">{% trans "Importar Excel" %}</a>
+            <a href="{% url 'mto:exportar_plan' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}" class="btn btn-ghost">{% trans "Exportar Excel" %}</a>
             <a href="{% url 'mto:nuevo_plan' %}" class="btn btn-primary">+ {% trans "Nueva tarea" %}</a>
             {% include 'menu_app/_language_selector.html' %}
         </div>
@@ -79,6 +80,15 @@
                    class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
             </div>
         </div>
+        {% if puede_eliminar_todos_planes and filtro_area and total_planes_area %}
+            <div class="filter-group" style="justify-content:flex-end; margin-top:auto; margin-left:auto;">
+                <label>&nbsp;</label>
+                <button type="button" class="btn btn-danger btn-sm"
+                        onclick="confirmarEliminarTodos('{{ filtro_area }}', {{ total_planes_area }})">
+                    {% trans "Eliminar todos los planes" %}
+                </button>
+            </div>
+        {% endif %}
     </form>
 
     <!-- ── Indicadores de semana ── -->
@@ -164,17 +174,17 @@
 
     <!-- ── Tabla ── -->
     <div class="table-wrap" style="overflow-x:auto;">
-        <table style="table-layout:auto; width:auto; min-width:100%;">
+        <table class="sticky-actions-col" style="table-layout:auto; width:auto; min-width:100%;">
             <thead>
                 <tr>
                     <th class="col-area"          style="text-align:center;">{% trans "Área" %}</th>
                     <th class="col-codigo"        style="text-align:center; width:140px;">{% trans "Código" %}</th>
                     <th class="col-rutina"        style="text-align:center; width:160px;">{% trans "Rutina" %}</th>
-                    <th class="col-actividad"     style="text-align:center; width:550px;">{% trans "Actividad" %}</th>
+                    <th class="col-actividad"     style="text-align:center; width:550px; min-width:550px;">{% trans "Actividad" %}</th>
                     <th class="col-duracion"      style="text-align:center; width:60px; ">{% trans "Dur." %}</th>
                     <th class="col-frecuencia"    style="text-align:center; width:150px;">{% trans "Frecuencia" %}</th>
                     <th class="col-plan"          style="text-align:center; width:60px; ">N°<br>{% trans "Plan" %}</th>
-                    <th class="col-sinicio"       style="display:none; text-align:center; width:180px;">{% trans "Semana" %}<br>{% trans "inicio" %}</th>
+                    <th class="col-sinicio"       style="display:none; text-align:center; width:180px; min-width:180px;">{% trans "Semana" %}<br>{% trans "inicio" %}</th>
                     {% if filtro_semana %}
                     <th                           style="text-align:center; width:180px;">{% trans "Semana" %}<br>{% trans "actual" %}</th>
                     {% endif %}
@@ -206,7 +216,7 @@
                     </td>
                     <td class="col-plan" style="text-align:center;">{{ p.plan_trabajo }}</td>
 
-                    <td class="col-sinicio" style="display:none;">
+                    <td class="col-sinicio" style="display:none; min-width:180px;">
                         {% if p.semana_inicio and p.anio_inicio %}
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center;">
                             <span style="font-size:12px; font-weight:600; color:var(--text-2);">S{{ p.semana_inicio }}/{{ p.anio_inicio }}</span>
@@ -218,7 +228,7 @@
                     </td>
 
                     {% if filtro_semana %}
-                    <td style="text-align:center;">
+                    <td style="text-align:center; min-width:180px;">
                         {% if p.semana_actual %}
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
                             <span style="font-size:12px; font-weight:600; color:#065F46;">S{{ p.semana_actual.semana }}/{{ p.semana_actual.lunes|date:"Y" }}</span>
@@ -228,7 +238,7 @@
                     </td>
                     {% endif %}
 
-                    <td class="col-proximo">
+                    <td class="col-proximo" style="min-width:180px;">
                         {% if p.proximo %}
                         <div style="display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center;">
                             <span style="font-size:12px; font-weight:600; color:var(--indigo);">S{{ p.proximo.semana }}/{{ p.proximo.lunes|date:"Y" }}</span>
@@ -362,7 +372,26 @@
             <button onclick="cerrarModalEliminar()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
             <form id="form-eliminar" method="post" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Si, eliminar" %}</button>
+            <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444; padding:8px 16px; font-size:13px;">{% trans "Si, eliminar" %}</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal confirmar eliminar TODOS los planes del área ── -->
+<div id="modal-eliminar-todos"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+                min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar todos los planes del área" %}</div>
+        <div id="texto-eliminar-todos" style="font-size:13px; color:var(--text-2); margin-bottom:24px;"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="cerrarModalEliminarTodos()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <form id="form-eliminar-todos" method="post" action="{% url 'mto:eliminar_todos_planes_area' %}" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="area" id="input-area-eliminar-todos" value="">
+                <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444; padding:8px 16px; font-size:13px;">{% trans "Sí, eliminar todos" %}</button>
             </form>
         </div>
     </div>

@@ -234,6 +234,22 @@ document.getElementById('modal-eliminar').addEventListener('click', function(e) 
     if (e.target === this) cerrarModalEliminar();
 });
 
+// ── Modal eliminar TODOS los planes del área ─────────────────────────────────
+function confirmarEliminarTodos(areaId, total) {
+    document.getElementById('input-area-eliminar-todos').value = areaId;
+    document.getElementById('texto-eliminar-todos').textContent =
+        `Esta acción no se puede deshacer. Se eliminarán los ${total} planes de mantenimiento de esta área junto con todo su historial de ejecuciones semanales. ¿Confirmas?`;
+    document.getElementById('modal-eliminar-todos').style.display = 'flex';
+}
+
+function cerrarModalEliminarTodos() {
+    document.getElementById('modal-eliminar-todos').style.display = 'none';
+}
+
+document.getElementById('modal-eliminar-todos').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalEliminarTodos();
+});
+
 // ── Asignar responsable ───────────────────────────────────────────────────────
 function asignarResponsable(planPk, semana, selectEl) {
     const anio          = window.MTO_CONFIG.anio_actual;
