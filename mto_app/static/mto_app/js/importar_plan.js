@@ -54,8 +54,8 @@ function mostrarPreview(input) {
             const sheet    = workbook.Sheets[workbook.SheetNames[0]];
             const rows     = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
-            // Filtrar filas vacías (excluye encabezado en fila 0)
-            const data = rows.slice(1).filter(r => r.some(c => c !== ''));
+            // Filtrar filas vacías (excluye las 2 filas en blanco + encabezado, igual que min_row=4 en importar_plan())
+            const data = rows.slice(3).filter(r => r.some(c => c !== ''));
 
             // Actualizar metadatos con número de filas
             document.getElementById('file-meta').textContent =
@@ -76,7 +76,7 @@ function mostrarPreview(input) {
 
 /**
  * Llena la tabla de vista previa con las filas del archivo.
- * Muestra columnas: A=Codigo, B=Rutina, C=Equipo, E=Frecuencia
+ * Muestra columnas: B=Codigo, C=Rutina, D=Equipo, E=Duracion, F=Frecuencia, G=Plan de Trabajo
  *
  * @param {Array}  rows  - Filas a mostrar (máx 10)
  * @param {number} total - Total de filas en el archivo
@@ -88,28 +88,16 @@ function llenarPreview(rows, total) {
     rows.forEach(row => {
         const tr = document.createElement('tr');
          tr.innerHTML = `
-            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text); width:100px;">${row[0] || ''}</td>
-            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text); width:130px;">${row[1] || ''}</td>
-            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text); width:260px;">${row[2] || ''}</td>
-            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text);   text-align:center;">${row[3] || ''}</td>
-            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text-2); text-align:center;">${row[4] || ''}</td>
+            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text); width:100px;">${row[1] || ''}</td>
+            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text); width:130px;">${row[2] || ''}</td>
+            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text); width:260px;">${row[3] || ''}</td>
+            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text);   text-align:center;">${row[4] || ''}</td>
             <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text-2); text-align:center;">${row[5] || ''}</td>
+            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text-2); text-align:center;">${row[6] || ''}</td>
         `;
         tbody.appendChild(tr);
     });
-
-    // Indicador de filas adicionales no mostradas
-    if (total > 10) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td colspan="4" style="padding:5px 10px; font-size:11px; color:var(--text-3);">
-                + ${total - 10} filas más…
-            </td>
-        `;
-        tbody.appendChild(tr);
-    }
 }
-
 
 // ── Limpiar formulario ────────────────────────────────────────────────────────
 
