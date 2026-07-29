@@ -281,12 +281,13 @@ def analisis_paros(request):
         qs = qs.filter(estatus=estatus_filtro)
 
     # ── Exclusiones por checkbox ──────────────────────────────────────────────
-    fallas_excluidas = request.GET.getlist('excluir_falla')
-    resp_excluidas   = request.GET.getlist('excluir_resp')
-    modo_pareto      = request.GET.get('modo_pareto', 'falla')
-    modo_barras      = request.GET.get('modo_barras', 'falla')
-    tipos_excluidos  = request.GET.getlist('excluir_tipo')
+    fallas_excluidas  = request.GET.getlist('excluir_falla')
+    resp_excluidas    = request.GET.getlist('excluir_resp')
+    modo_pareto       = request.GET.get('modo_pareto', 'falla')
+    modo_barras       = request.GET.get('modo_barras', 'falla')
+    tipos_excluidos   = request.GET.getlist('excluir_tipo')
     atendio_excluidos = request.GET.getlist('excluir_atendio')
+    equipos_excluidos = request.GET.getlist('excluir_equipo')
 
     # ── Listas para los paneles (antes de exclusión) ──────────────────────────
     lista_fallas = (
@@ -328,6 +329,11 @@ def analisis_paros(request):
         {**r, 'atendio': r['atendio'] or _('Sin quien atendio')}
         for r in lista_atendio
     ]
+    lista_equipos = (
+        qs.values('equipo')
+        .annotate(minutos=Sum('tiempo_minutos'))
+        .order_by('-minutos')
+    )
 
     # ── Aplicar exclusiones ───────────────────────────────────────────────────
     qs_graf = qs
@@ -349,6 +355,8 @@ def analisis_paros(request):
             qs_graf = qs_graf.exclude(atendio__in=atendio_excluidos_db)
         if excluir_vacios:
             qs_graf = qs_graf.exclude(atendio='')
+    if equipos_excluidos:
+        qs_graf = qs_graf.exclude(equipo__in=equipos_excluidos)
 
     # ── KPIs ──────────────────────────────────────────────────────────────────
     total_paros   = qs_graf.count()
@@ -433,6 +441,16 @@ def analisis_paros(request):
         labels_p  = [g['atendio'] or _('Sin quien atendio') for g in grupos_pareto]
         minutos_p = [g['minutos'] or 0 for g in grupos_pareto]
         nparos_p  = [g['n_paros'] for g in grupos_pareto]
+    elif modo_pareto == 'equipo':
+        grupos_pareto = (
+            qs_graf
+            .values('equipo')
+            .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
+            .order_by('-minutos')
+        )
+        labels_p  = [g['equipo'] for g in grupos_pareto]
+        minutos_p = [g['minutos'] or 0 for g in grupos_pareto]
+        nparos_p  = [g['n_paros'] for g in grupos_pareto]
     else:
         campo_pareto  = 'falla' if modo_pareto == 'falla' else 'responsable'
         grupos_pareto = (
@@ -479,6 +497,16 @@ def analisis_paros(request):
         labels_b  = [g['atendio'] or _('Sin quien atendio') for g in grupos_barras]
         minutos_b = [g['minutos'] or 0 for g in grupos_barras]
         nparos_b  = [g['n_paros'] for g in grupos_barras]
+    elif modo_barras == 'equipo':
+        grupos_barras = (
+            qs_graf
+            .values('equipo')
+            .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
+            .order_by('-minutos')
+        )
+        labels_b  = [g['equipo'] for g in grupos_barras]
+        minutos_b = [g['minutos'] or 0 for g in grupos_barras]
+        nparos_b  = [g['n_paros'] for g in grupos_barras]
     else:
         campo_barras  = 'falla' if modo_barras == 'falla' else 'responsable'
         grupos_barras = (
@@ -523,6 +551,8 @@ def analisis_paros(request):
         'estatus_filtro':     estatus_filtro,
         'lista_atendio':      lista_atendio,
         'atendio_excluidos':  atendio_excluidos,
+        'lista_equipos':      lista_equipos,
+        'equipos_excluidos':  equipos_excluidos,
     })
 
 
