@@ -490,6 +490,9 @@ function renderLightbox() {
 
         const thumbSkeleton = document.createElement('div');
         thumbSkeleton.className = 'img-skeleton';
+        const thumbSpinner = document.createElement('div');
+        thumbSpinner.className = 'img-spinner img-spinner-sm';
+        thumbSkeleton.appendChild(thumbSpinner);
         wrap.appendChild(thumbSkeleton);
 
         const thumb = document.createElement('img');

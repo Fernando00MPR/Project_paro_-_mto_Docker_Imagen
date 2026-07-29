@@ -170,9 +170,9 @@ togglePeriodo(document.getElementById('sel-periodo').value);
 // ── Toggle modo Pareto ────────────────────────────────────────────────────────
 function setModoPareto(modo) {
     document.getElementById('input-modo-pareto').value = modo;
-    ['falla', 'responsable', 'tipo_falla', 'atendio'].forEach(m => {
-        const id = m === 'tipo_falla' ? 'bp-tipo' : m === 'falla' ? 'bp-falla' : m === 'responsable' ? 'bp-resp' : 'bp-atendio';
-        const el = document.getElementById(id);
+    const idsPareto = { falla: 'bp-falla', equipo: 'bp-equipo', responsable: 'bp-resp', tipo_falla: 'bp-tipo', atendio: 'bp-atendio' };
+    ['falla', 'equipo', 'responsable', 'tipo_falla', 'atendio'].forEach(m => {
+        const el = document.getElementById(idsPareto[m]);
         if (!el) return;
         const activo = modo === m;
         el.style.background = activo ? 'var(--indigo)' : 'var(--white)';
@@ -183,9 +183,9 @@ function setModoPareto(modo) {
 // ── Toggle modo Barras ────────────────────────────────────────────────────────
 function setModoBarras(modo) {
     document.getElementById('input-modo-barras').value = modo;
-    ['falla', 'responsable', 'tipo_falla', 'atendio'].forEach(m => {
-        const id = m === 'tipo_falla' ? 'bb-tipo' : m === 'falla' ? 'bb-falla' : m === 'responsable' ? 'bb-resp' : 'bb-atendio';
-        const el = document.getElementById(id);
+    const idsBarras = { falla: 'bb-falla', equipo: 'bb-equipo', responsable: 'bb-resp', tipo_falla: 'bb-tipo', atendio: 'bb-atendio' };
+    ['falla', 'equipo', 'responsable', 'tipo_falla', 'atendio'].forEach(m => {
+        const el = document.getElementById(idsBarras[m]);
         if (!el) return;
         const activo = modo === m;
         el.style.background = activo ? 'var(--indigo)' : 'var(--white)';
@@ -197,6 +197,10 @@ function setModoBarras(modo) {
 document.getElementById('buscador-fallas').addEventListener('input', function() {
     const q = this.value.toLowerCase();
     document.querySelectorAll('.falla-item').forEach(l => l.style.display = l.textContent.toLowerCase().includes(q) ? '' : 'none');
+});
+document.getElementById('buscador-equipos').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.equipo-item').forEach(l => l.style.display = l.textContent.toLowerCase().includes(q) ? '' : 'none');
 });
 document.getElementById('buscador-resp').addEventListener('input', function() {
     const q = this.value.toLowerCase();
@@ -219,11 +223,19 @@ function toggleTodos(listaId, estado) {
 // ── Enviar con exclusiones ────────────────────────────────────────────────────
 function prepararExclusiones() {
     const form = document.getElementById('form-principal');
-    form.querySelectorAll('input[name="excluir_falla"],input[name="excluir_resp"],input[name="excluir_tipo"],input[name="excluir_atendio"]').forEach(el => el.remove());
+    form.querySelectorAll('input[name="excluir_falla"],input[name="excluir_resp"],input[name="excluir_tipo"],input[name="excluir_atendio"],input[name="excluir_equipo"]').forEach(el => el.remove());
+
     document.querySelectorAll('.chk-falla').forEach(chk => {
         if (!chk.checked) {
             const inp = document.createElement('input');
             inp.type='hidden'; inp.name='excluir_falla'; inp.value=chk.dataset.val;
+            form.appendChild(inp);
+        }
+    });
+    document.querySelectorAll('.chk-equipo').forEach(chk => {
+        if (!chk.checked) {
+            const inp = document.createElement('input');
+            inp.type='hidden'; inp.name='excluir_equipo'; inp.value=chk.dataset.val;
             form.appendChild(inp);
         }
     });
