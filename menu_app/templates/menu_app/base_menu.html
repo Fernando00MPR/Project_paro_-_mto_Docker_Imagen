@@ -368,6 +368,27 @@
             100% { background-position: 0%   50%; }
         }
 
+        /* Spinner centrado sobre el skeleton, para reforzar la señal de "cargando" */
+        .img-spinner {
+            position: absolute; top: 50%; left: 50%;
+            width: 48px; height: 48px; margin: -24px 0 0 -24px;
+            border: 4px solid rgba(0,0,0,.15); border-top-color: var(--indigo);
+            border-radius: 50%; pointer-events: none;
+            animation: img-spinner-spin .8s linear infinite;
+        }
+        .img-spinner-sm {
+            width: 16px; height: 16px; margin: -8px 0 0 -8px; border-width: 2px;
+        }
+        .img-spinner-label {
+            position: absolute; top: calc(50% + 22px); left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px; font-weight: 500; color: var(--text-2);
+            white-space: nowrap; pointer-events: none;
+        }
+        @keyframes img-spinner-spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* ── Filtros ── */
         .filters {
             display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;

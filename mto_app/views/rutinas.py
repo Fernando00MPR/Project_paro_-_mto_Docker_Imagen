@@ -191,7 +191,7 @@ def importar_pasos(request):
 
     planes = sorted(
         set(PlanMantenimiento.objects.values_list('plan_trabajo', flat=True)),
-        key=lambda x: int(x) if str(x).isdigit() else x
+        key=lambda x: (0, int(x)) if str(x).isdigit() else (1, str(x))
     )
     areas = areas_permitidas_mto(request)
     return render(request, 'mto_app/rutinas/importar_rutinas.html', {
