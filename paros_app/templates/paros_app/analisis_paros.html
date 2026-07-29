@@ -37,6 +37,7 @@
         {% for r in resp_excluidas %}<input type="hidden" name="excluir_resp" value="{{ r }}">{% endfor %}
         {% for t in tipos_excluidos %}<input type="hidden" name="excluir_tipo" value="{{ t }}">{% endfor %}
         {% for a in atendio_excluidos %}<input type="hidden" name="excluir_atendio" value="{{ a }}">{% endfor %}
+        {% for e in equipos_excluidos %}<input type="hidden" name="excluir_equipo"  value="{{ e }}">{% endfor %}
 
         <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Área" %}</label>
@@ -105,11 +106,13 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <div>
                 <div style="font-size:13px;font-weight:700;color:var(--text);">{% trans "Diagrama de Pareto" %}</div>
-                <div style="font-size:11px;color:var(--text-3);">{% if modo_pareto == 'falla' %}{% trans "Fallas" %}{% elif modo_pareto == 'responsable' %}{% trans "Responsables" %}{% else %}{% trans "Tipos de falla" %}{% endif %} {% trans "que generan el 80% del tiempo perdido" %}</div>
+                <div style="font-size:11px;color:var(--text-3);">{% if modo_pareto == 'falla' %}{% trans "Fallas" %}{% elif modo_pareto == 'responsable' %}{% trans "Responsables" %}{% elif modo_pareto == 'atendio' %}{% trans "Quién atendió" %}{% elif modo_pareto == 'equipo' %}{% trans "Equipos" %}{% else %}{% trans "Tipos de falla" %}{% endif %} {% trans "que generan el 80% del tiempo perdido" %}</div>
             </div>
             <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;height:28px;">
                 <button type="button" id="bp-falla" onclick="setModoPareto('falla'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_pareto == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
+                <button type="button" id="bp-equipo" onclick="setModoPareto('equipo'); prepararExclusiones();"
+                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'equipo' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'equipo' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Equipo" %}</button>
                 <button type="button" id="bp-resp" onclick="setModoPareto('responsable'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
                 <button type="button" id="bp-tipo" onclick="setModoPareto('tipo_falla'); prepararExclusiones();"
@@ -141,6 +144,8 @@
             <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;height:28px;">
                 <button type="button" id="bb-falla" onclick="setModoBarras('falla'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_barras == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
+                <button type="button" id="bb-equipo" onclick="setModoBarras('equipo'); prepararExclusiones();"
+                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'equipo' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'equipo' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Equipo" %}</button>           
                 <button type="button" id="bb-resp" onclick="setModoBarras('responsable'); prepararExclusiones();"
                         style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
                 <button type="button" id="bb-tipo" onclick="setModoBarras('tipo_falla'); prepararExclusiones();"
@@ -213,6 +218,30 @@
             <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
                 <button type="button" onclick="toggleTodos('lista-fallas',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
                 <button type="button" onclick="toggleTodos('lista-fallas',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+            </div>
+        </div>
+
+        <div class="card" style="padding:16px 18px;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar equipos" %}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
+            <input type="text" id="buscador-equipos" placeholder="{% trans 'Buscar equipo…' %}"
+                   style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
+            <div id="lista-equipos" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
+                {% for e in lista_equipos %}
+                <label class="equipo-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
+                       onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" class="chk-equipo" data-val="{{ e.equipo }}"
+                           {% if e.equipo not in equipos_excluidos %}checked{% endif %}
+                           onchange="prepararExclusiones()"
+                           style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
+                    <span style="flex:1;">{{ e.equipo }}</span>
+                    <span style="font-size:11px;color:var(--text-3);">{{ e.minutos }} min</span>
+                </label>
+                {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                <button type="button" onclick="toggleTodos('lista-equipos',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                <button type="button" onclick="toggleTodos('lista-equipos',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
             </div>
         </div>
 
