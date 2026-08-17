@@ -104,6 +104,44 @@ class CatalogoResponsable(models.Model):
         ordering = ['area', 'codigo']
         unique_together = [('area', 'codigo')]
 
+
+class CatalogoMolde(models.Model):
+    area         = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='catalogo_moldes', verbose_name=_("Área"))
+    numero_molde = models.CharField(max_length=30, verbose_name=_("Número de molde"))
+    nombre_molde = models.CharField(max_length=300, verbose_name=_("Nombre de molde"))
+
+    def __str__(self):
+        return f"[{self.numero_molde}] {self.nombre_molde}"
+
+    class Meta:
+        verbose_name = _("Molde de catálogo")
+        verbose_name_plural = _("Catálogo de moldes")
+        ordering = ['area', 'numero_molde']
+        unique_together = [('area', 'numero_molde')]
+
+# Configuracion para ventana de Catalogos de Moldes
+class ConfiguracionMoldes(models.Model):
+    area = models.ForeignKey(Area, on_delete=models.PROTECT, verbose_name=_("Área de moldes"))
+
+    def __str__(self):
+        return f"{_('Área de moldes')}: {self.area}"
+
+    class Meta:
+        verbose_name = _("Configuración de moldes")
+        verbose_name_plural = _("Configuración de moldes")
+
+# Configuracion para ventana de Hora x Hora
+class ConfiguracionHoraHora(models.Model):
+    area = models.ForeignKey(Area, on_delete=models.PROTECT, verbose_name=_("Área de hora x hora"))
+
+    def __str__(self):
+        return f"{_('Área de hora x hora')}: {self.area}"
+
+    class Meta:
+        verbose_name = _("Configuración de hora x hora")
+        verbose_name_plural = _("Configuración de hora x hora")
+
+              
 # Bitacora
 class BitacoraParo(models.Model):
     CAMPOS_LABELS = {
@@ -216,13 +254,15 @@ class AccionDia(models.Model):
 class RegistroProduccion(models.Model):
     TURNO_CHOICES = [(1, 'Turno 1'), (2, 'Turno 2')]
 
-    area        = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='registros_produccion', verbose_name='Área')
-    equipo      = models.CharField(max_length=100, blank=True, verbose_name='Equipo')
-    fecha       = models.DateField(verbose_name='Fecha', db_index=True)
-    turno       = models.IntegerField(choices=TURNO_CHOICES, verbose_name='Turno')
-    hora_inicio = models.TimeField(verbose_name='Hora inicio')
-    hora_fin    = models.TimeField(verbose_name='Hora fin')
-    orden = models.PositiveIntegerField(default=0, verbose_name='Orden')
+    area         = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='registros_produccion', verbose_name='Área')
+    equipo       = models.CharField(max_length=100, blank=True, verbose_name='Equipo')
+    fecha        = models.DateField(verbose_name='Fecha', db_index=True)
+    turno        = models.IntegerField(choices=TURNO_CHOICES, verbose_name='Turno')
+    hora_inicio  = models.TimeField(verbose_name='Hora inicio')
+    hora_fin     = models.TimeField(verbose_name='Hora fin')
+    orden        = models.PositiveIntegerField(default=0, verbose_name='Orden')
+    numero_molde = models.CharField(max_length=30, blank=True, verbose_name='Número de molde')
+    nombre_molde = models.CharField(max_length=300, blank=True, verbose_name='Nombre de molde')
 
     @property
     def tiempo_planeado(self):
@@ -244,7 +284,6 @@ class RegistroProduccion(models.Model):
         verbose_name = 'Registro de producción'
         verbose_name_plural = 'Registros de producción'
         ordering = ['-fecha', 'area', 'orden', 'turno', 'equipo']
-        unique_together = [('area', 'equipo', 'fecha', 'turno')]
 
 class TargetIndicador(models.Model):
     INDICADOR_CHOICES = [
@@ -291,7 +330,7 @@ class RegistroHoraHora(models.Model):
     def __str__(self):
         return f"{self.area.nombre} — {self.fecha} — {self.turno} — {self.hora:02d}:00 — {self.valor}"
 
-# Eficiencia   
+# Eficiencia Hora x Hora 
 class TargetHoraHora(models.Model):
     area              = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name='Área')
     anio              = models.PositiveSmallIntegerField(verbose_name='Año')
@@ -319,6 +358,60 @@ class TargetAnualHoraHora(models.Model):
 
     def __str__(self):
         return f"{self.area.nombre} — {self.anio} — {self.target_eficiencia}%"
+
+# Bitácora de AGVs
+class ConfiguracionAgv(models.Model):
+    area = models.ForeignKey(Area, on_delete=models.PROTECT, verbose_name=_("Área de bitácora de AGVs"))
+
+    def __str__(self):
+        return f"{_('Área de bitácora de AGVs')}: {self.area}"
+
+    class Meta:
+        verbose_name = _("Configuración de bitácora de AGVs")
+        verbose_name_plural = _("Configuración de bitácora de AGVs")
+
+
+class RegistroAgv(models.Model):
+    AREA_INTERNA_CHOICES = [
+        ('inyeccion', 'Inyección'),
+        ('pintura',   'Pintura'),
+    ]
+    TURNO_CHOICES = [
+        ('dia',   'Día'),
+        ('noche', 'Noche'),
+    ]
+
+    area         = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name='Área')
+    area_interna = models.CharField(max_length=10, choices=AREA_INTERNA_CHOICES, verbose_name='Área interna')
+    fecha        = models.DateField(verbose_name='Fecha')
+    turno        = models.CharField(max_length=10, choices=TURNO_CHOICES, verbose_name='Turno')
+    cantidad     = models.PositiveSmallIntegerField(default=0, verbose_name='Cantidad de AGVs')
+
+    class Meta:
+        verbose_name        = 'Registro de AGVs'
+        verbose_name_plural = 'Registros de AGVs'
+        unique_together     = ('area', 'area_interna', 'fecha', 'turno')
+        ordering            = ['area', 'fecha', 'turno', 'area_interna']
+
+    def __str__(self):
+        return f"{self.area.nombre} — {self.get_area_interna_display()} — {self.fecha} — {self.turno} — {self.cantidad}"
+
+
+class TargetAgv(models.Model):
+    area            = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name='Área')
+    area_interna    = models.CharField(max_length=10, choices=RegistroAgv.AREA_INTERNA_CHOICES, verbose_name='Área interna')
+    anio            = models.PositiveSmallIntegerField(verbose_name='Año')
+    mes             = models.PositiveSmallIntegerField(verbose_name='Mes')
+    target_cantidad = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Target de AGVs')
+
+    class Meta:
+        verbose_name        = 'Target de AGVs'
+        verbose_name_plural = 'Targets de AGVs'
+        unique_together     = ('area', 'area_interna', 'anio', 'mes')
+
+    def __str__(self):
+        return f"{self.area.nombre} — {self.get_area_interna_display()} — {self.mes}/{self.anio} — Target:{self.target_cantidad}"
+    
 
 def imagen_paro_upload_path(instance, filename):
     return f'paros/{instance.paro_id}/{filename}'

@@ -91,6 +91,64 @@
     </form>
 </div>
 
+<!-- Gráfica de tendencia (semana / mes / año) -->
+<div class="card p-16" style="margin-bottom:16px;">
+    <div class="flex-between">
+        <div style="font-size:13px; font-weight:600; color:var(--text);">
+            {% trans "Tendencia" %} — <span id="tendencia-ind-label"></span>
+        </div>
+        <div class="flex-row gap-8">
+            <!-- Toggle tipo de gráfica -->
+            <div class="btn-icon-group">
+                <button id="btn-tipo-tend-bar" onclick="cambiarTipoTendencia('bar')" class="btn-icon active">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="6" width="3" height="9" rx="1"/><rect x="6" y="3" width="3" height="12" rx="1"/><rect x="11" y="8" width="3" height="7" rx="1"/></svg>
+                    {% trans "Barras" %}
+                </button>
+                <button id="btn-tipo-tend-line" onclick="cambiarTipoTendencia('line')" class="btn-icon inactive">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,13 5,7 9,10 13,3 15,5"/></svg>
+                    {% trans "Línea" %}
+                </button>
+                <button id="btn-tipo-tend-area" onclick="cambiarTipoTendencia('area')" class="btn-icon inactive">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" opacity=".4"><polygon points="1,15 1,9 5,5 9,8 13,2 15,4 15,15"/></svg>
+                    {% trans "Área" %}
+                </button>
+            </div>
+            <div id="wrap-anio-semana" class="anio-selector">
+                <button type="button" onclick="cambiarAnio('tendencia-anio-semana', -1)" aria-label="{% trans 'Año anterior' %}" class="anio-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <input type="number" id="tendencia-anio-semana" value="{% now "Y" %}" min="2000" max="2099"
+                    onchange="cargarTendencia()" class="anio-input">
+                <button type="button" onclick="cambiarAnio('tendencia-anio-semana', 1)" aria-label="{% trans 'Año siguiente' %}" class="anio-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+            <div id="wrap-anio-inicio" class="anio-selector" style="display:none;">
+                <button type="button" onclick="cambiarAnio('tendencia-anio-inicio', -1)" aria-label="{% trans 'Año anterior' %}" class="anio-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <input type="number" id="tendencia-anio-inicio" value="2022" min="2000" max="2099"
+                    onchange="cargarTendencia()" class="anio-input">
+                <button type="button" onclick="cambiarAnio('tendencia-anio-inicio', 1)" aria-label="{% trans 'Año siguiente' %}" class="anio-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+            <div class="btn-icon-group">
+                <button id="btn-gran-semana" onclick="cambiarGranularidadTendencia('semana')" class="btn-icon active">{% trans "Semana" %}</button>
+                <button id="btn-gran-mes" onclick="cambiarGranularidadTendencia('mes')" class="btn-icon inactive">{% trans "Mes" %}</button>
+                <button id="btn-gran-anio" onclick="cambiarGranularidadTendencia('anio')" class="btn-icon inactive">{% trans "Año" %}</button>
+            </div>
+            <button onclick="descargarGraficaTendencia()" class="btn-outline">⬇ {% trans "Descargar" %}</button>
+        </div>
+    </div>
+
+    <div class="mb-14" style="font-size:11px; color:var(--text-3);" id="tendencia-periodo-label"></div>
+
+    <div class="mt-14" style="height:280px;">
+        <canvas id="chartTendencia" style="height:280px;"></canvas>
+    </div>
+</div>
+
 {% if datos_dias %}
 <!-- Gráfica -->
 <div class="card p-16" style="margin-bottom:16px;">
@@ -372,7 +430,8 @@
     window.URLS = {
         guardarAccion: "{% url 'paros:guardar_accion_dia' %}",
         obtenerAccion: "{% url 'paros:get_accion_dia' %}",
-        guardarTarget: "{% url 'paros:guardar_target' %}"
+        guardarTarget: "{% url 'paros:guardar_target' %}",
+        tendencia: "{% url 'paros:tendencia_indicadores' %}"
     };
     window.CSRF_TOKEN = "{{ csrf_token }}";
     window.AREA_ID = "{{ area_sel.id }}";

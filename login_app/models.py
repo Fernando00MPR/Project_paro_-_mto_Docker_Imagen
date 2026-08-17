@@ -21,17 +21,20 @@ class PerfilUsuario(models.Model):
     importar_paros       = models.BooleanField(default=False, verbose_name="Importar paros")
 
     # Catálogos
-    ver_catalogos           = models.BooleanField(default=False, verbose_name="Ver catálogos")
-    gestionar_catalogos     = models.BooleanField(default=False, verbose_name="Importar y limpiar catálogos")
-    agregar_catalogo_falla  = models.BooleanField(default=False, verbose_name="Agregar falla al catálogo")
-    editar_catalogo_falla   = models.BooleanField(default=False, verbose_name="Editar falla del catálogo")
-    eliminar_catalogo_falla = models.BooleanField(default=False, verbose_name="Eliminar falla del catálogo")
+    ver_catalogos            = models.BooleanField(default=False, verbose_name="Ver catálogos")
+    gestionar_catalogos      = models.BooleanField(default=False, verbose_name="Importar y limpiar catálogos")
+    agregar_catalogo_falla   = models.BooleanField(default=False, verbose_name="Agregar falla al catálogo")
+    editar_catalogo_falla    = models.BooleanField(default=False, verbose_name="Editar falla del catálogo")
+    eliminar_catalogo_falla  = models.BooleanField(default=False, verbose_name="Eliminar falla del catálogo")
     agregar_catalogo_equipo  = models.BooleanField(default=False, verbose_name="Agregar equipo al catálogo")
     editar_catalogo_equipo   = models.BooleanField(default=False, verbose_name="Editar equipo del catálogo")
     eliminar_catalogo_equipo = models.BooleanField(default=False, verbose_name="Eliminar equipo del catálogo")
     agregar_catalogo_resp    = models.BooleanField(default=False, verbose_name="Agregar responsable al catálogo")
     editar_catalogo_resp     = models.BooleanField(default=False, verbose_name="Editar responsable del catálogo")
     eliminar_catalogo_resp   = models.BooleanField(default=False, verbose_name="Eliminar responsable del catálogo")
+    agregar_catalogo_molde   = models.BooleanField(default=False, verbose_name="Agregar molde al catálogo")
+    editar_catalogo_molde    = models.BooleanField(default=False, verbose_name="Editar molde del catálogo")
+    eliminar_catalogo_molde  = models.BooleanField(default=False, verbose_name="Eliminar molde del catálogo")
 
     # Áreas permitidas (vacío = todas)
     areas_permitidas = models.ManyToManyField(
@@ -53,6 +56,9 @@ class PerfilUsuario(models.Model):
         related_name='usuarios_hora_hora',
         verbose_name='Áreas de hora x hora'
     )
+
+    ver_bitacora_agv    = models.BooleanField(default=False, verbose_name="Ver bitácora de AGVs")
+    editar_bitacora_agv = models.BooleanField(default=False, verbose_name="Editar bitácora de AGVs")
 
     def __str__(self):
         return f"Perfil de {self.user.username}"

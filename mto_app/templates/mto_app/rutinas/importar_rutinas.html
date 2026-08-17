@@ -31,12 +31,13 @@
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
                 <div class="form-field" style="margin-bottom:0;">
                     <label>Área *</label>
-                    <select name="area" required>
+                    <select name="area" required disabled>
                         <option value="">-- Seleccionar área --</option>
                         {% for a in areas %}
-                        <option value="{{ a.pk }}">{{ a.nombre }}</option>
+                        <option value="{{ a.pk }}" {% if area_seleccionada == a.pk|stringformat:"s" %}selected{% endif %}>{{ a.nombre }}</option>
                         {% endfor %}
                     </select>
+                    <input type="hidden" name="area" value="{{ area_seleccionada }}">
                 </div>
                 <div class="form-field" style="margin-bottom:0;">
                     <label>N° Plan de trabajo *</label>
@@ -79,8 +80,8 @@
                 <div style="border:0.5px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:12px;">
                     <table style="width:100%; border-collapse:collapse; font-size:12px;">
                         <thead><tr style="background:var(--surface);">
-                            <th style="padding:6px 10px; text-align:left; color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border); width:50px;">Seq #</th>
-                            <th style="padding:6px 10px; text-align:left; color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border); width:200px;">Descripción</th>
+                            <th style="padding:6px 10px; text-align:left; color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border); width:80px;">Seq #</th>
+                            <th style="padding:6px 10px; text-align:left; color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border); width:320px;">Descripción</th>
                             <th style="padding:6px 10px; text-align:left; color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border);">Detalles</th>
                         </tr></thead>
                         <tbody id="preview-body"></tbody>

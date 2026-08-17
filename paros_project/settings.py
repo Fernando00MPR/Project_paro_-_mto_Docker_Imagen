@@ -63,6 +63,11 @@ STORAGES = {
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 
+# nginx ya fuerza SAMEORIGIN en /media//static/ y en todo lo demás vía server{} en producción;
+# esto solo iguala el comportamiento en local (runserver), donde /media/ sí pasa por Django
+# y el default DENY del middleware bloqueaba el visor de PDF embebido (iframe).
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 ROOT_URLCONF = 'paros_project.urls'
 
 TEMPLATES = [

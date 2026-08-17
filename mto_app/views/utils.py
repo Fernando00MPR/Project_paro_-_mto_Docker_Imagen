@@ -4,17 +4,46 @@ from django.shortcuts import redirect
 from ..models import Area
 
 INTERVALO = {
-    'semanal':    1,
-    'quincenal':  2,
-    'mensual':    4,
-    'trimestral': 13,
-    'semestral':  26,
-    'anual':      52,
+    'semanal':       1,
+    'quincenal':     2,
+    'mensual':       4,
+    'bimestral':     9,
+    'trimestral':    13,
+    'cuatrimestral': 17,
+    'semestral':     26,
+    'anual':         52,
 }
 
 
 def lunes_de_semana(anio, semana):
     return date.fromisocalendar(anio, semana, 1)
+
+ORDEN_PLAN_PERMITIDO = {
+    'codigo': 'codigo', '-codigo': '-codigo',
+    'actividad': 'actividad', '-actividad': '-actividad',
+}
+
+
+def _aplicar_orden_plan(qs, get_params):
+    """Ordena el queryset de PlanMantenimiento por codigo/actividad vía ?orden=.
+    plan_trabajo no se puede ordenar en SQL de forma fiable (es texto tipo '1','2','10'),
+    así que ese caso se resuelve aparte con un sort en Python (ver _orden_por_plan_trabajo)."""
+    campo = ORDEN_PLAN_PERMITIDO.get(get_params.get('orden', ''))
+    if campo:
+        return qs.order_by(campo)
+    return qs
+
+
+def _orden_por_plan_trabajo(planes, orden):
+    """Reordena en Python una lista de PlanMantenimiento por N° de plan (plan_trabajo),
+    tratando los valores numéricos como números para no ordenar '10' antes que '2'."""
+    if orden not in ('plan_trabajo', '-plan_trabajo'):
+        return planes
+    planes.sort(
+        key=lambda p: (0, int(p.plan_trabajo)) if str(p.plan_trabajo).isdigit() else (1, str(p.plan_trabajo)),
+        reverse=orden.startswith('-')
+    )
+    return planes
 
 
 def _planes_que_tocan(planes, lunes):
@@ -52,8 +81,12 @@ def _frecuencia_desde_excel(valor):
         return 'quincenal'
     elif n <= 6:
         return 'mensual'
-    elif n <= 18:
+    elif n <= 11:
+        return 'bimestral'
+    elif n <= 15:
         return 'trimestral'
+    elif n <= 21:
+        return 'cuatrimestral'
     elif n <= 39:
         return 'semestral'
     else:

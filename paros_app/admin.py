@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Area, Paro, CatalogoFalla, CatalogoEquipo, CatalogoResponsable, TargetIndicador, AccionDia
+from .models import Area, Paro, CatalogoFalla, CatalogoEquipo, CatalogoResponsable, TargetIndicador, AccionDia, ConfiguracionMoldes, ConfiguracionHoraHora, ConfiguracionAgv
 
 @admin.register(Area)
 class AreaAdmin(admin.ModelAdmin):
@@ -7,6 +7,29 @@ class AreaAdmin(admin.ModelAdmin):
     search_fields  = ('nombre',)
 
 
+@admin.register(ConfiguracionMoldes)
+class ConfiguracionMoldesAdmin(admin.ModelAdmin):
+    list_display = ('area',)
+
+    def has_add_permission(self, request):
+        return not ConfiguracionMoldes.objects.exists()
+
+@admin.register(ConfiguracionHoraHora)
+class ConfiguracionHoraHoraAdmin(admin.ModelAdmin):
+    list_display = ('area',)
+
+    def has_add_permission(self, request):
+        return not ConfiguracionHoraHora.objects.exists()
+
+
+@admin.register(ConfiguracionAgv)
+class ConfiguracionAgvAdmin(admin.ModelAdmin):
+    list_display = ('area',)
+
+    def has_add_permission(self, request):
+        return not ConfiguracionAgv.objects.exists()
+
+    
 @admin.register(Paro)
 class ParoAdmin(admin.ModelAdmin):
     list_display   = ('area', 'fecha', 'turno', 'falla', 'responsable', 'equipo', 'hora', 'tiempo_minutos')

@@ -14,7 +14,7 @@ from collections import defaultdict
 from .utils import areas_permitidas_mto
 from ..models import Area, PlanMantenimiento, RegistroEjecucion, Responsable
 from django.urls import reverse
-from .utils import lunes_de_semana, INTERVALO, _frecuencia_desde_excel
+from .utils import lunes_de_semana, INTERVALO, _frecuencia_desde_excel, _aplicar_orden_plan, _orden_por_plan_trabajo
 
 
 @login_required
@@ -34,6 +34,7 @@ def lista_plan(request):
     busqueda      = request.GET.get('q', '').strip()
     filtro_semana = request.GET.get('semana', '').strip()
     filtro_anio   = request.GET.get('anio', '').strip()
+    orden         = request.GET.get('orden', '').strip()
 
     planes = PlanMantenimiento.objects.select_related('area').filter(activo=True)
 
@@ -51,6 +52,8 @@ def lista_plan(request):
                 planes.filter(codigo__icontains=busqueda) |
                 planes.filter(rutina__icontains=busqueda))
 
+    planes = _aplicar_orden_plan(planes, request.GET)
+    
     hoy         = date.today()
     anio_filtro = int(filtro_anio) if filtro_anio else hoy.year
 
@@ -152,6 +155,8 @@ def lista_plan(request):
                 'minutos_resto': minutos_total % 60,
             }
 
+    planes_con_datos = _orden_por_plan_trabajo(planes_con_datos, orden)
+
     per_page_raw = request.GET.get('per_page', '8')
     per_page     = per_page_raw if per_page_raw in ('8', '10', '15', '20') else '8'
     paginator    = Paginator(planes_con_datos, int(per_page))
@@ -166,6 +171,7 @@ def lista_plan(request):
         'frecuencias':   PlanMantenimiento.FRECUENCIA_CHOICES,
         'filtro_area':   area_id,
         'filtro_frec':   frecuencia,
+        'filtro_orden':  orden,
         'busqueda':      busqueda,
         'filtro_semana': filtro_semana,
         'filtro_anio':   anio_filtro,
@@ -594,7 +600,7 @@ def descargar_plantilla(request):
     ])
 
     ws.append([])
-    ws.append(['','NOTA: Frecuencia: 1S=semanal, 2S=quincenal, 4S=mensual, 13S=trimestral, 26S=semestral, 52S=anual'])
+    ws.append(['','NOTA: Frecuencia: 1S=semanal, 2S=quincenal, 4S=mensual, 9S=bimestral, 13S=trimestral, 17S=cuatrimestral, 26S=semestral, 52S=anual'])
 
     for cell in ws[3][1:]:
         cell.font = Font(bold=True, color='FFFFFF')

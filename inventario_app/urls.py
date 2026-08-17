@@ -14,6 +14,8 @@ urlpatterns = [
     path('imagen/eliminar/<int:imagen_id>/',    views.eliminar_imagen_refaccion,       name='eliminar_imagen_refaccion'),
     path('importar-stock/',                     views.importar_stock,                  name='importar_stock'),
     path('importar-stock/plantilla/',           views.descargar_plantilla_stock,       name='descargar_plantilla_stock'),
+    path('importar-completo/',                  views.importar_completo,               name='importar_completo'),
+    path('importar-completo/plantilla/',        views.descargar_plantilla_completa,    name='descargar_plantilla_completa'),
     path('exportar/',                           views.exportar_refacciones,            name='exportar_refacciones'),
 
     # Seguimiento de refacciones

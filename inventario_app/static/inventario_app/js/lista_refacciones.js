@@ -81,6 +81,7 @@ function abrirModalRefaccion() {
     document.getElementById('ref-area').value            = new URLSearchParams(window.location.search).get('area') || '';
     document.getElementById('ref-categoria').value       = '';
     document.getElementById('ref-unidad').value          = 'pza';
+    document.getElementById('ref-criticidad').value      = 'no_critico';
     document.getElementById('ref-stock_actual').value    = 0;
     document.getElementById('ref-stock_minimo').value    = 0;
     document.getElementById('ref-stock_maximo').value    = 0;
@@ -97,7 +98,7 @@ function abrirModalRefaccion() {
     document.getElementById('ref-imagenes-existentes').innerHTML = '';
 }
 
-function editarRefaccion(id, noItem, nombre, areaId, categoriaId, unidad, stockActual, stockMinimo, stockMaximo, ubicacion, proveedor, costoUnitario, descripcion, activo) {
+function editarRefaccion(id, noItem, nombre, areaId, categoriaId, unidad, criticidad, stockActual, stockMinimo, stockMaximo, ubicacion, proveedor, costoUnitario, descripcion, activo) {
     document.getElementById('modal-refaccion-titulo').textContent = 'Editar refacción';
     document.getElementById('form-refaccion').action = `/inventario/editar/${id}/`;
     document.getElementById('ref-no_item').value         = noItem;
@@ -105,6 +106,7 @@ function editarRefaccion(id, noItem, nombre, areaId, categoriaId, unidad, stockA
     document.getElementById('ref-area').value            = areaId;
     document.getElementById('ref-categoria').value       = categoriaId || '';
     document.getElementById('ref-unidad').value          = unidad;
+    document.getElementById('ref-criticidad').value      = criticidad;
     document.getElementById('ref-stock_actual').value    = stockActual;
     document.getElementById('ref-stock_minimo').value    = stockMinimo;
     document.getElementById('ref-stock_maximo').value    = stockMaximo;

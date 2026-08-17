@@ -124,6 +124,7 @@ function enviarValor(td, valor) {
                 DATOS[area][turno][dia][hora] = data.valor;
             }
             recalcularArea(area);
+            if (document.getElementById('chartEficiencia')) cargarEficiencia();
         } else {
             alert('Error: ' + (data.error || 'No se pudo guardar'));
         }

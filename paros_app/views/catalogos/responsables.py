@@ -109,7 +109,7 @@ def importar_responsables(request):
                 creados = actualizados = omitidos = 0
                 areas_borradas   = set()
                 errores_guardado = []
-                areas_cache = {a.nombre_es.lower(): a for a in Area.objects.filter(activa=True) if a.nombre_es}
+                areas_cache = {a.nombre_es.lower(): a for a in Area.objects.all() if a.nombre_es}
                 try:
                     with transaction.atomic():
                         for codigo, nombre_area, resp_es, resp_en in filas:

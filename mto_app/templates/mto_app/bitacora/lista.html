@@ -121,8 +121,23 @@
                     {% if puede_editar or puede_eliminar %}
                     <td style="text-align:center; padding-right:16px; white-space:nowrap;">
                         <div style="display:flex; gap:8px; justify-content:center;">
+                            {% if r.imagenes.all %}
+                            <button type="button" onclick="verImagenesBitacora({{ r.pk }})"
+                                    title="{% trans 'Ver imágenes' %}"
+                                    style="display:inline-flex; align-items:center; justify-content:center;
+                                        width:28px; height:28px; border-radius:6px; border:1px solid var(--border);
+                                        background:var(--surface); color:var(--text-2); cursor:pointer; padding:0; flex-shrink:0;">
+                                <svg width="16" height="16" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                            {% else %}
+                            <div style="width:28px; height:28px; flex-shrink:0;"></div>
+                            {% endif %}
                             {% if puede_editar %}
                             <button type="button"
+                                data-id="{{ r.pk }}"
                                 data-url="{% url 'mto:editar_bitacora' r.pk %}"
                                 data-area="{{ r.area_id }}"
                                 data-fecha="{{ r.fecha|date:'Y-m-d' }}"
@@ -188,7 +203,7 @@
                     style="background:none; border:none; cursor:pointer; color:var(--text-3); font-size:20px; line-height:1;">✕</button>
         </div>
 
-        <form id="form-bitacora" method="post" action="{% url 'mto:nuevo_bitacora' %}">
+        <form id="form-bitacora" method="post" enctype="multipart/form-data" action="{% url 'mto:nuevo_bitacora' %}">
             {% csrf_token %}
             <div class="form-grid">
 
@@ -249,6 +264,23 @@
                               maxlength="200" rows="2" style="resize:vertical;"></textarea>
                 </div>
 
+                <div class="form-field full">
+                    <label>{% trans "Imágenes" %} <span style="font-size:11px; color:var(--text-3);">{% trans "Máximo 2" %}</span></label>
+
+                    <div id="bit-imagenes-existentes" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;"></div>
+
+                    <div id="bit-zona-imagenes" onclick="document.getElementById('bit-input-imagenes').click()"
+                        style="border:2px dashed var(--border); border-radius:10px; padding:16px;
+                                text-align:center; cursor:pointer; transition:all .2s; background:var(--surface);"
+                        onmouseover="this.style.borderColor='var(--indigo)';this.style.background='var(--indigo-lt)'"
+                        onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                        <div id="bit-zona-texto" style="font-size:12px; font-weight:500; color:var(--text-2);">{% trans "Haz clic para seleccionar imágenes" %}</div>
+                    </div>
+                    <input type="file" id="bit-input-imagenes" name="imagenes" multiple accept="image/*" style="display:none;"
+                        onchange="previsualizarImagenesBitacora(this)">
+                    <div id="bit-preview-imagenes" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;"></div>
+                </div>
+
             </div>
 
             <div class="form-actions" style="margin-top:20px;">
@@ -278,6 +310,55 @@
     </div>
 </div>
 
+
+<!-- ── Modal imágenes (lightbox) ── -->
+<div id="modal-imagenes-bitacora" style="display:none; position:fixed; inset:0;
+     background:rgba(30,27,75,.45); z-index:2200; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:24px;
+                max-width:700px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del registro" %}</div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button onclick="descargarImagenActualBit()" title="{% trans 'Descargar' %}"
+                        style="background:none; border:none; cursor:pointer; color:var(--text-2); display:flex; align-items:center;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-6l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                </button>
+            <button onclick="cerrarModalImagenesBitacora()"
+                    onmouseover="this.style.color='var(--red)'"
+                    onmouseout="this.style.color='var(--text-3)'"
+                    style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
+            </div>     
+        </div>
+
+        <div style="position:relative; background:var(--surface); border-radius:10px;
+                    height:380px; display:flex; align-items:center; justify-content:center;
+                    overflow:hidden; margin-bottom:12px;">
+            <div id="lightbox-bit-skeleton" class="img-skeleton" style="display:none; inset:0; border-radius:10px;">
+                <div class="img-spinner"></div>
+                <div class="img-spinner-label">{% trans "Cargando…" %}</div>
+            </div>
+            <img id="lightbox-bit-img-principal" src="" alt=""
+                style="max-width:100%; max-height:100%; object-fit:contain;">
+
+            <button onclick="lightboxBitAnterior()" title="{% trans 'Anterior' %}"
+                    style="position:absolute; left:8px; top:50%; transform:translateY(-50%);
+                           width:32px; height:32px; border-radius:50%; border:none;
+                           background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+                           display:flex; align-items:center; justify-content:center; font-size:16px;">‹</button>
+            <button onclick="lightboxBitSiguiente()" title="{% trans 'Siguiente' %}"
+                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%);
+                           width:32px; height:32px; border-radius:50%; border:none;
+                           background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+                           display:flex; align-items:center; justify-content:center; font-size:16px;">›</button>
+        </div>
+
+        <div id="lightbox-bit-miniaturas" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"></div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -288,6 +369,9 @@ window.BITACORA_CFG = {
     urlNuevo:              "{% url 'mto:nuevo_bitacora' %}",
     urlBuscarEquipos:      "{% url 'mto:buscar_equipos_bitacora' %}",
     urlBuscarResponsables: "{% url 'mto:buscar_responsables_bitacora' %}",
+    urlImagenesBase:       "/mto/bitacora/",
+    urlEliminarImagenBase: "/mto/bitacora/imagen/",
+    maxImagenes:           2,
 };
 </script>
 {% load static %}

@@ -25,7 +25,8 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             {% if puede_editar_inventario %}
                 <button type="button" onclick="abrirModalRefaccion()" class="btn btn-primary">+ {% trans "Nueva refacción" %}</button>
-                <a href="{% url 'inventario:importar_stock' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}" class="btn btn-ghost">↑ {% trans "Importar Excel" %}</a>
+                <a href="{% url 'inventario:importar_stock' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}" class="btn btn-ghost">↑ {% trans "Actualizar stock" %}</a>
+                <a href="{% url 'inventario:importar_completo' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}" class="btn btn-ghost">↑ {% trans "Importar completo" %}</a>
             {% endif %}
                 <a href="{% url 'inventario:exportar_refacciones' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn btn-ghost">↓ {% trans "Exportar" %}</a>
             {% include 'menu_app/_language_selector.html' %}
@@ -64,6 +65,16 @@
                 <option value="sobre_maximo" {% if estatus_stock == 'sobre_maximo' %}selected{% endif %}>{% trans "Sobre máximo" %}</option>
                 <option value="en_rango" {% if estatus_stock == 'en_rango' %}selected{% endif %}>{% trans "En rango" %}</option>
                 <option value="sin_stock" {% if estatus_stock == 'sin_stock' %}selected{% endif %}>{% trans "Sin stock" %}</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>{% trans "Criticidad" %}</label>
+            <select name="criticidad" onchange="this.form.submit()">
+                <option value="">{% trans "Todas" %}</option>
+                {% for val, label in criticidades %}
+                <option value="{{ val }}" {% if filtro_criticidad == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
             </select>
         </div>
 
@@ -116,6 +127,7 @@
                     <label class="inv-col-toggle" data-col="inv-col-item">       <input type="checkbox" checked onchange="toggleInvCol('inv-col-item', this.checked)"> {% trans "No. Item" %}</label>
                     <label class="inv-col-toggle" data-col="inv-col-nombre">     <input type="checkbox" checked onchange="toggleInvCol('inv-col-nombre', this.checked)"> {% trans "Nombre" %}</label>
                     <label class="inv-col-toggle" data-col="inv-col-categoria">  <input type="checkbox" checked onchange="toggleInvCol('inv-col-categoria', this.checked)"> {% trans "Categoría" %}</label>
+                    <label class="inv-col-toggle" data-col="inv-col-criticidad"> <input type="checkbox" checked onchange="toggleInvCol('inv-col-criticidad', this.checked)"> {% trans "Criticidad" %}</label>
                     <label class="inv-col-toggle" data-col="inv-col-unidad">     <input type="checkbox" checked onchange="toggleInvCol('inv-col-unidad', this.checked)"> {% trans "Unidad" %}</label>
                     <label class="inv-col-toggle" data-col="inv-col-stock">      <input type="checkbox" checked onchange="toggleInvCol('inv-col-stock', this.checked)"> {% trans "Stock" %}</label>
                     <label class="inv-col-toggle" data-col="inv-col-minimo">     <input type="checkbox" checked onchange="toggleInvCol('inv-col-minimo', this.checked)"> {% trans "Stock mínimo" %}</label>
@@ -139,6 +151,7 @@
                     <th class="inv-col-item"        style="text-align:center; width:110px;">{% trans "No. Item" %}</th>
                     <th class="inv-col-nombre"      style="text-align:left;   width:260px;">{% trans "Nombre" %}</th>
                     <th class="inv-col-categoria"   style="text-align:center; width:140px;">{% trans "Categoría" %}</th>
+                    <th class="inv-col-criticidad"  style="text-align:center; width:110px;">{% trans "Criticidad" %}</th>
                     <th class="inv-col-unidad"      style="text-align:center; width:90px; ">{% trans "Unidad" %}</th>
                     <th class="inv-col-stock"       style="text-align:center; width:80px; ">{% trans "Stock" %}</th>
                     <th class="inv-col-minimo"      style="text-align:center; width:80px;" >{% trans "Mínimo" %}</th>
@@ -165,6 +178,13 @@
                         <span style="color:var(--text-3);">—</span>
                         {% endif %}
                     </td>
+                    <td class="inv-col-criticidad" style="text-align:center; white-space:nowrap;">
+                        {% if r.criticidad == 'critico' %}
+                        <span class="badge" style="background:#FEE2E2; color:#991B1B;">{% trans "Crítico" %}</span>
+                        {% else %}
+                        <span class="badge" style="background:var(--surface); color:var(--text-2);">{% trans "No crítico" %}</span>
+                        {% endif %}
+                    </td>
                     <td class="inv-col-unidad"    style="text-align:center;">{{ r.get_unidad_display }}</td>
                     <td class="inv-col-stock"     style="text-align:center; font-family:'DM Mono',monospace;">{{ r.stock_actual }}</td>
                     <td class="inv-col-minimo"    style="text-align:center; font-family:'DM Mono',monospace; color:var(--text-2);">{{ r.stock_minimo }}</td>
@@ -179,7 +199,7 @@
                     <td class="inv-col-descripcion" style="color:var(--text-2); font-size:12px;">{{ r.descripcion|default:"--" }}</td>
                     <td style="text-align:center;">
                         <div style="display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:nowrap;">
-                            {% if r.imagenes.exists %}
+                            {% if r.num_imagenes %}
                             <button type="button" onclick="verImagenesRefaccion({{ r.pk }}, '{{ r.area.nombre|escapejs }}', '{{ r.descripcion|escapejs }}')"
                                     title="{% trans 'Ver imágenes' %}"
                                     style="display:inline-flex; align-items:center; justify-content:center;
@@ -195,7 +215,7 @@
                             {% endif %}
 
                             {% if puede_editar_inventario %}
-                            <button type="button" onclick="editarRefaccion({{ r.pk }}, '{{ r.no_item|escapejs }}', '{{ r.nombre|escapejs }}', {{ r.area_id }}, {{ r.categoria_id|default:'null' }}, '{{ r.unidad }}', {{ r.stock_actual }}, {{ r.stock_minimo }}, {{ r.stock_maximo }}, '{{ r.ubicacion|escapejs }}', '{{ r.proveedor|escapejs }}', '{{ r.costo_unitario|default:'' }}', '{{ r.descripcion|escapejs }}', {{ r.activo|yesno:'true,false' }})"
+                            <button type="button" onclick="editarRefaccion({{ r.pk }}, '{{ r.no_item|escapejs }}', '{{ r.nombre|escapejs }}', {{ r.area_id }}, {{ r.categoria_id|default:'null' }}, '{{ r.unidad }}', '{{ r.criticidad }}', {{ r.stock_actual }}, {{ r.stock_minimo }}, {{ r.stock_maximo }}, '{{ r.ubicacion|escapejs }}', '{{ r.proveedor|escapejs }}', '{{ r.costo_unitario|default:'' }}', '{{ r.descripcion|escapejs }}', {{ r.activo|yesno:'true,false' }})"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid var(--border);
                                         background:var(--surface); color:var(--text); cursor:pointer;
@@ -331,6 +351,15 @@
                     <label>{% trans "Unidad" %}</label>
                     <select name="unidad" id="ref-unidad">
                         {% for val, label in unidades %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Criticidad" %}</label>
+                    <select name="criticidad" id="ref-criticidad">
+                        {% for val, label in criticidades %}
                         <option value="{{ val }}">{{ label }}</option>
                         {% endfor %}
                     </select>

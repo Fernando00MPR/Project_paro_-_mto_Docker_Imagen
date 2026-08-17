@@ -59,6 +59,7 @@ function validarColumnas(headers) {
     const esFallas      = h.some(c => c.includes('falla'));
     const esEquipo      = h.some(c => c.includes('equipo'));
     const esResponsable = h.some(c => c.includes('responsable'));
+    const esMolde       = h.some(c => c.includes('molde'));
     const errores       = [];
 
     if (esFallas) {
@@ -93,6 +94,9 @@ function validarColumnas(headers) {
             if (!h[1].includes('responsable'))  errores.push(`Columna 2 debe ser "Responsable (ES)", se encontró: "${headers[1]}"`);
             if (!h[2].includes('responsable'))  errores.push(`Columna 3 debe ser "Responsable (EN)", se encontró: "${headers[2]}"`);
         }
+    } else if (esMolde) {
+        if (!h[0].includes('numero') && !h[0].includes('número')) errores.push(`Columna 1 debe ser "Número de molde", se encontró: "${headers[0]}"`);
+        if (!h[1].includes('molde')) errores.push(`Columna 2 debe ser "Nombre de molde", se encontró: "${headers[1] || ''}"`);
     } else {
         if (!h[0].includes('codigo')) errores.push(`Columna 1 debe ser "Código", se encontró: "${headers[0]}"`);
         if (headers.length < 2) errores.push('Falta columna principal de valor');

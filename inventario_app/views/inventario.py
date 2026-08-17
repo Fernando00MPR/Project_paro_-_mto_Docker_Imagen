@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
+from django.db import transaction
+from django.db.models import Count
 import openpyxl
 from paros_app.views.utils import _excel_response, _estilo_cabecera
 from django.views.decorators.http import require_POST
@@ -34,13 +36,18 @@ def lista_refacciones(request):
     categoria_id  = request.GET.get('categoria', '')
     busqueda      = request.GET.get('q', '').strip()
     estatus_stock = request.GET.get('estatus_stock', '')
+    criticidad_id = request.GET.get('criticidad', '')
 
-    refacciones_qs = Refaccion.objects.select_related('area', 'categoria').filter(activo=True)
+    refacciones_qs = Refaccion.objects.select_related('area', 'categoria').annotate(
+        num_imagenes=Count('imagenes')
+    ).filter(activo=True)
 
     if area_id:
         refacciones_qs = refacciones_qs.filter(area_id=area_id)
     if categoria_id:
         refacciones_qs = refacciones_qs.filter(categoria_id=categoria_id)
+    if criticidad_id:
+        refacciones_qs = refacciones_qs.filter(criticidad=criticidad_id)
     if busqueda:
         refacciones_qs = (refacciones_qs.filter(nombre__icontains=busqueda)  |
                           refacciones_qs.filter(no_item__icontains=busqueda) |
@@ -70,12 +77,14 @@ def lista_refacciones(request):
         'areas':             Area.objects.filter(activa=True),
         'categorias':        CategoriaRefaccion.objects.all(),
         'filtro_area':       area_id,
+        'filtro_criticidad': criticidad_id,
         'filtro_categoria':  categoria_id,
         'busqueda':          busqueda,
         'estatus_stock':     estatus_stock,
         'per_page':          per_page,
         'total_bajo_minimo': total_bajo_minimo,
         'unidades':          Refaccion.UNIDAD_CHOICES,
+        'criticidades':      Refaccion.CRITICIDAD_CHOICES,
         'puede_editar_inventario':   (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.editar_inventario)),
         'puede_eliminar_inventario': (request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or (acceso and acceso.eliminar_inventario)),
     }
@@ -103,6 +112,7 @@ def form_refaccion(request, pk=None):
                 'nombre':         request.POST.get('nombre', '').strip(),
                 'descripcion':    request.POST.get('descripcion', '').strip(),
                 'area':           get_object_or_404(Area, pk=request.POST.get('area')),
+                'criticidad':     request.POST.get('criticidad', 'no_critico'),
                 'categoria_id':   request.POST.get('categoria') or None,
                 'unidad':         request.POST.get('unidad', 'pza'),
                 'stock_actual':   int(request.POST.get('stock_actual', 0) or 0),
@@ -352,6 +362,192 @@ def descargar_plantilla_stock(request):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename="Plantilla_Stock.xlsx"'
+    return response
+
+
+_UNIDAD_LABEL_A_CODIGO = {str(label).strip().lower(): codigo for codigo, label in Refaccion.UNIDAD_CHOICES}
+_UNIDAD_CODIGOS = {codigo for codigo, label in Refaccion.UNIDAD_CHOICES}
+
+
+@login_required
+def importar_completo(request):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_editar = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.editar_inventario)
+    )
+    if not puede_editar:
+        messages.error(request, "No tienes permiso para importar inventario.")
+        return redirect('inventario:lista_refacciones')
+
+    area_id = request.GET.get('area', '') or request.POST.get('area', '')
+
+    if request.method == 'POST':
+        archivo = request.FILES.get('archivo')
+        area_id = request.POST.get('area', '').strip()
+
+        if not archivo or not area_id:
+            messages.error(request, "Debes seleccionar un área y subir un archivo.")
+            return redirect(f"{reverse('inventario:importar_completo')}?area={area_id}")
+
+        try:
+            area = get_object_or_404(Area, pk=area_id)
+            wb = load_workbook(archivo, data_only=True)
+            ws = wb.active
+
+            categorias_dict = {}
+            for c in CategoriaRefaccion.objects.all():
+                for nombre_variante in (getattr(c, 'nombre_es', None), getattr(c, 'nombre_en', None), c.nombre):
+                    if nombre_variante:
+                        categorias_dict.setdefault(str(nombre_variante).strip().lower(), c)
+
+            # Una sola lectura de las refacciones existentes del área — evita 1 query por fila.
+            refacciones_existentes = {r.no_item: r for r in Refaccion.objects.filter(area=area)}
+            nuevos_dict = {}
+            ids_actualizados = set()
+            errores = []
+
+            for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                if row is None or not any(c not in (None, '') for c in row):
+                    continue
+
+                no_item = str(row[0]).strip() if len(row) > 0 and row[0] not in (None, '') else ''
+                if not no_item:
+                    continue
+
+                nombre = str(row[1]).strip() if len(row) > 1 and row[1] not in (None, '') else ''
+                if not nombre:
+                    errores.append(f"Fila {i}: falta el nombre, se omitió.")
+                    continue
+
+                descripcion = str(row[2]).strip() if len(row) > 2 and row[2] not in (None, '') else ''
+
+                categoria = None
+                cat_txt = str(row[3]).strip() if len(row) > 3 and row[3] not in (None, '') else ''
+                if cat_txt:
+                    categoria = categorias_dict.get(cat_txt.lower())
+                    if categoria is None:
+                        errores.append(f"Fila {i}: categoría '{cat_txt}' no encontrada, se dejó sin categoría.")
+
+                unidad_txt = str(row[4]).strip() if len(row) > 4 and row[4] not in (None, '') else ''
+                unidad = 'pza'
+                if unidad_txt:
+                    low = unidad_txt.lower()
+                    if low in _UNIDAD_CODIGOS:
+                        unidad = low
+                    elif low in _UNIDAD_LABEL_A_CODIGO:
+                        unidad = _UNIDAD_LABEL_A_CODIGO[low]
+                    else:
+                        errores.append(f"Fila {i}: unidad '{unidad_txt}' no reconocida, se usó 'Pieza'.")
+
+                try:
+                    stock_actual = int(float(row[5])) if len(row) > 5 and row[5] not in (None, '') else 0
+                    stock_minimo = int(float(row[6])) if len(row) > 6 and row[6] not in (None, '') else 0
+                    stock_maximo = int(float(row[7])) if len(row) > 7 and row[7] not in (None, '') else 0
+                except (ValueError, TypeError):
+                    errores.append(f"Fila {i}: stock inválido, se omitió.")
+                    continue
+
+                ubicacion = str(row[8]).strip() if len(row) > 8 and row[8] not in (None, '') else ''
+                if len(ubicacion) > 4:
+                    errores.append(f"Fila {i}: la ubicación '{ubicacion}' supera 4 caracteres, se recortó.")
+                    ubicacion = ubicacion[:4]
+
+                proveedor = str(row[9]).strip() if len(row) > 9 and row[9] not in (None, '') else ''
+                if len(proveedor) > 50:
+                    proveedor = proveedor[:50]
+
+                costo_unitario = None
+                if len(row) > 10 and row[10] not in (None, ''):
+                    try:
+                        costo_unitario = float(row[10])
+                    except (ValueError, TypeError):
+                        errores.append(f"Fila {i}: costo unitario inválido, se dejó vacío.")
+
+                if no_item in refacciones_existentes:
+                    obj = refacciones_existentes[no_item]
+                    ids_actualizados.add(no_item)
+                elif no_item in nuevos_dict:
+                    obj = nuevos_dict[no_item]
+                else:
+                    obj = Refaccion(no_item=no_item, area=area)
+                    nuevos_dict[no_item] = obj
+
+                obj.nombre         = nombre
+                obj.descripcion    = descripcion
+                obj.categoria      = categoria
+                obj.unidad         = unidad
+                obj.stock_actual   = stock_actual
+                obj.stock_minimo   = stock_minimo
+                obj.stock_maximo   = stock_maximo
+                obj.ubicacion      = ubicacion
+                obj.proveedor      = proveedor
+                obj.costo_unitario = costo_unitario
+
+            with transaction.atomic():
+                if ids_actualizados:
+                    Refaccion.objects.bulk_update(
+                        [refacciones_existentes[n] for n in ids_actualizados],
+                        ['nombre', 'descripcion', 'categoria', 'unidad',
+                         'stock_actual', 'stock_minimo', 'stock_maximo',
+                         'ubicacion', 'proveedor', 'costo_unitario']
+                    )
+                if nuevos_dict:
+                    Refaccion.objects.bulk_create(list(nuevos_dict.values()))
+
+            creados      = len(nuevos_dict)
+            actualizados = len(ids_actualizados)
+
+            resumen = f"Importación completada: {creados} creada(s), {actualizados} actualizada(s)."
+            if errores:
+                resumen += f" {len(errores)} advertencia(s)."
+            messages.success(request, resumen)
+            for e in errores[:15]:
+                messages.warning(request, e)
+
+            return redirect(f"{reverse('inventario:lista_refacciones')}?area={area.pk}")
+
+        except Exception as e:
+            messages.error(request, f"Error al leer el archivo: {e}")
+            return redirect(f"{reverse('inventario:importar_completo')}?area={area_id}")
+
+    ctx = {
+        'areas': Area.objects.filter(activa=True),
+        'area_id': area_id,
+    }
+    return render(request, 'inventario_app/importar_completo.html', ctx)
+
+
+@login_required
+def descargar_plantilla_completa(request):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Inventario"
+
+    headers = ['No. Item', 'Nombre', 'Descripción', 'Categoría', 'Unidad',
+               'Stock actual', 'Stock mínimo', 'Stock máximo', 'Ubicación', 'Proveedor', 'Costo unitario']
+    ws.append(headers)
+    ws.append(['001', 'Rodamiento 6205', 'Rodamiento de bolas blindado', 'Rodamientos', 'Pieza', 12, 5, 50, 'A12', 'Proveedor S.A.', 45.50])
+
+    for cell in ws[1]:
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = PatternFill(fill_type='solid', fgColor='4F46E5')
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    anchos = [12, 30, 36, 20, 12, 12, 12, 12, 12, 20, 14]
+    for i, ancho in enumerate(anchos, 1):
+        ws.column_dimensions[get_column_letter(i)].width = ancho
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    response = HttpResponse(
+        buffer,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="Plantilla_Inventario_Completo.xlsx"'
     return response
 
 

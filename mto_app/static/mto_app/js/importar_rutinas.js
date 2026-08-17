@@ -95,8 +95,8 @@ function llenarPreview(rows, total) {
             : detalle;
 
         tr.innerHTML = `
-            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text);   text-align:center; width:50px;"  >${row[0] || ''}</td>
-            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text);   text-align:left;   width:200px;" >${row[1] || ''}</td>
+            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text);   text-align:center; width:80px;"  >${row[0] || ''}</td>
+            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text);   text-align:left;   width:320px;" >${row[1] || ''}</td>
             <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text-2); text-align:left; font-size:11px;">${detalleTruncado}</td>
         `;
         tbody.appendChild(tr);

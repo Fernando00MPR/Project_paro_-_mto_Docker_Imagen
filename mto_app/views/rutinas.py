@@ -104,10 +104,11 @@ def importar_pasos(request):
         archivo      = request.FILES.get('archivo')
         plan_trabajo = request.POST.get('plan_trabajo', '').strip()
         area_id      = request.POST.get('area', '').strip()
+        motivo       = request.POST.get('motivo', '').strip()
         reemplazar   = 'reemplazar' in request.POST
 
-        if not archivo or not plan_trabajo or not area_id:
-            messages.error(request, "Debes indicar el area, N° plan y subir un archivo.")
+        if not archivo or not plan_trabajo or not area_id or not motivo:
+            messages.error(request, "Debes indicar el area, N° plan, el motivo y subir un archivo.")
             return redirect('mto:importar_pasos')
 
         try:
@@ -172,7 +173,6 @@ def importar_pasos(request):
             messages.success(request,
                 f"{creados} paso(s) importados para el plan {plan_trabajo} - {area.nombre}.")
 
-            motivo = request.POST.get('motivo', '').strip()
             HistorialRutina.objects.create(
                 usuario=request.user,
                 accion='importar',
@@ -189,14 +189,25 @@ def importar_pasos(request):
         except Exception as e:
             messages.error(request, f"Error al leer el archivo: {e}")
 
+    area_id = request.GET.get('area', '').strip()
+    if area_id:
+        request.session['pasos_area_id'] = area_id
+    else:
+        area_id = request.session.get('pasos_area_id', '')
+
+    planes_qs = PlanMantenimiento.objects.all()
+    if area_id:
+        planes_qs = planes_qs.filter(area_id=area_id)
+
     planes = sorted(
-        set(PlanMantenimiento.objects.values_list('plan_trabajo', flat=True)),
+        set(planes_qs.values_list('plan_trabajo', flat=True)),
         key=lambda x: (0, int(x)) if str(x).isdigit() else (1, str(x))
     )
     areas = areas_permitidas_mto(request)
     return render(request, 'mto_app/rutinas/importar_rutinas.html', {
         'planes': planes,
         'areas':  areas,
+        'area_seleccionada': area_id,
     })
 
 

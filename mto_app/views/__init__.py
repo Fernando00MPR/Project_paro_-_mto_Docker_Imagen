@@ -52,22 +52,36 @@ from .seguimiento_ot import (
     eliminar_seguimiento, 
     toggle_validado_ot,
 )
+
 from .seguimiento_manual import (
     agregar_seguimiento_manual, 
     editar_seguimiento_manual, 
     eliminar_seguimiento_manual, 
     toggle_validado_manual,
 )
+
 from .lista_seguimientos import (
     lista_seguimientos, 
     subir_imagenes_seguimiento, 
     imagenes_seguimiento, 
     eliminar_imagen_seguimiento,
 )
+
 from .bitacora import (
     lista_bitacora,
     form_bitacora,
     eliminar_bitacora,
+    imagenes_bitacora,
+    eliminar_imagen_bitacora,
     buscar_equipos_bitacora,
     buscar_responsables_bitacora,
+)
+
+from .documentacion import (
+    documentos_generales,
+    categoria_detalle,
+    crear_categoria_documento,
+    eliminar_categoria_documento,
+    subir_documento,
+    eliminar_documento,
 )

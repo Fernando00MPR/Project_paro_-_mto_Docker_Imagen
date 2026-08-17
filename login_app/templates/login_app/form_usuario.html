@@ -187,17 +187,98 @@
         <!-- Permisos — Catálogos -->
         <div class="card" style="margin-bottom:16px;">
             <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Catálogos" %}</div>
-            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">{% trans "Controla el acceso a fallas, equipos y responsables." %}</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                {% for campo, label, desc, marcado in permisos_catalogos %}
+
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">{% trans "Controla el acceso a fallas, equipos, responsables y moldes." %}</div>
+
+            <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
                 <label class="perm-row">
-                    <input type="checkbox" name="{{ campo }}" {% if marcado %}checked{% endif %} style="width:15px; height:15px; accent-color:var(--indigo); flex-shrink:0;">
+                    <input type="checkbox" name="ver_catalogos" {% if permisos_catalogos_dict.ver_catalogos %}checked{% endif %} style="width:15px; height:15px; accent-color:var(--indigo); flex-shrink:0;">
                     <div>
-                        <div style="font-size:13px; font-weight:500;">{{ label }}</div>
-                        <div style="font-size:11px; color:var(--text-3);">{{ desc }}</div>
+                        <div style="font-size:13px; font-weight:500;">{% trans "Ver catálogos" %}</div>
+                        <div style="font-size:11px; color:var(--text-3);">{% trans "Puede consultar fallas, equipos, responsables y moldes" %}</div>
                     </div>
                 </label>
-                {% endfor %}
+                <label class="perm-row">
+                    <input type="checkbox" name="gestionar_catalogos" {% if permisos_catalogos_dict.gestionar_catalogos %}checked{% endif %} style="width:15px; height:15px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-size:13px; font-weight:500;">{% trans "Importar y limpiar catálogos" %}</div>
+                        <div style="font-size:11px; color:var(--text-3);">{% trans "Puede importar y eliminar entradas de catálogos" %}</div>
+                    </div>
+                </label>
+            </div>
+            <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:440px;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:8px 10px; font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border);">{% trans "Catálogo" %}</th>
+                        <th style="text-align:center; padding:8px 10px; font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); width:80px;">{% trans "Agregar" %}</th>
+                        <th style="text-align:center; padding:8px 10px; font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); width:80px;">{% trans "Editar" %}</th>
+                        <th style="text-align:center; padding:8px 10px; font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); width:80px;">{% trans "Eliminar" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Falla" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="agregar_catalogo_falla" {% if permisos_catalogos_dict.agregar_catalogo_falla %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_catalogo_falla" {% if permisos_catalogos_dict.editar_catalogo_falla %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_catalogo_falla" {% if permisos_catalogos_dict.eliminar_catalogo_falla %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Equipo" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="agregar_catalogo_equipo" {% if permisos_catalogos_dict.agregar_catalogo_equipo %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_catalogo_equipo" {% if permisos_catalogos_dict.editar_catalogo_equipo %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_catalogo_equipo" {% if permisos_catalogos_dict.eliminar_catalogo_equipo %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Responsable" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="agregar_catalogo_resp" {% if permisos_catalogos_dict.agregar_catalogo_resp %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_catalogo_resp" {% if permisos_catalogos_dict.editar_catalogo_resp %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_catalogo_resp" {% if permisos_catalogos_dict.eliminar_catalogo_resp %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid var(--border); font-weight:500;">{% trans "Molde" %}</td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="agregar_catalogo_molde" {% if permisos_catalogos_dict.agregar_catalogo_molde %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="editar_catalogo_molde" {% if permisos_catalogos_dict.editar_catalogo_molde %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px; border-bottom:1px solid var(--border);">
+                            <input type="checkbox" name="eliminar_catalogo_molde" {% if permisos_catalogos_dict.eliminar_catalogo_molde %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
             </div>
         </div>
 
@@ -245,6 +326,7 @@
             <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Hora x hora" %}</div>
             <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
                 {% trans "Selecciona las áreas que este usuario puede ver en el registro de hora x hora." %}
+                {% trans "Hora x hora es de una sola área, configurada en el panel de administración." %}
             </div>
             <label class="perm-row" style="max-width:420px; margin-bottom:14px;">
                 <input type="checkbox" name="ver_hora_hora"
@@ -257,17 +339,47 @@
                     </div>
                 </div>
             </label>
+            {% if area_hora_hora_configurada %}
             <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                {% for area in areas %}
                 <label style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 14px; border:1px solid var(--border); border-radius:20px; font-size:13px; transition:all .15s;"
                        onmouseover="this.style.background='var(--indigo-lt)';this.style.borderColor='var(--indigo)'"
                        onmouseout="this.style.background='';this.style.borderColor='var(--border)'">
-                    <input type="checkbox" name="areas_hora_hora" value="{{ area.id }}"
-                           {% if area.id in areas_hora_hora_ids %}checked{% endif %}
+                    <input type="checkbox" name="areas_hora_hora" value="{{ area_hora_hora_configurada.id }}"
+                           {% if area_hora_hora_configurada.id in areas_hora_hora_ids %}checked{% endif %}
                            style="width:14px; height:14px; accent-color:var(--indigo);">
-                    {{ area.nombre }}
+                     {{ area_hora_hora_configurada.nombre }}
                 </label>
-                {% endfor %}
+            </div>
+            {% else %}
+            <div style="font-size:12px; color:var(--text-3);">{% trans "Aún no se ha configurado el área de hora x hora en /admin." %}</div>
+            {% endif %}
+        </div>
+
+        <!-- Permisos — Bitácora de AGVs -->
+        <div class="card" style="margin-bottom:16px;">
+            <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--text);">{% trans "Permisos — Bitácora de AGVs" %}</div>
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">
+                {% trans "Controla el acceso a la bitácora de AGVs (Inyección y Pintura)." %}
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <label class="perm-row">
+                    <input type="checkbox" name="ver_bitacora_agv"
+                        {% if perfil.ver_bitacora_agv %}checked{% endif %}
+                        style="width:15px; height:15px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-size:13px; font-weight:500;">{% trans "Ver bitácora de AGVs" %}</div>
+                        <div style="font-size:11px; color:var(--text-3);">{% trans "Puede consultar los registros de AGVs" %}</div>
+                    </div>
+                </label>
+                <label class="perm-row">
+                    <input type="checkbox" name="editar_bitacora_agv"
+                        {% if perfil.editar_bitacora_agv %}checked{% endif %}
+                        style="width:15px; height:15px; accent-color:var(--indigo); flex-shrink:0;">
+                    <div>
+                        <div style="font-size:13px; font-weight:500;">{% trans "Editar bitácora de AGVs" %}</div>
+                        <div style="font-size:11px; color:var(--text-3);">{% trans "Puede capturar y modificar cantidades y targets" %}</div>
+                    </div>
+                </label>
             </div>
         </div>
 
@@ -479,6 +591,22 @@
                         </td>
                         <td style="text-align:center; padding:10px;">
                             <input type="checkbox" name="eliminar_seguimiento_servicio" {% if permisos_mto.eliminar_seguimiento_servicio %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:10px; font-weight:500;">{% trans "Documentación" %}</td>
+                        <td style="text-align:center; padding:10px;">
+                            <input type="checkbox" name="ver_documentacion" {% if permisos_mto.ver_documentacion %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px;">
+                            <input type="checkbox" name="editar_documentacion" {% if permisos_mto.editar_documentacion %}checked{% endif %}
+                                style="width:16px; height:16px; accent-color:var(--indigo);">
+                        </td>
+                        <td style="text-align:center; padding:10px;">
+                            <input type="checkbox" name="eliminar_documentacion" {% if permisos_mto.eliminar_documentacion %}checked{% endif %}
                                 style="width:16px; height:16px; accent-color:var(--indigo);">
                         </td>
                     </tr>

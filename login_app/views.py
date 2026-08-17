@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import PerfilUsuario
 from .permisos import solo_admin, get_perfil
-from paros_app.models import Area
+from paros_app.models import Area, ConfiguracionHoraHora
 from mto_app.models import AccesoMto
 from mto_app.models import Area as AreaMto
 from django.utils.translation import gettext as _
@@ -45,6 +45,9 @@ _CAMPOS_CATALOGOS = [
     ('agregar_catalogo_resp',    'Agregar responsable',            'Puede agregar nuevos responsables al catálogo'),
     ('editar_catalogo_resp',     'Editar responsable',             'Puede editar responsables existentes en el catálogo'),
     ('eliminar_catalogo_resp',   'Eliminar responsable',           'Puede eliminar responsables del catálogo'),
+    ('agregar_catalogo_molde',   'Agregar molde',                  'Puede agregar nuevos moldes al catálogo'),
+    ('editar_catalogo_molde',    'Editar molde',                   'Puede editar moldes existentes en el catálogo'),
+    ('eliminar_catalogo_molde',  'Eliminar molde',                 'Puede eliminar moldes del catálogo'),
 ]
  
  
@@ -119,6 +122,7 @@ def _build_permisos_mto(usuario):
             'ver_inventario', 'editar_inventario', 'eliminar_inventario',
             'ver_seguimiento_refaccion', 'editar_seguimiento_refaccion', 'eliminar_seguimiento_refaccion',
             'ver_seguimiento_servicio', 'editar_seguimiento_servicio', 'eliminar_seguimiento_servicio',
+            'ver_documentacion', 'editar_documentacion', 'eliminar_documentacion',
         ]}
     except AccesoMto.DoesNotExist:
         return {}
@@ -133,19 +137,22 @@ def _ctx_form(perfil, post, areas, usuario=None):
             areas_mto_ids = list(usuario.acceso_mto.areas.values_list('id', flat=True))
         except AccesoMto.DoesNotExist:
             pass
+    permisos_catalogos = _build_permisos(_CAMPOS_CATALOGOS, perfil, post)
+    config_hora_hora = ConfiguracionHoraHora.objects.select_related('area').first()
     return {
         'areas': areas,
-        'permisos_dashboard':   _build_permisos(_CAMPOS_DASHBOARD, perfil, post),
-        'permisos_paros':       _build_permisos(_CAMPOS_PAROS, perfil, post),
-        'permisos_catalogos':   _build_permisos(_CAMPOS_CATALOGOS, perfil, post),
-        'areas_permitidas_ids': list(perfil.areas_permitidas.values_list('id', flat=True)) if perfil else [],
-        'areas_produccion_ids': list(perfil.areas_produccion.values_list('id', flat=True)) if perfil else [],
-        'areas_hora_hora_ids':  list(perfil.areas_hora_hora.values_list('id', flat=True)) if perfil else [],
-        'perfil':               perfil,
-        'acceso_mto':           acceso_mto,
-        'areas_mto':            AreaMto.objects.filter(activa=True),
-        'areas_mto_ids':        areas_mto_ids,
-        'permisos_mto':         _build_permisos_mto(usuario),
+        'permisos_dashboard':          _build_permisos(_CAMPOS_DASHBOARD, perfil, post),
+        'permisos_paros':              _build_permisos(_CAMPOS_PAROS, perfil, post),
+        'permisos_catalogos_dict':     {campo: marcado for campo, label, desc, marcado in permisos_catalogos},
+        'areas_permitidas_ids':        list(perfil.areas_permitidas.values_list('id', flat=True)) if perfil else [],
+        'areas_produccion_ids':        list(perfil.areas_produccion.values_list('id', flat=True)) if perfil else [],
+        'areas_hora_hora_ids':         list(perfil.areas_hora_hora.values_list('id', flat=True)) if perfil else [],
+        'area_hora_hora_configurada':  config_hora_hora.area if config_hora_hora else None,
+        'perfil':                      perfil,
+        'acceso_mto':                  acceso_mto,
+        'areas_mto':                   AreaMto.objects.filter(activa=True),
+        'areas_mto_ids':               areas_mto_ids,
+        'permisos_mto':                _build_permisos_mto(usuario),
 
     }
  
@@ -250,7 +257,9 @@ def _guardar_perfil(request, user, areas):
         'agregar_catalogo_falla', 'editar_catalogo_falla', 'eliminar_catalogo_falla',
         'agregar_catalogo_equipo', 'editar_catalogo_equipo', 'eliminar_catalogo_equipo',
         'agregar_catalogo_resp', 'editar_catalogo_resp', 'eliminar_catalogo_resp',
+        'agregar_catalogo_molde', 'editar_catalogo_molde', 'eliminar_catalogo_molde',
         'ver_indicadores', 'ver_hora_hora', 
+        'ver_bitacora_agv', 'editar_bitacora_agv',
     ]
     for campo in campos_bool:
         setattr(perfil, campo, campo in request.POST)
@@ -276,7 +285,7 @@ def _guardar_perfil(request, user, areas):
         'ver_inventario', 'editar_inventario', 'eliminar_inventario',
         'ver_seguimiento_refaccion', 'editar_seguimiento_refaccion', 'eliminar_seguimiento_refaccion',
         'ver_seguimiento_servicio', 'editar_seguimiento_servicio', 'eliminar_seguimiento_servicio',
-
+        'ver_documentacion', 'editar_documentacion', 'eliminar_documentacion',
     ]
     for campo in campos_mto:
         setattr(acceso_mto, campo, campo in request.POST)

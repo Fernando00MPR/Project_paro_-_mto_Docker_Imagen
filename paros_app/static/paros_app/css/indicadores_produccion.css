@@ -51,10 +51,13 @@
     border: 1px solid var(--border);
     border-radius: 7px;
     overflow: hidden;
+    height: 30px;
+    box-sizing: border-box;
 }
 
 .btn-icon {
-    padding: 4px 10px;
+    height: 100%;
+    padding: 0 10px;
     font-size: 12px;
     border: none;
     cursor: pointer;
@@ -62,6 +65,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    box-sizing: border-box;
 }
 
 .btn-icon.active {
@@ -78,7 +82,9 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 5px 12px;
+    padding: 0 12px;
+    height: 30px;
+    box-sizing: border-box;
     border: 1px solid var(--border);
     border-radius: 7px;
     font-size: 12px;
@@ -515,4 +521,49 @@ tbody tr {
 
 .table-wrapper::-webkit-scrollbar-thumb:hover {
     background: var(--text-3);
+}
+
+.anio-selector {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0 6px;
+    height: 30px;
+    box-sizing: border-box;
+}
+
+.anio-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-2);
+    border-radius: 50%;
+}
+
+.anio-btn:hover {
+    background: var(--indigo-lt);
+    color: var(--indigo);
+}
+.anio-input {
+    width: 44px;
+    text-align: center;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--indigo);
+    font-family: 'DM Mono', monospace;
+    -moz-appearance: textfield;
+}
+.anio-input::-webkit-inner-spin-button,
+.anio-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }

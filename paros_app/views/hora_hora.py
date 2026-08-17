@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 from django.db.models import Sum
 
-from ..models import Area, RegistroHoraHora
+from ..models import Area, RegistroHoraHora, ConfiguracionHoraHora
 from login_app.permisos import get_perfil
 from django.shortcuts import redirect
 
@@ -17,6 +17,11 @@ HORAS_DIA   = list(range(6, 18))   # 6 a 17
 HORAS_NOCHE = list(range(18, 24)) + list(range(0, 6))  # 18 a 23 + 0 a 5
 
 
+def _area_hora_hora():
+    config = ConfiguracionHoraHora.objects.select_related('area').first()
+    return config.area if config else None
+
+
 @login_required
 def hora_hora(request):
     perfil   = get_perfil(request.user)
@@ -24,24 +29,16 @@ def hora_hora(request):
 
     if not es_admin and not (perfil and perfil.ver_hora_hora):
         return redirect('paros:lista_paros')
-    """
-    if es_admin:
-        areas            = Area.objects.all()
-        areas_con_tablas = set(Area.objects.values_list('id', flat=True))
-        areas_grafico    = Area.objects.all()
-    else:
-        areas_con_tablas = set(perfil.areas_hora_hora.values_list('id', flat=True)) if perfil else set()
-        areas_con_tablas_qs = perfil.areas_hora_hora.all() if perfil else Area.objects.none()
-        
-        areas = perfil.areas_hora_hora.all() if perfil else Area.objects.none()
-        areas_grafico = areas_con_tablas_qs if areas_con_tablas else Area.objects.all()
-        
-    """
-    areas_con_tablas = set(perfil.areas_hora_hora.values_list('id', flat=True)) if perfil else set()
-    areas_con_tablas_qs = perfil.areas_hora_hora.all() if perfil else Area.objects.none()
     
-    areas = perfil.areas_hora_hora.all() if perfil else Area.objects.none()
-    areas_grafico = areas_con_tablas_qs
+    area_configurada = _area_hora_hora()
+    if area_configurada and perfil and perfil.areas_hora_hora.filter(id=area_configurada.id).exists():
+        areas = Area.objects.filter(id=area_configurada.id)
+    else:
+        areas = Area.objects.none()
+
+    areas_con_tablas     = set(a.id for a in areas)
+    areas_con_tablas_qs  = areas
+    areas_grafico        = areas
     
     hoy   = date.today()
     anio  = int(request.GET.get('anio', hoy.year))

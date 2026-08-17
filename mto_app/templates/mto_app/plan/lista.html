@@ -49,6 +49,9 @@
         {% if filtro_area %}
         <input type="hidden" name="area" value="{{ filtro_area }}">
         {% endif %}
+        {% if filtro_orden %}
+        <input type="hidden" name="orden" value="{{ filtro_orden }}">
+        {% endif %}
         <div class="filter-group">
             <label>{% trans "Semana" %}</label>
             <input type="number" name="semana" min="1" max="52"
@@ -178,12 +181,48 @@
             <thead>
                 <tr>
                     <th class="col-area"          style="text-align:center;">{% trans "Área" %}</th>
-                    <th class="col-codigo"        style="text-align:center; width:140px;">{% trans "Código" %}</th>
+                    <th class="col-codigo"        style="text-align:center; width:140px;">
+                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'codigo' %}-codigo{% else %}codigo{% endif %}"
+                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if filtro_orden == 'codigo' or filtro_orden == '-codigo' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if filtro_orden == 'codigo' or filtro_orden == '-codigo' %}600{% else %}500{% endif %};">
+                            {% trans "Código" %}
+                            {% if filtro_orden == 'codigo' %}
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+                            {% elif filtro_orden == '-codigo' %}
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                            {% else %}
+                            <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+                            {% endif %}
+                        </a>
+                    </th>
                     <th class="col-rutina"        style="text-align:center; width:160px;">{% trans "Rutina" %}</th>
-                    <th class="col-actividad"     style="text-align:center; width:550px; min-width:550px;">{% trans "Actividad" %}</th>
+                    <th class="col-actividad"     style="text-align:center; width:550px; min-width:550px;">
+                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'actividad' %}-actividad{% else %}actividad{% endif %}"
+                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if filtro_orden == 'actividad' or filtro_orden == '-actividad' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if filtro_orden == 'actividad' or filtro_orden == '-actividad' %}600{% else %}500{% endif %};">
+                            {% trans "Actividad" %}
+                            {% if filtro_orden == 'actividad' %}
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+                            {% elif filtro_orden == '-actividad' %}
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                            {% else %}
+                            <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+                            {% endif %}
+                        </a>
+                    </th>
                     <th class="col-duracion"      style="text-align:center; width:60px; ">{% trans "Dur." %}</th>
                     <th class="col-frecuencia"    style="text-align:center; width:150px;">{% trans "Frecuencia" %}</th>
-                    <th class="col-plan"          style="text-align:center; width:60px; ">N°<br>{% trans "Plan" %}</th>
+                    <th class="col-plan"          style="text-align:center; width:60px;">
+                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'plan_trabajo' %}-plan_trabajo{% else %}plan_trabajo{% endif %}"
+                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if filtro_orden == 'plan_trabajo' or filtro_orden == '-plan_trabajo' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if filtro_orden == 'plan_trabajo' or filtro_orden == '-plan_trabajo' %}600{% else %}500{% endif %};">
+                            N°<br>{% trans "Plan" %}
+                            {% if filtro_orden == 'plan_trabajo' %}
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+                            {% elif filtro_orden == '-plan_trabajo' %}
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                            {% else %}
+                            <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+                            {% endif %}
+                        </a>
+                    </th>
                     <th class="col-sinicio"       style="display:none; text-align:center; width:180px; min-width:180px;">{% trans "Semana" %}<br>{% trans "inicio" %}</th>
                     {% if filtro_semana %}
                     <th                           style="text-align:center; width:180px;">{% trans "Semana" %}<br>{% trans "actual" %}</th>
@@ -321,26 +360,26 @@
     <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
         <div style="display:flex; align-items:center; gap:4px;">
             {% if planes.has_previous %}
-            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ planes.previous_page_number }}"
+            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if filtro_orden %}orden={{ filtro_orden }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ planes.previous_page_number }}"
                style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--text-2); text-decoration:none; font-size:13px;">‹</a>
             {% endif %}
             {% for num in planes.paginator.page_range %}
                 {% if planes.number == num %}
                 <span style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; background:var(--indigo); color:#fff; border-radius:6px; font-size:13px; font-weight:600;">{{ num }}</span>
                 {% elif num > planes.number|add:'-3' and num < planes.number|add:'3' %}
-                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ num }}"
+                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if filtro_orden %}orden={{ filtro_orden }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ num }}"
                    style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--text-2); text-decoration:none; font-size:13px;">{{ num }}</a>
                 {% endif %}
             {% endfor %}
             {% if planes.has_next %}
-            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ planes.next_page_number }}"
+            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if filtro_orden %}orden={{ filtro_orden }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ planes.next_page_number }}"
                style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--text-2); text-decoration:none; font-size:13px;">›</a>
             {% endif %}
         </div>
         <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
             <span>{% trans "Mostrar" %}</span>
             {% for n in perpage_opts %}
-            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ n }}&page=1"
+            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if filtro_orden %}orden={{ filtro_orden }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ n }}&page=1"
                style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;
                       {% if per_page == n %}background:var(--indigo); color:#fff;{% else %}border:1px solid var(--border); color:var(--text-2);{% endif %}">{{ n }}</a>
             {% endfor %}

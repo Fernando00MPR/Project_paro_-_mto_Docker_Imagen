@@ -1,0 +1,351 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Bitácora de AGVs" %}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div>
+        <div class="card-title">{% trans "Bitácora de AGVs" %}</div>
+        <div class="card-subtitle">{% trans "Conteo de AGVs por turno y día del mes — Inyección y Pintura" %}</div>
+    </div>
+</div>
+
+{% if not area %}
+<div class="card" style="padding:40px 20px; text-align:center;">
+    <p style="color:var(--text-3); font-size:14px;">
+        {% trans "No se ha configurado el área de la bitácora de AGVs. Contacta a un administrador para configurarla en el panel de administración." %}
+    </p>
+</div>
+{% else %}
+
+<!-- Filtros -->
+<div style="padding:14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:20px;">
+    <form method="get" id="form-filtros" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+        <div class="filter-group">
+            <label>{% trans "Mes" %}</label>
+            <select name="mes" onchange="document.getElementById('form-filtros').submit()">
+                {% for num, nombre in meses %}
+                <option value="{{ num }}" {% if mes == num %}selected{% endif %}>{{ nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Año" %}</label>
+            <input type="number" name="anio" value="{{ anio }}" min="2018" max="2099"
+                   style="width:90px;" onchange="document.getElementById('form-filtros').submit()">
+        </div>
+    </form>
+</div>
+
+{% for clave, nombre_interna in areas_internas %}
+<div class="card" style="margin-bottom:16px; padding:0; overflow:hidden;">
+
+    <!-- Header colapsable -->
+    <div style="display:flex; justify-content:space-between; align-items:center;
+                padding:12px 16px; background:var(--surface);">
+        <div onclick="toggleAreaInterna('{{ clave }}')" style="cursor:pointer; flex:1;">
+            <div style="font-size:14px; font-weight:600; color:var(--text);">
+                {% trans "AGVs en" %} {{ nombre_interna }}
+            </div>
+            <div style="margin-top:4px;">
+                <span style="display:inline-flex; align-items:center; gap:5px; padding:2px 10px;
+                            border-radius:20px; font-size:11px; font-weight:600;
+                            background:var(--indigo-lt); color:var(--indigo);">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    {% for num, nombre in meses %}{% if mes == num %}{{ nombre }}{% endif %}{% endfor %} {{ anio }}
+                </span>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span id="badge-target-{{ clave }}"
+                style="display:none; padding:2px 8px; border-radius:20px; font-size:11px;
+                        font-weight:600; background:var(--indigo-lt); color:var(--indigo);">
+                Target: —
+            </span>
+            {% if puede_editar %}
+            <button type="button"
+                    onclick="abrirModalTarget('{{ clave }}', '{{ nombre_interna }}')"
+                    style="display:flex; align-items:center; gap:5px; padding:5px 12px;
+                        border:1px solid var(--border); border-radius:7px; font-size:12px;
+                        background:var(--white); color:var(--text-2); cursor:pointer;
+                        font-family:inherit;">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="6"/>
+                    <circle cx="12" cy="12" r="2"/>
+                </svg>
+                {% trans "Target" %}
+            </button>
+            {% endif %}
+            <svg id="chevron-{{ clave }}" width="16" height="16" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24" style="transition:transform .2s; cursor:pointer;"
+                onclick="toggleAreaInterna('{{ clave }}')">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Contenido colapsable -->
+    <div id="interna-{{ clave }}" style="display:none;">
+        <!-- Turno día -->
+        <div style="padding:12px 16px 0;">
+            <div style="font-size:12px; font-weight:600; color:#185FA5; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                {% trans "Turno de día" %}
+            </div>
+        </div>
+        <div style="overflow-x:auto; padding:0 16px 12px;" class="tabla-agv-scroll">
+            <table style="border-collapse:collapse; font-size:11px; white-space:nowrap; width:max-content; min-width:100%;">
+                <thead>
+                    <tr style="background:var(--surface);">
+                        <th style="padding:6px 10px; text-align:left; border:0.5px solid var(--border); min-width:94px; position:sticky; left:0; background:var(--surface); z-index:2;">{% trans "Cantidad" %}</th>
+                        {% for d in dias %}
+                        <th style="padding:6px 8px; text-align:center; border:0.5px solid var(--border); min-width:36px;">{{ d }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:5px 10px; border:0.5px solid var(--border); font-weight:500; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "AGVs" %}</td>
+                        {% for d in dias %}
+                        <td style="padding:0; border:0.5px solid var(--border); text-align:center;"
+                            data-interna="{{ clave }}"
+                            data-dia="{{ d }}"
+                            data-turno="dia"
+                            data-anio="{{ anio }}"
+                            data-mes="{{ mes }}"
+                            class="celda-agv {% if puede_editar %}celda-agv-editable{% endif %}"
+                            {% if puede_editar %}onclick="editarCelda(this)"{% endif %}>
+                            <span class="valor-celda"></span>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Turno noche -->
+        <div style="padding:4px 16px 0;">
+            <div style="font-size:12px; font-weight:600; color:#3C3489; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                </svg>
+                {% trans "Turno de noche" %}
+            </div>
+        </div>
+        <div style="overflow-x:auto; padding:0 16px 16px;" class="tabla-agv-scroll">
+            <table style="border-collapse:collapse; font-size:11px; white-space:nowrap; width:max-content; min-width:100%;">
+                <thead>
+                    <tr style="background:var(--surface);">
+                        <th style="padding:6px 10px; text-align:left; border:0.5px solid var(--border); min-width:94px; position:sticky; left:0; background:var(--surface); z-index:2;">{% trans "Cantidad" %}</th>
+                        {% for d in dias %}
+                        <th style="padding:6px 8px; text-align:center; border:0.5px solid var(--border); min-width:36px;">{{ d }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:5px 10px; border:0.5px solid var(--border); font-weight:500; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "AGVs" %}</td>
+                        {% for d in dias %}
+                        <td style="padding:0; border:0.5px solid var(--border); text-align:center;"
+                            data-interna="{{ clave }}"
+                            data-dia="{{ d }}"
+                            data-turno="noche"
+                            data-anio="{{ anio }}"
+                            data-mes="{{ mes }}"
+                            class="celda-agv {% if puede_editar %}celda-agv-editable{% endif %}"
+                            {% if puede_editar %}onclick="editarCelda(this)"{% endif %}>
+                            <span class="valor-celda"></span>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Modal edición -->
+<div id="modal-agv" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+     z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:24px 28px;
+                min-width:280px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;" id="modal-agv-titulo">{% trans "Registrar cantidad" %}</div>
+        <div style="font-size:12px; color:var(--text-2); margin-bottom:16px;" id="modal-agv-subtitulo"></div>
+        <div class="filter-group" style="margin-bottom:16px;">
+            <label>{% trans "Cantidad de AGVs" %}</label>
+            <input type="number" id="modal-agv-input" min="0" max="999" placeholder="0 - 999"
+                   style="width:100%;" onkeydown="if(event.key==='Enter') guardarModalAgv()">
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="borrarModalAgv()" class="btn btn-ghost btn-sm" style="color:#DC2626; border-color:#DC2626;">{% trans "Borrar" %}</button>
+            <button onclick="cerrarModalAgv()" class="btn btn-ghost btn-sm">{% trans "Cancelar" %}</button>
+            <button onclick="guardarModalAgv()" class="btn btn-primary btn-sm">{% trans "Guardar" %}</button>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico de cumplimiento -->
+<div class="card" style="margin-top:20px; padding:0; overflow:hidden;">
+    <div style="padding:14px 16px; background:var(--surface); border-bottom:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+                <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Cumplimiento de AGVs" %}</div>
+                <div style="font-size:11px; color:var(--text-3); margin-top:2px;">{% trans "Cantidad real vs target" %}</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <select id="ef-interna" onchange="cargarTargetsGrafico().then(() => cargarCumplimiento())"
+                        style="height:30px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:12px; background:var(--white); color:var(--text);">
+                    {% for clave, nombre_interna in areas_internas %}
+                    <option value="{{ clave }}">{{ nombre_interna }}</option>
+                    {% endfor %}
+                </select>
+                <div style="display:flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; height:30px;">
+                    <button onclick="setVistaEf('dia', this)" id="pill-dia"
+                            style="padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:none; font-family:inherit; background:#4F46E5; color:#fff;">
+                        {% trans "Día" %}
+                    </button>
+                    <button onclick="setVistaEf('mes', this)" id="pill-mes"
+                            style="padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:none; border-left:1px solid var(--border); font-family:inherit; background:var(--white); color:var(--text-2);">
+                        {% trans "Mes" %}
+                    </button>
+                    <button onclick="setVistaEf('anio', this)" id="pill-anio"
+                            style="padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:none; border-left:1px solid var(--border); font-family:inherit; background:var(--white); color:var(--text-2);">
+                        {% trans "Año" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="ef-rango" style="display:flex; gap:10px; align-items:flex-end; margin-top:12px; flex-wrap:wrap;">
+            <div id="ef-rango-dia" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                <div class="filter-group">
+                    <label>{% trans "Desde" %}</label>
+                    <input type="date" id="ef-desde" value="{{ anio }}-{{ mes|stringformat:'02d' }}-01"
+                           onchange="cargarCumplimiento()">
+                </div>
+                <div class="filter-group">
+                    <label>{% trans "Hasta" %}</label>
+                    <input type="date" id="ef-hasta" value="{{ anio }}-{{ mes|stringformat:'02d' }}-{{ dias_mes }}"
+                           onchange="cargarCumplimiento()">
+                </div>
+            </div>
+            <div id="ef-rango-mes" style="display:none; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                <div class="filter-group">
+                    <label>{% trans "Año" %}</label>
+                    <input type="number" id="ef-mes-anio" value="{{ anio }}" min="2018" max="2099"
+                           style="width:90px;" onchange="cargarCumplimiento()">
+                </div>
+                <div class="filter-group">
+                    <label>{% trans "Mes inicio" %}</label>
+                    <select id="ef-mes-desde" onchange="cargarCumplimiento()">
+                        {% for num, nombre in meses %}<option value="{{ num }}">{{ nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>{% trans "Mes fin" %}</label>
+                    <select id="ef-mes-hasta" onchange="cargarCumplimiento()">
+                        {% for num, nombre in meses %}<option value="{{ num }}" {% if mes == num %}selected{% endif %}>{{ nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div id="ef-rango-anio" style="display:none; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                <div class="filter-group">
+                    <label>{% trans "Año inicio" %}</label>
+                    <input type="number" id="ef-anio-desde" value="2018" min="2018" max="2099"
+                           style="width:90px;" onchange="cargarCumplimiento()">
+                </div>
+                <div class="filter-group">
+                    <label>{% trans "Año fin" %}</label>
+                    <input type="number" id="ef-anio-hasta" value="{{ anio }}" min="2018" max="2099"
+                           style="width:90px;" onchange="cargarCumplimiento()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="padding:16px;">
+        <div style="position:relative; width:100%; height:240px; margin-bottom:16px;">
+            <canvas id="chartCumplimiento" role="img" aria-label="Gráfico de cumplimiento de AGVs">{% trans "Cumplimiento de AGVs." %}</canvas>
+        </div>
+
+        <div style="overflow-x:auto; border:0.5px solid var(--border); border-radius:8px;">
+            <table id="ef-tabla" style="border-collapse:collapse; font-size:11px; white-space:nowrap; width:max-content; min-width:100%;">
+                <thead>
+                    <tr style="background:var(--surface);">
+                        <th style="padding:6px 12px; text-align:left; border:0.5px solid var(--border); min-width:120px; position:sticky; left:0; background:var(--surface); z-index:2;">{% trans "Indicador" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:6px 12px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "AGVs reales" %}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:6px 12px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "Target" %}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:6px 12px; border:0.5px solid var(--border); font-weight:600; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "Cumplimiento" %}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal target -->
+<div id="modal-target-agv" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+     z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:24px 28px;
+                min-width:320px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;">
+            {% trans "Configurar target" %}
+        </div>
+        <div style="font-size:12px; color:var(--text-2); margin-bottom:16px;" id="modal-target-agv-subtitulo"></div>
+
+        <div class="filter-group" style="margin-bottom:16px;">
+            <label>{% trans "Target mensual de AGVs" %}</label>
+            <input type="number" id="modal-target-agv-mensual" min="0" max="999" placeholder="Ej. 5"
+                   style="width:100%;">
+        </div>
+
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="cerrarModalTarget()" class="btn btn-ghost btn-sm">{% trans "Cancelar" %}</button>
+            <button onclick="guardarTargetAgv()" class="btn btn-primary btn-sm">{% trans "Guardar" %}</button>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+window.AGV_CFG = {
+    urlGuardar:            "{% url 'paros:guardar_agv' %}",
+    urlTargetGuardar:      "{% url 'paros:guardar_target_agv' %}",
+    urlTargetGet:          "{% url 'paros:get_target_agv' %}",
+    urlCumplimiento:       "{% url 'paros:cumplimiento_agv_data' %}",
+    datos:                 {{ datos_json|safe }},
+    internas:              [{% for clave, nombre_interna in areas_internas %}'{{ clave }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    anio:                  {{ anio }},
+    mes:                   {{ mes }},
+    mesNombre:             "{% for num, nombre in meses %}{% if mes == num %}{{ nombre }}{% endif %}{% endfor %}",
+};
+</script>
+<script src="{% static 'paros_app/js/bitacora_agv.js' %}"></script>
+{% endblock %}

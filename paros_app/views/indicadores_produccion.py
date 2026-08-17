@@ -1,3 +1,4 @@
+import calendar
 from datetime import date, timedelta, datetime
 from collections import defaultdict
 from django.contrib.auth.decorators import login_required
@@ -11,6 +12,60 @@ import json
 from ..models import Area, Paro, RegistroProduccion, TargetIndicador
 from login_app.permisos import get_perfil
 from .registro_produccion import _calcular_muerto, _calcular_kpis_mantenimiento
+
+
+INDICADORES = [
+    ('downtime',       'Downtime %'),
+    ('disponibilidad', 'Disponibilidad %'),
+    ('mttr',           'MTTR (min)'),
+    ('mtbf',           'MTBF (h)'),
+    ('t_muerto_mant',  'Tiempo perdido mantenimiento (min)'),
+]
+
+
+def _kpis_para_rango(equipo_sel, fecha_ini, fecha_fin, registros_qs, paros_qs):
+    """Agrega downtime/disponibilidad/MTTR/MTBF para un rango de fechas,
+    con la misma fórmula ponderada (sobre totales, no promedio de % diarios)
+    que usa la vista de detalle por día."""
+    regs = [
+        r for r in registros_qs
+        if fecha_ini <= r.fecha <= fecha_fin and (not equipo_sel or r.equipo == equipo_sel)
+    ]
+    paros_por_fecha = defaultdict(list)
+    for p in paros_qs:
+        if fecha_ini <= p.fecha <= fecha_fin:
+            paros_por_fecha[p.fecha].append(p)
+
+    total_planeado = 0
+    total_muerto   = 0
+    t_muerto_mant  = 0
+    n_paros_mant   = 0
+
+    for reg in regs:
+        paros_dia = paros_por_fecha[reg.fecha]
+        equipo_nombre = reg.equipo or ''
+        muerto   = _calcular_muerto(paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin)
+        planeado = reg.tiempo_planeado
+        total_planeado += planeado
+        total_muerto   += muerto
+
+        kpis = _calcular_kpis_mantenimiento(paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin, planeado)
+        t_muerto_mant += kpis['t_muerto']
+        n_paros_mant  += kpis['n_paros']
+
+    equipos_unicos = len(set(r.equipo for r in regs))
+    downtime = round(total_muerto / total_planeado * 100, 1) if total_planeado else None
+    disp     = round(100 - downtime, 1) if downtime is not None else None
+    mttr     = round(t_muerto_mant / n_paros_mant, 1) if n_paros_mant else (0 if total_planeado else None)
+    mtbf     = round((total_planeado - t_muerto_mant) / n_paros_mant / 60 / max(equipos_unicos, 1), 1) if n_paros_mant else round(total_planeado / 60 / max(equipos_unicos, 1), 1) if total_planeado else None
+
+    return {
+        'downtime':       downtime,
+        'disponibilidad': disp,
+        'mttr':           mttr,
+        'mtbf':           mtbf,
+        't_muerto_mant':  t_muerto_mant if total_planeado else None,
+    }
 
 
 @login_required
@@ -150,14 +205,6 @@ def indicadores_produccion(request):
                 'semana':          fecha.isocalendar()[1],
                 'equipos_unicos':  equipos_unicos,
             })
-
-    INDICADORES = [
-        ('downtime',       'Downtime %'),
-        ('disponibilidad', 'Disponibilidad %'),
-        ('mttr',           'MTTR (min)'),
-        ('mtbf',           'MTBF (h)'),
-        ('t_muerto_mant',  'Tiempo perdido mantenimiento (min)'),
-    ]
 
     PERIODO_LABELS = {
         'semana':     'Esta semana',
@@ -384,3 +431,105 @@ def get_accion_dia(request):
         return JsonResponse({'ok': False, 'error': 'No existe'})
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+
+
+@login_required
+def tendencia_indicadores(request):
+    """Serie agregada por semana/mes/año para la gráfica de tendencia,
+    reutilizando la misma lógica de cálculo que la vista de detalle por día."""
+    perfil   = get_perfil(request.user)
+    es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
+    if not es_admin and not (perfil and perfil.ver_indicadores):
+        return JsonResponse({'error': 'Sin permiso'}, status=403)
+
+    if es_admin:
+        areas = Area.objects.all()
+    else:
+        areas = perfil.areas_produccion.all() if perfil else Area.objects.none()
+
+    try:
+        area = areas.get(id=request.GET.get('area', ''))
+    except Exception:
+        return JsonResponse({'error': 'Área inválida'}, status=400)
+
+    equipo_sel   = request.GET.get('equipo', '')
+    indicador    = request.GET.get('indicador', 'downtime')
+    granularidad = request.GET.get('granularidad', 'semana')
+
+    if indicador not in dict(INDICADORES):
+        return JsonResponse({'error': 'Indicador inválido'}, status=400)
+
+    hoy = date.today()
+    buckets = []
+
+    if granularidad == 'semana':
+        
+        iso_anio_actual, _, _ = hoy.isocalendar()
+        try:
+            anio_semana = int(request.GET.get('anio_semana', iso_anio_actual))
+        except (TypeError, ValueError):
+            anio_semana = iso_anio_actual
+
+        lunes = date.fromisocalendar(anio_semana, 1, 1)
+
+        if anio_semana < iso_anio_actual:
+            # Año ya cerrado: recorrer hasta la última semana ISO de ese año
+            # (28 de diciembre siempre cae en la última semana ISO del año).
+            ultima_semana = date(anio_semana, 12, 28).isocalendar()[1]
+            lunes_fin = date.fromisocalendar(anio_semana, ultima_semana, 1)
+        elif anio_semana > iso_anio_actual:
+            lunes_fin = lunes
+        else:
+            lunes_fin = hoy - timedelta(days=hoy.weekday())
+
+        while lunes <= lunes_fin:
+            
+            domingo = lunes + timedelta(days=6)
+
+            _, iso_semana, _ = lunes.isocalendar()
+            buckets.append((f"S{iso_semana}", lunes, domingo))
+
+            lunes += timedelta(weeks=1)
+    elif granularidad == 'mes':
+        anio = hoy.year
+        for mes in range(1, 13):
+            ini = date(anio, mes, 1)
+            fin = date(anio, mes, calendar.monthrange(anio, mes)[1])
+            buckets.append((date_format(ini, 'M'), ini, fin))
+    elif granularidad == 'anio':
+        try:
+            anio_inicio = int(request.GET.get('anio_inicio', 2022))
+        except (TypeError, ValueError):
+            anio_inicio = 2022
+        anio_inicio = min(anio_inicio, hoy.year)
+        for anio in range(anio_inicio, hoy.year + 1):
+            buckets.append((str(anio), date(anio, 1, 1), date(anio, 12, 31)))
+    else:
+        return JsonResponse({'error': 'Granularidad inválida'}, status=400)
+
+    rango_ini = buckets[0][1]
+    rango_fin = buckets[-1][2]
+
+    if granularidad == 'semana':
+        periodo_label = f"{anio_semana} — Semana {buckets[0][0][1:]} a Semana {buckets[-1][0][1:]}"
+    elif granularidad == 'mes':
+        periodo_label = f"{date_format(rango_ini, 'F').capitalize()} — {date_format(rango_fin, 'F Y').capitalize()}"
+    else:
+        periodo_label = f"{buckets[0][0]} — {buckets[-1][0]}"
+
+    registros_qs = list(RegistroProduccion.objects.filter(area=area, fecha__gte=rango_ini, fecha__lte=rango_fin))
+    paros_qs     = list(Paro.objects.filter(area=area, fecha__gte=rango_ini, fecha__lte=rango_fin))
+
+    labels  = []
+    valores = []
+    for label, ini, fin in buckets:
+        kpis = _kpis_para_rango(equipo_sel, ini, fin, registros_qs, paros_qs)
+        labels.append(label)
+        valores.append(kpis.get(indicador))
+
+    return JsonResponse({
+        'labels':          labels,
+        'valores':         valores,
+        'indicador_label': dict(INDICADORES).get(indicador, ''),
+        'periodo_label':   periodo_label,
+    })

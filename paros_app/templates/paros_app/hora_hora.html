@@ -298,13 +298,11 @@
                 <div style="font-size:11px; color:var(--text-3); margin-top:2px;">{% trans "Skid corridos vs planeados" %}</div>
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <!-- Selector área -->
-                <select id="ef-area" onchange="cargarTargets().then(() => cargarEficiencia())"
-                        style="height:30px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:12px; background:var(--white); color:var(--text);">
-                    {% for area in areas_grafico %}
-                    <option value="{{ area.id }}">{{ area.nombre }}</option>
-                    {% endfor %}
-                </select>
+                <!-- Área (fija) -->
+                {% for area in areas_grafico %}
+                    <span style="height:30px; display:inline-flex; align-items:center; padding:0 10px; font-size:12px; font-weight:500; color:var(--text);">{{ area.nombre }}</span>
+                    <input type="hidden" id="ef-area" value="{{ area.id }}">
+                {% endfor %}
                 <!-- Pills vista -->
                 <div style="display:flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; height:30px;">
                     <button onclick="setVistaEf('dia', this)" id="pill-dia"

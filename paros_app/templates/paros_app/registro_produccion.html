@@ -4,9 +4,15 @@
 {% block title %}{% trans "Registro de producción" %}{% endblock %}
 {% block content %}
 
-<div class="card-title" style="margin-bottom:4px;">{% trans "Registro de producción" %}</div>
-<div class="card-subtitle" style="margin-bottom:18px;">{% trans "Doble clic en turno u hora para editar · El downtime se calcula automáticamente" %}</div>
-
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+    <div>
+        <div class="card-title" style="margin-bottom:4px;">{% trans "Registro de producción" %}</div>
+        <div class="card-subtitle" style="margin-bottom:18px;">{% trans "Doble clic en turno u hora para editar · El downtime se calcula automáticamente" %}</div>
+    </div>
+    <div style="padding-top:20px; margin-left:auto;">
+            {% include 'menu_app/_language_selector.html' %}
+    </div>
+</div>
 <!-- Filtros -->
 <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap;">
     <div style="display:flex; flex-direction:column; gap:4px;">
@@ -25,6 +31,7 @@
         </select>
     </div>
 </div>
+
 
 {% for d in datos_areas %}
 <div class="card" style="padding:0; margin-bottom:12px; overflow:hidden;">
@@ -115,6 +122,10 @@
                     <th style="padding:7px 12px; width:100px; text-align:left;   color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "Turno" %}</th>
                     <th style="padding:7px 12px; width: 90px; text-align:center; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "Inicio" %}</th>
                     <th style="padding:7px 12px; width: 90px; text-align:center; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "Fin" %}</th>
+                    {% if d.es_area_moldes %}
+                        <th style="padding:7px 12px; width:110px; text-align:left; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "No. molde" %}</th>
+                        <th style="padding:7px 12px; width:200px; text-align:left; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "Nombre de molde" %}</th>
+                    {% endif %}
                     <th style="padding:7px 12px; width: 90px; text-align:center; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "Planeado" %}</th>
                     <th style="padding:7px 12px; width:110px; text-align:center; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "T. muerto" %}</th>
                     <th style="padding:7px 12px; width:140px; text-align:center; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "Downtime %" %}</th>
@@ -157,6 +168,13 @@
                         ondblclick="editarHora(this, 'fin')">
                         {{ reg.hora_fin }}
                     </td>
+
+                    {% if d.es_area_moldes %}
+                        <td class="td-numero-molde" style="padding:8px 12px; border-bottom:1px solid var(--border); font-family:'DM Mono',monospace; font-size:12px; color:var(--indigo); cursor:pointer;"
+                            ondblclick="editarMolde(this.nextElementSibling)">{{ reg.numero_molde|default:"—" }}</td>
+                        <td class="td-nombre-molde" style="padding:8px 12px; border-bottom:1px solid var(--border); color:var(--text); cursor:pointer;"
+                            ondblclick="editarMolde(this)">{{ reg.nombre_molde|default:"—" }}</td>
+                    {% endif %}
 
                     <td style="text-align:center;padding:8px 12px; border-bottom:1px solid var(--border); color:var(--text-2);" id="plan-{{ reg.id }}">{{ reg.planeado }} min</td>
                     <td style="text-align:center;padding:8px 12px; border-bottom:1px solid var(--border); color:#EF4444; font-weight:500;" id="muerto-{{ reg.id }}">{{ reg.muerto }} min</td>
@@ -234,6 +252,16 @@
                                    style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); width:120px;">
                             <input type="time" id="fin-{{ d.area.id }}"
                                    style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); width:120px;">
+                            {% if d.es_area_moldes %}
+                            <input type="text" id="molde-{{ d.area.id }}" readonly placeholder="{% trans 'Número de molde' %}"
+                                   style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--surface); color:var(--text-2); width:140px;">
+                            <input type="text" id="molde-nombre-{{ d.area.id }}" autocomplete="off"
+                                   placeholder="{% trans 'Buscar nombre de molde…' %}"
+                                   oninput="filtrarMoldes({{ d.area.id }}, this.value)"
+                                   onfocus="filtrarMoldes({{ d.area.id }}, this.value)"
+                                   onblur="setTimeout(() => validarMoldeSeleccionado({{ d.area.id }}), 150)"
+                                   style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); width:200px;">
+                            {% endif %}
                             <button onclick="agregarRegistro({{ d.area.id }})"
                                     style="padding:5px 14px; background:var(--indigo); color:#fff; border:none; border-radius:7px; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit;">
                                 + {% trans "Agregar" %}
@@ -265,12 +293,80 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ moldes_area|json_script:"moldes-data" }}
 <script>
 const CSRF     = '{{ csrf_token }}';
 const URL_AGR  = "{% url 'paros:agregar_registro' %}";
 const URL_ELIM = "{% url 'paros:eliminar_registro' 0 %}".replace('/0/', '/');
 const URL_UPD  = "{% url 'paros:actualizar_registro' 0 %}".replace('/0/', '/');
 const URL_ORD  = "{% url 'paros:actualizar_orden' %}";
+const MOLDES_DATA = JSON.parse(document.getElementById('moldes-data').textContent);
+
+function getMoldeDropdown() {
+    let dropdown = document.getElementById('molde-dropdown-global');
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = 'molde-dropdown-global';
+        dropdown.style.cssText = `
+            display:none; position:fixed; background:var(--white); border:1px solid var(--indigo);
+            border-radius:7px; box-shadow:var(--shadow-md); z-index:9999;
+            max-height:200px; overflow-y:auto;`;
+        document.body.appendChild(dropdown);
+    }
+    return dropdown;
+}
+
+
+function filtrarMoldes(areaId, q) {
+    const input    = document.getElementById('molde-nombre-' + areaId);
+    const dropdown = getMoldeDropdown();
+    q = (q || '').toLowerCase().trim();
+    const matches = MOLDES_DATA.filter(m => !q || m.nombre_molde.toLowerCase().includes(q));
+    if (matches.length === 0) {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+        return;
+    }
+    const rect = input.getBoundingClientRect();
+    dropdown.style.left  = rect.left + 'px';
+    dropdown.style.top   = rect.bottom + 'px';
+    dropdown.style.width = rect.width + 'px';
+    dropdown.innerHTML = matches.slice(0, 30).map((m, i) => `
+        <div data-idx="${i}"
+             style="padding:6px 10px; font-size:12px; cursor:pointer; border-bottom:0.5px solid var(--border);"
+             onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''"
+             onmousedown="seleccionarMolde(${areaId}, ${i})">
+            <strong style="color:var(--indigo);">${m.numero_molde}</strong> — ${m.nombre_molde}
+        </div>
+    `).join('');
+    dropdown._matches = matches;
+    dropdown.style.display = 'block';
+}
+
+function seleccionarMolde(areaId, idx) {
+    const dropdown = getMoldeDropdown();
+    const molde    = dropdown._matches[idx];
+    document.getElementById('molde-nombre-' + areaId).value = molde.nombre_molde;
+    document.getElementById('molde-' + areaId).value        = molde.numero_molde;
+    dropdown.style.display = 'none';
+}
+
+function validarMoldeSeleccionado(areaId) {
+    const nombreInput = document.getElementById('molde-nombre-' + areaId);
+    const numeroInput = document.getElementById('molde-' + areaId);
+    const match = MOLDES_DATA.find(m => m.nombre_molde === nombreInput.value);
+    if (!match) {
+        nombreInput.value = '';
+        numeroInput.value = '';
+    }
+    getMoldeDropdown().style.display = 'none';
+}
+
+window.addEventListener('scroll', (e) => {
+    const dropdown = getMoldeDropdown();
+    if (e.target === dropdown || dropdown.contains(e.target)) return;
+    dropdown.style.display = 'none';
+}, true);
 </script>
 <script src="{% static 'paros_app/js/registro_produccion.js' %}"></script>
 {% endblock %}

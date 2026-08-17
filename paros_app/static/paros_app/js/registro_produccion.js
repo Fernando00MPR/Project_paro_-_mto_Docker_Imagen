@@ -203,6 +203,90 @@ function editarHora(td, tipo) {
     });
 }
 
+// ── Editar molde (nombre buscable, número derivado) ────────────────────────────
+function editarMolde(td) {
+    const tr           = td.closest('tr');
+    const regId        = tr.dataset.id;
+    const numeroTd      = td.previousElementSibling;
+    const actualNombre = td.textContent.trim() === '—' ? '' : td.textContent.trim();
+    const actualNumero = numeroTd.textContent.trim() === '—' ? '' : numeroTd.textContent.trim();
+
+    const input = document.createElement('input');
+    input.type          = 'text';
+    input.autocomplete  = 'off';
+    input.value         = actualNombre;
+    input.placeholder   = 'Buscar nombre de molde…';
+    input.style.cssText = 'width:100%;height:28px;padding:0 6px;border:1.5px solid var(--indigo);border-radius:4px;font-size:12px;background:var(--white);color:var(--text);';
+    td.innerHTML = '';
+    td.appendChild(input);
+    input.focus();
+
+    let guardando = false;
+
+    const mostrarLista = () => {
+        const dropdown = getMoldeDropdown();
+        const q = input.value.toLowerCase().trim();
+        const matches = MOLDES_DATA.filter(m => !q || m.nombre_molde.toLowerCase().includes(q));
+        dropdown.innerHTML = '';
+        if (matches.length === 0) { dropdown.style.display = 'none'; return; }
+        const rect = input.getBoundingClientRect();
+        dropdown.style.left  = rect.left + 'px';
+        dropdown.style.top   = rect.bottom + 'px';
+        dropdown.style.width = Math.max(rect.width, 220) + 'px';
+        matches.slice(0, 30).forEach(m => {
+            const opt = document.createElement('div');
+            opt.style.cssText = 'padding:6px 10px; font-size:12px; cursor:pointer; border-bottom:0.5px solid var(--border);';
+            opt.innerHTML = `<strong style="color:var(--indigo);">${m.numero_molde}</strong> — ${m.nombre_molde}`;
+            opt.addEventListener('mouseover', () => opt.style.background = 'var(--surface)');
+            opt.addEventListener('mouseout',  () => opt.style.background = '');
+            opt.addEventListener('mousedown', () => { input.value = m.nombre_molde; dropdown.style.display = 'none'; });
+            dropdown.appendChild(opt);
+        });
+        dropdown.style.display = 'block';
+    };
+
+    const guardar = async () => {
+        getMoldeDropdown().style.display = 'none';
+        if (guardando) return;
+        const nombre = input.value.trim();
+        if (nombre === actualNombre) { td.textContent = actualNombre || '—'; return; }
+
+        const molde = MOLDES_DATA.find(m => m.nombre_molde === nombre);
+        if (!molde) {
+            td.textContent = actualNombre || '—';
+            if (nombre) showToast('Selecciona un molde válido del catálogo.', 'error');
+            return;
+        }
+
+        guardando = true;
+        td.textContent       = molde.nombre_molde;
+        numeroTd.textContent = molde.numero_molde;
+
+        const res = await fetch(URL_UPD + regId + '/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ numero_molde: molde.numero_molde, nombre_molde: molde.nombre_molde })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            renderDt(regId, data.planeado, data.muerto, data.downtime);
+            showToast('Registro actualizado correctamente.', 'success');
+        } else {
+            showToast(data.error || 'No se pudo actualizar el molde.', 'error');
+            td.textContent       = actualNombre || '—';
+            numeroTd.textContent = actualNumero || '—';
+        }
+    };
+
+    input.addEventListener('input', mostrarLista);
+    input.addEventListener('focus', mostrarLista);
+    input.addEventListener('blur', () => setTimeout(guardar, 150));
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter')  input.blur();
+        if (e.key === 'Escape') { td.textContent = actualNombre || '—'; getMoldeDropdown().style.display = 'none'; }
+    });
+}
+
 // ── Agregar registro ──────────────────────────────────────────────────────────
 async function agregarRegistro(areaId) {
     const equipo  = document.getElementById('eq-'    + areaId).value;
@@ -211,13 +295,18 @@ async function agregarRegistro(areaId) {
     const horaFin = document.getElementById('fin-'   + areaId).value;
     const fecha   = FECHA.value;
 
-    if (!horaIni || !horaFin) { showToast('Ingresa la hora de inicio y fin.', 'error'); return; }
-    if (horaFin === horaIni) { showToast('La hora de inicio y fin no pueden ser iguales.', 'error'); return; }
+    const moldeSel    = document.getElementById('molde-' + areaId);
+    const moldeNombre = document.getElementById('molde-nombre-' + areaId);
+    const numero_molde = moldeSel ? moldeSel.value : '';
+    const nombre_molde = moldeNombre ? moldeNombre.value : '';
 
+    if (!horaIni || !horaFin) { showToast('Ingresa la hora de inicio y fin.', 'error'); return; }
+    if (moldeNombre && !numero_molde) { showToast('Selecciona un molde válido del catálogo.', 'error'); return; }
+    
     const res = await fetch(URL_AGR, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
-        body: JSON.stringify({ area_id: areaId, equipo, turno, fecha, hora_inicio: horaIni, hora_fin: horaFin })
+        body: JSON.stringify({ area_id: areaId, equipo, turno, fecha, hora_inicio: horaIni, hora_fin: horaFin, numero_molde, nombre_molde })
     });
     const data = await res.json();
     if (data.ok) {

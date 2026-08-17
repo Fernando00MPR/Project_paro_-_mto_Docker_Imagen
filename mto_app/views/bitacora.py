@@ -1,14 +1,16 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
 
 from .utils import areas_permitidas_mto
-from ..models import Area, Bitacora, Responsable
+from ..models import Area, Bitacora, Responsable, ImagenBitacora
 
+MAX_IMAGENES_BITACORA = 2
 
 @login_required
 def lista_bitacora(request):
@@ -27,7 +29,7 @@ def lista_bitacora(request):
     filtro_q     = request.GET.get('q', '').strip()
     filtro_pendiente = request.GET.get('pendiente', '').strip()
 
-    registros = Bitacora.objects.select_related('area')
+    registros = Bitacora.objects.select_related('area').prefetch_related('imagenes')
     if area_id:
         registros = registros.filter(area_id=area_id)
     if filtro_fecha:
@@ -94,8 +96,19 @@ def form_bitacora(request, pk=None):
             registro.save()
             messages.success(request, "Registro actualizado.")
         else:
-            Bitacora.objects.create(**datos)
+            registro = Bitacora.objects.create(**datos)
             messages.success(request, "Registro agregado.")
+
+        imagenes = request.FILES.getlist('imagenes')
+        if imagenes:
+            disponibles = MAX_IMAGENES_BITACORA - registro.imagenes.count()
+            if disponibles <= 0:
+                messages.warning(request, f"Este registro ya tiene {MAX_IMAGENES_BITACORA} imágenes — no se pueden agregar más.")
+            else:
+                if len(imagenes) > disponibles:
+                    messages.warning(request, f"Solo se guardaron {disponibles} imagen(es) — se alcanzó el límite de {MAX_IMAGENES_BITACORA}.")
+                for imagen in imagenes[:disponibles]:
+                    ImagenBitacora.objects.create(bitacora=registro, imagen=imagen)
 
         return redirect(f"/mto/bitacora/?area={area.pk}")
 
@@ -125,6 +138,31 @@ def eliminar_bitacora(request, pk):
         registro.delete()
         messages.success(request, "Registro eliminado.")
     return redirect(f"/mto/bitacora/?area={area_pk}")
+
+
+@login_required
+def imagenes_bitacora(request, pk):
+    registro = get_object_or_404(Bitacora, pk=pk)
+    imagenes = [{'id': img.id, 'url': img.imagen.url} for img in registro.imagenes.all()]
+    return JsonResponse({'imagenes': imagenes})
+
+
+@login_required
+@require_http_methods(["POST"])
+def eliminar_imagen_bitacora(request, imagen_id):
+    acceso = getattr(request.user, 'acceso_mto', None)
+    puede_editar = (
+        request.user.is_superuser or
+        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
+        (acceso and acceso.editar_bitacora)
+    )
+    if not puede_editar:
+        return JsonResponse({'error': 'Sin permiso'}, status=403)
+
+    imagen = get_object_or_404(ImagenBitacora, id=imagen_id)
+    imagen.imagen.delete()
+    imagen.delete()
+    return JsonResponse({'ok': True})
 
 
 @login_required

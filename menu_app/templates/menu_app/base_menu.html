@@ -666,7 +666,8 @@
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_dashboard or request.user.acceso_mto.ver_backlog %}
             <div class="sidebar-section">{% trans "General" %}</div>
             {% endif %}
-
+            
+            <!-- ── Sidebar - Dashboard ── -->
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_dashboard %}
             <a href="{% url 'mto:dashboard' %}" data-tooltip="Dashboard"
                 class="{% if 'mto:dashboard' in request.resolver_match.url_name %}active{% endif %}">
@@ -678,6 +679,7 @@
             </a>
             {% endif %}
 
+            <!-- ── Sidebar - Backlog ── -->
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_backlog %}
             <a href="{% url 'mto:backlog_seguimientos' %}" data-tooltip="Backlog de seguimientos"
                 class="{% if request.resolver_match.url_name == 'backlog_seguimientos' %}active{% endif %}">
@@ -686,6 +688,18 @@
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <span class="nav-label">{% trans "Backlog" %}</span>
+            </a>
+            {% endif %}
+
+            <!-- ── Sidebar - Documentos Generales ── -->
+            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_documentacion  %}
+            <a href="{% url 'mto:documentos_generales' %}" data-tooltip="Documentos Generales"
+                class="{% if request.resolver_match.url_name == 'documentos_generales' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span class="nav-label">{% trans "Documentos Generales" %}</span>
             </a>
             {% endif %}
 
@@ -704,7 +718,6 @@
             </div>
 
             <!-- ── Sidebar - Plan de Mantenimiento ── -->
-
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_plan_mantenimiento %}
             <a href="#" id="link-plan-mantenimiento" data-tooltip="{% trans 'Plan de Mantenimiento' %}" data-base-url="{% url 'mto:lista_plan' %}" 
                 class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_plan' %}active{% endif %}">
@@ -717,7 +730,6 @@
             {% endif %}
 
             <!-- ── Sidebar - Pasos rutinas ── -->
-
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_rutinas %}
             <a href="#" id="link-rutinas" data-tooltip="{% trans 'Rutinas de Mantenimiento' %}" data-base-url="{% url 'mto:lista_pasos' %}" 
                 class="link-area-dinamico {% if 'paso' in request.resolver_match.url_name %}active{% endif %}">
@@ -728,9 +740,7 @@
                 <span class="nav-label">{% trans "Rutinas de Mantenimiento" %}</span>
             </a>
             
-
             <!-- ── Sidebar - Pasos rutinas Historial ── -->
-
             <a href="{% url 'mto:historial_rutinas' %}" data-tooltip="{% trans 'Historial de rutinas' %}"
                 class="{% if request.resolver_match.url_name == 'historial_rutinas' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -742,7 +752,6 @@
             {% endif %}
 
             <!-- ── Sidebar - Seguimiento ── -->
-
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento %}
             <a href="#" id="link-seguimientos" data-tooltip="{% trans 'Seguimientos' %}" data-base-url="{% url 'mto:lista_seguimientos' %}" 
                 class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos' %}active{% endif %}">
@@ -755,7 +764,6 @@
             {% endif %}
 
             <!-- ── Sidebar - Responsables ── -->
-
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_responsables %}
             <a href="#" id="link-responsables" data-tooltip="{% trans 'Responsables' %}" data-base-url="{% url 'mto:lista_responsables' %}" 
                 class="link-area-dinamico {% if 'responsable' in request.resolver_match.url_name %}active{% endif %}">
@@ -768,7 +776,6 @@
             {% endif %}
 
             <!-- ── Sidebar - Bitácora ── -->
-
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_bitacora %}
             <a href="#" id="link-bitacora" data-tooltip="{% trans 'Bitácora' %}" data-base-url="{% url 'mto:lista_bitacora' %}"
                 class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_bitacora' %}active{% endif %}">
@@ -781,7 +788,6 @@
             {% endif %}
 
             <!-- ── Sidebar - Inventario ── -->
-
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_inventario %}
             <a href="#" id="link-inventario" data-tooltip="{% trans 'Inventario' %}" data-base-url="{% url 'inventario:lista_refacciones' %}" 
                 class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_refacciones' %}active{% endif %}">
@@ -794,7 +800,6 @@
             {% endif %}
 
             <!-- ── Sidebar - Seguimiento de refacciones ── -->
-
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento_refaccion %}
             <a href="#" id="link-seguimientos-refaccion" data-tooltip="{% trans 'Seguimiento de refacciones' %}" data-base-url="{% url 'inventario:lista_seguimientos_refaccion' %}" 
                 class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos_refaccion' %}active{% endif %}">
@@ -807,9 +812,7 @@
             {% endif %}
 
             <!-- ── Sidebar - Seguimiento de servicios ── -->
-
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento_servicio %}
-
             <a href="#" id="link-seguimientos-servicio" data-tooltip="{% trans 'Seguimiento de servicios' %}" data-base-url="{% url 'inventario:lista_seguimientos_servicio' %}" 
                 class="link-area-dinamico {% if request.resolver_match.url_name == 'lista_seguimientos_servicio' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -820,6 +823,7 @@
             </a>
             {% endif %}
 
+        <!-- ── Usuarios ── -->
             {% if request.user.is_superuser or perfil.es_admin %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Administración" %}</div>
             <a href="{% url 'lista_usuarios' %}" data-tooltip="{% trans 'Usuarios' %}"
@@ -834,7 +838,8 @@
 
             {% endwith %}
 
-            </div><!-- /nav-mto -->
+            </div>
+        <!-- /nav-mto -->
 
         <!-- ── Módulo Paros ── -->
             <div id="nav-paros">
@@ -844,7 +849,7 @@
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_dashboard or perfil.ver_analisis or perfil.ver_todos_paros or perfil.crear_paro %}
             <div class="sidebar-section">{% trans "General" %}</div>
             {% endif %}
-
+            <!-- ── Dashboard ── -->
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_dashboard %}
             <a href="{% url 'paros:dashboard' %}" data-tooltip="{% trans 'Dashboard' %}"
                class="{% if request.resolver_match.url_name == 'paros:dashboard' %}active{% endif %}">
@@ -855,7 +860,7 @@
                 <span class="nav-label">{% trans "Dashboard" %}</span>
             </a>
             {% endif %}
-
+            <!-- ── Análisis de paros ── -->
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_analisis %}
             <a href="{% url 'paros:analisis_paros' %}" data-tooltip="{% trans 'Análisis de paros' %}"
                class="{% if request.resolver_match.url_name == 'paros:analisis_paros' %}active{% endif %}">
@@ -865,7 +870,7 @@
                 <span class="nav-label">{% trans "Análisis de paros" %}</span>
             </a>
             {% endif %}
-
+            <!-- ── Todos los paros ── -->
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_todos_paros %}
             <a href="{% url 'paros:lista_paros' %}" data-tooltip="{% trans 'Todos los paros' %}"
                class="{% if request.resolver_match.url_name == 'paros:lista_paros' %}active{% endif %}">
@@ -875,7 +880,7 @@
                 <span class="nav-label">{% trans "Todos los paros" %}</span>
             </a>
             {% endif %}
-
+            <!-- ── Nuevo paro ── -->
             {% if request.user.is_superuser or perfil.es_admin or perfil.crear_paro %}
             <a href="{% url 'paros:crear_paro' %}" data-tooltip="{% trans 'Nuevo paro' %}"
                class="{% if request.resolver_match.url_name == 'paros:crear_paro' %}active{% endif %}">
@@ -904,8 +909,10 @@
             {% endif %}
 
         <!-- ── Catalogos ── -->
-            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_catalogos or perfil.gestionar_catalogos or perfil.agregar_catalogo_falla or perfil.editar_catalogo_falla or perfil.eliminar_catalogo_falla or perfil.agregar_catalogo_equipo or perfil.editar_catalogo_equipo or perfil.eliminar_catalogo_equipo or perfil.agregar_catalogo_resp or perfil.editar_catalogo_resp or perfil.eliminar_catalogo_resp %}
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_catalogos or perfil.gestionar_catalogos or perfil.agregar_catalogo_falla or perfil.editar_catalogo_falla or perfil.eliminar_catalogo_falla or perfil.agregar_catalogo_equipo or perfil.editar_catalogo_equipo or perfil.eliminar_catalogo_equipo or perfil.agregar_catalogo_resp or perfil.editar_catalogo_resp or perfil.eliminar_catalogo_resp or perfil.agregar_catalogo_molde or perfil.editar_catalogo_molde or perfil.eliminar_catalogo_molde %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Catálogos" %}</div>
+
+            <!-- ── Catalogos Fallas ── -->
             <a href="{% url 'paros:catalogo_fallas_general' %}" data-tooltip="{% trans 'Catálogo de fallas' %}"
                class="{% if 'falla' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -914,6 +921,7 @@
                 </svg>
                 <span class="nav-label">{% trans "Catálogo de fallas" %}</span>
             </a>
+            <!-- ── Catalogos Equipos ── -->
             <a href="{% url 'paros:catalogo_equipos' %}" data-tooltip="{% trans 'Catálogo de equipos' %}"
                class="{% if 'equipo' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -922,6 +930,7 @@
                 </svg>
                 <span class="nav-label">{% trans "Catálogo de equipos" %}</span>
             </a>
+            <!-- ── Catalogos Responsables ── -->
             <a href="{% url 'paros:catalogo_responsables' %}" data-tooltip="{% trans 'Catálogo de responsables' %}"
                class="{% if 'responsable' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -930,12 +939,25 @@
                 </svg>
                 <span class="nav-label">{% trans "Catálogo de responsables" %}</span>
             </a>
+            <!-- ── Catalogos Moldes ── -->
+            <a href="{% url 'paros:catalogo_moldes' %}" data-tooltip="{% trans 'Catálogo de moldes' %}"
+               class="{% if 'molde' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>
+                </svg>
+                <span class="nav-label">{% trans "Catálogo de moldes" %}</span>
+            </a>
             {% endif %}
 
         <!-- ── Producción ── -->
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_hora_hora or perfil.ver_bitacora_agv or perfil.areas_produccion.exists or perfil.ver_indicadores %}
+                <div class="sidebar-section" style="margin-top:4px;">{% trans "Producción" %}</div>
+            {% endif %}
 
+            <!-- ── Hora X Hora ── -->
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_hora_hora %}
-            <div class="sidebar-section" style="margin-top:4px;">{% trans "Producción" %}</div>
+            
             <a href="{% url 'paros:hora_hora' %}" data-tooltip="{% trans 'Hora x hora' %}"
                class="{% if request.resolver_match.url_name == 'hora_hora' %}active{% endif %}">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -946,6 +968,19 @@
             </a>
             {% endif %}
 
+            <!-- ── Bitácora de AGVs ── -->
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_bitacora_agv %}
+            <a href="{% url 'paros:bitacora_agv' %}" data-tooltip="{% trans 'Bitácora de AGVs' %}"
+               class="{% if request.resolver_match.url_name == 'bitacora_agv' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 13h2l1-5h12l1 5h2M5 13v5a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-5M7 16h.01M17 16h.01"/>
+                </svg>
+                <span class="nav-label">{% trans "Bitácora de AGVs" %}</span>
+            </a>
+            {% endif %}
+            
+            <!-- ── Tiempo de producción ── -->
             {% if request.user.is_superuser or perfil.es_admin or perfil.areas_produccion.exists %}
             <a href="{% url 'paros:registro_produccion' %}" data-tooltip="{% trans 'Tiempo de producción' %}"
                class="{% if request.resolver_match.url_name == 'registro_produccion' %}active{% endif %}">
@@ -956,6 +991,8 @@
                 <span class="nav-label">{% trans "Tiempo de producción" %}</span>
             </a>
             {% endif %}
+
+            <!-- ── Indicadores ── -->
             {% if request.user.is_superuser or perfil.es_admin or perfil.ver_indicadores %}
             <a href="{% url 'paros:indicadores_produccion' %}" data-tooltip="{% trans 'Indicadores' %}"
                class="{% if request.resolver_match.url_name == 'indicadores_produccion' %}active{% endif %}">
@@ -967,7 +1004,7 @@
             </a>
             {% endif %}
    
-
+        <!-- ── Usuarios ── -->
             {% if request.user.is_superuser or perfil.es_admin %}
             <div class="sidebar-section" style="margin-top:4px;">{% trans "Usuarios" %}</div>
             <a href="{% url 'lista_usuarios' %}" data-tooltip="{% trans 'Gestión de usuarios' %}"
@@ -980,7 +1017,8 @@
             </a>
             {% endif %}
             {% endwith %}
-            </div><!-- /nav-paros -->
+            </div>
+        <!-- /nav-paros -->
 
         </nav>
 

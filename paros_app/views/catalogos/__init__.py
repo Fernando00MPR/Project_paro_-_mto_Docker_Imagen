@@ -35,3 +35,13 @@ from .responsables import (
     agregar_responsables,
     editar_responsable,
 )
+from .moldes import (
+    catalogo_moldes_general,
+    limpiar_moldes_area,
+    importar_moldes,
+    descargar_plantilla_moldes,
+    eliminar_molde,
+    exportar_moldes,
+    agregar_moldes,
+    editar_molde,
+)

@@ -31,9 +31,15 @@ class Refaccion(models.Model):
         ('docena', _('Docena')),
     ]
 
+    CRITICIDAD_CHOICES = [
+        ('critico',    _('Crítico')),
+        ('no_critico', _('No crítico')),
+    ]
+
     no_item         = models.CharField(max_length=10, verbose_name=_("No. Item"))
     nombre          = models.CharField(max_length=200, verbose_name=_("Nombre"))
     descripcion     = models.TextField(blank=True, verbose_name=_("Descripción"))
+    criticidad      = models.CharField(max_length=12, choices=CRITICIDAD_CHOICES, default='no_critico', verbose_name=_("Criticidad"))
     categoria       = models.ForeignKey(CategoriaRefaccion, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Categoría"))
     area            = models.ForeignKey(Area, on_delete=models.PROTECT, verbose_name=_("Área"))
     unidad          = models.CharField(max_length=10, choices=UNIDAD_CHOICES, default='pza', verbose_name=_("Unidad"))

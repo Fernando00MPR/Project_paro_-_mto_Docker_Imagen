@@ -338,6 +338,22 @@ function descargarGrafica() {
     link.click();
 }
 
+function descargarGraficaTendencia() {
+    const canvas = document.getElementById('chartTendencia');
+    if (!canvas) return;
+    const tmp    = document.createElement('canvas');
+    tmp.width    = canvas.width;
+    tmp.height   = canvas.height;
+    const ctx    = tmp.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, tmp.width, tmp.height);
+    ctx.drawImage(canvas, 0, 0);
+    const link    = document.createElement('a');
+    link.download = `Tendencia_${window.INDICADOR_ACTUAL}_${tendenciaGranularidad}_${window.AREA_NOMBRE}.png`;
+    link.href     = tmp.toDataURL('image/png');
+    link.click();
+}
+
 // ── Tabla: ocultar filas sin registro ─────────────────────────
 let ocultando = localStorage.getItem('ind-ocultar-sin-registro') === 'true';
 
@@ -663,6 +679,163 @@ function centrarTextoTextarea(el) {
 }
 
 
+// ── Gráfica de tendencia (semana / mes / año) ───────────────────
+// Usa el mismo indicador seleccionado en las pills de "Indicador en gráfica"
+// (window.INDICADOR_ACTUAL) — no tiene selector propio, para no duplicar UI.
+let tendenciaGranularidad = 'semana';
+let tendenciaTipo         = 'bar';
+let chartTendencia        = null;
+
+function cambiarAnio(inputId, delta) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    const min = parseInt(el.min, 10);
+    const max = parseInt(el.max, 10);
+    let val = (parseInt(el.value, 10) || new Date().getFullYear()) + delta;
+    if (!isNaN(min)) val = Math.max(min, val);
+    if (!isNaN(max)) val = Math.min(max, val);
+    el.value = val;
+    cargarTendencia();
+}
+
+function cambiarTipoTendencia(tipo) {
+    tendenciaTipo = tipo;
+    const chart = chartTendencia;
+    if (!chart) return;
+    ['bar', 'line', 'area'].forEach(t => {
+        const btn = document.getElementById('btn-tipo-tend-' + t);
+        if (btn) {
+            btn.style.background = t === tipo ? '#4F46E5' : 'var(--white)';
+            btn.style.color      = t === tipo ? '#fff'    : 'var(--text)';
+        }
+    });
+    const ds = chart.data.datasets[0];
+    if (tipo === 'bar') {
+        ds.type = 'bar'; ds.fill = false; ds.tension = undefined;
+        ds.pointRadius = undefined; ds.borderWidth = 1; ds.borderRadius = 4;
+        ds.backgroundColor = 'rgba(79,70,229,0.75)'; ds.borderColor = '#4F46E5';
+    } else if (tipo === 'line') {
+        ds.type = 'line'; ds.fill = false; ds.tension = 0.3; ds.pointRadius = 4;
+        ds.pointBackgroundColor = '#4F46E5'; ds.borderWidth = 2;
+        ds.borderRadius = 0; ds.backgroundColor = 'transparent'; ds.borderColor = '#4F46E5';
+    } else if (tipo === 'area') {
+        ds.type = 'line'; ds.fill = true; ds.tension = 0.3; ds.pointRadius = 4;
+        ds.pointBackgroundColor = '#4F46E5'; ds.borderWidth = 2;
+        ds.borderRadius = 0; ds.backgroundColor = 'rgba(79,70,229,0.12)'; ds.borderColor = '#4F46E5';
+    }
+    chart.config.type = tipo === 'bar' ? 'bar' : 'line';
+    chart.update();
+}
+
+function cambiarGranularidadTendencia(g) {
+    tendenciaGranularidad = g;
+    ['semana', 'mes', 'anio'].forEach(k => {
+        const btn = document.getElementById('btn-gran-' + k);
+        if (btn) btn.className = 'btn-icon ' + (k === g ? 'active' : 'inactive');
+    });
+    const wrapAnioInicio = document.getElementById('wrap-anio-inicio');
+    if (wrapAnioInicio) wrapAnioInicio.style.display = g === 'anio' ? 'flex' : 'none';
+    const wrapAnioSemana = document.getElementById('wrap-anio-semana');
+    if (wrapAnioSemana) wrapAnioSemana.style.display = g === 'semana' ? 'flex' : 'none';
+    cargarTendencia();
+}
+
+function cargarTendencia() {
+    if (!window.AREA_ID) return;
+    const equipoEl = document.querySelector('select[name="equipo"]');
+    const equipo   = equipoEl ? equipoEl.value : '';
+    const params   = new URLSearchParams({
+        area:         window.AREA_ID,
+        equipo:       equipo,
+        indicador:    window.INDICADOR_ACTUAL,
+        granularidad: tendenciaGranularidad,
+    });
+    if (tendenciaGranularidad === 'anio') {
+        const anioEl = document.getElementById('tendencia-anio-inicio');
+        if (anioEl && anioEl.value) params.set('anio_inicio', anioEl.value);
+    }
+    if (tendenciaGranularidad === 'semana') {
+        const anioSemEl = document.getElementById('tendencia-anio-semana');
+        if (anioSemEl && anioSemEl.value) params.set('anio_semana', anioSemEl.value);
+    }
+    fetch(`${window.URLS.tendencia}?${params.toString()}`)
+        .then(r => r.json())
+        .then(data => {
+            const lbl = document.getElementById('tendencia-ind-label');
+            if (lbl) lbl.textContent = data.indicador_label || '';
+
+            const periodo = document.getElementById('tendencia-periodo-label');
+            if (periodo) periodo.textContent = data.periodo_label || '';
+
+            renderChartTendencia(data.labels || [], data.valores || []);
+        })
+        .catch(() => {});
+}
+
+function renderChartTendencia(labels, valores) {
+    const canvas = document.getElementById('chartTendencia');
+    if (!canvas) return;
+    const UNIDADES = { downtime: '%', disponibilidad: '%', mttr: ' min', mtbf: ' h', t_muerto_mant: ' min' };
+    const unidad = UNIDADES[window.INDICADOR_ACTUAL] || '';
+
+    if (chartTendencia) chartTendencia.destroy();
+    chartTendencia = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: valores,
+                backgroundColor: 'rgba(79,70,229,0.75)',
+                borderColor: '#4F46E5',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ' ' + (ctx.parsed.y ?? '—') + unidad } }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#888780' } },
+                y: { beginAtZero: true, ticks: { font: { size: 11 }, color: '#888780' } }
+            },
+            animation: {
+                onComplete: function () {
+                    const chart = this;
+                    const meta  = chart.getDatasetMeta(0);
+                    const barWidth = meta.data.length > 0 ? meta.data[0].width : 0;
+                    if (barWidth < 14) return;
+                    const ctx2 = chart.ctx;
+                    const esDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    ctx2.save();
+                    ctx2.font = 'bold 11px sans-serif';
+                    ctx2.textAlign = 'center';
+                    ctx2.fillStyle = esDark ? '#FFFFFF' : '#4F46E5';
+                    chart.data.datasets[0].data.forEach((val, i) => {
+                        if (val === null || val === undefined) return;
+                        const bar = meta.data[i];
+                        const yPos = bar.y - 6;
+                        const label = val + unidad;
+                        if (yPos < chart.chartArea.top + 12) {
+                            ctx2.fillStyle = '#ffffff';
+                            ctx2.fillText(label, bar.x, bar.y + 16);
+                            ctx2.fillStyle = esDark ? '#FFFFFF' : '#4F46E5';
+                        } else {
+                            ctx2.fillText(label, bar.x, yPos);
+                        }
+                    });
+                    ctx2.restore();
+                }
+            }
+        }
+    });
+    cambiarTipoTendencia(tendenciaTipo);
+}
+
+
 // ── Inicialización ────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
     const selPeriodo = document.getElementById('sel-periodo');
@@ -670,6 +843,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (typeof LABELS !== 'undefined' && LABELS.length && document.getElementById('chartIndicador')) {
         crearGrafica();
+    }
+
+    if (document.getElementById('chartTendencia')) {
+        cargarTendencia();
     }
 
     mostrarColumnaIndicador(window.INDICADOR_ACTUAL);

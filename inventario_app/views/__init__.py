@@ -8,6 +8,8 @@ from .inventario import (
     buscar_refacciones,
     importar_stock,
     descargar_plantilla_stock,
+    importar_completo,
+    descargar_plantilla_completa,
     exportar_refacciones,
 )
 

@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.core.files.base import ContentFile
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
 from paros_app.models import comprimir_imagen_pil
 
 
@@ -23,12 +25,14 @@ class Area(models.Model):
 class PlanMantenimiento(models.Model):
 
     FRECUENCIA_CHOICES = [
-        ('semanal',    _('Semanal')),
-        ('quincenal',  _('Quincenal')),
-        ('mensual',    _('Mensual')),
-        ('trimestral', _('Trimestral')),
-        ('semestral',  _('Semestral')),
-        ('anual',      _('Anual')),
+        ('semanal',       _('Semanal')),
+        ('quincenal',     _('Quincenal')),
+        ('mensual',       _('Mensual')),
+        ('bimestral',     _('Bimestral')),
+        ('trimestral',    _('Trimestral')),
+        ('cuatrimestral', _('Cuatrimestral')),
+        ('semestral',     _('Semestral')),
+        ('anual',         _('Anual')),
     ]
 
     STATUS_CHOICES = [
@@ -203,6 +207,12 @@ class AccesoMto(models.Model):
     editar_seguimiento_servicio   = models.BooleanField(default=False, verbose_name=_("Editar seguimiento de servicios"))
     eliminar_seguimiento_servicio = models.BooleanField(default=False, verbose_name=_("Eliminar seguimiento de servicios"))
 
+    # ── Documentación general ──
+    ver_documentacion      = models.BooleanField(default=False, verbose_name=_("Ver documentación"))
+    editar_documentacion   = models.BooleanField(default=False, verbose_name=_("Editar documentación"))
+    eliminar_documentacion = models.BooleanField(default=False, verbose_name=_("Eliminar documentación"))
+
+
     def __str__(self):
         return f"{self.usuario.username} — MTO"
 
@@ -340,6 +350,133 @@ def borrar_archivo_imagen_seguimiento(sender, instance, **kwargs):
     if instance.imagen:
         instance.imagen.delete(save=False)
 
+# ── Documentación general ──
+
+EXTENSIONES_IMAGEN_DOCUMENTO = ['jpg', 'jpeg', 'png', 'webp']
+EXTENSIONES_DOCUMENTO_PERMITIDAS = ['pdf', 'xlsx', 'xls', 'docx', 'doc', 'pptx', 'ppt'] + EXTENSIONES_IMAGEN_DOCUMENTO
+DOCUMENTO_TAMANO_MAX = 25 * 1024 * 1024         # 25 MB — documentos (PDF/Excel/Word/PowerPoint)
+DOCUMENTO_IMAGEN_TAMANO_MAX = 10 * 1024 * 1024  # 10 MB — imágenes; se comprimen al guardar
+
+
+def validar_tamano_documento(archivo):
+    if archivo.size > DOCUMENTO_TAMANO_MAX:
+        raise ValidationError(_("El archivo no puede superar 25 MB."))
+
+
+def documento_upload_path(instance, filename):
+    return f'documentacion/{instance.categoria_id}/{filename}'
+
+
+class CategoriaDocumento(models.Model):
+    codigo     = models.CharField(max_length=30, unique=True, verbose_name=_("Código"))
+    nombre     = models.CharField(max_length=100, unique=True, verbose_name=_("Nombre"))
+    creado_por = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, verbose_name=_("Creado por"))
+    creado_en  = models.DateTimeField(auto_now_add=True, verbose_name=_("Creado en"))
+
+    class Meta:
+        verbose_name = _("Categoría de documento")
+        verbose_name_plural = _("Categorías de documentos")
+        ordering = ['nombre']
+
+    def __str__(self):
+        return f'{self.codigo} — {self.nombre}'
+
+
+class Documento(models.Model):
+    categoria   = models.ForeignKey(CategoriaDocumento, on_delete=models.CASCADE, related_name='documentos', verbose_name=_("Categoría"))
+    nombre      = models.CharField(max_length=200, verbose_name=_("Nombre"))
+    descripcion = models.CharField(max_length=300, blank=True, verbose_name=_("Descripción"))
+    archivo     = models.FileField(
+        upload_to=documento_upload_path,
+        validators=[
+            FileExtensionValidator(allowed_extensions=EXTENSIONES_DOCUMENTO_PERMITIDAS),
+            validar_tamano_documento,
+        ],
+        verbose_name=_("Archivo"),
+    )
+    subido_por = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, verbose_name=_("Subido por"))
+    subido_en  = models.DateTimeField(auto_now_add=True, verbose_name=_("Subido en"))
+
+    class Meta:
+        verbose_name = _("Documento")
+        verbose_name_plural = _("Documentos")
+        ordering = ['-subido_en']
+
+    def __str__(self):
+        return f'{self.nombre} ({self.categoria.nombre})'
+
+    def save(self, *args, **kwargs):
+        if self.archivo and not self.archivo._committed:
+            ext = os.path.splitext(self.archivo.name)[1].lstrip('.').lower()
+            if ext in EXTENSIONES_IMAGEN_DOCUMENTO:
+                contenido_jpeg, _nombre = comprimir_imagen_pil(self.archivo)
+                if contenido_jpeg is not None:
+                    nombre_base  = os.path.splitext(self.archivo.name)[0]
+                    nuevo_nombre = f'{nombre_base}.jpg'
+                    self.archivo.save(nuevo_nombre, ContentFile(contenido_jpeg), save=False)
+        super().save(*args, **kwargs)
+
+    @property
+    def es_pdf(self):
+        return self.archivo.name.lower().endswith('.pdf')
+
+    @property
+    def es_imagen(self):
+        return self.extension.lower() in EXTENSIONES_IMAGEN_DOCUMENTO
+
+    @property
+    def extension(self):
+        return os.path.splitext(self.archivo.name)[1].lstrip('.').upper()
+
+    @property
+    def tamano_legible(self):
+        try:
+            tamano = self.archivo.size
+        except (OSError, ValueError):
+            return '—'
+        if tamano < 1024:
+            return f'{tamano} B'
+        if tamano < 1024 * 1024:
+            return f'{tamano / 1024:.1f} KB'
+        return f'{tamano / (1024 * 1024):.1f} MB'
+
+    @property
+    def color_extension(self):
+        ext = self.extension.lower()
+        if ext == 'pdf':
+            return {'bg': '#FEE2E2', 'color': '#DC2626'}
+        if ext in ('xlsx', 'xls'):
+            return {'bg': '#D1FAE5', 'color': '#059669'}
+        if ext in ('docx', 'doc'):
+            return {'bg': '#DBEAFE', 'color': '#1D4ED8'}
+        if ext in ('pptx', 'ppt'):
+            return {'bg': '#FEF3C7', 'color': '#D97706'}
+        if ext in EXTENSIONES_IMAGEN_DOCUMENTO:
+            return {'bg': '#F3E8FF', 'color': '#7C3AED'}
+        return {'bg': 'var(--surface)', 'color': 'var(--text-3)'}
+
+    @property
+    def tipo_icono(self):
+        ext = self.extension.lower()
+        if ext == 'pdf':
+            return 'pdf'
+        if ext in ('xlsx', 'xls'):
+            return 'excel'
+        if ext in ('docx', 'doc'):
+            return 'word'
+        if ext in ('pptx', 'ppt'):
+            return 'powerpoint'
+        if ext in EXTENSIONES_IMAGEN_DOCUMENTO:
+            return 'imagen'
+        return 'otro'
+
+
+@receiver(post_delete, sender=Documento)
+def borrar_archivo_documento(sender, instance, **kwargs):
+    if instance.archivo:
+        instance.archivo.delete(save=False)
+
+
 class Bitacora(models.Model):
     area                = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name=_("Área"))
     fecha               = models.DateField(verbose_name=_("Fecha"))
@@ -357,3 +494,36 @@ class Bitacora(models.Model):
         verbose_name        = _("Bitácora")
         verbose_name_plural = _("Bitácoras")
         ordering            = ['-fecha', '-creado_en']
+
+
+def imagen_bitacora_upload_path(instance, filename):
+    return f'bitacora/{instance.bitacora_id}/{filename}'
+
+
+class ImagenBitacora(models.Model):
+    bitacora  = models.ForeignKey(Bitacora, on_delete=models.CASCADE, related_name='imagenes', verbose_name=_("Bitácora"))
+    imagen    = models.ImageField(upload_to=imagen_bitacora_upload_path, verbose_name=_("Imagen"))
+    subida_en = models.DateTimeField(auto_now_add=True, verbose_name=_("Fecha de subida"))
+
+    class Meta:
+        verbose_name = _("Imagen de bitácora")
+        verbose_name_plural = _("Imágenes de bitácora")
+        ordering = ['subida_en']
+
+    def __str__(self):
+        return f'Imagen bitácora #{self.bitacora_id} — {self.subida_en:%d/%m/%Y}'
+
+    def save(self, *args, **kwargs):
+        if self.imagen and not self.imagen._committed:
+            contenido_jpeg, _ = comprimir_imagen_pil(self.imagen)
+            if contenido_jpeg is not None:
+                nombre_base  = os.path.splitext(self.imagen.name)[0]
+                nuevo_nombre = f'{nombre_base}.jpg'
+                self.imagen.save(nuevo_nombre, ContentFile(contenido_jpeg), save=False)
+        super().save(*args, **kwargs)
+
+
+@receiver(post_delete, sender=ImagenBitacora)
+def borrar_archivo_imagen_bitacora(sender, instance, **kwargs):
+    if instance.imagen:
+        instance.imagen.delete(save=False)

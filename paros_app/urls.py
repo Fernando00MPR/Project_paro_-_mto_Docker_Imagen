@@ -66,6 +66,17 @@ urlpatterns = [
     path('catalogos/responsables/agregar/<int:area_id>/',        views.agregar_responsables,             name='agregar_responsable'),
     path('catalogos/responsables/editar/<int:responsable_id>/',  views.editar_responsable,               name='editar_responsable'),
 
+    # ── Catálogo de MOLDES ───────────────────────────────────────────────
+    path('catalogos/moldes/',                              views.catalogo_moldes_general,       name='catalogo_moldes'),
+    path('catalogos/moldes/importar/',                     views.importar_moldes,               name='importar_moldes'),
+    path('catalogos/moldes/exportar/',                     views.exportar_moldes,               name='exportar_moldes'),
+    path('catalogos/moldes/exportar/area/<int:area_id>/',  views.exportar_moldes,               name='exportar_moldes_area'),
+    path('catalogos/moldes/plantilla/',                    views.descargar_plantilla_moldes,    name='descargar_plantilla_moldes'),
+    path('catalogos/moldes/eliminar/<int:molde_id>/',      views.eliminar_molde,                name='eliminar_molde'),
+    path('catalogos/moldes/limpiar/<int:area_id>/',        views.limpiar_moldes_area,           name='limpiar_moldes_area'),
+    path('catalogos/moldes/agregar/<int:area_id>/',        views.agregar_moldes,                name='agregar_molde'),
+    path('catalogos/moldes/editar/<int:molde_id>/',        views.editar_molde,                  name='editar_molde'),
+    
     # ── Regristo Timepo de Producción ───────────────────────────────────────────
     path('produccion/',                              views.registro_produccion,    name='registro_produccion'),
     path('produccion/agregar/',                      views.agregar_registro,       name='agregar_registro'),
@@ -73,6 +84,7 @@ urlpatterns = [
     path('produccion/actualizar/<int:registro_id>/', views.actualizar_registro,    name='actualizar_registro'),
     path('produccion/orden/',                        views.actualizar_orden,       name='actualizar_orden'),
     path('produccion/indicadores/',                  views.indicadores_produccion, name='indicadores_produccion'),
+    path('produccion/indicadores/tendencia/',        views.tendencia_indicadores,  name='tendencia_indicadores'),
     path('produccion/target/',                       views.guardar_target,         name='guardar_target'),
     path('produccion/accion-dia/',                   views.guardar_accion_dia,     name='guardar_accion_dia'),
     path('produccion/accion-dia/get/',               views.get_accion_dia,         name='get_accion_dia'),
@@ -86,6 +98,13 @@ urlpatterns = [
     path('hora-hora/target/anual/guardar/',          views.guardar_target_anual_hora_hora, name='guardar_target_anual_hora_hora'),
     path('hora-hora/target/anual/get/',              views.get_target_anual_hora_hora,     name='get_target_anual_hora_hora'),
 
+    # ── Bitácora de AGVs ───────────────────────────────────────────
+    path('agv/',                          views.bitacora_agv,             name='bitacora_agv'),
+    path('agv/guardar/',                  views.guardar_agv,              name='guardar_agv'),
+    path('agv/cumplimiento/',             views.cumplimiento_agv_data,    name='cumplimiento_agv_data'),
+    path('agv/target/guardar/',           views.guardar_target_agv,       name='guardar_target_agv'),
+    path('agv/target/get/',               views.get_target_agv,           name='get_target_agv'),
+    
     path('paros/<int:paro_id>/imagenes/',          views.imagenes_paro,         name='imagenes_paro'),
     path('paros/imagen/eliminar/<int:imagen_id>/', views.eliminar_imagen_paro,  name='eliminar_imagen_paro'),
 ]
