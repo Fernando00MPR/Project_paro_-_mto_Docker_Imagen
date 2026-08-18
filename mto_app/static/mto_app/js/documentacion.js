@@ -77,8 +77,20 @@ function cerrarModalPdf() {
 function verImagen(url, nombre, subidoEn) {
     document.getElementById('titulo-imagen').textContent = nombre;
     document.getElementById('fecha-imagen').textContent = subidoEn ? `Subido el ${subidoEn}` : '';
-    document.getElementById('img-visor').src = url;
+    
+
     document.getElementById('descargar-imagen').href = url;
+
+    const img      = document.getElementById('img-visor');
+    const skeleton = document.getElementById('imagen-skeleton');
+    img.style.opacity      = '0';
+    skeleton.style.display = 'block';
+    img.onload = () => {
+        img.style.transition = 'opacity .2s ease';
+        img.style.opacity    = '1';
+        skeleton.style.display = 'none';
+    };
+    
     document.getElementById('modal-imagen').style.display = 'flex';
 }
 

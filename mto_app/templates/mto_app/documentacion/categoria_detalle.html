@@ -204,7 +204,11 @@
                         style="background:none; border:none; cursor:pointer; color:var(--text-3); font-size:20px; line-height:1;">✕</button>
             </div>
         </div>
-        <div style="flex:1; overflow:auto; text-align:center; background:var(--surface); border-radius:8px; border:1px solid var(--border);">
+        <div class="img-loading-wrap" style="flex:1; overflow:auto; text-align:center; background:var(--surface); border-radius:8px; border:1px solid var(--border); position:relative;">
+            <div id="imagen-skeleton" class="img-skeleton" style="display:none; position:absolute; inset:0; border-radius:8px;">
+                <div class="img-spinner"></div>
+                <div class="img-spinner-label">{% trans "Cargando…" %}</div>
+            </div>
             <img id="img-visor" style="max-width:100%; max-height:75vh; object-fit:contain;">
         </div>
     </div>
