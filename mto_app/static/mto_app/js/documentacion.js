@@ -52,7 +52,18 @@ function cerrarModalEliminarDoc() {
 
 function verPdf(url, nombre) {
     document.getElementById('titulo-pdf').textContent = nombre;
-    document.getElementById('iframe-pdf').src = url;
+    
+    const iframe   = document.getElementById('iframe-pdf');
+    const skeleton = document.getElementById('pdf-skeleton');
+    iframe.style.opacity   = '0';
+    skeleton.style.display = 'block';
+    iframe.onload = () => {
+        iframe.style.transition = 'opacity .2s ease';
+        iframe.style.opacity    = '1';
+        skeleton.style.display  = 'none';
+    };
+    iframe.src = url;
+    
     document.getElementById('modal-pdf').style.display = 'flex';
 }
 
