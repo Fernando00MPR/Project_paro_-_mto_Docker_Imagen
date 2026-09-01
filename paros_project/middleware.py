@@ -17,7 +17,7 @@ class TimingMiddleware:
             response = self.get_response(request)
         ms = (time.perf_counter() - t0) * 1000
 
-        nivel = '[SLOW]' if ms > 50 else '[WARN]' if ms > 20 else None
+        nivel = '[SLOW]' if ms > 500 else '[WARN]' if ms > 200 else None
         if nivel:
             logger.warning(
                 f'{nivel} pid={os.getpid()} tid={threading.get_ident()} '
