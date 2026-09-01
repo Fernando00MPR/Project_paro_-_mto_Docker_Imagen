@@ -1,5 +1,21 @@
 /* dashboard.js — Controles de filtros, gráfica de tendencia y auto-refresh de KPIs */
 
+// Color de acento resuelto — Chart.js/canvas no entienden var(--indigo), necesitan el valor real
+function colorIndigo() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--indigo').trim();
+}
+function colorIndigoRgba(alpha) {
+    const hex = colorIndigo().replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function esModoOscuro() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
 // ── Toggle rangos de fecha ────────────────────────────────────────────────────
 // Llamado desde onchange del <select> de rango. Muestra u oculta los campos
 // extra (semana específica o rango custom) según la opción elegida.
@@ -8,15 +24,23 @@ function toggleCustom(val) {
     const wrapSemana = document.getElementById('wrap-semana');
     const wrapDesde  = document.getElementById('wrap-desde');
     const wrapHasta  = document.getElementById('wrap-hasta');
+    const wrapMes    = document.getElementById('wrap-mes');
+    const wrapMeses  = document.getElementById('wrap-meses');
     const btnSemana  = document.getElementById('btn-aplicar-semana');
     const btnCustom  = document.getElementById('btn-aplicar-custom');
+    const btnMes     = document.getElementById('btn-aplicar-mes');
+    const btnMeses   = document.getElementById('btn-aplicar-meses');
     if (wrapSemana) wrapSemana.style.display = val === 'semana_num' ? 'flex' : 'none';
     if (wrapDesde)  wrapDesde.style.display  = val === 'custom'     ? 'flex' : 'none';
     if (wrapHasta)  wrapHasta.style.display  = val === 'custom'     ? 'flex' : 'none';
+    if (wrapMes)    wrapMes.style.display    = val === 'mes'        ? 'flex' : 'none';
+    if (wrapMeses)  wrapMeses.style.display  = val === 'meses'      ? 'flex' : 'none';
     if (btnSemana)  btnSemana.style.display  = val === 'semana_num' ? 'flex' : 'none';
     if (btnCustom)  btnCustom.style.display  = val === 'custom'     ? 'flex' : 'none';
+    if (btnMes)     btnMes.style.display     = val === 'mes'        ? 'flex' : 'none';
+    if (btnMeses)   btnMeses.style.display   = val === 'meses'      ? 'flex' : 'none';
     // Opciones simples (hoy, semana, mes…) no necesitan botón "Aplicar": submit inmediato
-    if (val !== 'semana_num' && val !== 'custom') {
+    if (val !== 'semana_num' && val !== 'custom' && val !== 'mes' && val !== 'meses') {
         document.getElementById('rango-select').closest('form').submit();
     }
 }
@@ -35,6 +59,9 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
         maxRotation: 0,
     };
     const cfg = Object.assign({}, defaults, opciones);
+    const indigoSolid  = colorIndigo();
+    const indigoAlpha  = colorIndigoRgba(0.75);
+    const colorValores = esModoOscuro() ? '#FFFFFF' : indigoSolid;
 
     return new Chart(ctx, {
         type: 'bar',
@@ -43,8 +70,8 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
             datasets: [{
                 label: 'Minutos',
                 data: data,
-                backgroundColor: 'rgba(79,70,229,0.75)',
-                borderColor: '#4F46E5',
+                backgroundColor: indigoAlpha,
+                borderColor: indigoSolid,
                 borderWidth: 1,
                 borderRadius: 4,
             }]
@@ -84,7 +111,7 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
                     const ctx2  = chart.ctx;
                     ctx2.save();
                     ctx2.font      = `bold ${cfg.fontSize}px sans-serif`;
-                    ctx2.fillStyle = '#4F46E5';
+                    ctx2.fillStyle = colorValores;
                     ctx2.textAlign = 'center';
                     chart.data.datasets[0].data.forEach((val, i) => {
                         if (val === 0) return;
@@ -212,4 +239,16 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
     // Exponer para el botón "Actualizar ahora" del HTML y programar refresh cada 60 s
     window.actualizarDashboard = actualizarDashboard;
     setInterval(actualizarDashboard, 60000);
+
+    // Redibujar la gráfica al cambiar el color de acento o el tema. Se destruye y
+    // recrea (no basta con .update()) porque el texto sobre las barras se pinta
+    // en un callback que capturó el color viejo al crear el chart.
+    document.addEventListener('accentchange', function () {
+        if (!graficaTendencia) return;
+        const labels = graficaTendencia.data.labels;
+        const data   = graficaTendencia.data.datasets[0].data;
+        graficaTendencia.destroy();
+        graficaTendencia = crearGraficaTendencia('chartTendencia', labels, data, cfg.chartOpts);
+    });
+
 })();

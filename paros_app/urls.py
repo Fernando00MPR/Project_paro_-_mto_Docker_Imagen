@@ -17,9 +17,10 @@ urlpatterns = [
     path('paros/estatus/<int:paro_id>/',        views.cambiar_estatus_paro,    name='cambiar_estatus_paro'),
 
     # ── Exportación ────────────────────────────────────────────────────────
-    path('paros/importar/',                     views.importar_paros,          name='importar_paros'),
-    path('paros/exportar/csv/',                 views.exportar_csv,            name='exportar_csv'),
-    path('paros/exportar/excel/',               views.exportar_excel,          name='exportar_excel'),
+    path('paros/importar/',                     views.importar_paros,            name='importar_paros'),
+    path('paros/importar/plantilla/',           views.descargar_plantilla_paros, name='descargar_plantilla_paros'),
+    path('paros/exportar/csv/',                 views.exportar_csv,              name='exportar_csv'),
+    path('paros/exportar/excel/',               views.exportar_excel,            name='exportar_excel'),
 
     # ── API autocomplete ──────────────────────────────────────────────────────
     path('fallas/buscar/',                 views.buscar_fallas,                name='buscar_fallas'),
@@ -78,16 +79,18 @@ urlpatterns = [
     path('catalogos/moldes/editar/<int:molde_id>/',        views.editar_molde,                  name='editar_molde'),
     
     # ── Regristo Timepo de Producción ───────────────────────────────────────────
-    path('produccion/',                              views.registro_produccion,    name='registro_produccion'),
-    path('produccion/agregar/',                      views.agregar_registro,       name='agregar_registro'),
-    path('produccion/eliminar/<int:registro_id>/',   views.eliminar_registro,      name='eliminar_registro'),
-    path('produccion/actualizar/<int:registro_id>/', views.actualizar_registro,    name='actualizar_registro'),
-    path('produccion/orden/',                        views.actualizar_orden,       name='actualizar_orden'),
-    path('produccion/indicadores/',                  views.indicadores_produccion, name='indicadores_produccion'),
-    path('produccion/indicadores/tendencia/',        views.tendencia_indicadores,  name='tendencia_indicadores'),
-    path('produccion/target/',                       views.guardar_target,         name='guardar_target'),
-    path('produccion/accion-dia/',                   views.guardar_accion_dia,     name='guardar_accion_dia'),
-    path('produccion/accion-dia/get/',               views.get_accion_dia,         name='get_accion_dia'),
+    path('produccion/',                              views.registro_produccion,           name='registro_produccion'),
+    path('produccion/agregar/',                      views.agregar_registro,              name='agregar_registro'),
+    path('produccion/eliminar/<int:registro_id>/',   views.eliminar_registro,             name='eliminar_registro'),
+    path('produccion/actualizar/<int:registro_id>/', views.actualizar_registro,           name='actualizar_registro'),
+    path('produccion/orden/',                        views.actualizar_orden,              name='actualizar_orden'),
+    path('produccion/exportar/',                     views.exportar_registros_produccion, name='exportar_registros_produccion'),
+    path('produccion/exportar/contar/',              views.contar_registros_produccion,   name='contar_registros_produccion'),
+    path('produccion/indicadores/',                  views.indicadores_produccion,        name='indicadores_produccion'),
+    path('produccion/indicadores/tendencia/',        views.tendencia_indicadores,         name='tendencia_indicadores'),
+    path('produccion/target/',                       views.guardar_target,                name='guardar_target'),
+    path('produccion/accion-dia/',                   views.guardar_accion_dia,            name='guardar_accion_dia'),
+    path('produccion/accion-dia/get/',               views.get_accion_dia,                name='get_accion_dia'),
 
     # ── Hora x Hora ───────────────────────────────────────────
     path('hora-hora/',                               views.hora_hora,                      name='hora_hora'),

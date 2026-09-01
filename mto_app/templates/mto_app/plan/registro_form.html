@@ -3,169 +3,373 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'DM Sans',sans-serif; font-size:14px; background:#fff; color:#1E1B4B; }
-    .field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
-    .field label { font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase; letter-spacing:.04em; }
-    .field input, .field select, .field textarea {
-        padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px;
-        font-family:inherit; font-size:14px; color:#1E1B4B; outline:none;
-        transition:border-color .15s;
+    :root {
+        --rf-text-strong:  #1a1830;
+        --rf-text-mid:     #3c3952;
+        --rf-text-soft:    #6e6b82;
+        --rf-text-faint:   #9d9ab0;
+        --rf-border:       #e6e5ee;
+        --rf-border-div:   #ecebf2;
+        --rf-border-input: #dcdae7;
+        --rf-card-bg:      #ffffff;
+        --rf-subtle-bg:    #fbfbfd;
+        --rf-primary:        #5b4bd6;
+        --rf-primary-hover:  #4c3dc4;
+        --rf-primary-tint:       #f0eefc;
+        --rf-primary-tint-border:#e0dcfa;
+        --rf-success:      #1f6f4a;
+        --rf-success-bg:   #e8f6ee;
+        --rf-success-border: #cfeadb;
+        --rf-success-dot:  #34a06a;
+        --rf-warn:         #8a6410;
+        --rf-warn-bg:      #fdf3dd;
+        --rf-warn-border:  #f3e2b6;
+        --rf-info:         #33499b;
+        --rf-info-bg:      #e9eefc;
+        --rf-info-border:  #d3ddf8;
+        --rf-neutral:      #a8a5b8;
+        --rf-neutral-bg:   #f6f6fa;
+        --rf-neutral-border: #ebeaf1;
+        --rf-danger:        #a34455;
+        --rf-danger-hover:  #7d2b3a;
+        --rf-danger-bg:     #fdeef1;
+        --rf-danger-border: #f7d9e0;
     }
-    .field input:focus, .field select:focus, .field textarea:focus { border-color:#4F46E5; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Manrope',sans-serif; font-size:14px; background:#fff; color:var(--rf-text-mid); }
+    .rf-mono { font-family:'IBM Plex Mono',monospace; }
+
+    /* ── Tarjeta "Registrar ejecución" ── */
+    .rf-card {
+        margin: 0 24px 20px;
+        border: 1px solid var(--rf-border);
+        border-radius: 13px;
+        overflow: hidden;
+    }
+    .rf-card-head {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 14px 18px; background: var(--rf-subtle-bg); border-bottom: 1px solid var(--rf-border-div);
+    }
+    .rf-card-title { font-size: 15px; font-weight: 700; color: var(--rf-text-strong); }
+    .rf-card-subtitle { font-size: 12px; color: var(--rf-text-soft); margin-top: 2px; }
+    .rf-chip-semana-actual {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: var(--rf-success-bg); border: 1px solid var(--rf-success-border); color: var(--rf-success);
+        border-radius: 999px; padding: 4px 11px; font-size: 11.5px; font-weight: 600; white-space: nowrap;
+    }
+    .rf-chip-semana-actual .rf-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rf-success-dot); }
+
+    .rf-card-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+    .rf-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .field { display:flex; flex-direction:column; gap:6px; }
+    .field label {
+        font-size: 12.5px; font-weight: 600; color: var(--rf-text-mid);
+        display: flex; align-items: baseline; justify-content: space-between;
+    }
+    .field label .rf-req { color: #d1495b; }
+    .field label .rf-opcional { font-size: 11.5px; font-weight: 400; color: var(--rf-text-faint); }
+
+    .field input, .field textarea {
+        padding: 10px 12px; border: 1px solid var(--rf-border-input); border-radius: 9px;
+        font-family: inherit; font-size: 13.5px; color: var(--rf-text-strong); outline: none;
+        box-shadow: 0 1px 1px rgba(24,20,50,.03);
+        transition: border-color .15s;
+    }
+    .field input:focus, .field textarea:focus, .rf-select:focus { border-color: var(--rf-primary); }
     .field textarea { resize:vertical; min-height:70px; }
-    .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
-           border-radius:7px; font-size:13px; font-weight:600; font-family:inherit;
+
+    .field-fecha { max-width: 260px; }
+
+    /* Selects con chevron propio (no en el shorthand background) */
+    .rf-select-wrap { position: relative; }
+    .rf-select {
+        width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none;
+        padding: 10px 34px 10px 12px; border: 1px solid var(--rf-border-input); border-radius: 9px;
+        font-family: inherit; font-size: 13.5px; color: var(--rf-text-strong); background: #fff; outline: none;
+        box-shadow: 0 1px 1px rgba(24,20,50,.03);
+        transition: border-color .15s, background .15s, color .15s;
+    }
+    .rf-select-chevron {
+        position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+        pointer-events: none; font-size: 11px; color: var(--rf-text-faint);
+    }
+    .rf-select-wrap.is-completada .rf-select { background: #f4fbf7; border-color: var(--rf-success-border); color: var(--rf-success); font-weight: 600; }
+    .rf-select-wrap.is-completada .rf-select-chevron { color: var(--rf-success); }
+    .rf-select-wrap.is-pendiente .rf-select { background: var(--rf-warn-bg); border-color: var(--rf-warn-border); color: var(--rf-warn); font-weight: 600; }
+    .rf-select-wrap.is-pendiente .rf-select-chevron { color: var(--rf-warn); }
+    .rf-select-wrap.is-reagendada .rf-select { background: var(--rf-info-bg); border-color: var(--rf-info-border); color: var(--rf-info); font-weight: 600; }
+    .rf-select-wrap.is-reagendada .rf-select-chevron { color: var(--rf-info); }
+
+    /* ── Pie de tarjeta ── */
+    .rf-card-foot {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 18px; background: var(--rf-subtle-bg); border-top: 1px solid var(--rf-border-div);
+    }
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px;
+           border-radius:9px; font-size:13px; font-weight:600; font-family:inherit;
            cursor:pointer; border:1px solid transparent; transition:all .15s; }
-    .btn-primary { background:#4F46E5; color:#fff; }
-    .btn-primary:hover { background:#3730A3; }
-    .btn-ghost { background:transparent; color:#6B7280; border-color:#E5E4F0; }
-    .btn-ghost:hover { background:#F8F7FF; }
+    .btn-primary { background:var(--rf-primary); color:#fff; box-shadow:0 1px 2px rgba(46,33,150,.3); }
+    .btn-primary:hover { background:var(--rf-primary-hover); }
+    .btn-ghost { background:transparent; color:var(--rf-text-soft); border-color:var(--rf-border-input); }
+    .btn-ghost:hover { background:var(--rf-subtle-bg); }
+    /* Botón "Eliminar" — se conserva su apariencia actual a propósito (no se convierte a texto suelto) */
     .btn-danger { background:transparent; color:#EF4444; border-color:#FECACA; }
     .btn-danger:hover { background:#FEE2E2; }
+
+    /* ── Filas colapsables (Seguimiento) ── */
+    .rf-collapse-wrap { margin: 0 24px 20px; }
+    .rf-collapse {
+        background: #fff; border: 1px solid var(--rf-border); border-radius: 11px; overflow: hidden;
+    }
+    .rf-collapse-head {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 13px 16px; cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .rf-collapse-head:hover { background: var(--rf-subtle-bg); }
+    .rf-collapse-left { display: flex; align-items: center; gap: 10px; }
+    .rf-collapse-icon {
+        width: 26px; height: 26px; border-radius: 7px; background: var(--rf-primary-tint); color: var(--rf-primary);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .rf-collapse-title { font-size: 13.5px; font-weight: 600; color: var(--rf-text-strong); }
+    .rf-collapse-right { display: flex; align-items: center; gap: 10px; }
+    .rf-chip-count {
+        background: var(--rf-primary-tint); color: var(--rf-primary); padding: 2px 9px;
+        border-radius: 999px; font-size: 11px; font-weight: 600;
+    }
+    .rf-btn-seguir {
+        padding: 7px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+        border: none; background: var(--rf-primary); color: #fff; font-family: inherit;
+    }
+    .rf-chevron { width: 11px; height: 11px; transition: transform .2s; }
+    .rf-chevron-btn {
+        width: 28px; height: 28px; border-radius: 7px; border: none; background: transparent;
+        color: var(--rf-text-faint); cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: background .15s, color .15s;
+    }
+    .rf-chevron-btn:hover { background: #f2f1f7; color: var(--rf-text-mid); }
+
+    /* ── Tarjetas de seguimiento ── */
+    .rf-seg-empty {
+        border: 1px dashed var(--rf-border); border-radius: 10px; padding: 22px;
+        text-align: center; color: var(--rf-text-faint); font-size: 12.5px;
+    }
+    .rf-seg-item {
+        border: 1px solid var(--rf-border-div); border-radius: 10px; padding: 13px 14px;
+        display: grid; gap: 10px; transition: border-color .15s, background .15s;
+    }
+    .rf-seg-item:hover { border-color: var(--rf-border-input); background: var(--rf-subtle-bg); }
+    .rf-seg-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .rf-seg-badge-tipo { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 4px 8px; border: 1px solid transparent; }
+    .rf-seg-fecha { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--rf-text-faint); }
+    .rf-seg-spacer { flex: 1; }
+    .rf-seg-estado { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; font-size: 11.5px; font-weight: 600; padding: 4px 10px 4px 8px; border: 1px solid transparent; }
+    .rf-seg-estado-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .rf-seg-actions { display: flex; align-items: center; gap: 2px; border-left: 1px solid var(--rf-border-div); padding-left: 6px; margin-left: 2px; }
+    .rf-seg-action-btn { font-size: 12px; font-weight: 600; padding: 5px 9px; border-radius: 7px; border: none; background: none; cursor: pointer; font-family: inherit; }
+    .rf-seg-action-editar { color: var(--rf-text-mid); }
+    .rf-seg-action-editar:hover { background: #f2f1f7; }
+    .rf-seg-action-eliminar { color: var(--rf-danger); }
+    .rf-seg-action-eliminar:hover { background: var(--rf-danger-bg); }
+    .rf-seg-title { font-size: 14px; font-weight: 600; color: var(--rf-text-strong); }
+    .rf-seg-desc { font-size: 13px; line-height: 1.55; color: var(--rf-text-mid); }
+    .rf-seg-notas-label { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; color: var(--rf-text-faint); margin-bottom: 2px; }
+    .rf-seg-notas { font-size: 12.5px; line-height: 1.5; color: var(--rf-text-soft); }
+    .rf-seg-foot { display: flex; flex-wrap: wrap; gap: 8px 22px; padding-top: 8px; border-top: 1px solid #f2f1f7; }
+    .rf-seg-foot-label { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; color: var(--rf-text-faint); }
+    .rf-seg-foot-value { font-size: 12.5px; font-weight: 600; color: var(--rf-text-strong); margin-top: 2px; }
+    .rf-seg-nota { font-size: 11px; font-weight: 600; margin-left: 6px; }
+    
 </style>
 </head>
 <body>
-<div style="padding:20px 24px;">
+<div style="padding:20px 0 0;">
 
-    <!-- Encabezado -->
-    <div style="margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid #E5E4F0;">
-        <div style="font-size:15px; font-weight:600; color:#1E1B4B;">Registrar ejecucion</div>
-        <div style="font-size:12px; color:#9CA3AF; margin-top:3px;">
-            {{ plan.equipo }} &middot; S{{ semana }}/{{ anio }} &middot;
-            {{ lunes|date:"d M" }} – {{ domingo|date:"d M Y" }}
-        </div>
-    </div>
-
-    <form method="post">
-        {% csrf_token %}
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div class="field" style="margin-bottom:0;">
-                <label>Responsable</label>
-                <select name="responsable" id="responsable">
-                    <option value="">-- Sin asignar --</option>
-                    {% for r in responsables %}
-                    <option value="{{ r.pk }}" {% if registro and registro.responsable_id == r.pk %}selected{% endif %}>
-                        {{ r.numero_nomina }} — {{ r.nombre }} {{ r.apellidos }}
-                    </option>
-                    {% endfor %}
-                </select>
+    <!-- Tarjeta "Registrar ejecución" -->
+    <div class="rf-card">
+        <div class="rf-card-head">
+            <div>
+                <div class="rf-card-title">Registrar ejecuci&oacute;n</div>
+                <div class="rf-card-subtitle">Semana {{ semana }} &middot; {{ lunes|date:"d M" }} &ndash; {{ domingo|date:"d M Y" }}</div>
             </div>
-            <div class="field" style="margin-bottom:0;">
-                <label>Estado *</label>
-                <select name="estado" required>
-                    <option value="">-- Seleccionar estado --</option>
-                    {% for val, label in estados %}
-                    <option value="{{ val }}" {% if registro and registro.estado == val %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
+            {% if semana == hoy_semana and anio == hoy_anio %}
+            <span class="rf-chip-semana-actual"><span class="rf-dot"></span>Semana actual</span>
+            {% endif %}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="rf-card-body">
+                <div class="rf-row-2">
+                    <div class="field">
+                        <label>Responsable</label>
+                        <div class="rf-select-wrap">
+                            <select name="responsable" id="responsable" class="rf-select">
+                                <option value="">-- Sin asignar --</option>
+                                {% for r in responsables %}
+                                <option value="{{ r.pk }}" {% if registro and registro.responsable_id == r.pk %}selected{% endif %}>
+                                    {{ r.numero_nomina }} — {{ r.nombre }} {{ r.apellidos }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <span class="rf-select-chevron">&#9662;</span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Estado <span class="rf-req">*</span></label>
+                        <div class="rf-select-wrap" id="wrap-estado">
+                            <select name="estado" id="select-estado" class="rf-select" required onchange="rfActualizarTintaEstado(this)">
+                                <option value="">-- Seleccionar estado --</option>
+                                {% for val, label in estados %}
+                                <option value="{{ val }}" {% if registro and registro.estado == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="rf-select-chevron">&#9662;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field field-fecha">
+                    <label>Fecha de ejecuci&oacute;n</label>
+                    <input type="date" name="fecha_ejecucion" value="{{ registro.fecha_ejecucion|date:'Y-m-d'|default:'' }}">
+                </div>
+
+                <div class="field">
+                    <label>Observaciones <span class="rf-opcional">Opcional</span></label>
+                    <textarea name="observaciones" placeholder="Describe lo realizado, materiales usados, anomal&iacute;as detectadas&hellip;">{{ registro.observaciones|default:'' }}</textarea>
+                </div>
             </div>
-        </div>
-        <div style="margin-bottom:14px;"></div>
 
-        <div class="field">
-            <label>Fecha de ejecucion</label>
-            <input type="date" name="fecha_ejecucion" value="{{ registro.fecha_ejecucion|date:'Y-m-d'|default:'' }}">
-        </div>
-
-        <div class="field">
-            <label>Observaciones</label>
-            <textarea name="observaciones" placeholder="Describe lo realizado, materiales, anomalias...">{{ registro.observaciones|default:'' }}</textarea>
-        </div>
-
-        <div style="display:flex; gap:8px; justify-content:space-between; margin-top:16px;">
-            <button type="button" id="btn-guardar" onclick="guardarRegistro()" class="btn btn-primary">Guardar</button>
-            <div style="display:flex; gap:8px;">
+            <div class="rf-card-foot">
                 {% if registro %}
                 <button type="button" class="btn btn-danger"
                         onclick="document.getElementById('modal-confirm').style.display='flex'">Eliminar</button>
+                {% else %}
+                <span></span>
                 {% endif %}
-                <button type="button" class="btn btn-ghost"
-                        onclick="window.parent.postMessage('cerrar_form_registro', '*')">Cancelar</button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-ghost"
+                            onclick="window.parent.postMessage('cerrar_form_registro', '*')">Cancelar</button>
+                    <button type="button" id="btn-guardar" onclick="guardarRegistro()" class="btn btn-primary">Guardar</button>
+                </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 
-{% if registro and registro.estado == 'completada' %}
-<div style="margin:0 24px 20px;">
-    <div style="border-top:1px solid #E5E4F0; padding-top:16px;">
-        <div style="border-radius:12px;overflow:hidden;border:0.5px solid #CECBF6;">
+<script>
+    function rfActualizarTintaEstado(sel) {
+        const wrap = document.getElementById('wrap-estado');
+        wrap.classList.remove('is-completada', 'is-pendiente', 'is-reagendada');
+        if (sel.value === 'completada') wrap.classList.add('is-completada');
+        else if (sel.value === 'pendiente') wrap.classList.add('is-pendiente');
+        else if (sel.value === 'reagendada') wrap.classList.add('is-reagendada');
+    }
+    rfActualizarTintaEstado(document.getElementById('select-estado'));
 
-            <!-- Header colapsable -->
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#EEEDFE;cursor:pointer;"
-                onclick="toggleSeguimiento()">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <svg width="15" height="15" fill="none" stroke="#3C3489" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+    // Avisa al padre (modal_calendario.html) el alto real cada vez que cambia,
+    // en vez de medir una sola vez con un temporizador fijo — así el iframe
+    // siempre se ajusta aunque el contenido crezca (Seguimiento desplegado,
+    // fuentes que terminan de cargar, etc.) sin recortar nada.
+    (function () {
+        function rfEnviarAltura() {
+            window.parent.postMessage('resize_iframe:' + document.body.scrollHeight, '*');
+        }
+        if (window.ResizeObserver) {
+            new ResizeObserver(rfEnviarAltura).observe(document.body);
+        } else {
+            window.addEventListener('load', rfEnviarAltura);
+        }
+    })();
+
+</script>
+
+{% if registro and registro.estado == 'completada' %}
+<div class="rf-collapse-wrap">
+    <div class="rf-collapse">
+
+        <!-- Header colapsable -->
+        <div class="rf-collapse-head" onclick="toggleSeguimiento()">
+            <div class="rf-collapse-left">
+                <div class="rf-collapse-icon">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" stroke-width="2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3.5 2"/>
                     </svg>
-                    <span style="font-size:13px;font-weight:600;color:#3C3489;">Seguimiento</span>
-                    <span id="badge-seguimientos" style="display:none;background:#fff;color:#3C3489;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;"></span>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button type="button" onclick="event.stopPropagation(); abrirModalSeguimiento()"
-                            style="padding:4px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:#4F46E5;color:#fff;">
-                        + Dar seguimiento
-                    </button>
-                    <svg id="chevron-seg" width="14" height="14" fill="none" stroke="#3C3489" viewBox="0 0 24 24" style="transition:transform .2s;">
+                <span class="rf-collapse-title">Seguimiento</span>
+                <span id="badge-seguimientos" class="rf-chip-count" style="display:none;"></span>
+            </div>
+            <div class="rf-collapse-right">
+                <button type="button" class="rf-btn-seguir" onclick="event.stopPropagation(); abrirModalSeguimiento()">
+                    + Dar seguimiento
+                </button>
+                <span class="rf-chevron-btn" aria-hidden="true">
+                    <svg id="chevron-seg" class="rf-chevron" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
-                </div>
+                </span>
             </div>
-
-            <!-- Contenido -->
-            <div id="seg-content" style="display:none; padding:12px 16px;">
-                <div id="lista-seguimientos" style="display:flex; flex-direction:column; gap:8px;">
-                    {% for seg in registro.seguimientos.all %}
-                    <div class="seg-item" data-id="{{ seg.id }}"
-                         style="border:0.5px solid #E5E4F0; border-radius:8px; padding:10px 12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:5px;">
-                            <div style="display:flex; gap:6px; align-items:center;">
-                                <span style="padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; background:#FCEBEB; color:#A32D2D;">Correctiva</span>
-                                <span style="font-size:11px; color:#9CA3AF;">{{ seg.fecha_creacion|date:"d/m/Y" }}</span>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                <span class="badge-estatus" style="padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600;
-                                    {% if seg.estatus == 'pendiente' %}background:#FAEEDA; color:#854F0B;
-                                    {% elif seg.estatus == 'en_proceso' %}background:#E6F1FB; color:#185FA5;
-                                    {% else %}background:#EAF3DE; color:#3B6D11;{% endif %}">
-                                    {{ seg.get_estatus_display }}
-                                </span>
-                                <button type="button"
-                                    onclick="editarSeguimiento({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
-                                    style="font-size:11px; color:#6B7280; background:none; border:none; cursor:pointer; padding:2px 6px;">✏️</button>
-                                <button type="button" onclick="confirmarEliminarSeg({{ seg.id }})"
-                                    style="font-size:11px; color:#EF4444; background:none; border:none; cursor:pointer; padding:2px 6px;">🗑</button>
-                            </div>
-                        </div>
-                        <div style="font-size:12px; font-weight:600; color:#1E1B4B; margin-bottom:6px;">{{ seg.problema }}</div>
-                        {% if seg.accion %}
-                        <div style="font-size:11px; color:#4B5563; margin-bottom:4px;">
-                            <span style="font-weight:600; color:#1E1B4B;">Acción:</span> {{ seg.accion }}
-                        </div>
-                        {% endif %}
-                        {% if seg.notas %}
-                        <div style="font-size:11px; color:#4B5563; margin-bottom:4px;">
-                            <span style="font-weight:600; color:#1E1B4B;">Notas:</span> {{ seg.notas }}
-                        </div>
-                        {% endif %}
-                        <div style="font-size:11px; color:#9CA3AF; margin-top:2px;">
-                            {% if seg.responsable %}<span style="font-weight:600; color:#6B7280;">Responsable:</span> {{ seg.responsable }}{% if seg.fecha_compromiso %} · {% endif %}{% endif %}
-                            {% if seg.fecha_compromiso %}<span style="font-weight:600; color:#6B7280;">Compromiso:</span> {{ seg.fecha_compromiso|date:"d/m/Y" }}{% endif %}
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div id="empty-seg" style="text-align:center; padding:16px; color:#9CA3AF; font-size:12px;">
-                        Sin seguimientos registrados.
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
         </div>
+
+        <!-- Contenido -->
+        <div id="seg-content" style="display:none; padding:0 14px 14px;">
+            <div id="lista-seguimientos" style="display:grid; gap:8px;">
+                {% for seg in registro.seguimientos.all %}
+                <div class="seg-item rf-seg-item" data-id="{{ seg.id }}">
+                    <div class="rf-seg-top">
+                        <span class="rf-seg-badge-tipo" style="
+                            {% if seg.tipo == 'preventiva' %}background:var(--rf-info-bg); border-color:var(--rf-info-border); color:var(--rf-info);
+                            {% elif seg.tipo == 'mejora' %}background:var(--rf-success-bg); border-color:var(--rf-success-border); color:var(--rf-success);
+                            {% else %}background:var(--rf-danger-bg); border-color:var(--rf-danger-border); color:var(--rf-danger);{% endif %}">{{ seg.get_tipo_display }}</span>
+                        <span class="rf-seg-fecha">{{ seg.fecha_creacion|date:"d/m/Y" }}</span>
+                        <span class="rf-seg-spacer"></span>
+                        <span class="badge-estatus rf-seg-estado" data-estatus="{{ seg.estatus }}" style="
+                            {% if seg.estatus == 'pendiente' %}background:var(--rf-warn-bg); border-color:var(--rf-warn-border); color:var(--rf-warn);
+                            {% elif seg.estatus == 'en_proceso' %}background:var(--rf-info-bg); border-color:var(--rf-info-border); color:var(--rf-info);
+                            {% else %}background:var(--rf-success-bg); border-color:var(--rf-success-border); color:var(--rf-success);{% endif %}">
+                            <span class="rf-seg-estado-dot" style="background:currentColor;"></span>{{ seg.get_estatus_display }}
+                        </span>
+                        <span class="rf-seg-actions">
+                            <button type="button" class="rf-seg-action-btn rf-seg-action-editar"
+                                onclick="editarSeguimiento({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')">Editar</button>
+                            <button type="button" class="rf-seg-action-btn rf-seg-action-eliminar" onclick="confirmarEliminarSeg({{ seg.id }})">Eliminar</button>
+                        </span>
+                    </div>
+                    <div class="rf-seg-title">{{ seg.problema }}</div>
+                    {% if seg.accion %}<div class="rf-seg-desc">{{ seg.accion }}</div>{% endif %}
+                    {% if seg.notas %}
+                    <div>
+                        <div class="rf-seg-notas-label">NOTAS</div>
+                        <div class="rf-seg-notas">{{ seg.notas }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="rf-seg-foot">
+                        {% if seg.fecha_compromiso %}
+                        <div data-compromiso="{{ seg.fecha_compromiso|date:'d/m/Y' }}">
+                            <div class="rf-seg-foot-label">COMPROMISO</div>
+                            <div class="rf-seg-foot-value">{{ seg.fecha_compromiso|date:"d/m/Y" }}<span class="rf-seg-nota"></span></div>
+                        </div>
+                        {% endif %}
+                        {% if seg.responsable %}
+                        <div>
+                            <div class="rf-seg-foot-label">RESPONSABLE</div>
+                            <div class="rf-seg-foot-value">{{ seg.responsable }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div id="empty-seg" class="rf-seg-empty">Sin seguimientos registrados.</div>
+                {% endfor %}
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -174,8 +378,8 @@
      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
             z-index:99999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:12px; padding:24px 28px; min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:15px; font-weight:600; color:#1E1B4B; margin-bottom:8px;">Eliminar seguimiento</div>
-        <div style="font-size:13px; color:#6B7280; margin-bottom:20px;">Esta acción no se puede deshacer.</div>
+        <div style="font-size:15px; font-weight:600; color:var(--rf-text-strong); margin-bottom:8px;">Eliminar seguimiento</div>
+        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">Esta acción no se puede deshacer.</div>
         <div style="display:flex; gap:8px; justify-content:flex-end;">
             <button onclick="document.getElementById('modal-confirm-seg').style.display='none'" class="btn btn-ghost">Cancelar</button>
             <button onclick="eliminarSeguimientoConfirmado()" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">Sí, eliminar</button>
@@ -189,8 +393,8 @@
     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
             z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:12px; padding:24px 28px; min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:15px; font-weight:600; color:#1E1B4B; margin-bottom:8px;">Eliminar registro</div>
-        <div style="font-size:13px; color:#6B7280; margin-bottom:20px;">Esta accion no se puede deshacer.</div>
+        <div style="font-size:15px; font-weight:600; color:var(--rf-text-strong); margin-bottom:8px;">Eliminar registro</div>
+        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">Esta accion no se puede deshacer.</div>
         <div style="display:flex; gap:8px; justify-content:flex-end;">
             <button onclick="document.getElementById('modal-confirm').style.display='none'" class="btn btn-ghost">Cancelar</button>
             <button onclick="confirmarEliminar()" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">Si, eliminar</button>

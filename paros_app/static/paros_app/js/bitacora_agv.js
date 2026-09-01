@@ -5,6 +5,23 @@ const cfgAgv = window.AGV_CFG || {};
 // CSRF desde cookie
 const CSRF_AGV = document.cookie.split(';').find(s => s.trim().startsWith('csrftoken='))?.trim().split('=')[1] || '';
 
+// Color de acento resuelto — Chart.js/canvas no entienden var(--indigo), necesitan el valor real
+function colorIndigo() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--indigo').trim();
+}
+
+function colorIndigoRgba(alpha) {
+    const hex = colorIndigo().replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function esModoOscuro() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
 // Estado global — DATOS_AGV es mutable (se actualiza al guardar celdas)
 let DATOS_AGV     = cfgAgv.datos    || {};
 const INTERNAS    = cfgAgv.internas || [];
@@ -21,14 +38,29 @@ function cargarDatosAgv() {
         const interna = td.dataset.interna;
         const turno   = td.dataset.turno;
         const dia     = parseInt(td.dataset.dia);
-        const val     = DATOS_AGV[interna]?.[turno]?.[dia];
+        const reg     = DATOS_AGV[interna]?.[turno]?.[dia];
+        const val     = reg?.cantidad;
         if (val !== undefined && val > 0) {
             td.querySelector('.valor-celda').textContent = val;
             td.style.background = turno === 'dia' ? '#E6F1FB' : '#EEEDFE';
             td.style.color      = turno === 'dia' ? '#185FA5' : '#3C3489';
             td.style.fontWeight = '600';
         }
+        mostrarFlagComentario(td, reg?.comentario);
     });
+}
+
+// ── Franja indicadora de comentario (esquina inferior derecha de la celda) ────
+function mostrarFlagComentario(td, comentario) {
+    const flag = td.querySelector('.flag-comentario');
+    if (!flag) return;
+    if (comentario) {
+        flag.style.display = 'block';
+        td.title = comentario;
+    } else {
+        flag.style.display = 'none';
+        td.title = '';
+    } 
 }
 
 // ── Colapsar / expandir área interna ───────────────────────────────────────────
@@ -43,15 +75,19 @@ function toggleAreaInterna(clave) {
 // ── Modal edición de celda ─────────────────────────────────────────────────────
 function editarCelda(td) {
     celdaAgvActual = td;
-    const dia   = parseInt(td.dataset.dia);
-    const mes   = parseInt(td.dataset.mes);
-    const anio  = parseInt(td.dataset.anio);
-    const turno = td.dataset.turno;
+    const dia     = parseInt(td.dataset.dia);
+    const anio    = parseInt(td.dataset.anio);
+    const interna = td.dataset.interna;
+    const turno   = td.dataset.turno;
     const valActual = td.querySelector('.valor-celda').textContent.trim();
-    const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    document.getElementById('modal-agv-titulo').textContent    = `Día ${dia}`;
-    document.getElementById('modal-agv-subtitulo').textContent = `${meses[mes]} ${anio} · Turno ${turno === 'dia' ? 'día' : 'noche'}`;
+    const comentarioActual = DATOS_AGV[interna]?.[turno]?.[dia]?.comentario || '';
+    const i18n  = cfgAgv.i18n || {};
+
+    document.getElementById('modal-agv-titulo').textContent    = `${i18n.dia || 'Día'} ${dia}`;
+    document.getElementById('modal-agv-subtitulo').textContent = `${cfgAgv.mesNombre} ${anio} · ${i18n.turno || 'Turno'} ${turno === 'dia' ? (i18n.turnoDia || 'día') : (i18n.turnoNoche || 'noche')}`;
     document.getElementById('modal-agv-input').value = valActual || '';
+    document.getElementById('modal-agv-comentario').value = comentarioActual;
+    document.getElementById('modal-agv-comentario-count').textContent = comentarioActual.length;
     document.getElementById('modal-agv').style.display = 'flex';
     setTimeout(() => document.getElementById('modal-agv-input').focus(), 50);
 }
@@ -59,6 +95,14 @@ function editarCelda(td) {
 function cerrarModalAgv() {
     document.getElementById('modal-agv').style.display = 'none';
     celdaAgvActual = null;
+}
+
+// ── Stepper +/− de la cantidad ─────────────────────────────────────────────────
+function pasoCantidadAgv(delta) {
+    const input = document.getElementById('modal-agv-input');
+    const actual = parseInt(input.value) || 0;
+    const nuevo  = Math.min(100, Math.max(0, actual + delta));
+    input.value = nuevo;
 }
 
 function borrarModalAgv() {
@@ -69,13 +113,14 @@ function borrarModalAgv() {
 
 function guardarModalAgv() {
     if (!celdaAgvActual) return;
-    const val = document.getElementById('modal-agv-input').value.trim();
-    enviarValorAgv(celdaAgvActual, val);
+    const val        = document.getElementById('modal-agv-input').value.trim();
+    const comentario = document.getElementById('modal-agv-comentario').value.trim();
+    enviarValorAgv(celdaAgvActual, val, comentario);
     cerrarModalAgv();
 }
 
 // ── Enviar valor al servidor ───────────────────────────────────────────────────
-function enviarValorAgv(td, valor) {
+function enviarValorAgv(td, valor, comentario) {
     const interna = td.dataset.interna;
     const turno   = td.dataset.turno;
     const dia     = parseInt(td.dataset.dia);
@@ -86,7 +131,7 @@ function enviarValorAgv(td, valor) {
     fetch(cfgAgv.urlGuardar, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_AGV },
-        body: JSON.stringify({ area_interna: interna, fecha, turno, cantidad: valor === '' ? null : parseInt(valor) })
+        body: JSON.stringify({ area_interna: interna, fecha, turno, cantidad: valor === '' ? null : parseInt(valor), comentario: comentario || '' })
     })
     .then(r => r.json())
     .then(data => {
@@ -100,6 +145,7 @@ function enviarValorAgv(td, valor) {
                 if (!DATOS_AGV[interna]) DATOS_AGV[interna] = {};
                 if (!DATOS_AGV[interna][turno]) DATOS_AGV[interna][turno] = {};
                 delete DATOS_AGV[interna][turno][dia];
+                mostrarFlagComentario(td, '');
             } else {
                 span.textContent = data.cantidad;
                 const t = targetMensual[interna];
@@ -114,7 +160,8 @@ function enviarValorAgv(td, valor) {
                 td.style.fontWeight = '600';
                 if (!DATOS_AGV[interna]) DATOS_AGV[interna] = {};
                 if (!DATOS_AGV[interna][turno]) DATOS_AGV[interna][turno] = {};
-                DATOS_AGV[interna][turno][dia] = data.cantidad;
+                DATOS_AGV[interna][turno][dia] = { cantidad: data.cantidad, comentario: data.comentario };
+                mostrarFlagComentario(td, data.comentario);
             }
             if (document.getElementById('chartCumplimiento')) cargarCumplimiento();
         } else {
@@ -129,8 +176,8 @@ function setVistaEf(vista, btn) {
     vistaEfAgv = vista;
     ['dia', 'mes', 'anio'].forEach(v => {
         const b = document.getElementById('pill-' + v);
-        b.style.background = v === vista ? '#4F46E5' : 'var(--white)';
-        b.style.color      = v === vista ? '#fff'    : 'var(--text-2)';
+        b.style.background = v === vista ? 'var(--indigo)' : 'var(--white)';
+        b.style.color      = v === vista ? '#fff'        : 'var(--text-2)';
     });
     document.getElementById('ef-rango-dia').style.display  = vista === 'dia'  ? 'flex' : 'none';
     document.getElementById('ef-rango-mes').style.display  = vista === 'mes'  ? 'flex' : 'none';
@@ -153,13 +200,33 @@ function cargarCumplimiento() {
     fetch(url).then(r => r.json()).then(data => { if (data.ok) renderizarCumplimiento(data.datos); }).catch(() => {});
 }
 
+// ── Descargar gráfico de cumplimiento como PNG ─────────────────
+function descargarGraficaCumplimiento() {
+    const canvas = document.getElementById('chartCumplimiento');
+    if (!canvas) return;
+    const tmp    = document.createElement('canvas');
+    tmp.width    = canvas.width;
+    tmp.height   = canvas.height;
+    const ctx    = tmp.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, tmp.width, tmp.height);
+    ctx.drawImage(canvas, 0, 0);
+    const link    = document.createElement('a');
+    link.download = `Cumplimiento_AGV_${document.getElementById('ef-interna').value}.png`;
+    link.href     = tmp.toDataURL('image/png');
+    link.click();
+}
+
 function renderizarCumplimiento(datos) {
     const labels       = datos.map(d => d.label);
     const cantidades   = datos.map(d => d.cantidad);
     const targets      = datos.map(d => d.target);
     const cumplimiento = datos.map(d => d.cumplimiento);
-    const bgColors     = cumplimiento.map((v, i) => v === null ? 'rgba(136,135,128,0.3)' : v >= 100 ? 'rgba(79,70,229,0.75)' : 'rgba(226,75,74,0.75)');
-    const bdColors     = cumplimiento.map((v, i) => v === null ? '#888780'               : v >= 100 ? '#4F46E5'               : '#E24B4A');
+    const indigoSolid  = colorIndigo();
+    const indigoAlpha  = colorIndigoRgba(0.75);
+    const colorValores = esModoOscuro() ? '#FFFFFF' : indigoSolid;
+    const bgColors     = cumplimiento.map((v, i) => v === null ? 'rgba(136,135,128,0.3)' : v >= 100 ? indigoAlpha : 'rgba(226,75,74,0.75)');
+    const bdColors     = cumplimiento.map((v, i) => v === null ? '#888780'               : v >= 100 ? indigoSolid : '#E24B4A');
 
     if (chartCumplimiento) chartCumplimiento.destroy();
 
@@ -202,7 +269,7 @@ function renderizarCumplimiento(datos) {
                         if (!val) return;
                         const bar = meta.data[i];
                         const cum = cumplimiento[i];
-                        ctx2.fillStyle = cum !== null && cum >= 100 ? '#4F46E5' : '#E24B4A';
+                        ctx2.fillStyle = cum !== null && cum >= 100 ? colorValores : '#E24B4A';
                         ctx2.fillText(String(val), bar.x, bar.y - 6);
                     });
                     ctx2.restore();
@@ -365,6 +432,13 @@ document.addEventListener('DOMContentLoaded', () => {
         INTERNAS.forEach(interna => aplicarColoresCeldas(interna));
         if (document.getElementById('chartCumplimiento')) cargarCumplimiento();
     });
+});
+
+// ── Redibujar la gráfica al cambiar el color de acento o el tema ──────────
+// Chart.js pinta colores resueltos en píxeles al crear el chart; no reaccionan
+// solos a un cambio de var(--indigo), así que hay que volver a cargarla.
+document.addEventListener('accentchange', () => {
+    if (document.getElementById('ef-interna')) cargarCumplimiento();
 });
 
 // ── Sincronizar scroll horizontal entre las 2 tablas de cada área interna ──────

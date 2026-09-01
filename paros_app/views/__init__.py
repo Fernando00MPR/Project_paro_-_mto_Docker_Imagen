@@ -19,7 +19,8 @@ from .paros        import (
 from .exportacion  import (
     exportar_csv, 
     exportar_excel, 
-    importar_paros
+    importar_paros,
+    descargar_plantilla_paros,
 )
 
 from .autocomplete import (
@@ -33,8 +34,11 @@ from .autocomplete import (
 
 from .dashboard import (
     dashboard, 
-    analisis_paros,
     dashboard_json
+)
+
+from .analisis_paros import (
+    analisis_paros,
 )
 
 from .catalogos import (
@@ -90,6 +94,8 @@ from .registro_produccion import (
     eliminar_registro,
     actualizar_registro,
     actualizar_orden,
+    exportar_registros_produccion,
+    contar_registros_produccion,
 )
 
 from .indicadores_produccion import (

@@ -74,6 +74,54 @@ const chart = new Chart(chartEl, {
     }]
 });
 
+/* ── Modo celular: filtros colapsables ── */
+function toggleFiltros(btn) {
+    const form = document.getElementById('dsh-filters');
+    const abierto = form.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', String(abierto));
+}
+
+/* ── Modo celular: tabs de las dos listas ── */
+function mostrarLista(id, btn) {
+    document.querySelectorAll('.dsh-list').forEach(function (el) {
+        el.classList.toggle('is-visible', el.id === id);
+    });
+    document.querySelectorAll('.dsh-tab').forEach(function (t) {
+        const activo = t === btn;
+        t.classList.toggle('is-active', activo);
+        t.setAttribute('aria-selected', String(activo));
+    });
+}
+
+// Estado inicial en celular: la semana actual
+if (window.matchMedia('(max-width: 640px)').matches) {
+    const inicial = document.getElementById('dsh-list-week');
+    if (inicial) inicial.classList.add('is-visible');
+}
+
+/* ── Modo celular: posicionar el carril del gráfico en la semana filtrada ──
+   El canvas se dibuja de forma asíncrona, así que asignar scrollLeft de
+   inmediato se recorta a 0 porque el carril todavía no tiene ancho real.
+   Se reintenta hasta que exista overflow (o se agoten los intentos). */
+function posicionarCarrilSemana(semanaActual, intentos) {
+    intentos = intentos || 0;
+    const box = document.querySelector('.dsh-chart-box');
+    if (!box) return;
+    const overflow = box.scrollWidth - box.clientWidth;
+    if (overflow <= 0) {
+        if (intentos < 20) requestAnimationFrame(() => posicionarCarrilSemana(semanaActual, intentos + 1));
+        return;
+    }
+    const totalSemanas = semanas_labels.length || 52;
+    const pitch  = box.scrollWidth / totalSemanas;   // ancho real por semana
+    const target = Math.max(0, Math.min((semanaActual - 6) * pitch, overflow));
+    box.scrollLeft = target;                          // 6 semanas de contexto a la izquierda
+}
+
+if (window.matchMedia('(max-width: 640px)').matches) {
+    posicionarCarrilSemana(window.DASHBOARD_CONFIG.filtroSemana || 1);
+}
+
 function descargarGrafico() {
     const tmpCanvas = document.createElement('canvas');
     tmpCanvas.width  = chartEl.width;

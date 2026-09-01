@@ -194,10 +194,25 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ── Modal calendario ──────────────────────────────────────────────────────────
-function abrirModal(pk) {
-    document.getElementById('modal-iframe').src = '/mto/equipos/' + pk + '/modal/';
+function abrirModal(pk, semana, anio) {
+    let url = '/mto/equipos/' + pk + '/modal/';
+    const params = new URLSearchParams();
+    if (anio) params.set('anio', anio);
+    if (semana) params.set('semana', semana);
+    const qs = params.toString();
+    if (qs) url += '?' + qs;
+
+    document.getElementById('modal-iframe').src = url;
     document.getElementById('modal-backdrop').style.display = 'flex';
     document.body.style.overflow = 'hidden';
+}
+
+// Clic en cualquier parte de la fila abre el modal — salvo si el clic fue
+// sobre un botón, enlace, select o input (Ver/Editar/Eliminar, el selector
+// de Responsable, etc.), que deben conservar su propio comportamiento.
+function filaClickVer(e, pk, semana, anio) {
+    if (e.target.closest('button, a, select, input, textarea')) return;
+    abrirModal(pk, semana, anio);
 }
 
 function cerrarModal() {
@@ -256,7 +271,7 @@ function asignarResponsable(planPk, semana, selectEl) {
     const responsableId = selectEl.value;
     const valorPrevio   = selectEl.dataset.valorPrevio ?? responsableId;
 
-    selectEl.style.borderColor = '#4F46E5';
+    selectEl.style.borderColor = 'var(--indigo)';
     selectEl.disabled = true;
 
     fetch(`/mto/equipos/${planPk}/asignar/${semana}/${anio}/`, {

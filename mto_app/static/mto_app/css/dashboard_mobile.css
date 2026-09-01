@@ -1,0 +1,118 @@
+/* ==========================================================================
+   Dashboard — modo celular
+   Sobreescribe los estilos inline del template solo por debajo de 640px.
+   Requiere los arreglos del sidebar off-canvas + carril del botón hamburguesa
+   ya aplicados en base_menu.html.
+   ========================================================================== */
+
+/* El carril no altera nada en escritorio */
+.dsh-chart-rail { width: 100%; height: 100%; }
+.dsh-filters-toggle, .dsh-tabs { display: none; }
+
+@media (max-width: 640px) {
+
+  .dsh-kpis, .dsh-lists, .dsh-chart-card, .dsh-list { min-width: 0; }
+
+  /* --- Título pegado arriba --- */
+  .dsh-head {
+    position: sticky; top: 0; z-index: 20;
+    margin: 0 -16px 12px !important;
+    padding: 12px 16px !important;
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  [data-theme="dark"] .dsh-head { background: rgba(26,26,46,.95); }
+  .dsh-head .card-title { font-size: 16px !important; }
+  .dsh-head .card-subtitle { font-size: 11px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* --- Filtros colapsados --- */
+  .dsh-filters-toggle {
+    display: flex; align-items: center; gap: 7px;
+    width: 100%; min-height: 44px; margin-bottom: 12px;
+    padding: 0 14px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 999px;
+    font-family: inherit; font-size: 13px; font-weight: 600; color: var(--indigo);
+    cursor: pointer;
+  }
+  .dsh-filters-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--indigo); }
+
+  .dsh-filters { display: none !important; margin-bottom: 12px !important; }
+  .dsh-filters.is-open { display: grid !important; grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .dsh-filters .filter-group:first-child { grid-column: 1 / -1; }
+  .dsh-filters .filter-group { width: 100%; min-width: 0; }
+  .dsh-filters .filter-group input,
+  .dsh-filters .filter-group select {
+    width: 100% !important; min-width: 0 !important;
+    box-sizing: border-box;
+    min-height: 44px; font-size: 16px;   /* 16px evita el zoom automático de iOS */
+  }
+  .dsh-filters .filter-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dsh-filters .filter-actions .btn { justify-content: center; min-height: 44px; }
+
+  /* --- KPIs: la tarjeta de cumplimiento primero y a ancho completo --- */
+  .dsh-kpis {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  .dsh-kpi { padding: 12px 13px !important; }
+  .dsh-kpi > div:first-child  { font-size: 11px !important; margin-bottom: 4px !important; }
+  .dsh-kpi > div:nth-child(2) { font-size: 26px !important; }
+  .dsh-kpi > div:last-child   { font-size: 10px !important; line-height: 1.25; }
+
+  .dsh-kpi-main {
+    grid-column: 1 / -1;
+    order: -1;                              /* sube al primer lugar sin tocar el HTML */
+  }
+  .dsh-kpi-main > div:nth-child(2) { font-size: 40px !important; }
+  .dsh-kpi-main > div:first-child  { font-size: 12px !important; }
+
+  /* --- Gráfico: carril horizontal, 26px por semana --- */
+  .dsh-chart-card { padding: 14px 0 12px !important; margin-bottom: 12px !important; }
+  .dsh-chart-head { padding: 0 16px; }
+  .dsh-chart-head > div:last-child { flex-wrap: wrap; }
+  .dsh-legend { font-size: 10px !important; gap: 12px !important; }
+  /* Las etiquetas largas de la leyenda no caben: se abrevian por CSS */
+  /* ">" — solo los dos <span> de cada item de la leyenda, no el cuadradito
+     de color de adentro (que también es :nth-child(1) de su propio padre). */
+  .dsh-legend > span:nth-child(1) { font-size: 0; }
+  .dsh-legend > span:nth-child(1)::after { content: "≥ 90%"; font-size: 10px; }
+  .dsh-legend > span:nth-child(2) { font-size: 0; }
+  .dsh-legend > span:nth-child(2)::after { content: "< 90%"; font-size: 10px; }
+
+  .dsh-chart-box {
+    height: 240px !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+  }
+  .dsh-chart-box::-webkit-scrollbar { height: 0; }
+  .dsh-chart-rail { width: 1350px; }        /* 52 semanas × 26px */
+
+  /* --- Listas en tabs --- */
+  .dsh-tabs {
+    display: flex; gap: 4px; padding: 6px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px 10px 0 0; border-bottom: none;
+  }
+  .dsh-tab {
+    flex: 1; min-width: 0; min-height: 40px;
+    background: transparent; border: none; border-radius: 7px;
+    font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text-2);
+    cursor: pointer;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dsh-tab.is-active { background: var(--surface); color: var(--indigo); }
+
+  .dsh-lists { grid-template-columns: 1fr !important; gap: 0 !important; }
+  .dsh-list { display: none; border-radius: 0 0 var(--radius) var(--radius) !important; padding: 10px 14px !important; }
+  .dsh-list.is-visible { display: block; }
+  /* El título interno de cada card lo repite la tab */
+  .dsh-list > div:first-child { display: none; }
+
+  .dsh-list-body { max-height: none !important; overflow: visible !important; }
+  .dsh-row { padding: 10px 0 !important; }
+  .dsh-row > div:first-child > div:first-child { font-size: 13px; }
+}

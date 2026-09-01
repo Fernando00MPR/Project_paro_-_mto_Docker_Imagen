@@ -50,6 +50,8 @@ def registro_ejecucion(request, plan_pk, semana, anio):
             </script>
         ''')
 
+    hoy = date.today()
+
     ctx = {
         'plan':          plan,
         'semana':        semana,
@@ -59,6 +61,10 @@ def registro_ejecucion(request, plan_pk, semana, anio):
         'registro':      registro,
         'responsables':  responsables,
         'estados':       RegistroEjecucion.ESTADO_CHOICES,
+        # Mismo criterio que usa modal_plan() para marcar la semana actual:
+        # número de semana ISO + año calendario del lunes.
+        'hoy_semana':    hoy.isocalendar()[1],
+        'hoy_anio':      hoy.year,
     }
     return render(request, 'mto_app/plan/registro_form.html', ctx)
 

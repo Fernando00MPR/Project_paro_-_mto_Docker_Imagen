@@ -1,6 +1,8 @@
 from modeltranslation.translator import register, TranslationOptions
 from .models import Area, CatalogoFalla, CatalogoEquipo, CatalogoResponsable
 from .models import Paro
+from .models import RegistroProduccion
+
 
 @register(Area)
 class AreaTranslationOptions(TranslationOptions):
@@ -21,3 +23,7 @@ class CatalogoEquipoTranslationOptions(TranslationOptions):
 @register(CatalogoResponsable)
 class CatalogoResponsableTranslationOptions(TranslationOptions):
     fields = ('responsable',)
+
+@register(RegistroProduccion)
+class RegistroProduccionTranslationOptions(TranslationOptions):
+    fields = ('equipo',)

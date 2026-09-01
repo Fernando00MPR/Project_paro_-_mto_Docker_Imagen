@@ -2,6 +2,83 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Bitácora de AGVs" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Franja indicadora de comentario — esquina inferior derecha de la celda */
+    .celda-agv .flag-comentario {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 0 7px 7px;
+        border-color: transparent transparent #F59E0B transparent;
+        pointer-events: none;
+    }
+
+    /* Modal de edición de celda AGV */
+    .agv-modal-box {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 24px 26px 20px;
+        width: 340px;
+        max-width: calc(100vw - 32px);
+        box-shadow: 0 8px 40px rgba(0,0,0,.18);
+    }
+    .agv-modal-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .agv-modal-titulo { font-size: 17px; font-weight: 700; color: var(--text); }
+    .agv-modal-subtitulo { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+    .agv-modal-close {
+        background: none; border: none; padding: 4px; margin: -4px -4px 0 0;
+        font-size: 15px; line-height: 1; color: var(--text-3); cursor: pointer;
+    }
+    .agv-modal-close:hover { color: var(--text); }
+
+    .agv-field { margin-bottom: 18px; }
+    .agv-label {
+        display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+        color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;
+    }
+    .agv-label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .agv-label-row .agv-label { margin-bottom: 0; }
+    .agv-comentario-count { font-size: 11px; color: var(--text-3); }
+
+    .agv-stepper { display: flex; align-items: stretch; gap: 8px; }
+    .agv-step-btn {
+        width: 44px; flex-shrink: 0;
+        background: var(--indigo-lt); color: var(--indigo);
+        border: none; border-radius: 10px;
+        font-size: 18px; font-weight: 600; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .agv-step-btn:hover { filter: brightness(0.96); }
+    .agv-stepper-input {
+        flex: 1; min-width: 0; text-align: center; font-size: 16px; font-weight: 600;
+        border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+        color: var(--text); background: var(--white); font-family: inherit;
+    }
+    .agv-textarea {
+        width: 100%; resize: vertical; font-family: inherit; font-size: 13px;
+        border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+        color: var(--text); background: var(--white);
+    }
+
+    .agv-modal-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        padding-top: 16px; margin-top: 4px; border-top: 1px solid var(--border);
+    }
+    .agv-btn-borrar {
+        background: none; border: none; padding: 0; font-family: inherit;
+        font-size: 13px; font-weight: 600; color: #DC2626; cursor: pointer;
+    }
+    .agv-btn-borrar:hover { text-decoration: underline; }
+    .agv-modal-footer-right { display: flex; gap: 8px; }
+    
+</style>
+{% endblock %}
+
 {% block content %}
 
 <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
@@ -120,7 +197,7 @@
                     <tr>
                         <td style="padding:5px 10px; border:0.5px solid var(--border); font-weight:500; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "AGVs" %}</td>
                         {% for d in dias %}
-                        <td style="padding:0; border:0.5px solid var(--border); text-align:center;"
+                        <td style="padding:0; border:0.5px solid var(--border); text-align:center; position:relative;"
                             data-interna="{{ clave }}"
                             data-dia="{{ d }}"
                             data-turno="dia"
@@ -129,6 +206,7 @@
                             class="celda-agv {% if puede_editar %}celda-agv-editable{% endif %}"
                             {% if puede_editar %}onclick="editarCelda(this)"{% endif %}>
                             <span class="valor-celda"></span>
+                            <span class="flag-comentario" style="display:none;"></span>
                         </td>
                         {% endfor %}
                     </tr>
@@ -160,7 +238,7 @@
                     <tr>
                         <td style="padding:5px 10px; border:0.5px solid var(--border); font-weight:500; font-size:11px; color:var(--text-2); position:sticky; left:0; background:var(--white); z-index:1;">{% trans "AGVs" %}</td>
                         {% for d in dias %}
-                        <td style="padding:0; border:0.5px solid var(--border); text-align:center;"
+                        <td style="padding:0; border:0.5px solid var(--border); text-align:center; position:relative;"
                             data-interna="{{ clave }}"
                             data-dia="{{ d }}"
                             data-turno="noche"
@@ -169,6 +247,7 @@
                             class="celda-agv {% if puede_editar %}celda-agv-editable{% endif %}"
                             {% if puede_editar %}onclick="editarCelda(this)"{% endif %}>
                             <span class="valor-celda"></span>
+                            <span class="flag-comentario" style="display:none;"></span>
                         </td>
                         {% endfor %}
                     </tr>
@@ -182,19 +261,41 @@
 <!-- Modal edición -->
 <div id="modal-agv" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
      z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:24px 28px;
-                min-width:280px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;" id="modal-agv-titulo">{% trans "Registrar cantidad" %}</div>
-        <div style="font-size:12px; color:var(--text-2); margin-bottom:16px;" id="modal-agv-subtitulo"></div>
-        <div class="filter-group" style="margin-bottom:16px;">
-            <label>{% trans "Cantidad de AGVs" %}</label>
-            <input type="number" id="modal-agv-input" min="0" max="999" placeholder="0 - 999"
-                   style="width:100%;" onkeydown="if(event.key==='Enter') guardarModalAgv()">
+    <div class="agv-modal-box">
+        <div class="agv-modal-head">
+            <div>
+                <div class="agv-modal-titulo" id="modal-agv-titulo">{% trans "Registrar cantidad" %}</div>
+                <div class="agv-modal-subtitulo" id="modal-agv-subtitulo"></div>
+            </div>
+            <button type="button" class="agv-modal-close" onclick="cerrarModalAgv()" aria-label="{% trans 'Cerrar' %}">✕</button>
         </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button onclick="borrarModalAgv()" class="btn btn-ghost btn-sm" style="color:#DC2626; border-color:#DC2626;">{% trans "Borrar" %}</button>
-            <button onclick="cerrarModalAgv()" class="btn btn-ghost btn-sm">{% trans "Cancelar" %}</button>
-            <button onclick="guardarModalAgv()" class="btn btn-primary btn-sm">{% trans "Guardar" %}</button>
+
+        <div class="agv-field">
+            <label class="agv-label">{% trans "Cantidad de AGVs" %}</label>
+            <div class="agv-stepper">
+                <button type="button" class="agv-step-btn" onclick="pasoCantidadAgv(-1)" aria-label="{% trans 'Restar' %}">−</button>
+                <input type="number" id="modal-agv-input" min="0" max="100" placeholder="0"
+                       class="agv-stepper-input" onkeydown="if(event.key==='Enter') guardarModalAgv()">
+                <button type="button" class="agv-step-btn" onclick="pasoCantidadAgv(1)" aria-label="{% trans 'Sumar' %}">+</button>
+            </div>
+        </div>
+
+        <div class="agv-field">
+            <div class="agv-label-row">
+                <label class="agv-label">{% trans "Comentario" %}</label>
+                <span class="agv-comentario-count"><span id="modal-agv-comentario-count">0</span>/200</span>
+            </div>
+            <textarea id="modal-agv-comentario" maxlength="200" rows="3" class="agv-textarea"
+                      placeholder="{% trans 'Notas sobre este registro…' %}"
+                      oninput="document.getElementById('modal-agv-comentario-count').textContent = this.value.length"></textarea>
+        </div>
+
+        <div class="agv-modal-footer">
+            <button type="button" class="agv-btn-borrar" onclick="borrarModalAgv()">{% trans "Borrar registro" %}</button>
+            <div class="agv-modal-footer-right">
+                <button onclick="cerrarModalAgv()" class="btn btn-ghost btn-sm">{% trans "Cancelar" %}</button>
+                <button onclick="guardarModalAgv()" class="btn btn-primary btn-sm">{% trans "Guardar" %}</button>
+            </div>
         </div>
     </div>
 </div>
@@ -216,7 +317,7 @@
                 </select>
                 <div style="display:flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; height:30px;">
                     <button onclick="setVistaEf('dia', this)" id="pill-dia"
-                            style="padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:none; font-family:inherit; background:#4F46E5; color:#fff;">
+                            style="padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:none; font-family:inherit; background:var(--indigo); color:#fff;">
                         {% trans "Día" %}
                     </button>
                     <button onclick="setVistaEf('mes', this)" id="pill-mes"
@@ -228,6 +329,10 @@
                         {% trans "Año" %}
                     </button>
                 </div>
+                <button onclick="descargarGraficaCumplimiento()"
+                        style="height:30px; padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:1px solid var(--border); border-radius:7px; font-family:inherit; background:var(--white); color:var(--text-2); display:flex; align-items:center; gap:5px;">
+                    ⬇ {% trans "Descargar" %}
+                </button>
             </div>
         </div>
 
@@ -345,6 +450,12 @@ window.AGV_CFG = {
     anio:                  {{ anio }},
     mes:                   {{ mes }},
     mesNombre:             "{% for num, nombre in meses %}{% if mes == num %}{{ nombre }}{% endif %}{% endfor %}",
+    i18n: {
+        dia:        "{% trans 'Día' %}",
+        turno:      "{% trans 'Turno' %}",
+        turnoDia:   "{% trans 'día' %}",
+        turnoNoche: "{% trans 'noche' %}",
+    },
 };
 </script>
 <script src="{% static 'paros_app/js/bitacora_agv.js' %}"></script>

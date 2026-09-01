@@ -10,10 +10,12 @@
 {% block content %}
 
 {% if messages %}
-<div style="margin-bottom:16px;">
+<div style="margin-bottom:12px;">
     {% for msg in messages %}
-    <div style="padding:10px 16px; border-radius:8px; font-size:13px; margin-bottom:8px;
-        {% if msg.tags == 'success' %}background:#D1FAE5; color:#065F46;{% else %}background:#FEE2E2; color:#991B1B;{% endif %}">
+    <div style="padding:10px 16px; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:6px;
+                background:{% if msg.tags == 'error' %}var(--red-lt){% else %}#D1FAE5{% endif %};
+                color:{% if msg.tags == 'error' %}var(--red){% else %}#065F46{% endif %};
+                border:1px solid {% if msg.tags == 'error' %}var(--red){% else %}#6EE7B7{% endif %};">
         {{ msg }}
     </div>
     {% endfor %}
@@ -137,15 +139,7 @@
                             {% endif %}
                             {% if puede_editar %}
                             <button type="button"
-                                data-id="{{ r.pk }}"
-                                data-url="{% url 'mto:editar_bitacora' r.pk %}"
-                                data-area="{{ r.area_id }}"
-                                data-fecha="{{ r.fecha|date:'Y-m-d' }}"
-                                data-equipo="{{ r.equipo|escapejs }}"
-                                data-actividad="{{ r.actividad_realizada|escapejs }}"
-                                data-pendiente="{{ r.pendiente|escapejs }}"
-                                data-responsable="{{ r.responsable|escapejs }}"
-                                onclick="abrirModalEditar(this.dataset)"
+                                onclick="abrirModalEditar({{ r.pk }}, '{% url 'mto:editar_bitacora' r.pk %}', '{{ r.area_id }}', '{{ r.fecha|date:'Y-m-d' }}', '{{ r.equipo|escapejs }}', '{{ r.actividad_realizada|escapejs }}', '{{ r.pendiente|escapejs }}', '{{ r.responsable|escapejs }}')"
                                 style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                     font-size:12px; border-radius:6px; border:1px solid var(--border);
                                     background:var(--surface); color:var(--text); cursor:pointer; white-space:nowrap;">

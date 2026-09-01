@@ -13,7 +13,7 @@ from django.shortcuts import redirect, render
 
 from ..models import Area, Paro
 from login_app.permisos import get_perfil
-from .utils import _aplicar_filtros, _parse_fecha
+from .utils import _aplicar_filtros, _parse_fecha, _estilo_cabecera
 
 import logging
 
@@ -144,6 +144,36 @@ def exportar_excel(request):
 
 
 @login_required
+def descargar_plantilla_paros(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Paros'
+    _estilo_cabecera(
+        ws,
+        ['Área', 'Fecha', 'Sem.', 'Turno', 'Falla', 'Responsable', 'Equipo', 'Hora', 'Tiempo (min)', 'Estatus', 'Comentarios'],
+        [22, 14, 6, 10, 22, 18, 18, 8, 13, 12, 30],
+    )
+    filas = [
+        ['Mantenimiento AWH', '06/04/2026', 15, 'Turno 1', 'Falla eléctrica', 'Mantenimiento', 'Compresor 1', '20:48', 4, 'Revisado', ''],
+        ['Mantenimiento AWH', '07/04/2026', 15, 'Turno 2', 'Falla mecánica',  'Mantenimiento', 'Compresor 2', '08:15', 12, 'Sin revisar', 'Requiere seguimiento'],
+    ]
+    for fila in filas:
+        ws.append(fila)
+        for cell in ws[ws.max_row]:
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    # Columna "Fecha" (B) forzada a formato Texto: así Excel nunca la
+    # reinterpreta ni la reescribe como mm/dd/aaaa, aunque el usuario
+    # agregue más filas después de las de ejemplo.
+    for row in range(2, 500):
+        ws.cell(row=row, column=2).number_format = '@'
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="Plantilla_Paros.xlsx"'
+    wb.save(response)
+    return response
+
+@login_required
 def importar_paros(request):
     from datetime import datetime as dt
     perfil = get_perfil(request.user)
@@ -217,6 +247,7 @@ def importar_paros(request):
         
         importados = 0
         fallidos = 0
+        detalles = []
         for i, f in enumerate(filas_list, start=2):
             try:
                 area_obj = _areas_map.get((f['area'] or '').lower()) or \
@@ -224,6 +255,7 @@ def importar_paros(request):
                 if area_obj is None:
                     logger.error("Fila %d: área '%s' no encontrada", i, f['area'])
                     fallidos += 1
+                    detalles.append(f"Fila {i}: área '{f['area']}' no encontrada")
                     continue
 
                 if areas_permitidas_ids is not None and area_obj.id not in areas_permitidas_ids:
@@ -255,7 +287,8 @@ def importar_paros(request):
             except Exception as e:
                 logger.error("Fila %d no importada: %s | datos: %s", i, e, f)
                 fallidos += 1        # ← contar el fallo
-        return importados, fallidos  # ← devolver tupla
+                detalles.append(f"Fila {i}: {e}")
+        return importados, fallidos, detalles  # ← devolver tupla
 
     if request.method == 'POST':
         accion = request.POST.get('accion', '')
@@ -263,9 +296,10 @@ def importar_paros(request):
         if accion == 'importar_permitidas':
             filas_json = request.POST.get('filas_permitidas', '[]')
             filas = json.loads(filas_json)
-            importados, fallidos = _crear_paros(filas)
+            importados, fallidos, detalles = _crear_paros(filas)
             if fallidos:
-                messages.warning(request, f"{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar.")
+                detalle_txt = ' '.join(detalles[:5]) + (f' (+{len(detalles) - 5} más)' if len(detalles) > 5 else '')
+                messages.warning(request, f"{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar. {detalle_txt}")
             else:
                 messages.success(request, f"{importados} paro(s) importados correctamente.")
             if area_id_param:
@@ -365,9 +399,10 @@ def importar_paros(request):
                         pendiente_confirmacion = True
                         datos_sesion = json.dumps(filas_permitidas)
                     else:
-                        importados, fallidos = _crear_paros(filas_permitidas)
+                        importados, fallidos, detalles = _crear_paros(filas_permitidas)
                         if fallidos:
-                            messages.warning(request, f"{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar.")
+                            detalle_txt = ' '.join(detalles[:5]) + (f' (+{len(detalles) - 5} más)' if len(detalles) > 5 else '')
+                            messages.warning(request, f"{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar. {detalle_txt}")
                         else:
                             messages.success(request, f"{importados} paro(s) importados correctamente.")
                         if area_id_param:

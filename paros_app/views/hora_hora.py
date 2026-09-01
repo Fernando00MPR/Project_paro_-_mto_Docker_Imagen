@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
 from django.db.models import Sum
+from django.utils.translation import gettext as _
 
 from ..models import Area, RegistroHoraHora, ConfiguracionHoraHora
 from login_app.permisos import get_perfil
@@ -76,9 +77,9 @@ def hora_hora(request):
                 )
 
     meses = [
-        (1,'Enero'),(2,'Febrero'),(3,'Marzo'),(4,'Abril'),
-        (5,'Mayo'),(6,'Junio'),(7,'Julio'),(8,'Agosto'),
-        (9,'Septiembre'),(10,'Octubre'),(11,'Noviembre'),(12,'Diciembre'),
+        (1,_('Enero')),(2,_('Febrero')),(3,_('Marzo')),(4,_('Abril')),
+        (5,_('Mayo')),(6,_('Junio')),(7,_('Julio')),(8,_('Agosto')),
+        (9,_('Septiembre')),(10,_('Octubre')),(11,_('Noviembre')),(12,_('Diciembre')),
     ]
 
     return render(request, 'paros_app/hora_hora.html', {

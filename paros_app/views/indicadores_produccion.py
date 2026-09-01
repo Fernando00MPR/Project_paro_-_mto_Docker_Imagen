@@ -7,30 +7,63 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 from django.utils.formats import date_format
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 import json
 
-from ..models import Area, Paro, RegistroProduccion, TargetIndicador
+from ..models import Area, Paro, RegistroProduccion, TargetIndicador, CatalogoEquipo
 from login_app.permisos import get_perfil
-from .registro_produccion import _calcular_muerto, _calcular_kpis_mantenimiento
-
+from .registro_produccion import RESPONSABLES_MANT
 
 INDICADORES = [
-    ('downtime',       'Downtime %'),
-    ('disponibilidad', 'Disponibilidad %'),
-    ('mttr',           'MTTR (min)'),
-    ('mtbf',           'MTBF (h)'),
-    ('t_muerto_mant',  'Tiempo perdido mantenimiento (min)'),
+    ('downtime',       gettext_lazy('Downtime %')),
+    ('disponibilidad', gettext_lazy('Disponibilidad %')),
+    ('mttr',           gettext_lazy('MTTR (min)')),
+    ('mtbf',           gettext_lazy('MTBF (h)')),
+    ('t_muerto_mant',  gettext_lazy('Tiempo perdido mantenimiento (min)')),
+    ('planeado',       gettext_lazy('Tiempo de planificación (min)')),
 ]
 
+def _muerto_y_kpis_mant(paros, equipo_nombre, hora_inicio, hora_fin):
+    """Combina en una sola pasada sobre `paros` lo que antes hacían por
+    separado `_calcular_muerto` + `_calcular_kpis_mantenimiento`: ambas
+    recorrían la misma lista con condiciones casi idénticas (estatus, equipo,
+    rango de hora), duplicando el trabajo por cada registro del día."""
+    en = equipo_nombre.lower() if equipo_nombre else None
+    muerto = 0
+    n_paros_mant = 0
+    t_muerto_mant = 0
+    for p in paros:
+        if p.estatus != 'verde':
+            continue
+        if en and (p.equipo_es or '').lower() != en and (p.equipo_en or '').lower() != en:
+            continue
+        if hora_fin > hora_inicio:
+            if not (p.hora >= hora_inicio and p.hora < hora_fin):
+                continue
+        else:
+            if not (p.hora >= hora_inicio or p.hora < hora_fin):
+                continue
+        tiempo = p.tiempo_minutos or 0
+        muerto += tiempo
+        if p.responsable in RESPONSABLES_MANT:
+            n_paros_mant += 1
+            t_muerto_mant += tiempo
+    return muerto, n_paros_mant, t_muerto_mant
 
-def _kpis_para_rango(equipo_sel, fecha_ini, fecha_fin, registros_qs, paros_qs):
+def _kpis_para_rango(equipo_sel, fecha_ini, fecha_fin, registros_qs, paros_qs, equipos_permitidos=None):
     """Agrega downtime/disponibilidad/MTTR/MTBF para un rango de fechas,
     con la misma fórmula ponderada (sobre totales, no promedio de % diarios)
-    que usa la vista de detalle por día."""
+    que usa la vista de detalle por día.
+    `equipos_permitidos`, si se da, restringe a los equipos de la sub área elegida."""
+
     regs = [
         r for r in registros_qs
-        if fecha_ini <= r.fecha <= fecha_fin and (not equipo_sel or r.equipo == equipo_sel)
+        if fecha_ini <= r.fecha <= fecha_fin
+        and (not equipo_sel or r.equipo == equipo_sel)
+        and (equipos_permitidos is None or r.equipo in equipos_permitidos)
     ]
+
     paros_por_fecha = defaultdict(list)
     for p in paros_qs:
         if fecha_ini <= p.fecha <= fecha_fin:
@@ -44,14 +77,13 @@ def _kpis_para_rango(equipo_sel, fecha_ini, fecha_fin, registros_qs, paros_qs):
     for reg in regs:
         paros_dia = paros_por_fecha[reg.fecha]
         equipo_nombre = reg.equipo or ''
-        muerto   = _calcular_muerto(paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin)
+        muerto, n_mant, t_mant = _muerto_y_kpis_mant(paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin)
         planeado = reg.tiempo_planeado
         total_planeado += planeado
         total_muerto   += muerto
 
-        kpis = _calcular_kpis_mantenimiento(paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin, planeado)
-        t_muerto_mant += kpis['t_muerto']
-        n_paros_mant  += kpis['n_paros']
+        t_muerto_mant  += t_mant
+        n_paros_mant   += n_mant
 
     equipos_unicos = len(set(r.equipo for r in regs))
     downtime = round(total_muerto / total_planeado * 100, 1) if total_planeado else None
@@ -65,6 +97,7 @@ def _kpis_para_rango(equipo_sel, fecha_ini, fecha_fin, registros_qs, paros_qs):
         'mttr':           mttr,
         'mtbf':           mtbf,
         't_muerto_mant':  t_muerto_mant if total_planeado else None,
+        'planeado':       total_planeado if total_planeado else None,
     }
 
 
@@ -81,13 +114,16 @@ def indicadores_produccion(request):
     else:
         areas = perfil.areas_produccion.all() if perfil else Area.objects.none()
 
-    area_id     = request.GET.get('area', '')
-    periodo     = request.GET.get('periodo', 'semana')
-    semana_num  = request.GET.get('semana_num', '')
-    fecha_desde = request.GET.get('fecha_desde', '')
-    fecha_hasta = request.GET.get('fecha_hasta', '')
-    indicador   = request.GET.get('indicador', 'downtime')
-    equipo_sel  = request.GET.get('equipo', '')
+    area_id      = request.GET.get('area', '')
+    periodo      = request.GET.get('periodo', 'semana')
+    semana_num   = request.GET.get('semana_num', '')
+    fecha_desde  = request.GET.get('fecha_desde', '')
+    fecha_hasta  = request.GET.get('fecha_hasta', '')
+    indicador    = request.GET.get('indicador', 'downtime')
+    equipo_sel   = request.GET.get('equipo', '')
+    sub_area_sel = request.GET.get('sub_area', '')
+    mes_num      = request.GET.get('mes_num', '')
+    anio_mes     = request.GET.get('anio_mes', '')
 
     hoy = date.today()
 
@@ -108,6 +144,15 @@ def indicadores_produccion(request):
     elif periodo == 'semanas':
         d_desde = date(hoy.year, 1, 1)
         d_hasta = hoy
+    elif periodo == 'mes_elegido':
+        try:
+            mn = int(mes_num) if mes_num else hoy.month
+            an = int(anio_mes) if anio_mes else hoy.year
+        except (ValueError, TypeError):
+            mn, an = hoy.month, hoy.year
+        ultimo_dia = calendar.monthrange(an, mn)[1]
+        d_desde    = date(an, mn, 1)
+        d_hasta    = date(an, mn, ultimo_dia)
     elif periodo == 'custom' and fecha_desde and fecha_hasta:
         try:
             d_desde = date.fromisoformat(fecha_desde)
@@ -130,19 +175,28 @@ def indicadores_produccion(request):
 
     datos_dias = []
 
-    equipos_periodo = list(
-        RegistroProduccion.objects
-        .exclude(equipo='')
-        .filter(area=area_sel, fecha__gte=d_desde, fecha__lte=d_hasta)
-        .values_list('equipo', flat=True)
-        .distinct()
-        .order_by('equipo')
+    subareas_disponibles = list(
+        CatalogoEquipo.objects.filter(area=area_sel).exclude(sub_area='')
+        .values_list('sub_area', flat=True).distinct().order_by('sub_area')
         ) if area_sel else []
+
+    equipos_en_subarea = None
+    if area_sel and sub_area_sel:
+        equipos_en_subarea = set(
+            CatalogoEquipo.objects.filter(area=area_sel, sub_area=sub_area_sel)
+            .values_list('equipo', flat=True)
+        )
+
+    equipos_periodo = []
 
     if area_sel:
         registros_list = list(RegistroProduccion.objects.filter(
             area=area_sel, fecha__gte=d_desde, fecha__lte=d_hasta
         ).order_by('fecha'))
+
+        equipos_periodo = sorted({r.equipo for r in registros_list if r.equipo})
+        if equipos_en_subarea is not None:
+            equipos_periodo = [e for e in equipos_periodo if e in equipos_en_subarea]
 
         regs_por_fecha = defaultdict(list)
         for r in registros_list:
@@ -161,6 +215,8 @@ def indicadores_produccion(request):
 
         for fecha in fechas_rango:
             regs_dia = regs_por_fecha[fecha]
+            if equipos_en_subarea is not None:
+                regs_dia = [r for r in regs_dia if r.equipo in equipos_en_subarea]
             if equipo_sel:
                 regs_dia = [r for r in regs_dia if r.equipo == equipo_sel]
             paros_dia = paros_por_fecha[fecha]
@@ -172,16 +228,13 @@ def indicadores_produccion(request):
 
             for reg in regs_dia:
                 equipo_nombre = reg.equipo or ''
-                muerto        = _calcular_muerto(paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin)
                 planeado      = reg.tiempo_planeado
                 total_planeado += planeado
-                total_muerto   += muerto
 
-                kpis = _calcular_kpis_mantenimiento(
-                    paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin, planeado
-                )
-                t_muerto_mant += kpis['t_muerto']
-                n_paros_mant  += kpis['n_paros']
+                muerto, n_mant, t_mant = _muerto_y_kpis_mant(paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin)
+                total_muerto   += muerto
+                t_muerto_mant  += t_mant
+                n_paros_mant   += n_mant
 
             equipos_unicos = len(set(reg.equipo for reg in regs_dia))
             downtime = round(total_muerto / total_planeado * 100, 1) if total_planeado else (0 if regs_dia else None)
@@ -207,13 +260,14 @@ def indicadores_produccion(request):
             })
 
     PERIODO_LABELS = {
-        'semana':     'Esta semana',
-        'mes':        'Este mes',
-        'semana_num': f'Semana {semana_num}',
-        'custom':     f'{fecha_desde} al {fecha_hasta}',
+        'semana':      'Esta semana',
+        'mes':         'Este mes',
+        'semana_num':  f'Semana {semana_num}',
+        'mes_elegido': f'{d_desde.strftime("%m/%Y")}',
+        'custom':      f'{fecha_desde} al {fecha_hasta}',
     }
 
-    ind_lbl   = dict(INDICADORES).get(indicador, 'Downtime %')
+    ind_lbl   = dict(INDICADORES).get(indicador, gettext_lazy('Downtime %'))
     labels    = [d['fecha_lbl'] for d in datos_dias]
     valores   = [d.get(indicador) if d.get('tiene_registros') else None for d in datos_dias]
     valores   = [0.01 if v == 0 and d.get('tiene_registros') else v for v, d in zip(valores, datos_dias)]
@@ -268,30 +322,43 @@ def indicadores_produccion(request):
         first_name='', last_name=''
     ).order_by('first_name', 'last_name')
 
+    meses = [
+        (1, _('Enero')), (2, _('Febrero')), (3, _('Marzo')), (4, _('Abril')),
+        (5, _('Mayo')), (6, _('Junio')), (7, _('Julio')), (8, _('Agosto')),
+        (9, _('Septiembre')), (10, _('Octubre')), (11, _('Noviembre')), (12, _('Diciembre')),
+    ]
+
     return render(request, 'paros_app/indicadores_produccion.html', {
-        'usuarios':           usuarios,
-        'areas':              areas,
-        'area_sel':           area_sel,
-        'area_id':            area_id,
-        'periodo':            periodo,
-        'semana_num':         semana_num,
-        'fecha_desde':        fecha_desde,
-        'fecha_hasta':        fecha_hasta,
-        'indicador':          indicador,
-        'indicadores':        INDICADORES,
-        'indicador_label':    ind_lbl,
-        'periodo_label':      PERIODO_LABELS.get(periodo, ''),
-        'datos_dias':         datos_dias,
-        'labels':             json.dumps(labels),
-        'valores':            json.dumps(valores),
-        'min_width':          min_width,
-        'semana_actual':      hoy.isocalendar()[1],
-        'equipo_sel':         equipo_sel,
-        'equipos_periodo':    equipos_periodo,
-        'target_valor':       target_valor,
-        'target_valor_input': target_valor_input,
-        'targets_json':       json.dumps(targets_all),
-        'd_desde':            d_desde,
+        'usuarios':             usuarios,
+        'areas':                areas,
+        'area_sel':             area_sel,
+        'area_id':              area_id,
+        'periodo':              periodo,
+        'semana_num':           semana_num,
+        'fecha_desde':          fecha_desde,
+        'fecha_hasta':          fecha_hasta,
+        'indicador':            indicador,
+        'indicadores':          INDICADORES,
+        'indicador_label':      ind_lbl,
+        'periodo_label':        PERIODO_LABELS.get(periodo, ''),
+        'datos_dias':           datos_dias,
+        'labels':               json.dumps(labels),
+        'valores':              json.dumps(valores),
+        'min_width':            min_width,
+        'semana_actual':        hoy.isocalendar()[1],
+        'equipo_sel':           equipo_sel,
+        'equipos_periodo':      equipos_periodo,
+        'sub_area_sel':         sub_area_sel,
+        'subareas_disponibles': subareas_disponibles,
+        'target_valor':         target_valor,
+        'target_valor_input':   target_valor_input,
+        'targets_json':         json.dumps(targets_all),
+        'd_desde':              d_desde,
+        'mes_num':              mes_num,
+        'mes_actual':           hoy.month,
+        'anio_mes':             anio_mes,
+        'anio_actual':          hoy.year,
+        'meses':                meses,
     })
 
 
@@ -353,24 +420,24 @@ def guardar_accion_dia(request):
         area      = Area.objects.get(id=area_id)
         fecha     = datetime.strptime(fecha_str, '%d/%m/%y').date()
 
-        def limitar(val):
-            return (val or '').strip()[:100]
+        def limitar(val, longitud=100):
+            return (val or '').strip()[:longitud]
 
-        ESTATUS_VALIDOS = {'p', 'e', 'c'}
+        ESTATUS_VALIDOS = {'p', 'e', 'c', 'n'}
         def validar_estatus(val):
             return val if val in ESTATUS_VALIDOS else 'p'
 
         campos = {
-            'problema':          limitar(data.get('problema')),
-            'cont_accion':       limitar(data.get('cont_accion')),
+            'problema':          limitar(data.get('problema'), 200),
+            'cont_accion':       limitar(data.get('cont_accion'), 200),
             'cont_fecha_inicio': parse_fecha(data.get('cont_fecha_inicio')),
             'cont_fecha_fin':    parse_fecha(data.get('cont_fecha_fin')),
             'cont_estatus':      validar_estatus(data.get('cont_estatus')),
-            'corr_accion':       limitar(data.get('corr_accion')),
+            'corr_accion':       limitar(data.get('corr_accion'), 200),
             'corr_fecha_inicio': parse_fecha(data.get('corr_fecha_inicio')),
             'corr_fecha_fin':    parse_fecha(data.get('corr_fecha_fin')),
             'corr_estatus':      validar_estatus(data.get('corr_estatus')),
-            'prev_accion':       limitar(data.get('prev_accion')),
+            'prev_accion':       limitar(data.get('prev_accion'), 200),
             'prev_fecha_inicio': parse_fecha(data.get('prev_fecha_inicio')),
             'prev_fecha_fin':    parse_fecha(data.get('prev_fecha_fin')),
             'prev_estatus':      validar_estatus(data.get('prev_estatus')),
@@ -453,11 +520,19 @@ def tendencia_indicadores(request):
         return JsonResponse({'error': 'Área inválida'}, status=400)
 
     equipo_sel   = request.GET.get('equipo', '')
+    sub_area_sel = request.GET.get('sub_area', '')
     indicador    = request.GET.get('indicador', 'downtime')
     granularidad = request.GET.get('granularidad', 'semana')
 
     if indicador not in dict(INDICADORES):
         return JsonResponse({'error': 'Indicador inválido'}, status=400)
+
+    equipos_en_subarea = None
+    if sub_area_sel:
+        equipos_en_subarea = set(
+            CatalogoEquipo.objects.filter(area=area, sub_area=sub_area_sel)
+            .values_list('equipo', flat=True)
+        )
 
     hoy = date.today()
     buckets = []
@@ -491,7 +566,10 @@ def tendencia_indicadores(request):
 
             lunes += timedelta(weeks=1)
     elif granularidad == 'mes':
-        anio = hoy.year
+        try:
+            anio = int(request.GET.get('anio_mes', hoy.year))
+        except (TypeError, ValueError):
+            anio = hoy.year
         for mes in range(1, 13):
             ini = date(anio, mes, 1)
             fin = date(anio, mes, calendar.monthrange(anio, mes)[1])
@@ -523,7 +601,7 @@ def tendencia_indicadores(request):
     labels  = []
     valores = []
     for label, ini, fin in buckets:
-        kpis = _kpis_para_rango(equipo_sel, ini, fin, registros_qs, paros_qs)
+        kpis = _kpis_para_rango(equipo_sel, ini, fin, registros_qs, paros_qs, equipos_en_subarea)
         labels.append(label)
         valores.append(kpis.get(indicador))
 

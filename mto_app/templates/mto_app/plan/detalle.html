@@ -91,7 +91,7 @@
             <div style="width:12px; height:12px; border-radius:3px; background:#FEF3C7;"></div> {% trans "Pendiente / En proceso" %}
         </div>
         <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-2);">
-            <div style="width:12px; height:12px; border-radius:3px; background:#E0E7FF;"></div> {% trans "Reagendada" %}
+            <div style="width:12px; height:12px; border-radius:3px; background:var(--indigo-lt);"></div> {% trans "Reagendada" %}
         </div>
         <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-2);">
             <div style="width:12px; height:12px; border-radius:3px; background:var(--border);"></div> {% trans "Sin orden generada" %}
@@ -127,15 +127,15 @@
             {% elif item.orden.estado == 'reagendada' %}
                 <a href="{% url 'detalle_orden' item.orden.pk %}"
                    style="display:block; padding:12px 14px; border-radius:8px;
-                          background:#E0E7FF; border:1px solid #A5B4FC;
+                          background:var(--indigo-lt); border:1px solid var(--indigo-dk);
                           text-decoration:none;">
-                    <div style="font-size:11px; font-weight:700; color:#3730A3; letter-spacing:.05em;">
+                    <div style="font-size:11px; font-weight:700; color:var(--indigo-dk); letter-spacing:.05em;">
                         {% trans "SEMANA" %} {{ item.semana }}
                     </div>
-                    <div style="font-size:13px; font-weight:600; color:#3730A3; margin-top:2px;">
+                    <div style="font-size:13px; font-weight:600; color:var(--indigo-dk); margin-top:2px;">
                         {{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}
                     </div>
-                    <div style="font-size:11px; color:#3730A3; margin-top:4px; opacity:.8;">
+                    <div style="font-size:11px; color:var(--indigo-dk); margin-top:4px; opacity:.8;">
                         {% trans "Reagendada" %}
                     </div>
                 </a>

@@ -69,7 +69,7 @@
 }
 
 .btn-icon.active {
-    background: #4F46E5;
+    background: var(--indigo);
     color: #fff;
 }
 
@@ -120,7 +120,7 @@
 
 .accion-input {
     width: 100%;
-    height: 90px;
+    min-height: 40px;
     border: 1px solid transparent;
     background: transparent;
     border-radius: 7px;
@@ -129,23 +129,15 @@
     color: var(--text);
     resize: none;
     outline: none;
-    overflow-y: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding: 0 10px;
+    overflow: hidden;
+    padding: 8px 10px;
     box-sizing: border-box;
     line-height: 1.5;
-    display: flex;
-    align-items: center;
 }
 
 .accion-input:focus {
     border: 0px solid var(--border);
     /*background: var(--white);*/
-}
-
-.accion-input::-webkit-scrollbar {
-    display: none;
 }
 
 .fecha-acc {
@@ -166,7 +158,7 @@
 
 .fecha-acc:focus {
     outline: none;
-    border-color: #a5b4fc;
+    border-color: var(--indigo);
 }
 
 .btn-est {
@@ -214,12 +206,12 @@
 
 .ind-acc:focus {
     outline: none;
-    border-color: #a5b4fc;
+    border-color: var(--indigo);
 }
 
 /* Fondos y colores de tabla */
 .bg-cont {
-    background: rgba(79, 70, 229, 0.03);
+    background: color-mix(in srgb, var(--indigo) 3%, transparent);
 }
 
 .bg-corr {
@@ -231,8 +223,8 @@
 }
 
 .th-cont {
-    background: rgba(79, 70, 229, 0.06) !important;
-    color: #4338CA !important;
+    background: color-mix(in srgb, var(--indigo) 6%, transparent) !important;
+    color: var(--indigo-dk) !important;
 }
 
 .th-corr {
@@ -246,8 +238,8 @@
 }
 
 .th-ind {
-    background: rgba(99, 102, 241, 0.06) !important;
-    color: #4338CA !important;
+    background: color-mix(in srgb, var(--indigo) 6%, transparent) !important;
+    color: var(--indigo-dk) !important;
     font-weight: 500 !important;
     text-align: center;
 }
@@ -264,7 +256,7 @@
 }
 
 .val-blue {
-    color: #4F46E5;
+    color: var(--indigo);
     font-weight: 600;
     font-size: 12px;
 }
@@ -319,7 +311,7 @@
 
 .col-item input[type=checkbox] {
     cursor: pointer;
-    accent-color: #4F46E5;
+    accent-color: var(--indigo);
     width: 13px;
     height: 13px;
 }
@@ -551,6 +543,7 @@ tbody tr {
     background: var(--indigo-lt);
     color: var(--indigo);
 }
+
 .anio-input {
     width: 44px;
     text-align: center;
@@ -562,8 +555,531 @@ tbody tr {
     font-family: 'DM Mono', monospace;
     -moz-appearance: textfield;
 }
+
 .anio-input::-webkit-inner-spin-button,
 .anio-input::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
+}
+
+/* ==================== Celda de rango de fechas ==================== */
+.rango-fechas {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 9px;
+    cursor: pointer;
+    width: max-content;
+    background: var(--white);
+    transition: border-color .15s, background .15s;
+}
+
+.rango-fechas:hover {
+    border-color: var(--fase-color, var(--indigo));
+    background: var(--fase-bg, var(--indigo-lt));
+}
+
+.rango-fechas:focus-visible {
+    outline: 2px solid var(--fase-color, var(--indigo));
+    outline-offset: 2px;
+}
+
+.rango-fecha {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+}
+
+.rango-flecha {
+    color: var(--text-3);
+    font-size: 11px;
+}
+
+.rango-chip {
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 2px 6px;
+    white-space: nowrap;
+}
+
+.rango-placeholder {
+    font-size: 12px;
+    color: var(--text-3);
+}
+
+.rango-vacia {
+    border-style: dashed;
+}
+
+/* Chip de duración — coloreado según el estatus (semáforo), no la fase */
+.rango-chip-e { background: #fefce8; color: #a16207; }
+.rango-chip-c { background: #ecfdf5; color: #15803d; }
+
+/* ==================== Punto de estatus (semáforo) ==================== */
+.rango-dot-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin: -8px -4px -8px -9px;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.rango-dot-btn:hover {
+    background: rgba(0, 0, 0, .06);
+}
+
+.rango-dot-btn:disabled {
+    cursor: default;
+}
+
+.rango-dot-btn:disabled:hover {
+    background: none;
+}
+
+.rango-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    transition: box-shadow .12s ease-out;
+}
+
+.rango-dot-p { background: #e11d48; }
+.rango-dot-e { background: #eab308; }
+.rango-dot-c { background: #16a34a; }
+.rango-dot-n { background: #94a3b8; }
+
+/* Estatus fijado manualmente — anillo alrededor del punto */
+.rango-dot-fijado.rango-dot-p { box-shadow: 0 0 0 2px #e11d4833; }
+.rango-dot-fijado.rango-dot-e { box-shadow: 0 0 0 2px #eab30833; }
+.rango-dot-fijado.rango-dot-c { box-shadow: 0 0 0 2px #16a34a33; }
+.rango-dot-fijado.rango-dot-n { box-shadow: 0 0 0 2px #94a3b833; }
+
+/* ==================== Menú de estatus manual ==================== */
+.menu-estatus {
+    position: fixed;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 10px 26px rgba(16, 24, 40, .10);
+    padding: 6px;
+    width: 246px;
+    z-index: 1100;
+}
+
+.menu-estatus-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: none;
+    padding: 8px 10px;
+    border-radius: 7px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+.menu-estatus-item:hover {
+    background: var(--surface);
+}
+
+.menu-estatus-item.actual {
+    background: var(--surface);
+}
+
+.menu-estatus-label {
+    flex: 1;
+}
+
+.menu-estatus-actual {
+    display: none;
+    font-size: 11px;
+    color: #0f766e;
+}
+
+.menu-estatus-item.actual .menu-estatus-actual {
+    display: inline;
+}
+
+.menu-estatus-footer {
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    padding-top: 6px;
+}
+
+.menu-estatus-auto {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: none;
+    padding: 8px 10px;
+    border-radius: 7px;
+    font-size: 13px;
+    color: var(--indigo);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+.menu-estatus-auto:hover {
+    background: var(--surface);
+}
+
+.menu-estatus-nota {
+    font-size: 11px;
+    color: var(--text-3);
+    padding: 4px 10px 2px;
+}
+
+/* ==================== Leyenda de estatus ==================== */
+.leyenda-estatus {
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.leyenda-estatus-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    cursor: pointer;
+}
+
+.leyenda-estatus-toggle {
+    transition: transform .15s;
+    color: var(--text-3);
+}
+
+.leyenda-estatus.colapsada .leyenda-estatus-toggle {
+    transform: rotate(-90deg);
+}
+
+.leyenda-estatus.colapsada .leyenda-estatus-body {
+    display: none;
+}
+
+.leyenda-estatus-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 0 16px 11px;
+    font-size: 12px;
+    color: var(--text-2);
+}
+
+.leyenda-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ==================== Modal de fechas ==================== */
+.modal-fechas-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 31, 36, .34);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-fechas-panel {
+    width: 452px;
+    max-width: calc(100vw - 32px);
+    border-radius: 14px;
+    background: var(--white);
+    box-shadow: 0 24px 48px rgba(16, 24, 40, .22);
+    animation: modalFechasPanelIn .16s cubic-bezier(.2,.8,.2,1);
+    --fase-color: var(--indigo);
+    --fase-color-dk: var(--indigo-dk);
+    --fase-bg: var(--indigo-lt);
+}
+
+.modal-fechas-panel.fase-corr {
+    --fase-color: #10B981;
+    --fase-color-dk: #047857;
+    --fase-bg: rgba(16, 185, 129, .08);
+}
+
+.modal-fechas-panel.fase-prev {
+    --fase-color: #F59E0B;
+    --fase-color-dk: #92400E;
+    --fase-bg: rgba(245, 158, 11, .08);
+}
+
+@keyframes modalFechasPanelIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-fechas-panel { animation: none; }
+}
+
+.modal-fechas-header {
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.modal-fechas-titulo {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: capitalize;
+}
+
+.modal-fechas-subtitulo {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 4px;
+}
+
+.modal-fechas-cerrar {
+    border: none;
+    background: none;
+    color: var(--text-3);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+.modal-fechas-body {
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.modal-fechas-campos {
+    display: flex;
+    gap: 12px;
+}
+
+.modal-fechas-campo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modal-fechas-campo label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.modal-fechas-input {
+    font-size: 14px;
+    padding: 10px 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--white);
+    color: var(--text);
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modal-fechas-input:focus {
+    outline: none;
+    border-color: var(--fase-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fase-color) 12%, transparent);
+}
+
+.modal-fechas-input.error {
+    border-color: #E11D48;
+}
+
+.modal-fechas-error {
+    font-size: 12px;
+    color: #BE123C;
+    min-height: 14px;
+}
+
+.modal-fechas-atajos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip-atajo {
+    font-size: 12px;
+    border-radius: 999px;
+    padding: 5px 11px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-2);
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.chip-atajo-color {
+    background: var(--fase-bg);
+    border-color: color-mix(in srgb, var(--fase-color) 30%, transparent);
+    color: var(--fase-color-dk);
+}
+
+.modal-fechas-resumen {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.modal-fechas-resumen-label {
+    font-size: 13px;
+    color: var(--text-2);
+}
+
+.modal-fechas-resumen-valor {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.modal-fechas-footer {
+    padding: 14px 22px 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal-fechas-hint {
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: 'DM Mono', monospace;
+}
+
+.modal-fechas-acciones {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-modal-cancelar {
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text-2);
+    border-radius: 9px;
+    padding: 9px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-modal-guardar {
+    border: none;
+    background: var(--fase-color);
+    color: #fff;
+    border-radius: 9px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-modal-guardar:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .modal-fechas-overlay { align-items: flex-end; }
+    .modal-fechas-panel {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 14px 14px 0 0;
+    }
+    .modal-fechas-campos { flex-direction: column; }
+}
+
+/* ==================== Autocompletado de responsable ==================== */
+.resp-autocomplete {
+    position: fixed;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 10px 26px rgba(16, 24, 40, .10);
+    padding: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 1100;
+}
+
+.resp-autocomplete-item {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: none;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.resp-autocomplete-item:hover,
+.resp-autocomplete-item.highlighted {
+    background: var(--indigo-lt);
+    color: var(--indigo-dk);
+}
+
+.area-content.collapsed {
+    display: none;
+}
+
+.chev-tendencia {
+    transition: transform .25s;
+    color: var(--text-3);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* El input crece con el nombre capturado, para que no se corte.
+   width:auto anula el width:120px fijo de .fecha-acc, que si no
+   queda explícito, ignora tanto field-sizing como el atributo size. */
+.resp-input {
+    field-sizing: content;
+    width: auto;
+    min-width: 140px;
+    max-width: 340px;
 }

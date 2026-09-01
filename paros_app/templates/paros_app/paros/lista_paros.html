@@ -296,7 +296,7 @@
                             {% if puede_editar %}
                             <a href="{% url 'paros:editar_paro' paro.id %}?next={{ request.get_full_path|urlencode }}"
                                title="{% trans 'Editar' %}"
-                               style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; min-width:32px; flex-shrink:0; border-radius:6px; border:none; background:#4F46E5; cursor:pointer; text-decoration:none;">
+                                style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; min-width:32px; flex-shrink:0; border-radius:6px; border:none; background:var(--indigo); cursor:pointer; text-decoration:none;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                                     <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>

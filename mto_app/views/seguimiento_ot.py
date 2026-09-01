@@ -41,16 +41,18 @@ def agregar_seguimiento(request, registro_pk):
             creado_por=request.user,
         )
         return JsonResponse({
-            'ok':               True,
-            'id':               seg.id,
-            'tipo':             seg.get_tipo_display(),
-            'problema':         seg.problema,
-            'accion':           seg.accion,
-            'responsable':      seg.responsable,
-            'fecha_compromiso': seg.fecha_compromiso.strftime('%d/%m/%Y') if seg.fecha_compromiso else '',
-            'estatus':          seg.estatus,
-            'estatus_display':  seg.get_estatus_display(),
-            'fecha_creacion':   seg.fecha_creacion.strftime('%d/%m/%Y'),
+            'ok':                   True,
+            'id':                   seg.id,
+            'tipo':                 seg.tipo,
+            'tipo_display':         seg.get_tipo_display(),
+            'problema':             seg.problema,
+            'accion':               seg.accion,
+            'responsable':          seg.responsable,
+            'fecha_compromiso':     seg.fecha_compromiso.strftime('%d/%m/%Y') if seg.fecha_compromiso else '',
+            'fecha_compromiso_iso': seg.fecha_compromiso.isoformat() if seg.fecha_compromiso else '',
+            'estatus':              seg.estatus,
+            'estatus_display':      seg.get_estatus_display(),
+            'fecha_creacion':       seg.fecha_creacion.strftime('%d/%m/%Y'),
         })
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=400)
@@ -86,16 +88,19 @@ def editar_seguimiento(request, seguimiento_pk):
         seg.save()
 
         return JsonResponse({
-            'ok':               True,
-            'id':               seg.id,
-            'problema':         seg.problema,
-            'accion':           seg.accion,
-            'responsable':      seg.responsable,
-            'fecha_compromiso': seg.fecha_compromiso.strftime('%d/%m/%Y') if seg.fecha_compromiso else '',
-            'estatus':          seg.estatus,
-            'estatus_display':  seg.get_estatus_display(),
-            'notas':            seg.notas,
-            'fecha_creacion':   seg.fecha_creacion.strftime('%d/%m/%Y'),
+            'ok':                   True,
+            'id':                   seg.id,
+            'tipo':                 seg.tipo,
+            'tipo_display':         seg.get_tipo_display(),
+            'problema':             seg.problema,
+            'accion':               seg.accion,
+            'responsable':          seg.responsable,
+            'fecha_compromiso':     seg.fecha_compromiso.strftime('%d/%m/%Y') if seg.fecha_compromiso else '',
+            'fecha_compromiso_iso': seg.fecha_compromiso.isoformat() if seg.fecha_compromiso else '',
+            'estatus':              seg.estatus,
+            'estatus_display':      seg.get_estatus_display(),
+            'notas':                seg.notas,
+            'fecha_creacion':       seg.fecha_creacion.strftime('%d/%m/%Y'),
         })
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=400)

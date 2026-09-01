@@ -33,7 +33,7 @@
             <div style="display:flex; flex-direction:column; gap:4px;">
                 <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Área" %}</label>
                 <select name="area" onchange="this.form.submit()"
-                        style="padding:7px 10px; border:1px solid var(--border); border-radius:6px;
+                        style="height:33px; padding:0 10px; border:1px solid var(--border); border-radius:6px;
                                font-family:inherit; font-size:13px; background:var(--white); color:var(--text);">
                     <option value="">{% trans "Todas las áreas" %}</option>
                     {% for area in areas %}
@@ -47,13 +47,15 @@
             <div style="display:flex; flex-direction:column; gap:4px;">
                 <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Período" %}</label>
                 <select name="rango" id="rango-select" onchange="toggleCustom(this.value)"
-                        style="padding:7px 10px; border:1px solid var(--border); border-radius:6px;
+                        style="height:33px; padding:0 10px; border:1px solid var(--border); border-radius:6px;
                                font-family:inherit; font-size:13px; background:var(--white); color:var(--text);">
                     <option value="1"          {% if rango == '1'          %}selected{% endif %}>{% trans "Hoy" %}</option>
                     <option value="7"          {% if rango == '7'          %}selected{% endif %}>{% trans "Últimos 7 días" %}</option>
                     <option value="30"         {% if rango == '30'         %}selected{% endif %}>{% trans "Últimos 30 días" %}</option>
                     <option value="semana_num" {% if rango == 'semana_num' %}selected{% endif %}>{% trans "Por número de semana" %}</option>
                     <option value="semanas"    {% if rango == 'semanas'    %}selected{% endif %}>{% trans "Por semana (año actual)" %}</option>
+                    <option value="mes"        {% if rango == 'mes'        %}selected{% endif %}>{% trans "Por mes" %}</option>
+                    <option value="meses"      {% if rango == 'meses'      %}selected{% endif %}>{% trans "Por meses (año completo)" %}</option>
                     <option value="custom"     {% if rango == 'custom'     %}selected{% endif %}>{% trans "Rango personalizado" %}</option>
                 </select>
             </div>
@@ -61,13 +63,36 @@
             <div id="wrap-semana" style="display:{% if rango == 'semana_num' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
                 <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;">{% trans "Semana" %}</label>
                 <input type="number" name="semana_num" value="{{ semana_num|default:semana_actual }}" min="1" max="53"
-                       style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--white);color:var(--text);width:80px;">
+                        style="height:33px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text);width:80px;">
+            </div>
+
+            <div id="wrap-mes" style="display:{% if rango == 'mes' %}flex{% else %}none{% endif %};gap:8px;">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;">{% trans "Mes" %}</label>
+                    <select name="mes_num"
+                            style="height:33px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text);">
+                        {% for num, nombre in meses %}
+                        <option value="{{ num }}" {% if mes_num|default:mes_actual|stringformat:"s" == num|stringformat:"s" %}selected{% endif %}>{{ nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;">{% trans "Año" %}</label>
+                    <input type="number" name="anio_mes" value="{{ anio_mes|default:año_actual }}" min="2015" max="{{ año_actual }}"
+                           style="height:33px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text);width:80px;">
+                </div>
+            </div>
+
+            <div id="wrap-meses" style="display:{% if rango == 'meses' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
+                <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;">{% trans "Año" %}</label>
+                <input type="number" name="anio_meses" value="{{ anio_meses|default:año_actual }}" min="2015" max="{{ año_actual }}"
+                        style="height:33px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text);width:80px;">
             </div>
 
             <div style="display:flex; flex-direction:column; gap:4px;">
                 <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Responsable" %}</label>
                 <select name="responsable" onchange="this.form.submit()"
-                        style="padding:7px 10px; border:1px solid var(--border); border-radius:6px;
+                        style="height:33px; padding:0 10px; border:1px solid var(--border); border-radius:6px;
                                font-family:inherit; font-size:13px; background:var(--white); color:var(--text);">
                     <option value="">{% trans "Todos" %}</option>
                     {% for resp in responsables_disponibles %}
@@ -78,7 +103,8 @@
             <div style="display:flex;flex-direction:column;gap:4px;">
                 <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Estatus" %}</label>
                 <select name="estatus" onchange="this.form.submit()"
-                        style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
+                        style="height:33px; padding:0 10px; border:1px solid var(--border); border-radius:6px;
+                               font-family:inherit; font-size:13px; background:var(--white); color:var(--text); min-width:140px;">
                     <option value=""         {% if estatus_filtro == ''         %}selected{% endif %}>{% trans "Todos" %}</option>
                     <option value="verde"    {% if estatus_filtro == 'verde'    %}selected{% endif %}>{% trans "Aceptados" %}</option>
                     <option value="rojo"     {% if estatus_filtro == 'rojo'     %}selected{% endif %}>{% trans "Rechazados" %}</option>
@@ -90,13 +116,13 @@
             <div id="wrap-desde" style="display:{% if rango == 'custom' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
                 <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{% trans "Desde" %}</label>
                 <input type="date" name="fecha_ini" value="{{ fecha_ini|date:'Y-m-d' }}"
-                       style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--white);color:var(--text);">
+                       style="height:33px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text);">
             </div>
 
             <div id="wrap-hasta" style="display:{% if rango == 'custom' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
                 <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{% trans "Hasta" %}</label>
                 <input type="date" name="fecha_fin" value="{{ fecha_fin|date:'Y-m-d' }}"
-                       style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--white);color:var(--text);">
+                       style="height:33px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text);">
             </div>
 
             <button type="submit" id="btn-aplicar-custom" class="btn btn-primary"
@@ -105,6 +131,14 @@
             </button>
             <button type="submit" id="btn-aplicar-semana" class="btn btn-primary"
                     style="align-self:flex-end;display:{% if rango == 'semana_num' %}flex{% else %}none{% endif %};">
+                {% trans "Aplicar" %}
+            </button>
+            <button type="submit" id="btn-aplicar-mes" class="btn btn-primary"
+                    style="align-self:flex-end;display:{% if rango == 'mes' %}flex{% else %}none{% endif %};">
+                {% trans "Aplicar" %}
+            </button>
+            <button type="submit" id="btn-aplicar-meses" class="btn btn-primary"
+                    style="align-self:flex-end;display:{% if rango == 'meses' %}flex{% else %}none{% endif %};">
                 {% trans "Aplicar" %}
             </button>
         </form>
@@ -315,6 +349,11 @@ window.DASHBOARD_CFG = {
                 "Sem {{ s.semana }}"
                 {% if not forloop.last %},{% endif %}
             {% endfor %}
+        {% elif es_meses %}
+            {% for m in paros_por_mes %}
+                "{{ m.mes_label }}"
+                {% if not forloop.last %},{% endif %}
+            {% endfor %}
         {% else %}
             {% for d in tendencia %}
                 "{{ d.fecha|slice:'5:' }}"
@@ -333,6 +372,11 @@ window.DASHBOARD_CFG = {
                 {{ s.minutos }}
                 {% if not forloop.last %},{% endif %}
             {% endfor %}
+        {% elif es_meses %}
+            {% for m in paros_por_mes %}
+                {{ m.minutos }}
+                {% if not forloop.last %},{% endif %}
+            {% endfor %}   
         {% else %}
             {% for d in tendencia %}
                 {{ d.minutos }}
@@ -345,6 +389,8 @@ window.DASHBOARD_CFG = {
             { fontSize: 11, maxRotation: 0 }
         {% elif es_semanas %}
             { fontSize: 10, maxRotation: 45 }
+        {% elif es_meses %}
+            { fontSize: 11, maxRotation: 30 }   
         {% else %}
             { fontSize: 11, maxRotation: 45, autoSkip: {{ tendencia|length }} > 20 }
         {% endif %},

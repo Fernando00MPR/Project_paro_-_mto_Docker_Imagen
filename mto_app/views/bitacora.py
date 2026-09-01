@@ -215,3 +215,4 @@ def buscar_responsables_bitacora(request):
         for r in qs[:15]
     ]
     return JsonResponse(data, safe=False)
+

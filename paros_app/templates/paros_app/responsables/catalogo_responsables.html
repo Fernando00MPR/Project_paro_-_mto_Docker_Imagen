@@ -21,13 +21,16 @@
 </div>
 
 {% if messages %}
-{% for msg in messages %}
-<div style="padding:10px 16px; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:12px;
-            {% if msg.tags == 'error' %}background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;
-            {% else %}background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7;{% endif %}">
-    {{ msg }}
+<div style="margin-bottom:12px;">
+    {% for msg in messages %}
+    <div style="padding:10px 16px; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:6px;
+                background:{% if msg.tags == 'error' %}var(--red-lt){% else %}#D1FAE5{% endif %};
+                color:{% if msg.tags == 'error' %}var(--red){% else %}#065F46{% endif %};
+                border:1px solid {% if msg.tags == 'error' %}var(--red){% else %}#6EE7B7{% endif %};">
+        {{ msg }}
+    </div>
+    {% endfor %}
 </div>
-{% endfor %}
 {% endif %}
 
 {% for area in areas %}
@@ -85,7 +88,7 @@
         <div class="table-wrap">
             <table>
                 <thead><tr>
-                    <th style="width:40px;">{% trans "Código" %}</th>
+                    <th style="width:80px;">{% trans "Código" %}</th>
                     <th style="width:400px;">{% trans "Responsable" %}</th>
                     {% if puede_editar or puede_eliminar %}
                     <th style="width:90px;">{% trans "Acción" %}</th>

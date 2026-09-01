@@ -73,9 +73,9 @@
     transition: opacity .15s;
 }
 .btn-accion:hover  { opacity: .85; }
-.btn-accion-est    { background: #10B981; color: #fff; }
-.btn-accion-edit   { background: #4F46E5; color: #fff; }
-.btn-accion-del    { background: #EF4444; color: #fff; }
+.btn-accion-est    { background: #10B981;     color: #fff; }
+.btn-accion-edit   { background: var(--indigo); color: #fff; }
+.btn-accion-del    { background: #EF4444;     color: #fff; }
 
 
 /* ── crear_paro / editar_paro — autocomplete de fallas ────────────────────── */

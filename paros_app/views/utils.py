@@ -77,16 +77,25 @@ def _parse_fecha(s):
         if isinstance(s, _dt):
             return s.date()
         return s
-    s = str(s).strip().replace('-', '/').replace('.', '/')
+    s_original = str(s).strip()
+    s = s_original.replace('-', '/').replace('.', '/')
     partes = s.split('/')
     if len(partes) != 3:
-        raise ValueError(f"Formato de fecha no reconocido: {s}")
-    dia  = int(partes[0])
-    mes  = int(partes[1])
-    anio = int(partes[2])
+        raise ValueError(f"Fecha '{s_original}' no reconocida (usa el formato dd/mm/aaaa)")
+    try:
+        dia  = int(partes[0])
+        mes  = int(partes[1])
+        anio = int(partes[2])
+    except ValueError:
+        raise ValueError(f"Fecha '{s_original}' no reconocida (usa el formato dd/mm/aaaa)")
     if anio < 100:
         anio += 2000
-    return _d(anio, mes, dia)
+    if mes > 12:
+        raise ValueError(f"Fecha '{s_original}' inválida — el mes '{mes}' no existe (máximo 12). Usa el formato dd/mm/aaaa, no mm/dd/aaaa")
+    try:
+        return _d(anio, mes, dia)
+    except ValueError:
+        raise ValueError(f"Fecha '{s_original}' inválida — revisa que sea dd/mm/aaaa (día/mes/año)")
 
 
 import openpyxl

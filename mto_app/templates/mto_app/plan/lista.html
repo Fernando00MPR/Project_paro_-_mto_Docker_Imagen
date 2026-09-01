@@ -180,6 +180,7 @@
         <table class="sticky-actions-col" style="table-layout:auto; width:auto; min-width:100%;">
             <thead>
                 <tr>
+                    <th style="width:6px; padding:0; border-bottom:1px solid var(--border);"></th>
                     <th class="col-area"          style="text-align:center;">{% trans "Área" %}</th>
                     <th class="col-codigo"        style="text-align:center; width:140px;">
                         <a href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'codigo' %}-codigo{% else %}codigo{% endif %}"
@@ -241,9 +242,12 @@
             </thead>
             <tbody>
                 {% for p in planes %}
-                <tr>
+                <tr style="cursor:pointer;" onclick="filaClickVer(event, {{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')">
+                    <td style="width:6px; padding:0;
+                       background:{% if filtro_semana %}{% if p.registro_semana.estado == 'completada' %}#1D9E75{% elif p.registro_semana.estado == 'reagendada' %}var(--indigo){% elif p.registro_semana.estado == 'cancelada' %}#9CA3AF{% else %}#F59E0B{% endif %}{% else %}transparent{% endif %};"
+                        {% if filtro_semana %}title="{% if p.registro_semana.estado == 'completada' %}{% trans 'Completada' %}{% elif p.registro_semana.estado == 'reagendada' %}{% trans 'Reagendada' %}{% elif p.registro_semana.estado == 'cancelada' %}{% trans 'Cancelada' %}{% else %}{% trans 'Pendiente' %}{% endif %} — S{{ filtro_semana }}"{% endif %}></td>
                     <td class="col-area"   style="white-space:nowrap;">{{ p.area }}</td>
-                    <td class="col-codigo" style="text-align:center; white-space:nowrap;"><strong>{{ p.codigo }}</strong></td>
+                    <td class="col-codigo" style="text-align:center; white-space:nowrap;"><strong style="font-family:ui-monospace,SFMono-Regular,'Roboto Mono',Menlo,Consolas,monospace;">{{ p.codigo }}</strong></td>
                     <td class="col-rutina" style="text-align:center; white-space:nowrap;">{{ p.rutina }}</td>
                     <td class="col-actividad">{{ p.actividad }}</td>
                     <td class="col-duracion" style="text-align:center;">
@@ -306,7 +310,7 @@
                             {% elif p.registro_semana.estado == 'pendiente' %}
                             <span style="font-size:10px; font-weight:600; color:#92400E; background:#FEF3C7; padding:2px 8px; border-radius:20px;">{% trans "Pendiente" %}</span>
                             {% elif p.registro_semana.estado == 'reagendada' %}
-                            <span style="font-size:10px; font-weight:600; color:#3730A3; background:#E0E7FF; padding:2px 8px; border-radius:20px;">{% trans "Reagendada" %}</span>
+                            <span style="font-size:10px; font-weight:600; color:var(--indigo-dk); background:var(--indigo-lt); padding:2px 8px; border-radius:20px;">{% trans "Reagendada" %}</span>
                             {% elif p.registro_semana.estado == 'cancelada' %}
                             <span style="font-size:10px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px;">{% trans "Cancelada" %}</span>
                             {% endif %}
@@ -331,8 +335,8 @@
 
                     <td style="align-items:center;">
                         <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:nowrap;">
-                            <button onclick="abrirModal({{ p.pk }})" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Ver" %}</button>
-
+                            <button onclick="abrirModal({{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Ver" %}</button>
+                            
                             {% if puede_editar_plan %}
                             <a href="{% url 'mto:editar_plan' p.pk %}" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Editar" %}</a>
                             {% endif %}
@@ -346,7 +350,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="12" style="text-align:center; color:var(--text-3); padding:24px;">
+                    <td colspan="13" style="text-align:center; color:var(--text-3); padding:24px;">
                         {% trans "No hay tareas registradas." %} <a href="{% url 'mto:nuevo_plan' %}">{% trans "Agregar primera tarea" %}</a>
                     </td>
                 </tr>
@@ -392,9 +396,10 @@
 <!-- ── Modal calendario ── -->
 <div id="modal-backdrop"
      style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
-            z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:14px; width:min(860px,95vw);
-                box-shadow:0 8px 40px rgba(0,0,0,.18); overflow:hidden; position:relative;">
+            z-index:1000; align-items:center; justify-content:center; padding:40px 24px 64px;">
+    <div style="background:#fff; border-radius:16px; width:min(880px,95vw);
+                box-shadow:0 1px 2px rgba(24,20,50,.06), 0 24px 56px -20px rgba(24,20,50,.28);
+                overflow:hidden; position:relative;">
         <iframe id="modal-iframe" src="" style="width:100%; height:940px; border:none; display:block;"></iframe>
     </div>
 </div>
@@ -463,7 +468,7 @@
             z-index:3000; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:12px; padding:24px 28px;
                 min-width:360px; max-width:480px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:14px; font-weight:600; color:#1E1B4B; margin-bottom:4px;" id="mseg-titulo">{% trans "Nuevo seguimiento" %}</div>
+        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;" id="mseg-titulo">{% trans "Nuevo seguimiento" %}</div>
         <div style="font-size:11px; color:#9CA3AF; margin-bottom:16px;" id="mseg-subtitulo"></div>
 
         <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
@@ -513,7 +518,7 @@
             <button type="button" onclick="cerrarMseg()"
                     style="padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; border:1px solid #E5E4F0; background:transparent; color:#6B7280;">{% trans "Cancelar" %}</button>
             <button type="button" onclick="guardarMseg()"
-                    style="padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; border:none; background:#4F46E5; color:#fff;">{% trans "Guardar" %}</button>
+                    style="padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; border:none; background:var(--indigo); color:#fff;">{% trans "Guardar" %}</button>
         </div>
     </div>
 </div>

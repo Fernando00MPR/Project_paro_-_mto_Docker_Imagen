@@ -386,22 +386,30 @@ def modal_plan(request, pk):
     if plan.semana_inicio and plan.anio_inicio:
         intervalo = INTERVALO.get(plan.frecuencia, 1)
         try:
-            ref_lunes   = lunes_de_semana(plan.anio_inicio, plan.semana_inicio)
-            inicio_anio = date(anio, 1, 1)
-            fin_anio    = date(anio, 12, 31)
-            registros_map = {
-                r.semana_inicio: r
-                for r in RegistroEjecucion.objects.filter(
-                    plan=plan,
-                    semana_inicio__gte=inicio_anio,
-                    semana_inicio__lte=fin_anio,
-                )
-            }
+            ref_lunes = lunes_de_semana(plan.anio_inicio, plan.semana_inicio)
+            fin_anio  = date(anio, 12, 31)
 
-            cursor      = ref_lunes
+            # Semanas de frontera (p. ej. la S1 de un año puede empezar en
+            # diciembre del año calendario anterior) pertenecen a `anio` por
+            # año ISO aunque su lunes no caiga dentro de Jan 1–Dec 31 de ese
+            # año. Por eso primero se arma la lista exacta de lunes a mostrar
+            # (sin tocar la BD) y luego se buscan los registros por esa lista
+            # exacta — en vez de un rango de fechas de calendario, que las
+            # excluía y hacía que su tarjeta nunca reflejara el registro ya
+            # guardado (quedaba en "Sin registro" aunque estuviera completada).
+            cursores = []
+            cursor   = ref_lunes
             while cursor <= fin_anio:
                 if cursor.isocalendar()[0] == anio:
+                    cursores.append(cursor)
+                cursor += timedelta(weeks=intervalo)
 
+            registros_map = {
+                r.semana_inicio: r
+                for r in RegistroEjecucion.objects.filter(plan=plan, semana_inicio__in=cursores)
+            }
+
+            for cursor in cursores:
                     fechas.append({
                         'fecha':    cursor,
                         'domingo':  cursor + timedelta(days=6),
@@ -411,11 +419,23 @@ def modal_plan(request, pk):
                         'actual':   (cursor.isocalendar()[1] == hoy.isocalendar()[1]
                                      and cursor.year == hoy.year),
                     })
-                cursor += timedelta(weeks=intervalo)
         except Exception:
             pass
 
     proxima = next((f for f in fechas if not f['pasada']), None)
+
+    # Si se abrió el modal desde una lista filtrada por semana (?semana=),
+    # se abre automáticamente el formulario de "Registrar ejecución" de esa
+    # semana — solo si de verdad es una ocurrencia real del plan en `fechas`.
+    auto_semana = None
+    semana_get = request.GET.get('semana', '').strip()
+    if semana_get:
+        try:
+            semana_get = int(semana_get)
+            if any(f['semana'] == semana_get for f in fechas):
+                auto_semana = semana_get
+        except ValueError:
+            pass
 
     ctx = {
         'plan':           plan,
@@ -424,6 +444,7 @@ def modal_plan(request, pk):
         'anio':           anio,
         'anio_anterior':  anio - 1,
         'anio_siguiente': anio + 1,
+        'auto_semana':    auto_semana,
     }
     return render(request, 'mto_app/plan/modal_calendario.html', ctx)
 

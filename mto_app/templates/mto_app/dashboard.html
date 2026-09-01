@@ -4,10 +4,14 @@
 {% block extra_head %}
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='14' width='8' height='16' rx='2' fill='%234F46E5'/><rect x='12' y='8' width='8' height='22' rx='2' fill='%234F46E5' opacity='.7'/><rect x='22' y='2' width='8' height='28' rx='2' fill='%234F46E5' opacity='.4'/></svg>">
 {% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'mto_app/css/dashboard_mobile.css' %}">
+{% endblock %}
 {% block content %}
 
 <!-- Título -->
-<div style="margin-bottom:20px;">
+<div class="dsh-head" style="margin-bottom:20px;">
     <div class="card-title">
         {% trans "Dashboard" %}
         {% if filtro_area %}
@@ -23,46 +27,55 @@
 </div>
 
 <!-- ── Filtros ── -->
-<form method="get" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;
-                          padding:14px; background:var(--white); border:1px solid var(--border);
-                          border-radius:var(--radius); align-items:flex-end;">
-    <div class="filter-group">
-        <label>{% trans "Área" %}</label>
-        <select name="area">
-            <option value="">{% trans "Todas las áreas" %}</option>
-            {% for a in areas %}
-            <option value="{{ a.pk }}" {% if filtro_area == a.pk|stringformat:"s" %}selected{% endif %}>
-                {{ a.nombre }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="filter-group">
-        <label>{% trans "Semana" %}</label>
-        <input type="number" name="semana" min="1" max="52"
-               value="{{ filtro_semana }}" style="width:90px;">
-    </div>
-    <div class="filter-group">
-        <label>{% trans "Año" %}</label>
-        <input type="number" name="anio" min="2020" max="2099"
-               value="{{ anio }}" style="width:90px;">
-    </div>
-    <div class="filter-actions">
-        <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
-        <a href="{% url 'mto:dashboard' %}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
-    </div>
-</form>
+<div class="dsh-filters-wrap">
+    <button type="button" class="dsh-filters-toggle" aria-expanded="false" aria-controls="dsh-filters"
+            onclick="toggleFiltros(this)">
+        <span class="dsh-filters-dot"></span>
+        {% trans "Filtros" %} · S{{ filtro_semana }}
+    </button>
+
+    <form method="get" id="dsh-filters" class="dsh-filters"
+                            style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;
+                            padding:14px; background:var(--white); border:1px solid var(--border);
+                            border-radius:var(--radius); align-items:flex-end;">
+        <div class="filter-group">
+            <label>{% trans "Área" %}</label>
+            <select name="area">
+                <option value="">{% trans "Todas las áreas" %}</option>
+                {% for a in areas %}
+                <option value="{{ a.pk }}" {% if filtro_area == a.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ a.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Semana" %}</label>
+            <input type="number" name="semana" min="1" max="52"
+                    value="{{ filtro_semana }}">
+        </div>
+        <div class="filter-group">
+            <label>{% trans "Año" %}</label>
+            <input type="number" name="anio" min="2020" max="2099"
+                value="{{ anio }}">
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
+            <a href="{% url 'mto:dashboard' %}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
+        </div>
+    </form>
+</div>
 
 <!-- ── Métricas ── -->
-<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:24px;">
+<div class="dsh-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:24px;">
 
-    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+    <div class="dsh-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
         <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Planes activos" %}</div>
         <div style="font-size:26px; font-weight:500; line-height:1; color:var(--text);">{{ total_planes }}</div>
         <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{{ total_semana }} {% trans "tocan esta semana" %}</div>
     </div>
 
-    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+    <div class="dsh-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
         <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Sin registrar (vencidas)" %}</div>
         <div style="font-size:26px; font-weight:500; line-height:1;
                     color:{% if total_vencidos > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
@@ -71,7 +84,7 @@
         <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "semanas anteriores a Semana" %} {{ filtro_semana }}</div>
     </div>
 
-    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+    <div class="dsh-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
         <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Sin responsable" %}</div>
         <div style="font-size:26px; font-weight:500; line-height:1;
                     color:{% if sin_responsable > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
@@ -80,7 +93,7 @@
         <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "en semana" %} {{ filtro_semana }}</div>
     </div>
 
-    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+    <div class="dsh-kpi dsh-kpi-main" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
         <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Cumplimiento semana" %} {{ filtro_semana }}</div>
         <div style="font-size:26px; font-weight:500; line-height:1;
                     color:{% if cumplimiento_pct >= 90 %}#1D9E75{% elif cumplimiento_pct >= 50 %}#854F0B{% else %}#E24B4A{% endif %};">
@@ -91,7 +104,7 @@
         </div>
     </div>
 
-    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
+    <div class="dsh-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
         <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Pendientes" %}</div>
         <div style="font-size:22px; font-weight:500; line-height:1;
                     color:{% if pendientes > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
@@ -103,8 +116,8 @@
 </div>
 
 <!-- ── Gráfico cumplimiento por semana ── -->
-<div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:24px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+<div class="dsh-chart-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:24px;">
+    <div class="dsh-chart-head" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
         <div>
             <div style="font-size:13px; font-weight:500;">{% trans "Cumplimiento por semana" %} — {{ anio }}</div>
             <div style="font-size:11px; color:var(--text-3); margin-top:2px;">
@@ -112,7 +125,7 @@
             </div>
         </div>
         <div style="display:flex; gap:12px; align-items:center;">
-            <div style="display:flex; gap:10px; font-size:11px; color:var(--text-2);">
+            <div class="dsh-legend" style="display:flex; gap:10px; font-size:11px; color:var(--text-2);">
                 <span style="display:flex; align-items:center; gap:4px;">
                     <span style="width:10px; height:10px; border-radius:2px; background:#1D9E75; display:inline-block;"></span>{% trans "Mayor o igual que 90%" %}
                 </span>
@@ -130,25 +143,39 @@
             </button>
         </div>
     </div>
-    <div style="position:relative; width:100%; height:280px;">
-        <canvas id="chartCumplimiento" role="img" aria-label="Gráfico de cumplimiento por semana">{% trans "Cumplimiento semanal." %}</canvas>
+    <div class="dsh-chart-box" style="position:relative; width:100%; height:280px;">
+        <div class="dsh-chart-rail">
+            <canvas id="chartCumplimiento" role="img" aria-label="Gráfico de cumplimiento por semana">{% trans "Cumplimiento semanal." %}</canvas>
+    
+        </div>
     </div>
 </div>
 
 <!-- ── Segunda fila ── -->
-<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+<div class="dsh-tabs" role="tablist">
+    <button type="button" role="tab" class="dsh-tab is-active" data-target="dsh-list-week"
+            aria-selected="true" onclick="mostrarLista('dsh-list-week', this)">
+        {% trans "Semana" %} {{ filtro_semana }} · {{ total_semana }}
+    </button>
+    <button type="button" role="tab" class="dsh-tab" data-target="dsh-list-overdue"
+            aria-selected="false" onclick="mostrarLista('dsh-list-overdue', this)">
+        {% trans "Vencidas" %} · {{ total_vencidos }}
+    </button>
+</div>
+
+<div class="dsh-lists" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
 
     <!-- Planes vencidos sin registro -->
-    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
+    <div id="dsh-list-overdue" class="dsh-list dsh-list-overdue" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
             <div style="font-size:13px; font-weight:500;">{% trans "Ordenes de trabajo vencidas sin registro" %}</div>
             {% if total_vencidos > 6 %}
             <span style="font-size:11px; color:var(--text-3);">+{{ total_vencidos|add:"-6" }} {% trans "más" %}</span>
             {% endif %}
         </div>
-        <div style="max-height:320px; overflow-y:auto;">
+        <div class="dsh-list-body" style="max-height:320px; overflow-y:auto;">
             {% for v in vencidos %}
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;
+            <div class="dsh-row" style="display:flex; justify-content:space-between; align-items:flex-start;
                         padding:8px 0; border-bottom:1px solid var(--border); font-size:12px;">
                 <div style="min-width:0;">
                     <div style="font-weight:500; color:var(--text);">{{ v.plan.codigo }}</div>
@@ -175,16 +202,16 @@
     </div>
 
     <!-- Detalle semana -->
-    <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
+    <div id="dsh-list-week" class="dsh-list dsh-list-week" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
         <div style="font-size:13px; font-weight:500; margin-bottom:14px;">
             {% trans "Detalles de la semana" %} {{ filtro_semana }}
             <span style="font-size:11px; font-weight:400; color:var(--text-3);">
                 ({{ lunes_filtro|date:"d M" }} – {{ domingo_filtro|date:"d M" }})
             </span>
         </div>
-        <div style="max-height:320px; overflow-y:auto;">
+        <div class="dsh-list-body" style="max-height:320px; overflow-y:auto;">
             {% for item in semana_detalle %}
-            <div style="display:flex; justify-content:space-between; align-items:center;
+            <div class="dsh-row" style="display:flex; justify-content:space-between; align-items:center;
                         padding:7px 0; border-bottom:1px solid var(--border); font-size:12px;">
                 <div style="min-width:0; flex:1;">
                     <div style="font-weight:500; color:var(--text);">{{ item.plan.codigo }}</div>
@@ -200,7 +227,7 @@
                 {% elif item.estado == 'pendiente' %}
                     <span style="font-size:10px; font-weight:600; color:#92400E; background:#FEF3C7; padding:2px 8px; border-radius:20px; flex-shrink:0;">{% trans "Pendiente" %}</span>
                 {% elif item.estado == 'reagendada' %}
-                    <span style="font-size:10px; font-weight:600; color:#3730A3; background:#E0E7FF; padding:2px 8px; border-radius:20px; flex-shrink:0;">{% trans "Reagendada" %}</span>
+                    <span style="font-size:10px; font-weight:600; color:var(--indigo-dk); background:var(--indigo-lt); padding:2px 8px; border-radius:20px; flex-shrink:0;">{% trans "Reagendada" %}</span>
                 {% elif item.estado == 'cancelada' %}
                     <span style="font-size:10px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px; flex-shrink:0;">{% trans "Cancelada" %}</span>
                 {% else %}
@@ -223,11 +250,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 window.DASHBOARD_CONFIG = {
-    semanas:     {{ cumplimiento_semanas|safe }},
-    valores:     {{ cumplimiento_valores|safe }},
-    totales:     {{ cumplimiento_totales|safe }},
-    completadas: {{ cumplimiento_completadas|safe }},
-    anio:        {{ anio }},
+    semanas:       {{ cumplimiento_semanas|safe }},
+    valores:       {{ cumplimiento_valores|safe }},
+    totales:       {{ cumplimiento_totales|safe }},
+    completadas:   {{ cumplimiento_completadas|safe }},
+    anio:          {{ anio }},
+    filtroSemana:  {{ filtro_semana|default:0 }},
 };
 </script>
 {% load static %}

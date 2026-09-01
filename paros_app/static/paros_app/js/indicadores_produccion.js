@@ -2,11 +2,44 @@
 //  indicadores_produccion.js
 // ──────────────────────────────────────────────────────────────
 
+// Color de acento resuelto — Chart.js/canvas no entienden var(--indigo), necesitan el valor real
+function colorIndigo() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--indigo').trim();
+}
+function colorIndigoRgba(alpha) {
+    const hex = colorIndigo().replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── Colapsar gráfico de Tendencia ───────────────────────────────
+function toggleTendencia() {
+    const el   = document.getElementById('tendencia-content');
+    const chev = document.getElementById('chev-tendencia');
+    const collapsed = el.classList.toggle('collapsed');
+    chev.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+    localStorage.setItem('tendencia-collapsed', collapsed ? '1' : '0');
+    if (!collapsed) cargarTendencia();
+}
+
+if (localStorage.getItem('tendencia-collapsed') === '1') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const el   = document.getElementById('tendencia-content');
+        const chev = document.getElementById('chev-tendencia');
+        if (el)   el.classList.add('collapsed');
+        if (chev) chev.style.transform = 'rotate(-90deg)';
+    });
+}
+
 // ── Filtros de período ────────────────────────────────────────
 function togglePeriodo(v, autoSubmit) {
-    document.getElementById('wrap-semana-num').style.display = v === 'semana_num' ? 'flex' : 'none';
-    document.getElementById('wrap-desde').style.display      = v === 'custom'     ? 'flex' : 'none';
-    document.getElementById('wrap-hasta').style.display      = v === 'custom'     ? 'flex' : 'none';
+    document.getElementById('wrap-semana-num').style.display       = v === 'semana_num'  ? 'flex' : 'none';
+    document.getElementById('wrap-mes-elegido').style.display      = v === 'mes_elegido' ? 'flex' : 'none';
+    document.getElementById('wrap-anio-mes-elegido').style.display = v === 'mes_elegido' ? 'flex' : 'none';
+    document.getElementById('wrap-desde').style.display            = v === 'custom'      ? 'flex' : 'none';
+    document.getElementById('wrap-hasta').style.display            = v === 'custom'      ? 'flex' : 'none';
 
     if (autoSubmit && (v === 'semana' || v === 'mes')) {
         document.getElementById('form-filtros').submit();
@@ -48,7 +81,7 @@ function mostrarColumnaIndicador(ind) {
 // ── Poblar valores KPI en la columna activa ───────────────────
 function poblarValoresTabla() {
     const ind = window.INDICADOR_ACTUAL;
-    const UNIDADES = { downtime:'%', disponibilidad:'%', mttr:' min', mtbf:' h', t_muerto_mant:' min' };
+    const UNIDADES = { downtime:'%', disponibilidad:'%', mttr:' min', mtbf:' h', t_muerto_mant:' min', planeado:' min' };
     const unidad = UNIDADES[ind] || '';
 
     const CLAVE = {
@@ -167,10 +200,12 @@ function esRojo(v, hayOutlier, axisMax) {
 // ── Gráfica ───────────────────────────────────────────────────
 function crearGrafica() {
     const { axisMax, hayOutlier } = detectarOutlier();
-    const bgColors = VALORES.map(v => esRojo(v, hayOutlier, axisMax) ? 'rgba(239,68,68,0.80)' : 'rgba(79,70,229,0.75)');
-    const bdColors = VALORES.map(v => esRojo(v, hayOutlier, axisMax) ? '#DC2626' : '#4F46E5');
+    const indigoAlpha = colorIndigoRgba(0.75);
+    const indigoSolid = colorIndigo();
+    const bgColors = VALORES.map(v => esRojo(v, hayOutlier, axisMax) ? 'rgba(239,68,68,0.80)' : indigoAlpha);
+    const bdColors = VALORES.map(v => esRojo(v, hayOutlier, axisMax) ? '#DC2626'              : indigoSolid);
 
-    const UNIDADES = { downtime:'%', disponibilidad:'%', mttr:' min', mtbf:' h', t_muerto_mant:' min' };
+    const UNIDADES = { downtime:'%', disponibilidad:'%', mttr:' min', mtbf:' h', t_muerto_mant:' min', planeado:' min' };
     const unidad = UNIDADES[window.INDICADOR_ACTUAL] || '';
 
     const ctx   = document.getElementById('chartIndicador').getContext('2d');
@@ -263,7 +298,7 @@ function crearGrafica() {
                         if (esRecortada) {
                             const yArea = chart.chartArea.top + 16;
                             const bw = bar.width || 30;
-                            ctx2.fillStyle = rojo ? '#DC2626' : '#4F46E5';
+                            ctx2.fillStyle = rojo ? '#DC2626' : indigoSolid;
                             ctx2.fillRect(bar.x - bw / 2, chart.chartArea.top, bw, 20);
                             ctx2.fillStyle = '#ffffff';
                             ctx2.fillText(label, bar.x, yArea);
@@ -274,13 +309,13 @@ function crearGrafica() {
                             ctx2.fillText(label, bar.x, yPos);
                         } else {
                             const yPos = bar.y - 6;
-                            const dentroDeBar = yPos < chart.chartArea.top + 14;
+                            const dentroDeBar = yPos < 14;
                             if (dentroDeBar) {
                                 ctx2.fillStyle = '#ffffff';
                                 ctx2.fillText(label, bar.x, bar.y + 16);
                             } else {
                                 const esDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                                ctx2.fillStyle = esDark ? '#FFFFFF' : '#4F46E5';
+                                ctx2.fillStyle = esDark ? '#FFFFFF' : indigoSolid;
                                 ctx2.fillText(label, bar.x, yPos);
                             }
                         }
@@ -301,8 +336,8 @@ function cambiarTipo(tipo) {
     ['bar', 'line', 'area'].forEach(t => {
         const btn = document.getElementById('btn-tipo-' + t);
         if (btn) {
-            btn.style.background = t === tipo ? '#4F46E5' : 'var(--white)';
-            btn.style.color      = t === tipo ? '#fff'    : 'var(--text)';
+            btn.style.background = t === tipo ? 'var(--indigo)' : 'var(--white)';
+            btn.style.color      = t === tipo ? '#fff'        : 'var(--text)';
         }
     });
     const ds = chart.data.datasets[0];
@@ -313,11 +348,11 @@ function cambiarTipo(tipo) {
     } else if (tipo === 'line') {
         ds.type = 'line'; ds.fill = false; ds.tension = 0.3; ds.pointRadius = 4;
         ds.pointBackgroundColor = chart._bgColors; ds.borderWidth = 2;
-        ds.borderRadius = 0; ds.backgroundColor = 'transparent'; ds.borderColor = '#4F46E5';
+        ds.borderRadius = 0; ds.backgroundColor = 'transparent'; ds.borderColor = colorIndigo();
     } else if (tipo === 'area') {
         ds.type = 'line'; ds.fill = true; ds.tension = 0.3; ds.pointRadius = 4;
         ds.pointBackgroundColor = chart._bgColors; ds.borderWidth = 2;
-        ds.borderRadius = 0; ds.backgroundColor = 'rgba(79,70,229,0.12)'; ds.borderColor = '#4F46E5';
+        ds.borderRadius = 0; ds.backgroundColor = colorIndigoRgba(0.12); ds.borderColor = colorIndigo();
     }
     chart.config.type = tipo === 'bar' ? 'bar' : 'line';
     chart.update();
@@ -370,7 +405,7 @@ function aplicarFiltroTabla() {
         tr.style.display = (ocultoPorSinRegistro || ocultoPorTarget) ? 'none' : '';
     });
     const btn = document.getElementById('btn-filtrar');
-    if (btn) btn.textContent = ocultando ? 'Mostrar sin registro' : 'Ocultar sin registro';
+    if (btn) btn.textContent = ocultando ? window.TXT_MOSTRAR_SIN_REGISTRO : window.TXT_OCULTAR_SIN_REGISTRO;
 }
 
 let filtroTarget = localStorage.getItem('ind-filtro-target') || 'fuera';
@@ -412,32 +447,111 @@ function toggleCol(cls) {
     els.forEach(el => { el.style.display = hide ? 'none' : ''; });
 }
 
-// ── Ciclo de estatus ──────────────────────────────────────────
-const CICLO_EST = [
-    { cls: 'est-p', label: 'Pendiente',  val: 'p' },
-    { cls: 'est-e', label: 'En proceso', val: 'e' },
-    { cls: 'est-c', label: 'Cerrada',    val: 'c' },
-];
+// ── Estatus (semáforo) — derivado de fechas, con override manual ──────
+const ESTATUS_LABELS = { p: 'Pendiente', e: 'En proceso', c: 'Cerrada', n: 'No aplica' };
 
-function ciclarEst(btn) {
-    const i = CICLO_EST.findIndex(e => btn.classList.contains(e.cls));
-    const s = (i + 1) % CICLO_EST.length;
-    CICLO_EST.forEach(e => btn.classList.remove(e.cls));
-    btn.classList.add(CICLO_EST[s].cls);
-    btn.textContent = CICLO_EST[s].label;
-    const tr = btn.closest('tr');
-    if (tr) guardarFila(tr);
+function deriveStatus(isoInicio, isoCierre) {
+    if (!isoInicio) return 'p';
+    if (!isoCierre) return 'e';
+    return 'c';
+}
+
+// ── Responsable — autocompletado restringido a usuarios existentes ────
+let RESPONSABLES_VALIDOS = null;
+
+function nombresResponsablesValidos() {
+    if (RESPONSABLES_VALIDOS) return RESPONSABLES_VALIDOS;
+    const datalist = document.getElementById('datalist-responsables');
+    RESPONSABLES_VALIDOS = new Set(datalist ? Array.from(datalist.options).map(o => o.value) : []);
+    return RESPONSABLES_VALIDOS;
+}
+
+function validarResponsable(el) {
+    const val = el.value.trim();
+    if (val && !nombresResponsablesValidos().has(val)) {
+        el.value = '';
+    }
+}
+
+function filtrarResponsables(query) {
+    const q = query.trim().toLowerCase();
+    const nombres = Array.from(nombresResponsablesValidos());
+    if (!q) return nombres.slice(0, 8);
+    return nombres.filter(n => n.toLowerCase().includes(q)).slice(0, 8);
+}
+
+let respAutocompleteState = null; // { tr, input, nombres, indice }
+
+function mostrarAutocompleteResponsable(el) {
+    const tr = el.closest('tr');
+    if (!tr) return;
+    const nombres = filtrarResponsables(el.value);
+    respAutocompleteState = { tr, input: el, nombres, indice: -1 };
+    renderAutocompleteResponsable();
+}
+
+function renderAutocompleteResponsable() {
+    const box = document.getElementById('resp-autocomplete');
+    if (!box || !respAutocompleteState) return;
+    const { input, nombres, indice } = respAutocompleteState;
+
+    if (!nombres.length) {
+        box.innerHTML = `<div class="resp-autocomplete-empty">Sin coincidencias</div>`;
+    } else {
+        box.innerHTML = nombres.map((n, i) =>
+            `<button type="button" class="resp-autocomplete-item${i === indice ? ' highlighted' : ''}" ` +
+            `onmousedown="event.preventDefault(); seleccionarResponsableAutocomplete(${i});">${n}</button>`
+        ).join('');
+    }
+
+    box.style.display = 'block';
+    const rect = input.getBoundingClientRect();
+    const boxWidth = Math.max(box.offsetWidth || 0, rect.width);
+    let left = rect.left;
+    if (left + boxWidth > window.innerWidth - 8) left = window.innerWidth - boxWidth - 8;
+    let top = rect.bottom + 4;
+    const boxHeight = box.offsetHeight || 0;
+    if (top + boxHeight > window.innerHeight - 8) top = rect.top - boxHeight - 4;
+    box.style.minWidth = rect.width + 'px';
+    box.style.left = Math.max(8, left) + 'px';
+    box.style.top  = Math.max(8, top) + 'px';
+}
+
+function ocultarAutocompleteResponsable() {
+    const box = document.getElementById('resp-autocomplete');
+    if (box) box.style.display = 'none';
+    respAutocompleteState = null;
+}
+
+function moverResaltadoResponsable(delta) {
+    if (!respAutocompleteState || !respAutocompleteState.nombres.length) return;
+    const n = respAutocompleteState.nombres.length;
+    respAutocompleteState.indice = (respAutocompleteState.indice + delta + n) % n;
+    renderAutocompleteResponsable();
+}
+
+// El atributo size ajusta el ancho por caracteres — funciona en todos los
+// navegadores, a diferencia de field-sizing:content (sin soporte en Firefox).
+function ajustarAnchoResponsable(el) {
+    el.setAttribute('size', Math.max(el.value.length, 12));
+}
+
+function seleccionarResponsableAutocomplete(i) {
+    if (!respAutocompleteState) return;
+    const { tr, input, nombres } = respAutocompleteState;
+    const nombre = nombres[i];
+    if (nombre === undefined) return;
+    input.value = nombre;
+    ajustarAnchoResponsable(input);
+    ocultarAutocompleteResponsable();
+    guardarFila(tr);
+    input.focus();
 }
 
 // ── Obtener datos de una fila ─────────────────────────────────
 function datosDeFila(tr) {
     const get  = cls => { const el = tr.querySelector(cls); return el ? el.value.trim() : ''; };
-    const getB = cls => {
-        const el = tr.querySelector(cls);
-        if (!el) return 'p';
-        const f = CICLO_EST.find(e => el.classList.contains(e.cls));
-        return f ? f.val : 'p';
-    };
+    
     return {
         area_id:           window.AREA_ID,
         fecha:             tr.dataset.fecha,
@@ -447,15 +561,15 @@ function datosDeFila(tr) {
         cont_accion:       get('.cont-accion'),
         cont_fecha_inicio: fmtFecha(get('.cont-fi')),
         cont_fecha_fin:    fmtFecha(get('.cont-ff')),
-        cont_estatus:      getB('.cont-est'),
+        cont_estatus:      get('.cont-status') || 'p',
         corr_accion:       get('.corr-accion'),
         corr_fecha_inicio: fmtFecha(get('.corr-fi')),
         corr_fecha_fin:    fmtFecha(get('.corr-ff')),
-        corr_estatus:      getB('.corr-est'),
+        corr_estatus:      get('.corr-status') || 'p',
         prev_accion:       get('.prev-accion'),
         prev_fecha_inicio: fmtFecha(get('.prev-fi')),
         prev_fecha_fin:    fmtFecha(get('.prev-ff')),
-        prev_estatus:      getB('.prev-est'),
+        prev_estatus:      get('.prev-status') || 'p',
         responsable:       get('.resp-input'),
     };
 }
@@ -506,38 +620,315 @@ function cargarFila(tr) {
         if (!d.ok) return;
         const data = d.data;
         const set  = (cls, val) => { const el = tr.querySelector(cls); if (el) el.value = val || ''; };
-        const setB = (cls, val) => {
-            const el = tr.querySelector(cls);
-            if (!el) return;
-            const f = CICLO_EST.find(e => e.val === val) || CICLO_EST[0];
-            CICLO_EST.forEach(e => el.classList.remove(e.cls));
-            el.classList.add(f.cls);
-            el.textContent = f.label;
-        };
+        
         set('.problema-input', data.problema);
         set('.cont-accion',    data.cont_accion);
         set('.cont-fi',        parseFecha(data.cont_fecha_inicio));
         set('.cont-ff',        parseFecha(data.cont_fecha_fin));
-        setB('.cont-est',      data.cont_estatus);
+        set('.cont-status',    data.cont_estatus || 'p');
         set('.corr-accion',    data.corr_accion);
         set('.corr-fi',        parseFecha(data.corr_fecha_inicio));
         set('.corr-ff',        parseFecha(data.corr_fecha_fin));
-        setB('.corr-est',      data.corr_estatus);
+        set('.corr-status',    data.corr_estatus || 'p');
         set('.prev-accion',    data.prev_accion);
         set('.prev-fi',        parseFecha(data.prev_fecha_inicio));
         set('.prev-ff',        parseFecha(data.prev_fecha_fin));
-        setB('.prev-est',      data.prev_estatus);
+        set('.prev-status',    data.prev_estatus || 'p');
         set('.resp-input',     data.responsable);
+
+        const respEl = tr.querySelector('.resp-input');
+        if (respEl) ajustarAnchoResponsable(respEl);
 
         // Inicializar contadores tras cargar datos
         tr.querySelectorAll('.problema-input, .cont-accion, .corr-accion, .prev-accion').forEach(el => {
             el.dispatchEvent(new Event('input'));
-            centrarTextoTextarea(el);
+            autoGrowTextarea(el);
         });
+
+        // Repintar las celdas de rango de fechas con los datos cargados
+        ['cont', 'corr', 'prev'].forEach(fase => renderCeldaRango(tr, fase));
+
     })
     .catch(() => {
         console.warn(`cargarFila: fallo al cargar fila ${fecha}`);
     });
+}
+
+// ── Celda de rango de fechas (Contención / Correctiva / Preventiva) ───
+function hoyISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function diasEntre(isoInicio, isoFin) {
+    const d1 = new Date(isoInicio + 'T00:00:00');
+    const d2 = new Date(isoFin + 'T00:00:00');
+    return Math.round((d2 - d1) / 86400000);
+}
+
+function anioDeFila(tr) {
+    const partes = (tr.dataset.fecha || '').split('/');
+    if (partes.length !== 3) return null;
+    const y = partes[2];
+    return parseInt(y.length === 2 ? '20' + y : y, 10);
+}
+
+function fmtCorto(iso, anioFila) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return (anioFila && parseInt(y, 10) !== anioFila) ? `${d}/${m}/${y.slice(2)}` : `${d}/${m}`;
+}
+
+const FASE_INFO = {
+    cont: { label: 'contención',            clase: 'fase-cont' },
+    corr: { label: 'la acción correctiva',  clase: 'fase-corr' },
+    prev: { label: 'la acción preventiva',  clase: 'fase-prev' },
+};
+
+function renderCeldaRango(tr, fase) {
+    const wrap = tr.querySelector('.rango-' + fase);
+    if (!wrap) return;
+    const fi     = tr.querySelector('.' + fase + '-fi');
+    const ff     = tr.querySelector('.' + fase + '-ff');
+    const stEl   = tr.querySelector('.' + fase + '-status');
+    const inicio = fi ? fi.value : '';
+    const cierre = ff ? ff.value : '';
+    const anioFila = anioDeFila(tr);
+
+    const derivado = deriveStatus(inicio, cierre);
+    const estatus  = (stEl && stEl.value) || derivado;
+    const fijado   = estatus !== derivado;
+
+    // Mientras no hay fecha de inicio ("Fijar fechas"), el punto se ve gris —
+    // salvo que el estatus haya sido fijado manualmente a otra cosa.
+    const dotColor = (!inicio && !fijado) ? 'n' : estatus;
+
+    const dotHtml =
+        `<button type="button" class="rango-dot-btn" aria-haspopup="menu" ` +
+        `title="${ESTATUS_LABELS[estatus]}${fijado ? ' · fijado manualmente' : ''}" ` +
+        `aria-label="Estatus: ${ESTATUS_LABELS[estatus]}" ` +
+        `onclick="event.stopPropagation(); abrirMenuEstatus(event, this, '${fase}');">` +
+        `<span class="rango-dot rango-dot-${dotColor}${fijado ? ' rango-dot-fijado' : ''}"></span>` +
+        `</button>`;
+
+    wrap.classList.remove('rango-vacia', 'rango-abierta', 'rango-cerrada');
+
+    if (!inicio) {
+        wrap.classList.add('rango-vacia');
+        wrap.innerHTML = dotHtml + `<span class="rango-placeholder">Fijar fechas</span>`;
+        wrap.setAttribute('aria-label', `Editar fechas de ${FASE_INFO[fase].label}`);
+        return;
+    }
+
+    const dur     = diasEntre(inicio, cierre || hoyISO()) + 1;
+    const abierta = !cierre;
+    wrap.classList.add(abierta ? 'rango-abierta' : 'rango-cerrada');
+
+    const finTxt     = abierta ? 'abierta' : fmtCorto(cierre, anioFila);
+    const chipClase  = estatus === 'e' ? ' rango-chip-e' : estatus === 'c' ? ' rango-chip-c' : '';
+    const chipHtml   = (estatus === 'p' || estatus === 'n') ? '' : `<span class="rango-chip${chipClase}">${dur} d</span>`;
+
+    wrap.innerHTML =
+        dotHtml +
+        `<span class="rango-fecha">${fmtCorto(inicio, anioFila)}</span>` +
+        `<span class="rango-flecha">→</span>` +
+        `<span class="rango-fecha">${finTxt}</span>` +
+        chipHtml;
+    wrap.setAttribute('aria-label', `Editar fechas de ${FASE_INFO[fase].label}, inicio ${fmtCorto(inicio, anioFila)}`);
+}
+
+// ── Menú de estatus manual ──────────────────────────────────────
+let menuEstatusState = null;
+
+function abrirMenuEstatus(event, btnEl, fase) {
+    const tr = btnEl.closest('tr');
+    if (!tr) return;
+    const stEl   = tr.querySelector('.' + fase + '-status');
+    const actual = (stEl && stEl.value) || 'p';
+
+    menuEstatusState = { tr, fase, btn: btnEl };
+
+    const menu = document.getElementById('menu-estatus');
+    menu.querySelectorAll('.menu-estatus-item').forEach(item => {
+        const esActual = item.dataset.val === actual;
+        item.classList.toggle('actual', esActual);
+        item.setAttribute('aria-checked', esActual ? 'true' : 'false');
+    });
+
+    menu.style.display = 'block';
+    const rect = btnEl.getBoundingClientRect();
+    const menuWidth  = menu.offsetWidth  || 246;
+    const menuHeight = menu.offsetHeight || 220;
+    let left = rect.left;
+    if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8;
+    let top = rect.bottom + 4;
+    if (top + menuHeight > window.innerHeight - 8) top = rect.top - menuHeight - 4;
+    menu.style.left = Math.max(8, left) + 'px';
+    menu.style.top  = Math.max(8, top) + 'px';
+
+    const primerItem = menu.querySelector('.menu-estatus-item');
+    if (primerItem) primerItem.focus();
+}
+
+function cerrarMenuEstatus() {
+    const menu = document.getElementById('menu-estatus');
+    menu.style.display = 'none';
+    const btn = menuEstatusState ? menuEstatusState.btn : null;
+    menuEstatusState = null;
+    if (btn) btn.focus();
+}
+
+function seleccionarEstatusMenu(val) {
+    if (!menuEstatusState) return;
+    const { tr, fase } = menuEstatusState;
+    const stEl = tr.querySelector('.' + fase + '-status');
+    const fi   = tr.querySelector('.' + fase + '-fi');
+    const ff   = tr.querySelector('.' + fase + '-ff');
+    if (stEl) stEl.value = val === null ? deriveStatus(fi.value, ff.value) : val;
+    renderCeldaRango(tr, fase);
+    guardarFila(tr);
+    cerrarMenuEstatus();
+}
+
+// ── Leyenda de estatus (colapsable, recuerda preferencia) ────────
+function toggleLeyendaEstatus() {
+    const el = document.getElementById('leyenda-estatus');
+    if (!el) return;
+    const colapsada = el.classList.toggle('colapsada');
+    localStorage.setItem('indicadores_leyenda_colapsada', colapsada ? '1' : '0');
+}
+
+// ── Modal de edición de fechas ─────────────────────────────────
+let modalFechasState = null;
+
+function abrirModalFechas(celdaEl, fase) {
+    const tr = celdaEl.closest('tr');
+    if (!tr) return;
+    const fi = tr.querySelector('.' + fase + '-fi');
+    const ff = tr.querySelector('.' + fase + '-ff');
+    if (!fi || !ff) return;
+
+    modalFechasState = {
+        tr, fase, celda: celdaEl,
+        inicioInicial: fi.value,
+        cierreInicial: ff.value,
+    };
+
+    const info  = FASE_INFO[fase];
+    const panel = document.querySelector('#modal-fechas .modal-fechas-panel');
+    panel.classList.remove('fase-cont', 'fase-corr', 'fase-prev');
+    panel.classList.add(info.clase);
+
+    document.getElementById('modal-fechas-fase-label').textContent = info.label;
+    const problema = tr.querySelector('.problema-input');
+    const subt = tr.dataset.fecha + (problema && problema.value ? ' · ' + problema.value : '');
+    document.getElementById('modal-fechas-subtitulo').textContent = subt;
+
+    document.getElementById('modal-fecha-inicio').value = fi.value;
+    document.getElementById('modal-fecha-cierre').value = ff.value;
+
+    actualizarResumenModalFechas();
+
+    const overlay = document.getElementById('modal-fechas');
+    overlay.style.display = 'flex';
+    const inputInicio = document.getElementById('modal-fecha-inicio');
+    inputInicio.focus();
+    if (inputInicio.select) inputInicio.select();
+}
+
+function validarModalFechas() {
+    const inicio = document.getElementById('modal-fecha-inicio').value;
+    const cierre = document.getElementById('modal-fecha-cierre').value;
+    const errInicio = document.getElementById('modal-fechas-error-inicio');
+    const errCierre = document.getElementById('modal-fechas-error-cierre');
+    errInicio.textContent = '';
+    errCierre.textContent = '';
+    let ok = true;
+
+    if (cierre && !inicio) {
+        errInicio.textContent = 'Captura primero la fecha de inicio';
+        ok = false;
+    }
+    if (inicio && cierre && cierre < inicio) {
+        errCierre.textContent = 'El cierre no puede ser anterior al inicio';
+        ok = false;
+    }
+    if (inicio && modalFechasState && modalFechasState.fase !== 'prev' && inicio > hoyISO()) {
+        errInicio.textContent = 'El inicio no puede ser futuro';
+        ok = false;
+    }
+
+    const btnGuardar = document.getElementById('modal-fechas-guardar');
+    btnGuardar.disabled = !ok;
+    btnGuardar.style.opacity = ok ? '1' : '.45';
+    return ok;
+}
+
+function actualizarResumenModalFechas() {
+    const inicio = document.getElementById('modal-fecha-inicio').value;
+    const cierre = document.getElementById('modal-fecha-cierre').value;
+    const el = document.getElementById('modal-fechas-duracion');
+    const ok = validarModalFechas();
+    if (!ok || !inicio) { el.textContent = '—'; return; }
+    const dur = diasEntre(inicio, cierre || hoyISO()) + 1;
+    el.textContent = cierre ? `${dur} día${dur === 1 ? '' : 's'}` : `${dur} día${dur === 1 ? '' : 's'} (abierta)`;
+}
+
+function modalAtajoInicioHoy() {
+    document.getElementById('modal-fecha-inicio').value = hoyISO();
+    actualizarResumenModalFechas();
+}
+
+function modalAtajoCierreHoy() {
+    document.getElementById('modal-fecha-cierre').value = hoyISO();
+    actualizarResumenModalFechas();
+}
+
+function modalAtajoMismoDia() {
+    const inicio = document.getElementById('modal-fecha-inicio').value;
+    if (!inicio) return;
+    document.getElementById('modal-fecha-cierre').value = inicio;
+    actualizarResumenModalFechas();
+}
+
+function modalAtajoSinCierre() {
+    document.getElementById('modal-fecha-cierre').value = '';
+    actualizarResumenModalFechas();
+}
+
+function guardarModalFechas() {
+    if (!modalFechasState || !validarModalFechas()) return;
+    const { tr, fase } = modalFechasState;
+    const fi   = tr.querySelector('.' + fase + '-fi');
+    const ff   = tr.querySelector('.' + fase + '-ff');
+    const stEl = tr.querySelector('.' + fase + '-status');
+
+    // Un estatus fijado a mano no se sobrescribe al guardar fechas
+    const fijadoAntes = stEl && stEl.value && stEl.value !== deriveStatus(fi.value, ff.value);
+
+    fi.value = document.getElementById('modal-fecha-inicio').value;
+    ff.value = document.getElementById('modal-fecha-cierre').value;
+
+    if (stEl && !fijadoAntes) {
+        stEl.value = deriveStatus(fi.value, ff.value);
+    }
+
+    renderCeldaRango(tr, fase);
+    guardarFila(tr);
+    cerrarModalFechas(true);
+}
+
+function cerrarModalFechas(skipConfirm) {
+    if (!skipConfirm && modalFechasState) {
+        const inicio = document.getElementById('modal-fecha-inicio').value;
+        const cierre = document.getElementById('modal-fecha-cierre').value;
+        const cambio = inicio !== modalFechasState.inicioInicial || cierre !== modalFechasState.cierreInicial;
+        if (cambio && !confirm('¿Descartar cambios?')) return;
+    }
+    document.getElementById('modal-fechas').style.display = 'none';
+    const celda = modalFechasState ? modalFechasState.celda : null;
+    modalFechasState = null;
+    if (celda) celda.focus();
 }
 
 // ── Modal Target ──────────────────────────────────────────────
@@ -609,11 +1000,7 @@ function exportarExcel() {
         const get = cls => { const el = tr.querySelector(cls); return el ? el.value.trim() : ''; };
         const getB = cls => {
             const el = tr.querySelector(cls);
-            if (!el) return '';
-            if (el.classList.contains('est-p')) return 'Pendiente';
-            if (el.classList.contains('est-e')) return 'En proceso';
-            if (el.classList.contains('est-c')) return 'Cerrada';
-            return '';
+            return el ? (ESTATUS_LABELS[el.value] || '') : '';
         };
 
         const CLAVE = { downtime:'dt', disponibilidad:'disp', mttr:'mttr', mtbf:'mtbf', t_muerto_mant:'tmuerto' };
@@ -629,9 +1016,9 @@ function exportarExcel() {
             tr.querySelector('.col-equipo') ? tr.querySelector('.col-equipo').textContent.trim() : '',
             valor,
             get('.problema-input'),
-            get('.cont-accion'),  fmtFecha(get('.cont-fi')),  fmtFecha(get('.cont-ff')),  getB('.cont-est'),
-            get('.corr-accion'),  fmtFecha(get('.corr-fi')),  fmtFecha(get('.corr-ff')),  getB('.corr-est'),
-            get('.prev-accion'),  fmtFecha(get('.prev-fi')),  fmtFecha(get('.prev-ff')),  getB('.prev-est'),
+            get('.cont-accion'),  fmtFecha(get('.cont-fi')),  fmtFecha(get('.cont-ff')),  getB('.cont-status'),
+            get('.corr-accion'),  fmtFecha(get('.corr-fi')),  fmtFecha(get('.corr-ff')),  getB('.corr-status'),
+            get('.prev-accion'),  fmtFecha(get('.prev-fi')),  fmtFecha(get('.prev-ff')),  getB('.prev-status'),
             get('.resp-input'),
         ]);
     });
@@ -650,32 +1037,63 @@ function exportarExcel() {
     XLSX.writeFile(wb, `Indicadores_${area}_${window.INDICADOR_ACTUAL.toUpperCase()}.xlsx`);
 }
 
-//Centrar Texto Textarea
-function centrarTextoTextarea(el) {
-    const clone = document.createElement('textarea');
-    clone.style.cssText = `
-        position: absolute;
-        visibility: hidden;
-        height: auto;
-        width: ${el.clientWidth}px;
-        font-size: 12px;
-        font-family: ${getComputedStyle(el).fontFamily};
-        line-height: 1.5;
-        padding: 0 10px;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        border: none;
-        resize: none;
-        box-sizing: border-box;
-    `;
-    clone.value = el.value || '';
-    document.body.appendChild(clone);
-    const contentHeight = clone.scrollHeight;
-    document.body.removeChild(clone);
+function descargarTablaImagen() {
+    const tabla = document.querySelector('.table-wrapper table');
+    if (!tabla) {
+        console.error('descargarTablaImagen: no se encontró la tabla (.table-wrapper table)');
+        return;
+    }
+    if (typeof html2canvas === 'undefined') {
+        console.error('descargarTablaImagen: html2canvas no está cargado (revisa la pestaña Network — ¿se cargó el <script> del CDN?)');
+        return;
+    }
 
-    const containerHeight = el.clientHeight;
-    const paddingTop = Math.max(0, (containerHeight - contentHeight) / 2 + 18);
-    el.style.paddingTop = paddingTop + 'px';
+    const btn = document.getElementById('btn-imagen');
+    const textoOriginal = btn ? btn.textContent : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = window.TXT_GENERANDO_IMAGEN || '…';
+    }
+
+    // La primera columna usa position:sticky para quedar fija al hacer scroll
+    // horizontal — html2canvas no la respeta bien, se neutraliza para la
+    // captura y se restaura después, pase lo que pase.
+    const stickyEls = tabla.querySelectorAll('.cell-sticky');
+    const prevPosiciones = Array.from(stickyEls).map(el => el.style.position);
+    stickyEls.forEach(el => { el.style.position = 'static'; });
+
+    const bgColor = getComputedStyle(document.body).backgroundColor || '#ffffff';
+
+    html2canvas(tabla, { backgroundColor: bgColor, scale: 2 })
+        .then(canvas => {
+            canvas.toBlob(blob => {
+                if (!blob) return;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Indicadores_${window.AREA_NOMBRE}_${window.INDICADOR_ACTUAL.toUpperCase()}.png`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            });
+        })
+        .catch(err => {
+            console.error('descargarTablaImagen: fallo al generar la imagen', err);
+        })
+        .finally(() => {
+            stickyEls.forEach((el, i) => { el.style.position = prevPosiciones[i]; });
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = textoOriginal;
+            }
+        });
+}
+
+// Ajustar alto del textarea al contenido (la celda/fila crece con el texto)
+function autoGrowTextarea(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
 }
 
 
@@ -705,23 +1123,23 @@ function cambiarTipoTendencia(tipo) {
     ['bar', 'line', 'area'].forEach(t => {
         const btn = document.getElementById('btn-tipo-tend-' + t);
         if (btn) {
-            btn.style.background = t === tipo ? '#4F46E5' : 'var(--white)';
-            btn.style.color      = t === tipo ? '#fff'    : 'var(--text)';
+            btn.style.background = t === tipo ? 'var(--indigo)' : 'var(--white)';
+            btn.style.color      = t === tipo ? '#fff'        : 'var(--text)';
         }
     });
     const ds = chart.data.datasets[0];
     if (tipo === 'bar') {
         ds.type = 'bar'; ds.fill = false; ds.tension = undefined;
         ds.pointRadius = undefined; ds.borderWidth = 1; ds.borderRadius = 4;
-        ds.backgroundColor = 'rgba(79,70,229,0.75)'; ds.borderColor = '#4F46E5';
+        ds.backgroundColor = colorIndigoRgba(0.75); ds.borderColor = colorIndigo();
     } else if (tipo === 'line') {
         ds.type = 'line'; ds.fill = false; ds.tension = 0.3; ds.pointRadius = 4;
-        ds.pointBackgroundColor = '#4F46E5'; ds.borderWidth = 2;
-        ds.borderRadius = 0; ds.backgroundColor = 'transparent'; ds.borderColor = '#4F46E5';
+        ds.pointBackgroundColor = colorIndigo(); ds.borderWidth = 2;
+        ds.borderRadius = 0; ds.backgroundColor = 'transparent'; ds.borderColor = colorIndigo();
     } else if (tipo === 'area') {
         ds.type = 'line'; ds.fill = true; ds.tension = 0.3; ds.pointRadius = 4;
-        ds.pointBackgroundColor = '#4F46E5'; ds.borderWidth = 2;
-        ds.borderRadius = 0; ds.backgroundColor = 'rgba(79,70,229,0.12)'; ds.borderColor = '#4F46E5';
+        ds.pointBackgroundColor = colorIndigo(); ds.borderWidth = 2;
+        ds.borderRadius = 0; ds.backgroundColor = colorIndigoRgba(0.12); ds.borderColor = colorIndigo();
     }
     chart.config.type = tipo === 'bar' ? 'bar' : 'line';
     chart.update();
@@ -737,16 +1155,21 @@ function cambiarGranularidadTendencia(g) {
     if (wrapAnioInicio) wrapAnioInicio.style.display = g === 'anio' ? 'flex' : 'none';
     const wrapAnioSemana = document.getElementById('wrap-anio-semana');
     if (wrapAnioSemana) wrapAnioSemana.style.display = g === 'semana' ? 'flex' : 'none';
+    const wrapAnioMes = document.getElementById('wrap-anio-mes');
+    if (wrapAnioMes) wrapAnioMes.style.display = g === 'mes' ? 'flex' : 'none';
     cargarTendencia();
 }
 
 function cargarTendencia() {
     if (!window.AREA_ID) return;
-    const equipoEl = document.querySelector('select[name="equipo"]');
-    const equipo   = equipoEl ? equipoEl.value : '';
-    const params   = new URLSearchParams({
+    const equipoEl   = document.querySelector('select[name="equipo"]');
+    const equipo     = equipoEl ? equipoEl.value : '';
+    const subAreaEl  = document.querySelector('select[name="sub_area"]');
+    const subArea    = subAreaEl ? subAreaEl.value : '';
+    const params     = new URLSearchParams({
         area:         window.AREA_ID,
         equipo:       equipo,
+        sub_area:     subArea,
         indicador:    window.INDICADOR_ACTUAL,
         granularidad: tendenciaGranularidad,
     });
@@ -757,6 +1180,10 @@ function cargarTendencia() {
     if (tendenciaGranularidad === 'semana') {
         const anioSemEl = document.getElementById('tendencia-anio-semana');
         if (anioSemEl && anioSemEl.value) params.set('anio_semana', anioSemEl.value);
+    }
+    if (tendenciaGranularidad === 'mes') {
+        const anioMesEl = document.getElementById('tendencia-anio-mes');
+        if (anioMesEl && anioMesEl.value) params.set('anio_mes', anioMesEl.value);
     }
     fetch(`${window.URLS.tendencia}?${params.toString()}`)
         .then(r => r.json())
@@ -775,18 +1202,20 @@ function cargarTendencia() {
 function renderChartTendencia(labels, valores) {
     const canvas = document.getElementById('chartTendencia');
     if (!canvas) return;
-    const UNIDADES = { downtime: '%', disponibilidad: '%', mttr: ' min', mtbf: ' h', t_muerto_mant: ' min' };
+    const UNIDADES = { downtime: '%', disponibilidad: '%', mttr: ' min', mtbf: ' h', t_muerto_mant: ' min', planeado: ' min' }
     const unidad = UNIDADES[window.INDICADOR_ACTUAL] || '';
 
     if (chartTendencia) chartTendencia.destroy();
+    const indigoSolid = colorIndigo();
+    const indigoAlpha = colorIndigoRgba(0.75);
     chartTendencia = new Chart(canvas.getContext('2d'), {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
                 data: valores,
-                backgroundColor: 'rgba(79,70,229,0.75)',
-                borderColor: '#4F46E5',
+                backgroundColor: indigoAlpha,
+                borderColor: indigoSolid,
                 borderWidth: 1,
                 borderRadius: 4,
             }]
@@ -794,6 +1223,7 @@ function renderChartTendencia(labels, valores) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: { padding: { top: 24 } },
             plugins: {
                 legend: { display: false },
                 tooltip: { callbacks: { label: ctx => ' ' + (ctx.parsed.y ?? '—') + unidad } }
@@ -813,16 +1243,16 @@ function renderChartTendencia(labels, valores) {
                     ctx2.save();
                     ctx2.font = 'bold 11px sans-serif';
                     ctx2.textAlign = 'center';
-                    ctx2.fillStyle = esDark ? '#FFFFFF' : '#4F46E5';
+                    ctx2.fillStyle = esDark ? '#FFFFFF' : indigoSolid;
                     chart.data.datasets[0].data.forEach((val, i) => {
                         if (val === null || val === undefined) return;
                         const bar = meta.data[i];
                         const yPos = bar.y - 6;
                         const label = val + unidad;
-                        if (yPos < chart.chartArea.top + 12) {
+                        if (yPos < 12) {
                             ctx2.fillStyle = '#ffffff';
                             ctx2.fillText(label, bar.x, bar.y + 16);
-                            ctx2.fillStyle = esDark ? '#FFFFFF' : '#4F46E5';
+                            ctx2.fillStyle = esDark ? '#FFFFFF' : indigoSolid;
                         } else {
                             ctx2.fillText(label, bar.x, yPos);
                         }
@@ -857,9 +1287,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('tbody tr[data-fecha]').forEach(tr => {
 
-        // Responsable — guardar al cambiar selección
+        // Responsable — autocompletado; solo nombres existentes, texto libre se limpia al guardar
         tr.querySelectorAll('.resp-input').forEach(el => {
-            el.addEventListener('change', () => guardarFila(tr));
+            ajustarAnchoResponsable(el);
+            el.addEventListener('input', () => {
+                ajustarAnchoResponsable(el);
+                mostrarAutocompleteResponsable(el);
+            });
+            el.addEventListener('focus', () => mostrarAutocompleteResponsable(el));
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!respAutocompleteState) mostrarAutocompleteResponsable(el);
+                    else moverResaltadoResponsable(1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (respAutocompleteState) moverResaltadoResponsable(-1);
+                } else if (e.key === 'Enter') {
+                    if (respAutocompleteState && respAutocompleteState.indice >= 0) {
+                        e.preventDefault();
+                        seleccionarResponsableAutocomplete(respAutocompleteState.indice);
+                    } else {
+                        ocultarAutocompleteResponsable();
+                    }
+                } else if (e.key === 'Escape') {
+                    ocultarAutocompleteResponsable();
+                }
+            });
+            el.addEventListener('blur', () => {
+                setTimeout(() => {
+                    ocultarAutocompleteResponsable();
+                    validarResponsable(el);
+                    guardarFila(tr);
+                }, 150);
+            });
         });
 
         // Campos de texto — guardar + contador visible solo en focus
@@ -887,7 +1348,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     counter.textContent = n + '/' + max;
                     counter.className = 'char-counter visible' + (n >= max ? ' full' : n >= max * 0.8 ? ' warn' : '');
                 }
-                centrarTextoTextarea(this);
+                autoGrowTextarea(this);
             });
             el.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -896,12 +1357,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             el.dispatchEvent(new Event('input'));
-            centrarTextoTextarea(el);
-        });
-
-        // Fechas — guardar al cambiar
-        tr.querySelectorAll('.cont-fi, .cont-ff, .corr-fi, .corr-ff, .prev-fi, .prev-ff').forEach(el => {
-            el.addEventListener('change', () => guardarFila(tr));
+            autoGrowTextarea(el);
         });
 
         // Cargar datos guardados para este indicador
@@ -913,5 +1369,57 @@ document.addEventListener('DOMContentLoaded', function () {
         modalTarget.addEventListener('click', function (e) {
             if (e.target === this) cerrarModalTarget();
         });
+    }
+
+    // Modal de fechas (contención / correctiva / preventiva)
+    const overlayFechas = document.getElementById('modal-fechas');
+    if (overlayFechas) {
+        overlayFechas.addEventListener('click', function (e) {
+            if (e.target === this) cerrarModalFechas();
+        });
+        overlayFechas.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                cerrarModalFechas();
+            } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                guardarModalFechas();
+            } else if (e.key === 'Tab') {
+                const focusables = overlayFechas.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])');
+                if (!focusables.length) return;
+                const first = focusables[0];
+                const last  = focusables[focusables.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        });
+    }
+    const inputFechaInicio = document.getElementById('modal-fecha-inicio');
+    const inputFechaCierre = document.getElementById('modal-fecha-cierre');
+    if (inputFechaInicio) inputFechaInicio.addEventListener('input', actualizarResumenModalFechas);
+    if (inputFechaCierre) inputFechaCierre.addEventListener('input', actualizarResumenModalFechas);
+    if (inputFechaInicio) inputFechaInicio.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); guardarModalFechas(); }
+    });
+    if (inputFechaCierre) inputFechaCierre.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); guardarModalFechas(); }
+    });
+
+});
+
+// ── Redibujar gráficas al cambiar el color de acento o el tema ────────────
+// Chart.js pinta colores resueltos en píxeles al crear el chart; no reaccionan
+// solos a un cambio de var(--indigo), así que hay que volver a crearlos.
+document.addEventListener('accentchange', function () {
+    if (typeof LABELS !== 'undefined' && LABELS.length && document.getElementById('chartIndicador')) {
+        crearGrafica();
+    }
+    if (document.getElementById('chartTendencia')) {
+        cargarTendencia();
     }
 });

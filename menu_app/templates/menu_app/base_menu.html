@@ -12,6 +12,10 @@
     if (theme === 'dark') {
         document.documentElement.style.background = '#0F0F1A';
     }
+    var accent = localStorage.getItem('app_accent');
+    if (accent) {
+        document.documentElement.setAttribute('data-accent', accent);
+    }
 })();
 </script>
     <meta charset="utf-8">
@@ -64,6 +68,17 @@
             --shadow:     0 1px 3px rgba(0,0,0,.3);
             --shadow-md:  0 4px 16px rgba(0,0,0,.4);
         }
+
+        /* ── Paletas de acento — modo claro ── */
+        [data-accent="azul"]  { --indigo: #3B82F6; --indigo-dk: #1D4ED8; --indigo-lt: #EFF6FF; }
+        [data-accent="verde"] { --indigo: #059669; --indigo-dk: #065F46; --indigo-lt: #ECFDF5; }
+        [data-accent="rosa"]  { --indigo: #EC4899; --indigo-dk: #BE185D; --indigo-lt: #FDF2F8; }
+        [data-accent="ambar"] { --indigo: #D97706; --indigo-dk: #92400E; --indigo-lt: #FFFBEB; }
+
+        /* ── Paletas de acento — modo oscuro ── */
+        [data-theme="dark"][data-accent="azul"]  { --indigo: #60A5FA; --indigo-dk: #93C5FD; --indigo-lt: #172554; }
+        [data-theme="dark"][data-accent="verde"] { --indigo: #34D399; --indigo-dk: #6EE7B7; --indigo-lt: #064E3B; }
+        [data-theme="dark"][data-accent="rosa"]  { --indigo: #F472B6; --indigo-dk: #F9A8D4; --indigo-lt: #500724; }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -121,8 +136,11 @@
             flex-shrink: 0;
             transition: border-color var(--tr);
         }
-        /* Auto-colapsar en pantallas angostas */
-        @media (max-width: 768px) {
+        /* Auto-colapsar en pantallas angostas — solo rango tablet.
+           Por debajo de 640px el sidebar es un cajón (ver bloque siguiente),
+           no una tira de iconos: si este bloque siguiera aplicando ahí, el
+           cajón se abriría con 56px de ancho y sin etiquetas. */
+        @media (min-width: 641px) and (max-width: 768px) {
             .sidebar:not(.collapsed) {
                 width: var(--sidebar-collapsed-w) !important;
             }
@@ -136,6 +154,63 @@
             .sidebar:not(.collapsed) .user-menu-btn { justify-content: center; }
             .sidebar:not(.collapsed) .btn-collapse svg { transform: rotate(180deg); }
         }
+
+        /* ── Sidebar como cajón (off-canvas) en celular ── */
+        .btn-sidebar-mobile, .sidebar-backdrop { display: none; }
+        @media (max-width: 640px) {
+            .sidebar {
+                position: fixed; inset: 0 auto 0 0;
+                width: var(--sidebar-w) !important;   /* gana al .collapsed persistido en localStorage */
+                max-width: 82vw;
+                height: 100dvh;                    
+                transform: translateX(-100%);
+                transition: transform .25s;
+                z-index: 40;
+                box-shadow: 4px 0 24px rgba(30,27,75,.18);
+            }
+            .sidebar.is-open { transform: none; }
+            /* El .collapsed persistido en localStorage no debe aplicar en celular */
+            .sidebar.collapsed .nav-label,
+            .sidebar.collapsed .sidebar-section,
+            .sidebar.collapsed .brand-text,
+            .sidebar.collapsed .brand-label,
+            .sidebar.collapsed .logout-label,
+            .sidebar.collapsed .theme-label {
+                display: revert !important;
+                opacity: 1 !important;
+                width: auto !important;
+            }
+            .sidebar.collapsed div.nav-label { display: block !important; }
+            .sidebar.collapsed .sidebar-brand { flex-direction: row; height: 58px; padding: 0 8px; }
+
+            /* Sin tooltips en táctil */
+            .sidebar .sidebar-nav a::after,
+            .sidebar #mod-mto::after,
+            .sidebar #mod-paros::after,
+            .sidebar .logout-btn::after { content: none !important; }
+
+            /* El botón de colapsar no aporta nada en celular (el cajón ya es angosto por su propia naturaleza) */
+            #btn-collapse { display: none !important; }
+
+            .main { padding: 16px !important; padding-top: 62px !important; }  /* deja el carril del botón hamburguesa */
+
+            .btn-sidebar-mobile {
+                display: flex; align-items: center; justify-content: center;
+                position: fixed; top: 12px; left: 12px; z-index: 41;
+                width: 38px; height: 38px; border-radius: 8px;
+                background: var(--white); border: 1px solid var(--border);
+                color: var(--text); cursor: pointer; box-shadow: var(--shadow);
+            }
+            .sidebar.is-open ~ .btn-sidebar-mobile { display: none; }
+
+            .sidebar-backdrop {
+                display: none;
+                position: fixed; inset: 0; z-index: 39;
+                background: rgba(30,27,75,.45);
+            }
+            .sidebar-backdrop.is-open { display: block; }
+        }
+
         .brand-text {
             display: flex; align-items: center; gap: 8px;
             overflow: hidden; white-space: nowrap; flex: 1; min-width: 0;
@@ -260,6 +335,22 @@
         .logout-btn:hover { background: var(--red-lt); color: var(--red); }
         .logout-label { opacity: 1; transition: opacity var(--tr); overflow: hidden; }
         .sidebar.collapsed .logout-label { opacity: 0; }
+
+         /* ── Footer centrado en modo colapsado ──
+           No se usa display:none en las etiquetas: ya usan opacity con
+           transición (mismo criterio que .nav-label en toda la barra) y
+           display:none rompería ese fundido. Se colapsa solo el ancho
+           para que el ícono quede realmente centrado. */
+        .sidebar.collapsed .sidebar-footer { padding-left: 0; padding-right: 0; }
+
+        .sidebar.collapsed .user-menu-btn { justify-content: center !important; gap: 0 !important; padding: 8px 0 4px !important; }
+        .sidebar.collapsed .user-menu-btn .nav-label { width: 0; margin: 0; }
+
+        .sidebar.collapsed .footer-row { justify-content: center; gap: 0; padding-left: 0; padding-right: 0; }
+        .sidebar.collapsed .theme-label { width: 0; margin: 0; }
+
+        .sidebar.collapsed .logout-btn { justify-content: center; gap: 0; padding-left: 0; padding-right: 0; }
+        .sidebar.collapsed .logout-label { width: 0; margin: 0; }
 
         /* ── Main ── */
         .main { flex: 1; min-width: 0; padding: 28px 32px; transition: background var(--tr); }
@@ -1024,7 +1115,7 @@
 
         <div class="sidebar-footer">
             <!-- Usuario actual -->
-            <button type="button" onclick="abrirModalUsuario()" class="user-menu-btn"
+            <button type="button" onclick="abrirModalUsuario()" class="user-menu-btn" title="{% trans 'Cambiar contraseña' %}"
                         style="all:unset; cursor:pointer; display:flex; align-items:center; gap:8px;
                         overflow:hidden; padding:8px 12px 4px; width:100%; box-sizing:border-box;
                         border-radius:7px; transition:background .15s;"
@@ -1081,6 +1172,15 @@
         </div>
     </aside>
 
+    <!-- Sidebar en celular: botón hamburguesa + fondo para cerrar tocando afuera -->
+    <button type="button" id="btn-sidebar-mobile" class="btn-sidebar-mobile"
+            aria-label="{% trans 'Abrir menú' %}" aria-expanded="false" aria-controls="sidebar">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    </button>
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
     <!-- Modal de usuario: cambiar contraseña / cerrar sesión -->
     <div id="modal-usuario" style="display:none; position:fixed; inset:0;
          background:rgba(30,27,75,.45); z-index:8000; align-items:center; justify-content:center;">
@@ -1111,6 +1211,22 @@
                     </svg>
                     {% trans "Cambiar contraseña" %}
                 </button>
+
+                 <div style="padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px;">
+                    <div style="font-size:12px; color:var(--text-2); margin-bottom:8px;">{% trans "Color" %}</div>
+                    <div id="accent-swatches" style="display:flex; gap:8px;">
+                        <button type="button" data-accent-value="indigo" onclick="seleccionarAccent('indigo')" title="Indigo"
+                                style="width:44px; height:22px; border-radius:6px; background:#4F46E5; cursor:pointer; padding:0;"></button>
+                        <button type="button" data-accent-value="azul" onclick="seleccionarAccent('azul')" title="{% trans 'Azul' %}"
+                                style="width:44px; height:22px; border-radius:6px; background:#3B82F6; cursor:pointer; padding:0;"></button>
+                        <button type="button" data-accent-value="verde" onclick="seleccionarAccent('verde')" title="{% trans 'Verde' %}"
+                                style="width:44px; height:22px; border-radius:6px; background:#059669; cursor:pointer; padding:0;"></button>
+                        <button type="button" data-accent-value="rosa" onclick="seleccionarAccent('rosa')" title="{% trans 'Rosa' %}"
+                                style="width:44px; height:22px; border-radius:6px; background:#EC4899; cursor:pointer; padding:0;"></button>
+                        <button type="button" data-accent-value="ambar" onclick="seleccionarAccent('ambar')" title="{% trans 'Ámbar' %}"
+                                style="width:44px; height:22px; border-radius:6px; background:#D97706; cursor:pointer; padding:0;"></button>
+                    </div>
+                </div>
 
                 <form method="post" action="{% url 'logout' %}" style="margin:0;">
                     {% csrf_token %}
@@ -1264,6 +1380,43 @@ btnCollapse.addEventListener('click', () => {
     localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
 });
 
+/* ── Sidebar como cajón en celular ── */
+const btnSidebarMobile = document.getElementById('btn-sidebar-mobile');
+const sidebarBackdrop  = document.getElementById('sidebar-backdrop');
+
+function abrirSidebarMobile() {
+    sidebar.classList.add('is-open');
+    sidebarBackdrop.classList.add('is-open');
+    btnSidebarMobile.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+}
+function cerrarSidebarMobile() {
+    sidebar.classList.remove('is-open');
+    sidebarBackdrop.classList.remove('is-open');
+    btnSidebarMobile.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+}
+
+if (btnSidebarMobile && sidebarBackdrop) {
+    btnSidebarMobile.addEventListener('click', abrirSidebarMobile);
+    sidebarBackdrop.addEventListener('click', cerrarSidebarMobile);
+    // Al navegar (clic en un link o botón dentro del sidebar) se cierra solo —
+    // salvo los controles que no navegan a otra página (tema, usuario, los
+    // botones de módulo que solo cambian qué nav se muestra).
+    sidebar.addEventListener('click', (e) => {
+        if (window.innerWidth > 640) return;
+        if (!e.target.closest('a, button')) return;
+        if (e.target.closest('#btn-collapse, #btn-theme, .user-menu-btn, #mod-mto, #mod-paros')) return;
+        cerrarSidebarMobile();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') cerrarSidebarMobile();
+    });
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 640) cerrarSidebarMobile();
+    });
+}
+
 /* ── Dark mode ── */
 const html       = document.documentElement;
 const btnTheme   = document.getElementById('btn-theme');
@@ -1282,6 +1435,7 @@ function applyTheme(theme) {
         iconMoon.style.display = 'none';
         themeLabel.textContent = 'Modo oscuro';
     }
+    document.dispatchEvent(new CustomEvent('accentchange'));
 }
 
 const savedTheme = localStorage.getItem('app_theme');
@@ -1296,6 +1450,33 @@ btnTheme.addEventListener('click', () => {
     applyTheme(next);
     localStorage.setItem('app_theme', next);
 });
+
+/* ── Color de acento ── */
+function marcarAccentActivo(accent) {
+    document.querySelectorAll('#accent-swatches button').forEach(btn => {
+        const activo = btn.dataset.accentValue === accent;
+        btn.style.boxShadow = activo ? '0 0 0 2px var(--white), 0 0 0 4px var(--text)' : 'none';
+    });
+}
+
+function seleccionarAccent(accent) {
+    if (accent === 'indigo') {
+        html.removeAttribute('data-accent');
+        localStorage.removeItem('app_accent');
+    } else {
+        html.setAttribute('data-accent', accent);
+        localStorage.setItem('app_accent', accent);
+    }
+    marcarAccentActivo(accent);
+
+    // Los estilos CSS (var(--indigo)) se actualizan solos; las gráficas Chart.js
+    // no, porque pintan colores resueltos en píxeles. Cada página con gráficas
+    // escucha este evento para volver a dibujarlas con el color nuevo.
+    document.dispatchEvent(new CustomEvent('accentchange'));
+}
+
+marcarAccentActivo(localStorage.getItem('app_accent') || 'indigo');
+
 </script>
 
 <script>

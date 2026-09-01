@@ -5,6 +5,22 @@ const cfg = window.HORA_HORA_CFG || {};
 // CSRF desde cookie
 const CSRF = document.cookie.split(';').find(s => s.trim().startsWith('csrftoken='))?.trim().split('=')[1] || '';
 
+// Color de acento resuelto — Chart.js/canvas no entienden var(--indigo), necesitan el valor real
+function colorIndigo() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--indigo').trim();
+}
+function colorIndigoRgba(alpha) {
+    const hex = colorIndigo().replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function esModoOscuro() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
 // Estado global — DATOS es mutable (se actualiza al guardar celdas)
 let DATOS        = cfg.datos    || {};
 const AREAS_IDS  = cfg.areasIds || [];
@@ -195,8 +211,8 @@ function setVistaEf(vista, btn) {
     vistaEf = vista;
     ['dia','mes','anio'].forEach(v => {
         const b = document.getElementById('pill-' + v);
-        b.style.background = v === vista ? '#4F46E5' : 'var(--white)';
-        b.style.color      = v === vista ? '#fff'    : 'var(--text-2)';
+        b.style.background = v === vista ? 'var(--indigo)' : 'var(--white)';
+        b.style.color      = v === vista ? '#fff'        : 'var(--text-2)';
     });
     document.getElementById('ef-rango-dia').style.display  = vista === 'dia'  ? 'flex' : 'none';
     document.getElementById('ef-rango-mes').style.display  = vista === 'mes'  ? 'flex' : 'none';
@@ -247,9 +263,12 @@ function renderizarEficiencia(datos) {
     const labels         = datos.map(d => d.label);
     const eficiencia     = datos.map(d => d.eficiencia);
     const targets        = datos.map(d => d.target_ef ?? targetEfActual);
-    const bgColors       = eficiencia.map((v, i) => v === null ? 'rgba(136,135,128,0.3)' : v >= targets[i] ? 'rgba(79,70,229,0.75)' : 'rgba(226,75,74,0.75)');
-    const bdColors       = eficiencia.map((v, i) => v === null ? '#888780'               : v >= targets[i] ? '#4F46E5'               : '#E24B4A');
-
+    const indigoSolid    = colorIndigo();
+    const indigoAlpha    = colorIndigoRgba(0.75);
+    const colorValores   = esModoOscuro() ? '#FFFFFF' : indigoSolid;
+    const bgColors       = eficiencia.map((v, i) => v === null ? 'rgba(136,135,128,0.3)' : v >= targets[i] ? indigoAlpha : 'rgba(226,75,74,0.75)');
+    const bdColors       = eficiencia.map((v, i) => v === null ? '#888780'               : v >= targets[i] ? indigoSolid : '#E24B4A');
+    
     if (chartEf) chartEf.destroy();
 
     chartEf = new Chart(document.getElementById('chartEficiencia'), {
@@ -291,7 +310,7 @@ function renderizarEficiencia(datos) {
                         const bar = meta.data[i];
                         const ef  = eficiencia[i];
                         if (ef === null) return;
-                        ctx2.fillStyle = ef >= targets[i] ? '#4F46E5' : '#E24B4A';
+                        ctx2.fillStyle = ef >= targets[i] ? colorValores : '#E24B4A';
                         ctx2.fillText(ef + '%', bar.x, bar.y - 6);
                     });
                     ctx2.restore();
@@ -499,6 +518,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('chartEficiencia')) cargarEficiencia();
     });
 });
+
+// ── Redibujar la gráfica al cambiar el color de acento o el tema ──────────
+// Chart.js pinta colores resueltos en píxeles al crear el chart; no reaccionan
+// solos a un cambio de var(--indigo), así que hay que volver a cargarla.
+document.addEventListener('accentchange', () => {
+    if (document.getElementById('chartEficiencia')) cargarEficiencia();
+});
+
 
 // ── Sincronizar scroll horizontal entre las 3 tablas de cada área ──────────────
 document.addEventListener('DOMContentLoaded', () => {

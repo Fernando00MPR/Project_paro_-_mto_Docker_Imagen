@@ -2,6 +2,260 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Registro de producción" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fila-agregar { flex-wrap: nowrap; }
+    .fila-agregar > * { flex-shrink: 0; }
+
+    :root {
+        --row-action-muted: #cfd2de;
+        --row-action-muted-hover: #8a8fa3;
+        --row-menu-border: #e2dfec;
+        --row-menu-bg-hover: #f1eff8;
+        --row-menu-text-hover: #5f6478;
+        --row-drop-indicator: #0f7a4d;
+        --row-delete-text: #c2410c;
+        --row-delete-bg-hover: #fef2f2;
+    }
+    [data-theme="dark"] {
+        --row-action-muted: #4b4f66;
+        --row-action-muted-hover: #7a7fa0;
+        --row-menu-border: #34324a;
+        --row-menu-bg-hover: #2a2840;
+        --row-menu-text-hover: #c7c5e0;
+        --row-drop-indicator: #34d399;
+        --row-delete-text: #e08e6a;
+        --row-delete-bg-hover: #3a1f1f;
+    }
+
+    /* ── Handle de arrastre ── */
+    tr:hover .drag-handle { color: var(--row-action-muted-hover); }
+    .drag-handle:focus-visible {
+        outline: 2px solid var(--row-drop-indicator); outline-offset: 2px; border-radius: 3px;
+    }
+    tr.dragging-row { opacity: .6; }
+    tr.dragging-row .drag-handle { cursor: grabbing; }
+    tr.drop-above { box-shadow: inset 0 2px 0 var(--row-drop-indicator); }
+    tr.drop-below { box-shadow: inset 0 -2px 0 var(--row-drop-indicator); }
+
+    /* ── Botón ⋯ ── */
+    tr:hover .btn-menu-fila { color: var(--row-menu-text-hover); border-color: var(--row-menu-border); }
+    .btn-menu-fila:hover, .btn-menu-fila.open {
+        background: var(--row-menu-bg-hover); color: var(--row-menu-text-hover); border-color: var(--row-menu-border);
+    }
+    .btn-menu-fila:focus-visible { outline: 2px solid var(--row-drop-indicator); outline-offset: 2px; }
+
+    /* ── Popover del menú ⋯ ── */
+    .menu-fila-popover {
+        display: none; position: fixed; z-index: 9999; min-width: 200px;
+        background: var(--white); border: 1px solid var(--row-menu-border); border-radius: 10px;
+        box-shadow: 0 12px 28px -12px rgba(28,32,48,.25); padding: 4px;
+    }
+    .menu-fila-item {
+        display: block; width: 100%; box-sizing: border-box; border: none; background: none;
+        padding: 8px 12px; font-size: 13px; text-align: left; cursor: pointer; border-radius: 6px;
+        color: var(--text); font-family: inherit;
+    }
+    .menu-fila-item:hover, .menu-fila-item.highlighted { background: var(--row-menu-bg-hover); }
+    .menu-fila-item.delete { color: var(--row-delete-text); }
+    .menu-fila-item.delete:hover, .menu-fila-item.delete.highlighted { background: var(--row-delete-bg-hover); }
+    .menu-fila-item:disabled { color: var(--text-3); cursor: not-allowed; }
+    .menu-fila-item:disabled:hover { background: none; }
+
+    /* ── Modal eliminar — ancho propio de esta página ── */
+    #modal-eliminar .modal-box { width: 380px; }
+
+    .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    /* ── Modal Exportar — paleta propia (verde), con equivalente en modo oscuro ── */
+    :root {
+        --exp-accent: #0f9d5c;
+        --exp-accent-hover: #0d8b51;
+        --exp-accent-text: #0f8a52;
+        --exp-accent-lt: #eaf7f0;
+        --exp-accent-lt-border: #cfeadd;
+        --exp-accent-mid-text: #0d7a48;
+        --exp-border: #dcdee6;
+        --exp-border-hover: #c3c7d2;
+        --exp-hairline: #edeef2;
+        --exp-hairline-2: #e7e9ef;
+        --exp-text: #16182a;
+        --exp-text-2: #5b6070;
+        --exp-text-3: #767a8c;
+        --exp-text-4: #9aa0b0;
+        --exp-text-muted-day: #c6c9d3;
+        --exp-hover-bg: #f3f4f7;
+        --exp-footer-bg: #fcfcfd;
+        --exp-chip-border: #e2e4ea;
+        --exp-chip-hover: #f6f7f9;
+        --exp-count-bg: #f7f8fa;
+        --exp-shadow-modal: 0 28px 70px -18px rgba(16,18,32,.45), 0 2px 6px rgba(16,18,32,.10);
+        --exp-shadow-popover: 0 18px 44px -12px rgba(16,18,32,.28), 0 2px 4px rgba(16,18,32,.06);
+    }
+    [data-theme="dark"] {
+        --exp-accent: #34d399;
+        --exp-accent-hover: #2bbf88;
+        --exp-accent-text: #34d399;
+        --exp-accent-lt: #113328;
+        --exp-accent-lt-border: #1c4a3a;
+        --exp-accent-mid-text: #6ee7b7;
+        --exp-border: #34324a;
+        --exp-border-hover: #454266;
+        --exp-hairline: #2d2b40;
+        --exp-hairline-2: #302e46;
+        --exp-text: #eceaf6;
+        --exp-text-2: #b6b3cc;
+        --exp-text-3: #9a97b8;
+        --exp-text-4: #7d7a9c;
+        --exp-text-muted-day: #55536e;
+        --exp-hover-bg: #262438;
+        --exp-footer-bg: #1c1a2c;
+        --exp-chip-border: #3a3752;
+        --exp-chip-hover: #2a2840;
+        --exp-count-bg: #201e30;
+        --exp-shadow-modal: 0 28px 70px -18px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.3);
+        --exp-shadow-popover: 0 18px 44px -12px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.3);
+    }
+
+    .exp-modal {
+        width: 460px; max-width: calc(100vw - 32px); background: var(--white);
+        border-radius: 14px; box-shadow: var(--exp-shadow-modal); overflow: hidden;
+        text-align: left;
+    }
+    .exp-header {
+        padding: 22px 26px 18px; border-bottom: 1px solid var(--exp-hairline);
+        display: flex; align-items: flex-start; gap: 14px;
+    }
+    .exp-title { font-size: 17px; font-weight: 600; color: var(--exp-text); letter-spacing: -.01em; }
+    .exp-subtitle { font-size: 13px; color: var(--exp-text-3); margin-top: 4px; }
+    .exp-close {
+        width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+        color: var(--exp-text-4); font-size: 16px; cursor: pointer; border: none; background: transparent;
+        margin: -2px -6px 0 0; flex-shrink: 0;
+    }
+    .exp-close:hover { background: var(--exp-hover-bg); color: var(--exp-text-2); }
+
+    .exp-body { padding: 22px 26px 24px; display: flex; flex-direction: column; gap: 18px; }
+    .exp-label {
+        font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--exp-text-3);
+    }
+
+    .exp-chip {
+        font-size: 12px; font-weight: 500; border-radius: 999px; padding: 5px 11px; cursor: pointer;
+        border: 1px solid var(--exp-chip-border); background: var(--white); color: var(--exp-text-2);
+    }
+    .exp-chip:hover { background: var(--exp-chip-hover); }
+    .exp-chip.active {
+        color: var(--exp-accent-text); background: var(--exp-accent-lt); border-color: var(--exp-accent-lt-border);
+    }
+
+    .exp-select {
+        height: 42px; border: 1px solid var(--exp-border); border-radius: 10px; padding: 0 30px 0 12px;
+        font-size: 14px; color: var(--exp-text); background: var(--white); width: 100%; box-sizing: border-box;
+        font-family: inherit; cursor: pointer; appearance: none;
+        text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%239aa0b0' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat; background-position: right 10px center;
+    }
+    .exp-select:hover { border-color: var(--exp-border-hover); }
+
+    .exp-select:focus-visible {
+        outline: none; border-color: var(--exp-accent); box-shadow: 0 0 0 3px rgba(15,157,92,.14);
+    }
+
+    .exp-count {
+        display: flex; align-items: center; gap: 8px; background: var(--exp-count-bg);
+        border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--exp-text-2);
+    }
+    .exp-count-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--exp-accent-text); flex-shrink: 0; }
+    .exp-count.warn .exp-count-dot { background: #d97706; }
+    .exp-count strong { color: var(--exp-text); font-weight: 600; }
+
+    .exp-footer {
+        padding: 16px 26px; border-top: 1px solid var(--exp-hairline); background: var(--exp-footer-bg);
+        display: flex; justify-content: flex-end; gap: 10px; align-items: center;
+    }
+    .exp-btn-cancel {
+        height: 40px; padding: 0 16px; display: grid; place-items: center; font-size: 14px; font-weight: 500;
+        color: var(--exp-text-2); border-radius: 9px; cursor: pointer; border: none; background: transparent; font-family: inherit;
+    }
+    .exp-btn-cancel:hover { background: var(--exp-hover-bg); }
+    .exp-btn-primary {
+        height: 40px; padding: 0 18px; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;
+        color: #fff; background: var(--exp-accent); border-radius: 9px; cursor: pointer; border: none; font-family: inherit;
+        box-shadow: 0 1px 2px rgba(15,157,92,.35);
+    }
+    .exp-btn-primary:hover { background: var(--exp-accent-hover); }
+    .exp-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+     /* ── Control de rango de fechas ── */
+    #exp-rango-control {
+        display: flex; align-items: stretch; border: 1px solid var(--exp-border); border-radius: 10px;
+        background: var(--white); overflow: hidden; cursor: pointer;
+    }
+    #exp-rango-control:hover { border-color: var(--exp-border-hover); }
+    #exp-rango-control:focus-visible,
+    #exp-rango-control.exp-abierto {
+        border-color: var(--exp-accent); box-shadow: 0 0 0 3px rgba(15,157,92,.14); outline: none;
+    }
+
+    /* ── Popover del calendario — position:fixed + movido a <body> por JS,
+         para que el overflow:hidden del modal no le corte la parte de abajo
+         (mismo criterio que los dropdowns de equipo/molde de esta página). ── */
+    .exp-cal-popover {
+        display: none; position: fixed; z-index: 1100; width: 288px;
+        background: var(--white); border: 1px solid var(--exp-border); border-radius: 12px;
+        box-shadow: var(--exp-shadow-popover); padding: 14px;
+    }
+    .exp-cal-nav {
+        width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center;
+        color: var(--exp-text-2); font-size: 13px; cursor: pointer; border: none; background: transparent;
+    }
+    .exp-cal-nav:hover { background: var(--exp-hover-bg); }
+    .exp-cal-titulo { font-size: 13px; font-weight: 600; color: var(--exp-text); }
+    .exp-cal-dow {
+        height: 22px; display: grid; place-items: center; font-size: 10px; font-weight: 600;
+        letter-spacing: .04em; color: var(--exp-text-4);
+    }
+    .exp-cal-day {
+        height: 32px; display: grid; place-items: center; font-size: 12.5px; color: var(--exp-text);
+        border-radius: 8px; cursor: pointer; font-variant-numeric: tabular-nums; position: relative;
+        border: none; background: none; font-family: inherit;
+    }
+    .exp-cal-day:hover:not(.exp-cal-muted):not(.exp-cal-inicio):not(.exp-cal-fin) { background: var(--exp-hover-bg); }
+    .exp-cal-day:focus-visible { outline: 2px solid var(--exp-accent); outline-offset: 1px; }
+    .exp-cal-muted { color: var(--exp-text-muted-day); cursor: default; }
+    .exp-cal-inicio, .exp-cal-fin { background: var(--exp-accent); color: #fff; font-weight: 600; }
+    .exp-cal-inicio { border-radius: 8px 0 0 8px; }
+    .exp-cal-fin { border-radius: 0 8px 8px 0; }
+    .exp-cal-inicio.exp-cal-fin { border-radius: 8px; }
+    .exp-cal-medio { background: var(--exp-accent-lt); color: var(--exp-accent-mid-text); border-radius: 0; }
+    .exp-cal-hoy-dot {
+        position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+        width: 3px; height: 3px; border-radius: 999px; background: currentColor;
+    }
+    .exp-cal-footer {
+        border-top: 1px solid var(--exp-hairline); margin-top: 10px; padding-top: 10px;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .exp-cal-conteo { font-size: 11.5px; color: var(--exp-text-3); }
+    .exp-cal-listo {
+        font-size: 12px; font-weight: 600; color: var(--exp-accent-text); cursor: pointer;
+        border: none; background: none; font-family: inherit;
+    }
+
+    .exp-error {
+        font-size: 12px; color: #b91c1c; background: #fef2f2; border-radius: 8px;
+        padding: 8px 12px; margin: 0 26px 12px;
+    }
+
+</style>
+{% endblock %}
+
 {% block content %}
 
 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
@@ -9,10 +263,14 @@
         <div class="card-title" style="margin-bottom:4px;">{% trans "Registro de producción" %}</div>
         <div class="card-subtitle" style="margin-bottom:18px;">{% trans "Doble clic en turno u hora para editar · El downtime se calcula automáticamente" %}</div>
     </div>
-    <div style="padding-top:20px; margin-left:auto;">
+    <div style="padding-top:20px; margin-left:auto; display:flex; align-items:center; gap:8px;">
+            {% if datos_areas %}
+            <button type="button" class="btn btn-ghost" onclick="abrirModalExportar()">⬇ {% trans "Exportar" %}</button>
+            {% endif %}
             {% include 'menu_app/_language_selector.html' %}
     </div>
 </div>
+
 <!-- Filtros -->
 <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap;">
     <div style="display:flex; flex-direction:column; gap:4px;">
@@ -82,7 +340,7 @@
             {% if d.disp_area is not None %}
             <div style="width:1px; height:28px; background:var(--border);"></div>
             <div style="text-align:center;">
-                <div style="font-size:14px; font-weight:600; color:#4F46E5;">{{ d.disp_area }}%</div>
+                <div style="font-size:14px; font-weight:600; color:var(--indigo);">{{ d.disp_area }}%</div>
                 <div style="font-size:10px; color:var(--text-3);">{% trans "Disponibilidad" %}</div>
             </div>
             <div style="text-align:center;">
@@ -134,7 +392,7 @@
                     <th style="padding:7px 12px; width:100px; text-align:center; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "MTTR" %}</th>
                     <th style="padding:7px 12px; width:80px;  text-align:center; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "MTBF" %}</th>
                     <th style="padding:7px 12px; width:80px;  text-align:center; color:var(--text-3); font-weight:500; border-bottom:1px solid var(--border); font-size:11px;">{% trans "No. Paros" %}</th>
-                    <th style="padding:7px 12px; border-bottom:1px solid var(--border);"></th>
+                    <th style="padding:7px 12px; width:56px; border-bottom:1px solid var(--border);"></th>
                 </tr>
             </thead>
             <tbody id="tbody-{{ d.area.id }}">
@@ -147,7 +405,14 @@
                     data-inicio="{{ reg.hora_inicio }}"
                     data-fin="{{ reg.hora_fin }}">
 
-                    <td style="padding:8px 12px; border-bottom:1px solid var(--border); font-weight:500; color:var(--text); cursor:pointer;" ondblclick="editarEquipo(this)">{{ reg.equipo }}</td>
+                    <td style="padding:8px 12px; border-bottom:1px solid var(--border);">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="drag-handle" draggable="true" tabindex="0" role="button"
+                                  aria-label="{% trans 'Reordenar' %}"
+                                  style="color:var(--row-action-muted); cursor:grab; user-select:none; font-size:13px; line-height:1;">⠿</span>
+                            <span style="flex:1; min-width:0; font-weight:500; color:var(--text); cursor:pointer;" ondblclick="editarEquipo(this)">{{ reg.equipo }}</span>
+                        </div>
+                    </td>
 
                     <!-- Turno — doble clic para editar -->
                     <td style="padding:8px 12px; border-bottom:1px solid var(--border); cursor:pointer;" class="td-turno"
@@ -194,7 +459,7 @@
                         </div>
                         {% else %}—{% endif %}
                     </td>
-                    <td style="padding:8px 12px; border-bottom:1px solid var(--border); color:#4F46E5; font-weight:500; text-align:center;">
+                    <td style="padding:8px 12px; border-bottom:1px solid var(--border); color:var(--indigo); font-weight:500; text-align:center;">
                         {% if reg.disponibilidad is not None %}{{ reg.disponibilidad }}%{% else %}—{% endif %}
                     </td>
                     <td style="padding:8px 6px; border-bottom:1px solid var(--border); color:#EF4444; font-weight:500; text-align:center;">
@@ -209,67 +474,64 @@
                     <td style="padding:8px 6px; border-bottom:1px solid var(--border); color:var(--text-2); text-align:center;">
                         {{ reg.n_paros_mant|default:0 }}
                     </td>
-                    <td style="padding:8px 12px; border-bottom:1px solid var(--border); white-space:nowrap; min-width:170px;">
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <button onclick="moverFila(this, -1)"
-                                    style="width:32px; height:26px; border:0.5px solid var(--border); border-radius:5px;
-                                        background:var(--surface); color:var(--text-2); cursor:pointer;
-                                        display:inline-flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0;">▲</button>
-                            <button onclick="moverFila(this, 1)"
-                                    style="width:32px; height:26px; border:0.5px solid var(--border); border-radius:5px;
-                                        background:var(--surface); color:var(--text-2); cursor:pointer;
-                                        display:inline-flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0;">▼</button>
-                            <button onclick="eliminarRegistro({{ reg.id }})"
-                                    style="padding:6px 14px; min-width:75px; border:none; border-radius:5px; font-size:11px; font-weight:600;
-                                    background:#EF4444; color:#fff; cursor:pointer; font-family:inherit; flex-shrink:0;">{% trans "Eliminar" %}</button>
-                        </div>
+                    <td style="padding:8px 12px; border-bottom:1px solid var(--border); text-align:right;">
+                        <button type="button" class="btn-menu-fila" data-registro="{{ reg.id }}"
+                                onclick="toggleMenuFila(this)"
+                                aria-haspopup="menu" aria-expanded="false" aria-label="{% trans 'Acciones del registro' %}"
+                                style="border:1px solid transparent; background:transparent; border-radius:7px;
+                                       padding:2px 9px; font-size:20px; letter-spacing:1px; font-weight:700;
+                                       color:var(--row-action-muted-hover); cursor:pointer; line-height:1.4;">⋯</button>
                     </td>
                 </tr>
                 {% endfor %}
-
+            </tbody>
                 <!-- Fila agregar -->
-                <tr style="background:var(--surface);">
-                    <td style="padding:10px 12px;" colspan="8">
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                            {% if d.tiene_equipos %}
-                            <select id="eq-{{ d.area.id }}"
-                                    style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); min-width:240px;">
-                                <option value="">— {% trans "Área completa" %} —</option>
-                                {% for eq in d.equipos %}
-                                <option value="{{ eq }}">{{ eq }}</option>
-                                {% endfor %}
-                            </select>
-                            {% else %}
-                            <span style="font-size:12px; color:var(--text-2); font-weight:500;">{% trans "Área completa" %}</span>
-                            <input type="hidden" id="eq-{{ d.area.id }}" value="">
-                            {% endif %}
-                            <select id="turno-{{ d.area.id }}"
-                                    style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text);">
-                                <option value="1">{% trans "Turno" %} 1</option>
-                                <option value="2">{% trans "Turno" %} 2</option>
-                            </select>
-                            <input type="time" id="ini-{{ d.area.id }}"
-                                   style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); width:120px;">
-                            <input type="time" id="fin-{{ d.area.id }}"
-                                   style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); width:120px;">
-                            {% if d.es_area_moldes %}
-                            <input type="text" id="molde-{{ d.area.id }}" readonly placeholder="{% trans 'Número de molde' %}"
-                                   style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--surface); color:var(--text-2); width:140px;">
-                            <input type="text" id="molde-nombre-{{ d.area.id }}" autocomplete="off"
-                                   placeholder="{% trans 'Buscar nombre de molde…' %}"
-                                   oninput="filtrarMoldes({{ d.area.id }}, this.value)"
-                                   onfocus="filtrarMoldes({{ d.area.id }}, this.value)"
-                                   onblur="setTimeout(() => validarMoldeSeleccionado({{ d.area.id }}), 150)"
-                                   style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); width:200px;">
-                            {% endif %}
-                            <button onclick="agregarRegistro({{ d.area.id }})"
-                                    style="padding:5px 14px; background:var(--indigo); color:#fff; border:none; border-radius:7px; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit;">
-                                + {% trans "Agregar" %}
-                            </button>
-                        </div>
+                <tfoot>
+                <tr style="background:var(--surface); border-top:1px solid var(--border);">
+                    <td style="padding:10px 12px;" colspan="{{ d.n_columnas }}">
+                    <div class="fila-agregar" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                        {% if d.tiene_equipos %}
+                        <input type="text" id="eq-{{ d.area.id }}" autocomplete="off"
+                            placeholder="— {% trans 'Área completa' %} —"
+                            oninput="filtrarEquipoDropdown(this, {{ d.area.id }})"
+                            onfocus="filtrarEquipoDropdown(this, {{ d.area.id }})"
+                            onblur="validarEquipoTexto(this, {{ d.area.id }})"
+                            style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); min-width:240px;">
+                        {% else %}
+                        <span style="font-size:12px; color:var(--text-2); font-weight:500;">{% trans "Área completa" %}</span>
+                        <input type="hidden" id="eq-{{ d.area.id }}" value="">
+                        {% endif %}
+
+                        <select id="turno-{{ d.area.id }}"
+                                style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text);">
+                        <option value="1">{% trans "Turno" %} 1</option>
+                        <option value="2">{% trans "Turno" %} 2</option>
+                        </select>
+
+                        <input type="time" id="ini-{{ d.area.id }}" aria-label="{% trans 'Inicio' %}"
+                            style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); width:120px;">
+                        <input type="time" id="fin-{{ d.area.id }}" aria-label="{% trans 'Fin' %}"
+                            style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); width:120px;">
+
+                        {% if d.es_area_moldes %}
+                        <input type="text" id="molde-{{ d.area.id }}" readonly placeholder="{% trans 'Número de molde' %}"
+                            style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--surface); color:var(--text-2); width:140px;">
+                        <input type="text" id="molde-nombre-{{ d.area.id }}" autocomplete="off"
+                            placeholder="{% trans 'Buscar nombre de molde…' %}"
+                            oninput="filtrarMoldes({{ d.area.id }}, this.value)"
+                            onfocus="filtrarMoldes({{ d.area.id }}, this.value)"
+                            onblur="setTimeout(() => validarMoldeSeleccionado({{ d.area.id }}), 150)"
+                            style="border:0.5px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; background:var(--white); color:var(--text); width:200px;">
+                        {% endif %}
+
+                        <button type="button" onclick="agregarRegistro({{ d.area.id }})"
+                                style="padding:5px 14px; background:var(--indigo); color:#fff; border:none; border-radius:7px; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit;">
+                        + {% trans "Agregar" %}
+                        </button>
+                    </div>
                     </td>
                 </tr>
-            </tbody>
+                </tfoot>
         </table>
         </div>
     </div>
@@ -278,10 +540,14 @@
 <div class="card" style="text-align:center; padding:40px; color:var(--text-3);">{% trans "No tienes áreas asignadas." %}</div>
 {% endfor %}
 
+<div id="orden-anuncio" class="sr-only" aria-live="polite"></div>
+
 <!-- Modal eliminar -->
 <div id="modal-eliminar" class="modal-backdrop" style="display:none;">
     <div class="modal-box">
-        <p>{% trans "¿Eliminar este registro?" %}<br><small style="color:var(--text-3);font-weight:400;">{% trans "Esta acción no se puede deshacer." %}</small></p>
+        <p>{% trans "¿Eliminar este registro?" %}<br>
+           <small id="modal-eliminar-detalle" style="color:var(--text-2);font-weight:500;"></small><br>
+           <small style="color:var(--text-3);font-weight:400;">{% trans "Esta acción no se puede deshacer." %}</small></p>
         <div class="modal-actions">
             <button type="button" class="btn btn-primary" id="btn-confirmar-eliminar"
                     style="background:var(--red);border-color:var(--red);">{% trans "Sí, eliminar" %}</button>
@@ -290,17 +556,118 @@
     </div>
 </div>
 
+<!-- Modal exportar -->
+<div id="modal-exportar" class="modal-backdrop" style="display:none;">
+    <div class="exp-modal" role="dialog" aria-modal="true" aria-labelledby="exp-titulo">
+        <div class="exp-header">
+            <div style="flex:1;">
+                <div class="exp-title" id="exp-titulo">{% trans "Exportar registros de producción" %}</div>
+                <div class="exp-subtitle">{% trans "Se descargará un archivo Excel con los registros del rango seleccionado." %}</div>
+            </div>
+            <button type="button" class="exp-close" onclick="cerrarModalExportar()" aria-label="{% trans 'Cerrar' %}">✕</button>
+        </div>
+
+        <form method="get" action="{% url 'paros:exportar_registros_produccion' %}" id="form-exportar">
+            <div class="exp-body">
+                <div style="display:flex; flex-direction:column; gap:8px; position:relative;">
+                    <div class="exp-label">{% trans "Rango de fechas" %}</div>
+
+                    <input type="hidden" name="fecha_desde" id="exp-fecha-desde" value="{{ fecha }}">
+                    <input type="hidden" name="fecha_hasta" id="exp-fecha-hasta" value="{{ fecha }}">
+
+                    <div id="exp-rango-control" tabindex="0" role="button" aria-haspopup="dialog"
+                         onclick="toggleCalendarioExport()"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCalendarioExport();}">
+                        <div style="flex:1; display:flex; flex-direction:column; gap:2px; padding:8px 12px;">
+                            <div style="font-size:11px; color:var(--exp-text-4);">{% trans "Desde" %}</div>
+                            <div id="exp-desde-txt" style="font-size:14px; color:var(--exp-text); font-variant-numeric:tabular-nums;">{{ fecha|date:"d / m / Y" }}</div>
+                        </div>
+                        <div style="width:1px; background:var(--exp-hairline-2);"></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:2px; padding:8px 12px;">
+                            <div style="font-size:11px; color:var(--exp-text-4);">{% trans "Hasta" %}</div>
+                            <div id="exp-hasta-txt" style="font-size:14px; color:var(--exp-text); font-variant-numeric:tabular-nums;">{{ fecha|date:"d / m / Y" }}</div>
+                        </div>
+                        <div style="display:grid; place-items:center; padding:0 12px; border-left:1px solid var(--exp-hairline-2); color:var(--exp-text-3);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="5" width="18" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 3v4M8 3v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:6px; padding-top:2px;">
+                        <div class="exp-chip" data-atajo="hoy">{% trans "Hoy" %}</div>
+                        <div class="exp-chip" data-atajo="7dias">{% trans "Últimos 7 días" %}</div>
+                        <div class="exp-chip" data-atajo="mes">{% trans "Este mes" %}</div>
+                    </div>
+                    <div id="exp-cal-popover" class="exp-cal-popover" role="dialog" aria-label="{% trans 'Calendario' %}">
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:0 2px 10px;">
+                            <button type="button" class="exp-cal-nav" id="exp-cal-prev" aria-label="{% trans 'Mes anterior' %}">‹</button>
+                            <div class="exp-cal-titulo" id="exp-cal-titulo"></div>
+                            <button type="button" class="exp-cal-nav" id="exp-cal-next" aria-label="{% trans 'Mes siguiente' %}">›</button>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px; padding-bottom:4px;" id="exp-cal-dow"></div>
+                        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px;" id="exp-cal-grid"></div>
+                        <div class="exp-cal-footer">
+                            <span class="exp-cal-conteo" id="exp-cal-conteo"></span>
+                            <button type="button" class="exp-cal-listo" id="exp-cal-listo">{% trans "Listo" %}</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1.6fr 1fr; gap:14px;">
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <label class="exp-label">{% trans "Área" %}</label>
+                        <select name="area_id" id="exp-area" class="exp-select" onchange="solicitarConteoExport()">
+                            <option value="">— {% trans "Todas las áreas" %} —</option>
+                            {% for d in datos_areas %}
+                            <option value="{{ d.area.id }}">{{ d.area.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <label class="exp-label">{% trans "Turno" %}</label>
+                        <select name="turno" id="exp-turno" class="exp-select" onchange="solicitarConteoExport()">
+                            <option value="">{% trans "Ambos turnos" %}</option>
+                            <option value="1">{% trans "Turno 1" %}</option>
+                            <option value="2">{% trans "Turno 2" %}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="exp-count" id="exp-contador">
+                    <span class="exp-count-dot"></span>
+                    <span id="exp-contador-txt">{% trans "Calculando…" %}</span>
+                </div>
+            </div>
+            <div class="exp-error" id="exp-error" style="display:none;"></div>
+            <div class="exp-footer">
+                <button type="button" class="exp-btn-cancel" onclick="cerrarModalExportar()">{% trans "Cancelar" %}</button>
+                <button type="submit" class="exp-btn-primary" id="exp-btn-exportar">
+                    <span>⬇</span><span id="exp-btn-exportar-txt">{% trans "Exportar Excel" %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 {{ moldes_area|json_script:"moldes-data" }}
+{{ equipos_por_area_json|json_script:"equipos-data" }}
 <script>
 const CSRF     = '{{ csrf_token }}';
 const URL_AGR  = "{% url 'paros:agregar_registro' %}";
 const URL_ELIM = "{% url 'paros:eliminar_registro' 0 %}".replace('/0/', '/');
 const URL_UPD  = "{% url 'paros:actualizar_registro' 0 %}".replace('/0/', '/');
 const URL_ORD  = "{% url 'paros:actualizar_orden' %}";
-const MOLDES_DATA = JSON.parse(document.getElementById('moldes-data').textContent);
+const MOLDES_DATA  = JSON.parse(document.getElementById('moldes-data').textContent);
+const EQUIPOS_DATA = JSON.parse(document.getElementById('equipos-data').textContent);
+const TXT_ELIMINAR = "{% trans 'Eliminar' %}";
+const TXT_TURNO    = "{% trans 'Turno' %}";
+const URL_CONTAR   = "{% url 'paros:contar_registros_produccion' %}";
+const EXP_LANG     = "{{ LANGUAGE_CODE }}";
 
 function getMoldeDropdown() {
     let dropdown = document.getElementById('molde-dropdown-global');
@@ -336,7 +703,8 @@ function filtrarMoldes(areaId, q) {
              style="padding:6px 10px; font-size:12px; cursor:pointer; border-bottom:0.5px solid var(--border);"
              onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''"
              onmousedown="seleccionarMolde(${areaId}, ${i})">
-            <strong style="color:var(--indigo);">${m.numero_molde}</strong> — ${m.nombre_molde}
+            <div style="font-weight:600; color:var(--indigo);">${m.numero_molde}</div>
+            <div style="color:var(--text);">${m.nombre_molde}</div>
         </div>
     `).join('');
     dropdown._matches = matches;
@@ -367,6 +735,366 @@ window.addEventListener('scroll', (e) => {
     if (e.target === dropdown || dropdown.contains(e.target)) return;
     dropdown.style.display = 'none';
 }, true);
+
+// ── Autocompletado de equipo (restringido al catálogo del área) ────────────────
+function getEquipoDropdown() {
+    let dropdown = document.getElementById('equipo-dropdown-global');
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = 'equipo-dropdown-global';
+        dropdown.style.cssText = `
+            display:none; position:fixed; background:var(--white); border:1px solid var(--indigo);
+            border-radius:7px; box-shadow:var(--shadow-md); z-index:9999;
+            max-height:200px; overflow-y:auto;`;
+        document.body.appendChild(dropdown);
+    }
+    return dropdown;
+}
+
+function equiposValidos(areaId) {
+    return (EQUIPOS_DATA[areaId] || []).map(e => e.equipo);
+}
+
+function filtrarEquipoDropdown(input, areaId) {
+    const dropdown = getEquipoDropdown();
+    const q = (input.value || '').toLowerCase().trim();
+    const equipos = EQUIPOS_DATA[areaId] || [];
+    const matches = equipos.filter(e => !q || e.equipo.toLowerCase().includes(q) || (e.codigo || '').toLowerCase().includes(q));
+    if (matches.length === 0) {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+        return;
+    }
+    const rect = input.getBoundingClientRect();
+    dropdown.style.left  = rect.left + 'px';
+    dropdown.style.top   = rect.bottom + 'px';
+    dropdown.style.width = rect.width + 'px';
+    dropdown.innerHTML = matches.slice(0, 30).map((e, i) => `
+        <div data-idx="${i}"
+             style="padding:6px 10px; font-size:12px; cursor:pointer; border-bottom:0.5px solid var(--border);"
+             onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''"
+             onmousedown="seleccionarEquipoDropdown('${input.id}', ${i})">
+            <div style="font-weight:600; color:var(--indigo);">${e.codigo}</div>
+            <div style="color:var(--text);">${e.equipo}</div>
+        </div>
+    `).join('');
+    dropdown._matches = matches;
+    dropdown.style.display = 'block';
+}
+
+function seleccionarEquipoDropdown(inputId, idx) {
+    const dropdown  = getEquipoDropdown();
+    const equipo    = dropdown._matches[idx];
+    const input     = document.getElementById(inputId);
+    input.value = equipo.equipo;
+    dropdown.style.display = 'none';
+    input.dispatchEvent(new Event('change'));
+}
+
+function validarEquipoTexto(input, areaId) {
+    const equipos = equiposValidos(areaId);
+    const val = input.value.trim();
+    if (val && !equipos.includes(val)) {
+        input.value = '';
+    }
+    getEquipoDropdown().style.display = 'none';
+}
+
+window.addEventListener('scroll', (e) => {
+    const dropdown = getEquipoDropdown();
+    if (e.target === dropdown || dropdown.contains(e.target)) return;
+    dropdown.style.display = 'none';
+}, true);
+
+// ── Calendario del modal Exportar ─────────────────────────────────────────────
+const EXP_MESES = EXP_LANG === 'en'
+    ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+    : ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const EXP_DOW = EXP_LANG === 'en' ? ['M','T','W','T','F','S','S'] : ['L','M','M','J','V','S','D'];
+
+const TXT_CALCULANDO   = "{% trans 'Calculando…' %}";
+const TXT_REGISTROS    = "{% trans 'registros' %}";
+const TXT_COINCIDEN    = "{% trans 'coinciden con estos filtros' %}";
+const TXT_ERROR_CONTEO = "{% trans 'No se pudo calcular el total. Intenta de nuevo.' %}";
+const TXT_DIAS_SEL     = "{% trans 'días seleccionados' %}";
+const TXT_EXPORTANDO   = "{% trans 'Exportando…' %}";
+const TXT_EXPORTAR_EXCEL = "{% trans 'Exportar Excel' %}";
+
+function expPad(n) { return String(n).padStart(2, '0'); }
+function expFmt(d) { return `${expPad(d.getDate())} / ${expPad(d.getMonth() + 1)} / ${d.getFullYear()}`; }
+function expISO(d) { return `${d.getFullYear()}-${expPad(d.getMonth() + 1)}-${expPad(d.getDate())}`; }
+function expParseISO(s) {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+function expHoy() { const h = new Date(); h.setHours(0, 0, 0, 0); return h; }
+function expSameDay(a, b) {
+    return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+let expCal = { viewYear: 0, viewMonth: 0, desde: null, hasta: null, abierto: false };
+let expEligiendoSegundo = false;
+
+// Se saca del modal (que tiene overflow:hidden) para que no le corte la parte
+// de abajo — mismo criterio que getEquipoDropdown()/getMoldeDropdown().
+document.body.appendChild(document.getElementById('exp-cal-popover'));
+
+function expLeerRangoActual() {
+    const dEl = document.getElementById('exp-fecha-desde');
+    const hEl = document.getElementById('exp-fecha-hasta');
+    expCal.desde = dEl.value ? expParseISO(dEl.value) : expHoy();
+    expCal.hasta = hEl.value ? expParseISO(hEl.value) : expHoy();
+    expCal.viewYear  = expCal.hasta.getFullYear();
+    expCal.viewMonth = expCal.hasta.getMonth();
+}
+
+function expAplicarRango(desde, hasta) {
+    if (hasta < desde) { const t = desde; desde = hasta; hasta = t; }
+    expCal.desde = desde;
+    expCal.hasta = hasta;
+    expCal.viewYear  = hasta.getFullYear();
+    expCal.viewMonth = hasta.getMonth();
+    document.getElementById('exp-fecha-desde').value = expISO(desde);
+    document.getElementById('exp-fecha-hasta').value = expISO(hasta);
+    document.getElementById('exp-desde-txt').textContent = expFmt(desde);
+    document.getElementById('exp-hasta-txt').textContent = expFmt(hasta);
+    expActualizarChipsActivos();
+    if (expCal.abierto) renderCalendarioExport();
+    solicitarConteoExport();
+}
+
+function expActualizarChipsActivos() {
+    const hoy = expHoy();
+    const hace7 = new Date(hoy); hace7.setDate(hoy.getDate() - 6);
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+
+    document.querySelectorAll('.exp-chip').forEach(chip => chip.classList.remove('active'));
+    const marcar = sel => { const c = document.querySelector(sel); if (c) c.classList.add('active'); };
+    if (expSameDay(expCal.desde, hoy) && expSameDay(expCal.hasta, hoy)) {
+        marcar('.exp-chip[data-atajo="hoy"]');
+    } else if (expSameDay(expCal.desde, hace7) && expSameDay(expCal.hasta, hoy)) {
+        marcar('.exp-chip[data-atajo="7dias"]');
+    } else if (expSameDay(expCal.desde, inicioMes) && expSameDay(expCal.hasta, finMes)) {
+        marcar('.exp-chip[data-atajo="mes"]');
+    }
+}
+
+document.querySelectorAll('.exp-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        const hoy = expHoy();
+        const atajo = chip.dataset.atajo;
+        if (atajo === 'hoy') {
+            expAplicarRango(hoy, hoy);
+        } else if (atajo === '7dias') {
+            const desde = new Date(hoy); desde.setDate(hoy.getDate() - 6);
+            expAplicarRango(desde, hoy);
+        } else if (atajo === 'mes') {
+            const desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            const hasta = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+            expAplicarRango(desde, hasta);
+        }
+    });
+});
+
+function toggleCalendarioExport() {
+    if (expCal.abierto) cerrarCalendarioExport();
+    else abrirCalendarioExport();
+}
+
+function abrirCalendarioExport() {
+    expLeerRangoActual();
+    expCal.abierto = true;
+    expEligiendoSegundo = false;
+    const popover = document.getElementById('exp-cal-popover');
+    const control = document.getElementById('exp-rango-control');
+    const rect = control.getBoundingClientRect();
+    popover.style.top  = (rect.bottom + 8) + 'px';
+    popover.style.left = rect.left + 'px';
+    popover.style.display = 'block';
+    control.classList.add('exp-abierto');
+    renderCalendarioExport();
+}
+
+function cerrarCalendarioExport() {
+    expCal.abierto = false;
+    const popover = document.getElementById('exp-cal-popover');
+    const control = document.getElementById('exp-rango-control');
+    if (popover) popover.style.display = 'none';
+    if (control) control.classList.remove('exp-abierto');
+}
+
+document.getElementById('exp-cal-listo').addEventListener('click', cerrarCalendarioExport);
+document.getElementById('exp-cal-prev').addEventListener('click', () => {
+    expCal.viewMonth--;
+    if (expCal.viewMonth < 0) { expCal.viewMonth = 11; expCal.viewYear--; }
+    renderCalendarioExport();
+});
+document.getElementById('exp-cal-next').addEventListener('click', () => {
+    expCal.viewMonth++;
+    if (expCal.viewMonth > 11) { expCal.viewMonth = 0; expCal.viewYear++; }
+    renderCalendarioExport();
+});
+
+document.addEventListener('click', e => {
+    if (!expCal.abierto) return;
+    const popover = document.getElementById('exp-cal-popover');
+    const control = document.getElementById('exp-rango-control');
+    if (popover.contains(e.target) || control.contains(e.target)) return;
+    cerrarCalendarioExport();
+});
+
+function expClickDia(dia) {
+    const fecha = new Date(expCal.viewYear, expCal.viewMonth, dia);
+    if (!expEligiendoSegundo) {
+        expCal.desde = fecha;
+        expCal.hasta = fecha;
+        expEligiendoSegundo = true;
+    } else {
+        if (fecha < expCal.desde) {
+            expCal.hasta = expCal.desde;
+            expCal.desde = fecha;
+        } else {
+            expCal.hasta = fecha;
+        }
+        expEligiendoSegundo = false;
+    }
+    document.getElementById('exp-fecha-desde').value = expISO(expCal.desde);
+    document.getElementById('exp-fecha-hasta').value = expISO(expCal.hasta);
+    document.getElementById('exp-desde-txt').textContent = expFmt(expCal.desde);
+    document.getElementById('exp-hasta-txt').textContent = expFmt(expCal.hasta);
+    expActualizarChipsActivos();
+    renderCalendarioExport();
+    solicitarConteoExport();
+}
+
+function renderCalendarioExport() {
+    document.getElementById('exp-cal-titulo').textContent = `${EXP_MESES[expCal.viewMonth]} ${expCal.viewYear}`;
+
+    const dow = document.getElementById('exp-cal-dow');
+    dow.innerHTML = EXP_DOW.map(d => `<div class="exp-cal-dow">${d}</div>`).join('');
+
+    const primerDia = new Date(expCal.viewYear, expCal.viewMonth, 1);
+    const offsetInicio = (primerDia.getDay() + 6) % 7; // lunes = 0
+    const diasEnMes = new Date(expCal.viewYear, expCal.viewMonth + 1, 0).getDate();
+    const diasMesAnterior = new Date(expCal.viewYear, expCal.viewMonth, 0).getDate();
+
+    const celdas = [];
+    for (let i = 0; i < offsetInicio; i++) {
+        celdas.push({ dia: diasMesAnterior - offsetInicio + 1 + i, fuera: true });
+    }
+    for (let d = 1; d <= diasEnMes; d++) {
+        celdas.push({ dia: d, fuera: false });
+    }
+    let diaSiguiente = 1;
+    while (celdas.length < 42) {
+        celdas.push({ dia: diaSiguiente++, fuera: true });
+    }
+
+    const hoy = expHoy();
+    const grid = document.getElementById('exp-cal-grid');
+    grid.innerHTML = celdas.map(c => {
+        if (c.fuera) {
+            return `<div class="exp-cal-day exp-cal-muted">${c.dia}</div>`;
+        }
+        const fecha = new Date(expCal.viewYear, expCal.viewMonth, c.dia);
+        const esInicio = expSameDay(fecha, expCal.desde);
+        const esFin    = expSameDay(fecha, expCal.hasta);
+        const enMedio  = expCal.desde && expCal.hasta && fecha > expCal.desde && fecha < expCal.hasta;
+        const esHoy    = expSameDay(fecha, hoy);
+        let cls = 'exp-cal-day';
+        if (esInicio) cls += ' exp-cal-inicio';
+        if (esFin)    cls += ' exp-cal-fin';
+        if (enMedio)  cls += ' exp-cal-medio';
+        const dot = esHoy ? '<span class="exp-cal-hoy-dot"></span>' : '';
+        return `<button type="button" class="${cls}" tabindex="-1" onclick="event.stopPropagation(); expClickDia(${c.dia})">${c.dia}${dot}</button>`;
+    }).join('');
+
+    const cells = [...grid.querySelectorAll('.exp-cal-day:not(.exp-cal-muted)')];
+    const objetivo = cells.find(c => c.classList.contains('exp-cal-fin')) || cells[0];
+    if (objetivo) objetivo.tabIndex = 0;
+
+    const msDia = 24 * 60 * 60 * 1000;
+    const nDias = expCal.desde && expCal.hasta ? Math.round((expCal.hasta - expCal.desde) / msDia) + 1 : 0;
+    document.getElementById('exp-cal-conteo').textContent = nDias + ' ' + TXT_DIAS_SEL;
+}
+
+document.getElementById('exp-cal-grid').addEventListener('keydown', e => {
+    const grid = e.currentTarget;
+    const cells = [...grid.querySelectorAll('.exp-cal-day:not(.exp-cal-muted)')];
+    const idx = cells.indexOf(document.activeElement);
+    if (idx === -1) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        document.activeElement.click();
+        return;
+    }
+    let destino = -1;
+    if (e.key === 'ArrowRight') destino = idx + 1;
+    else if (e.key === 'ArrowLeft') destino = idx - 1;
+    else if (e.key === 'ArrowDown') destino = idx + 7;
+    else if (e.key === 'ArrowUp') destino = idx - 7;
+    else return;
+    e.preventDefault();
+    if (destino >= 0 && destino < cells.length) {
+        cells[idx].tabIndex = -1;
+        cells[destino].tabIndex = 0;
+        cells[destino].focus();
+    }
+});
+
+// ── Contador de resultados en vivo ────────────────────────────────────────────
+let expContadorTimer = null;
+function solicitarConteoExport() {
+    clearTimeout(expContadorTimer);
+    expContadorTimer = setTimeout(expEjecutarConteo, 300);
+}
+
+async function expEjecutarConteo() {
+    const bloque    = document.getElementById('exp-contador');
+    const txt       = document.getElementById('exp-contador-txt');
+    const btn       = document.getElementById('exp-btn-exportar');
+    const errorBox  = document.getElementById('exp-error');
+    errorBox.style.display = 'none';
+    bloque.classList.remove('warn');
+    txt.textContent = TXT_CALCULANDO;
+
+    const params = new URLSearchParams({
+        fecha_desde: document.getElementById('exp-fecha-desde').value,
+        fecha_hasta: document.getElementById('exp-fecha-hasta').value,
+        area_id: document.getElementById('exp-area').value,
+        turno: document.getElementById('exp-turno').value,
+    });
+    try {
+        const res = await fetch(URL_CONTAR + '?' + params.toString());
+        if (!res.ok) throw new Error('http');
+        const data = await res.json();
+        const n = data.count;
+        txt.innerHTML = `<strong>${n} ${TXT_REGISTROS}</strong> ${TXT_COINCIDEN}`;
+        bloque.classList.toggle('warn', n === 0);
+        btn.disabled = n === 0;
+    } catch (err) {
+        errorBox.textContent = TXT_ERROR_CONTEO;
+        errorBox.style.display = 'block';
+        txt.textContent = TXT_CALCULANDO;
+        btn.disabled = false;
+    }
+}
+
+document.getElementById('form-exportar').addEventListener('submit', () => {
+    const btn = document.getElementById('exp-btn-exportar');
+    const txt = document.getElementById('exp-btn-exportar-txt');
+    const cancelBtn = document.querySelector('#modal-exportar .exp-btn-cancel');
+    btn.disabled = true;
+    txt.textContent = TXT_EXPORTANDO;
+    if (cancelBtn) cancelBtn.disabled = true;
+    setTimeout(() => {
+        btn.disabled = false;
+        txt.textContent = TXT_EXPORTAR_EXCEL;
+        if (cancelBtn) cancelBtn.disabled = false;
+    }, 1500);
+});
+
 </script>
 <script src="{% static 'paros_app/js/registro_produccion.js' %}"></script>
 {% endblock %}

@@ -15,16 +15,72 @@ function toggleSeguimiento() {
     setTimeout(notificarAltura, 50);
 }
 
-// ── Actualizar badge ──────────────────────────────────────────────────────────
+// ── Actualizar badge (cuenta solo los seguimientos abiertos, no cerrados) ──────
 function actualizarBadge() {
-    const items = document.querySelectorAll('.seg-item');
-    const badge = document.getElementById('badge-seguimientos');
-    const empty = document.getElementById('empty-seg');
-    const count = items.length;
-    badge.textContent   = count + (count === 1 ? ' seguimiento' : ' seguimientos');
-    badge.style.display = count > 0 ? 'inline-block' : 'none';
-    if (empty) empty.style.display = count > 0 ? 'none' : 'block';
+    const items  = document.querySelectorAll('.seg-item');
+    const badge  = document.getElementById('badge-seguimientos');
+    const empty  = document.getElementById('empty-seg');
+    const abiertos = Array.from(items).filter(el => {
+        const estado = el.querySelector('.badge-estatus');
+        return !estado || !estado.dataset.estatus || estado.dataset.estatus !== 'completado';
+    }).length;
+    badge.textContent   = abiertos + (abiertos === 1 ? ' abierto' : ' abiertos');
+    badge.style.display = abiertos > 0 ? 'inline-block' : 'none';
+    if (empty) empty.style.display = items.length > 0 ? 'none' : 'block';
 }
+
+// ── Nota relativa de "Compromiso" (en N días / vence hoy / vencido hace N días) ─
+function parseFechaDMY(str) {
+    if (!str) return null;
+    const partes = str.split('/');
+    if (partes.length !== 3) return null;
+    const [d, m, y] = partes.map(Number);
+    if (!d || !m || !y) return null;
+    return new Date(y, m - 1, d);
+}
+
+function calcularNotaCompromiso(fechaDMY) {
+    const fecha = parseFechaDMY(fechaDMY);
+    if (!fecha) return null;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    fecha.setHours(0, 0, 0, 0);
+    const dias = Math.round((fecha - hoy) / 86400000);
+
+    if (dias < 0) {
+        const n = Math.abs(dias);
+        return { texto: `vencido hace ${n} d\u00eda${n === 1 ? '' : 's'}`, color: 'var(--rf-danger)' };
+    }
+    if (dias === 0) {
+        return { texto: 'vence hoy', color: 'var(--rf-warn)' };
+    }
+    if (dias <= 7) {
+        return { texto: `en ${dias} d\u00eda${dias === 1 ? '' : 's'}`, color: 'var(--rf-warn)' };
+    }
+    return { texto: `en ${dias} d\u00edas`, color: 'var(--rf-text-soft)' };
+}
+
+function pintarNotasCompromiso(raiz) {
+    (raiz || document).querySelectorAll('[data-compromiso]').forEach(el => {
+        const nota = calcularNotaCompromiso(el.dataset.compromiso);
+        const span = el.querySelector('.rf-seg-nota');
+        if (!nota || !span) return;
+        span.textContent = ' \u00b7 ' + nota.texto;
+        span.style.color = nota.color;
+    });
+}
+
+// ── Colores por tipo / estatus (mismos tokens que el template) ─────────────────
+const RF_COLORES_TIPO = {
+    preventiva: { bg: 'var(--rf-info-bg)',    border: 'var(--rf-info-border)',    color: 'var(--rf-info)' },
+    mejora:     { bg: 'var(--rf-success-bg)', border: 'var(--rf-success-border)', color: 'var(--rf-success)' },
+    correctiva: { bg: 'var(--rf-danger-bg)',  border: 'var(--rf-danger-border)',  color: 'var(--rf-danger)' },
+};
+const RF_COLORES_ESTATUS = {
+    pendiente:  { bg: 'var(--rf-warn-bg)',    border: 'var(--rf-warn-border)',    color: 'var(--rf-warn)' },
+    en_proceso: { bg: 'var(--rf-info-bg)',    border: 'var(--rf-info-border)',    color: 'var(--rf-info)' },
+    completado: { bg: 'var(--rf-success-bg)', border: 'var(--rf-success-border)', color: 'var(--rf-success)' },
+};
 
 // ── Abrir modal seguimiento (en padre via postMessage) ────────────────────────
 function abrirModalSeguimiento() {
@@ -52,42 +108,37 @@ function agregarItemSeg(data) {
     const empty = document.getElementById('empty-seg');
     if (empty) empty.style.display = 'none';
 
-    const colores = {
-        pendiente:  { bg:'#FAEEDA', color:'#854F0B' },
-        en_proceso: { bg:'#E6F1FB', color:'#185FA5' },
-        completado: { bg:'#EAF3DE', color:'#3B6D11' },
-    };
-    const c = colores[data.estatus] || colores.pendiente;
+    const tipoKey = data.tipo || 'correctiva';
+    const ct = RF_COLORES_TIPO[tipoKey] || RF_COLORES_TIPO.correctiva;
+    const ce = RF_COLORES_ESTATUS[data.estatus] || RF_COLORES_ESTATUS.pendiente;
 
     const div = document.createElement('div');
-    div.className     = 'seg-item';
-    div.dataset.id    = data.id;
-    div.style.cssText = 'border:0.5px solid #E5E4F0; border-radius:8px; padding:10px 12px;';
+    div.className  = 'seg-item rf-seg-item';
+    div.dataset.id = data.id;
     div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:5px;">
-            <div style="display:flex; gap:6px; align-items:center;">
-                <span style="padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; background:#FCEBEB; color:#A32D2D;">Correctiva</span>
-                <span style="font-size:11px; color:#9CA3AF;">${data.fecha_creacion}</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px;">
-                <span class="badge-estatus" style="padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; background:${c.bg}; color:${c.color};">${data.estatus_display}</span>
-                <button type="button"
-                    onclick="editarSeguimiento(${data.id},'${data.problema.replace(/'/g,"\\'")}','${(data.accion||'').replace(/'/g,"\\'")}','${(data.responsable||'').replace(/'/g,"\\'")}','${data.fecha_compromiso||''}','${data.estatus}','${(data.notas||'').replace(/'/g,"\\'")}')"
-                    style="font-size:11px; color:#6B7280; background:none; border:none; cursor:pointer; padding:2px 6px;">✏️</button>
-                <button type="button" onclick="confirmarEliminarSeg(${data.id})"
-                    style="font-size:11px; color:#EF4444; background:none; border:none; cursor:pointer; padding:2px 6px;">🗑</button>
-            </div>
+        <div class="rf-seg-top">
+            <span class="rf-seg-badge-tipo" style="background:${ct.bg}; border-color:${ct.border}; color:${ct.color};">${data.tipo_display || 'Correctiva'}</span>
+            <span class="rf-seg-fecha">${data.fecha_creacion}</span>
+            <span class="rf-seg-spacer"></span>
+            <span class="badge-estatus rf-seg-estado" data-estatus="${data.estatus}" style="background:${ce.bg}; border-color:${ce.border}; color:${ce.color};">
+                <span class="rf-seg-estado-dot" style="background:currentColor;"></span>${data.estatus_display}
+            </span>
+            <span class="rf-seg-actions">
+                <button type="button" class="rf-seg-action-btn rf-seg-action-editar"
+                    onclick="editarSeguimiento(${data.id},'${data.problema.replace(/'/g,"\\'")}','${(data.accion||'').replace(/'/g,"\\'")}','${(data.responsable||'').replace(/'/g,"\\'")}','${data.fecha_compromiso_iso||''}','${data.estatus}','${(data.notas||'').replace(/'/g,"\\'")}')">Editar</button>
+                <button type="button" class="rf-seg-action-btn rf-seg-action-eliminar" onclick="confirmarEliminarSeg(${data.id})">Eliminar</button>
+            </span>
         </div>
-        <div style="font-size:12px; font-weight:600; color:#1E1B4B; margin-bottom:6px;">${data.problema}</div>
-        ${data.accion ? `<div style="font-size:11px; color:#4B5563; margin-bottom:4px;"><span style="font-weight:600; color:#1E1B4B;">Acción:</span> ${data.accion}</div>` : ''}
-        ${data.notas  ? `<div style="font-size:11px; color:#4B5563; margin-bottom:4px;"><span style="font-weight:600; color:#1E1B4B;">Notas:</span> ${data.notas}</div>` : ''}
-        <div style="font-size:11px; color:#9CA3AF; margin-top:2px;">
-            ${data.responsable ? `<span style="font-weight:600; color:#6B7280;">Responsable:</span> ${data.responsable}` : ''}
-            ${data.responsable && data.fecha_compromiso ? ' · ' : ''}
-            ${data.fecha_compromiso ? `<span style="font-weight:600; color:#6B7280;">Compromiso:</span> ${data.fecha_compromiso}` : ''}
+        <div class="rf-seg-title">${data.problema}</div>
+        ${data.accion ? `<div class="rf-seg-desc">${data.accion}</div>` : ''}
+        ${data.notas ? `<div><div class="rf-seg-notas-label">NOTAS</div><div class="rf-seg-notas">${data.notas}</div></div>` : ''}
+        <div class="rf-seg-foot">
+            ${data.fecha_compromiso ? `<div data-compromiso="${data.fecha_compromiso}"><div class="rf-seg-foot-label">COMPROMISO</div><div class="rf-seg-foot-value">${data.fecha_compromiso}<span class="rf-seg-nota"></span></div></div>` : ''}
+            ${data.responsable ? `<div><div class="rf-seg-foot-label">RESPONSABLE</div><div class="rf-seg-foot-value">${data.responsable}</div></div>` : ''}
         </div>
     `;
     lista.prepend(div);
+    pintarNotasCompromiso(div);
     notificarAltura();
 }
 
@@ -149,6 +200,8 @@ window.addEventListener('message', function(e) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.badge-estatus[data-estatus]').forEach(() => {}); // no-op, mantiene compat
     actualizarBadge();
+    pintarNotasCompromiso(document);
     setTimeout(notificarAltura, 100);
 });

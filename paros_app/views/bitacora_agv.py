@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 from django.db.models import Q
+from django.utils.translation import gettext as _
 
 from ..models import RegistroAgv, ConfiguracionAgv, TargetAgv
 from login_app.permisos import get_perfil
@@ -50,12 +51,12 @@ def bitacora_agv(request):
         for r in registros_qs:
             d = r.fecha.day
             datos.setdefault(r.area_interna, {'dia': {}, 'noche': {}})
-            datos[r.area_interna][r.turno][d] = r.cantidad
+            datos[r.area_interna][r.turno][d] = {'cantidad': r.cantidad, 'comentario': r.comentario}
 
     meses = [
-        (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'),
-        (5, 'Mayo'), (6, 'Junio'), (7, 'Julio'), (8, 'Agosto'),
-        (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre'),
+        (1, _('Enero')), (2, _('Febrero')), (3, _('Marzo')), (4, _('Abril')),
+        (5, _('Mayo')), (6, _('Junio')), (7, _('Julio')), (8, _('Agosto')),
+        (9, _('Septiembre')), (10, _('Octubre')), (11, _('Noviembre')), (12, _('Diciembre')),
     ]
 
     return render(request, 'paros_app/bitacora_agv.html', {
@@ -83,6 +84,7 @@ def guardar_agv(request):
         fecha_str    = data.get('fecha')
         turno        = data.get('turno')
         cantidad     = data.get('cantidad')
+        comentario   = (data.get('comentario') or '').strip()[:200]
 
         if area_interna not in AREAS_INTERNAS_VALIDAS:
             return JsonResponse({'ok': False, 'error': 'Área interna inválida'}, status=400)
@@ -98,14 +100,14 @@ def guardar_agv(request):
             return JsonResponse({'ok': True, 'eliminado': True})
 
         cantidad = int(cantidad)
-        if cantidad < 0 or cantidad > 999:
-            return JsonResponse({'ok': False, 'error': 'La cantidad debe estar entre 0 y 999'}, status=400)
+        if cantidad < 0 or cantidad > 100:
+            return JsonResponse({'ok': False, 'error': 'La cantidad debe estar entre 0 y 100'}, status=400)
 
         obj, created = RegistroAgv.objects.update_or_create(
             area=area, area_interna=area_interna, fecha=fecha, turno=turno,
-            defaults={'cantidad': cantidad}
+            defaults={'cantidad': cantidad, 'comentario': comentario}
         )
-        return JsonResponse({'ok': True, 'created': created, 'cantidad': obj.cantidad})
+        return JsonResponse({'ok': True, 'created': created, 'cantidad': obj.cantidad, 'comentario': obj.comentario})
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=400)
 

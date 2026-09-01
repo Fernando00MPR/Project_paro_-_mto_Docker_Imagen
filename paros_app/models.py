@@ -214,6 +214,7 @@ class AccionDia(models.Model):
         ('p', 'Pendiente'),
         ('e', 'En proceso'),
         ('c', 'Cerrada'),
+        ('n', 'No aplica'),
     ]
 
     area              = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='acciones_dia')
@@ -223,19 +224,19 @@ class AccionDia(models.Model):
     equipo            = models.CharField(max_length=200, blank=True, verbose_name='Equipo')  
 
     # Contención
-    cont_accion       = models.CharField(max_length=100, blank=True)
+    cont_accion       = models.CharField(max_length=200, blank=True)
     cont_fecha_inicio = models.DateField(null=True, blank=True)
     cont_fecha_fin    = models.DateField(null=True, blank=True)
     cont_estatus      = models.CharField(max_length=1, choices=ESTATUS_CHOICES, default='p')
 
     # Correctiva
-    corr_accion       = models.CharField(max_length=100, blank=True)
+    corr_accion       = models.CharField(max_length=200, blank=True)
     corr_fecha_inicio = models.DateField(null=True, blank=True)
     corr_fecha_fin    = models.DateField(null=True, blank=True)
     corr_estatus      = models.CharField(max_length=1, choices=ESTATUS_CHOICES, default='p')
 
     # Preventiva
-    prev_accion       = models.CharField(max_length=100, blank=True)
+    prev_accion       = models.CharField(max_length=200, blank=True)
     prev_fecha_inicio = models.DateField(null=True, blank=True)
     prev_fecha_fin    = models.DateField(null=True, blank=True)
     prev_estatus      = models.CharField(max_length=1, choices=ESTATUS_CHOICES, default='p')
@@ -372,13 +373,15 @@ class ConfiguracionAgv(models.Model):
 
 
 class RegistroAgv(models.Model):
+
     AREA_INTERNA_CHOICES = [
-        ('inyeccion', 'Inyección'),
-        ('pintura',   'Pintura'),
+        ('inyeccion', _('Inyección')),
+        ('pintura',   _('Pintura')),
     ]
+
     TURNO_CHOICES = [
-        ('dia',   'Día'),
-        ('noche', 'Noche'),
+        ('dia',   _('Día')),
+        ('noche', _('Noche')),
     ]
 
     area         = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name='Área')
@@ -386,7 +389,8 @@ class RegistroAgv(models.Model):
     fecha        = models.DateField(verbose_name='Fecha')
     turno        = models.CharField(max_length=10, choices=TURNO_CHOICES, verbose_name='Turno')
     cantidad     = models.PositiveSmallIntegerField(default=0, verbose_name='Cantidad de AGVs')
-
+    comentario   = models.CharField(max_length=200, blank=True, default='', verbose_name='Comentario')
+    
     class Meta:
         verbose_name        = 'Registro de AGVs'
         verbose_name_plural = 'Registros de AGVs'

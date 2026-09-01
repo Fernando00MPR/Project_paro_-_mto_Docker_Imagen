@@ -16,6 +16,9 @@ CSRF_TRUSTED_ORIGINS = [origin for origin in os.environ.get('CSRF_TRUSTED_ORIGIN
 LOGIN_REDIRECT_URL = '/paros/'
 LOGIN_URL = '/login/'
 
+# Nombre de marca mostrado en la pantalla de login
+APP_NAME = os.environ.get('APP_NAME', 'STOPLINE')
+
 # ── Sesión — cierre automático ──────────────────────────────────────────────
 SESSION_COOKIE_AGE = 1800               # 30 minutos en segundos
 SESSION_SAVE_EVERY_REQUEST = False      # Reinicia el contador con cada acción

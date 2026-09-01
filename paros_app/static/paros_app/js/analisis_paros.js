@@ -1,15 +1,31 @@
 /* analisis_paros.js — Gráficas de Pareto, barras y controles de filtros */
 
+// Color de acento resuelto — Chart.js/canvas no entienden var(--indigo), necesitan el valor real
+function colorIndigo() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--indigo').trim();
+}
+function colorIndigoRgba(alpha) {
+    const hex = colorIndigo().replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function esModoOscuro() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
 // Ajustar layout según cantidad de barras
 // Responsive por tamaño de ventana
 function ajustarLayout() {
     const maxBars = Math.max(LABELS_P.length, LABELS_B.length);
-    if (maxBars > 20 || window.innerWidth < 900) {
-        document.getElementById('charts-grid').style.gridTemplateColumns = '1fr';
+    if (maxBars > 20 || window.innerWidth < 1100) {
+        document.getElementById('charts-grid').style.gridTemplateColumns = 'minmax(0,1fr)';
     } else {
-        document.getElementById('charts-grid').style.gridTemplateColumns = '1fr 1fr';
+        document.getElementById('charts-grid').style.gridTemplateColumns = 'minmax(0,1fr) minmax(0,1fr)';
     }
-    const minW = Math.max(600, maxBars * 20);
+    const minW = Math.max(320, maxBars * 45);
     document.querySelectorAll('#chartPareto, #chartBarras').forEach(c => {
         c.style.minWidth = minW + 'px';
     });
@@ -22,11 +38,13 @@ const red = '#EF4444';
 
 // ── Pareto ────────────────────────────────────────────────────────────────────
 function crearGraficaPareto(canvasId) {
+    const indigoSolid  = colorIndigo();
+    const colorValores = esModoOscuro() ? '#FFFFFF' : indigoSolid;
     return new Chart(document.getElementById(canvasId), {
         data: {
             labels: LABELS_P,
             datasets: [
-                { type:'bar',  data:MINUTOS_P, backgroundColor:'#4F46E5', borderRadius:4, yAxisID:'y',  label:'Minutos', order:2 },
+                { type:'bar',  data:MINUTOS_P, backgroundColor:indigoSolid, borderRadius:4, yAxisID:'y',  label:'Minutos', order:2 },
                 { type:'line', data:ACUM_P, borderColor:red, borderWidth:2.5, pointBackgroundColor:red, pointRadius:4, fill:false, tension:0.1, yAxisID:'y1', label:'%', order:1 }
             ]
         },
@@ -43,14 +61,14 @@ function crearGraficaPareto(canvasId) {
             const {ctx} = chart;
             chart.getDatasetMeta(0).data.forEach((bar,i) => {
                 ctx.save(); 
-                ctx.textAlign='center';           
+                ctx.textAlign = 'center';           
                 if(LABELS_P.length > 14){
-                    ctx.font='bold 10px Segoe UI,sans-serif'; 
-                    ctx.fillStyle='#4F46E5';
+                    ctx.font = 'bold 10px Segoe UI,sans-serif'; 
+                    ctx.fillStyle = colorValores;
                     ctx.fillText(MINUTOS_P[i], bar.x, bar.y - 5);
                 }else{
-                    ctx.font='bold 10px Segoe UI,sans-serif'; 
-                    ctx.fillStyle='#4F46E5';
+                    ctx.font = 'bold 10px Segoe UI,sans-serif'; 
+                    ctx.fillStyle = colorValores;
                     ctx.fillText(''+MINUTOS_P[i]+' min', bar.x, bar.y - 5);
                 }
                 ctx.restore();
@@ -58,13 +76,16 @@ function crearGraficaPareto(canvasId) {
         }}]
     });
 }
-const chartParetoOriginal = crearGraficaPareto('chartPareto');
+
+let chartParetoOriginal = crearGraficaPareto('chartPareto');
 
 // ── Barras ────────────────────────────────────────────────────────────────────
 function crearGraficaBarrasAnalisis(canvasId) {
+    const indigoSolid  = colorIndigo();
+    const colorValores = esModoOscuro() ? '#FFFFFF' : indigoSolid;
     return new Chart(document.getElementById(canvasId), {
         type:'bar',
-        data:{ labels:LABELS_B, datasets:[{data:MINUTOS_B, backgroundColor:'#4F46E5', borderRadius:5, label:'Minutos'}] },
+        data:{ labels:LABELS_B, datasets:[{data:MINUTOS_B, backgroundColor:indigoSolid, borderRadius:5, label:'Minutos'}] },
         options:{
             responsive:true, maintainAspectRatio:false, layout:{padding:{top:30}},
             plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} min (${NPAROS_B[ctx.dataIndex]} paros)` }}},
@@ -77,18 +98,18 @@ function crearGraficaBarrasAnalisis(canvasId) {
             const {ctx} = chart;
             chart.getDatasetMeta(0).data.forEach((bar,i) => {
                 ctx.save(); 
-                ctx.textAlign='center';           
+                ctx.textAlign = 'center';           
                 if(LABELS_B.length > 14){
-                    ctx.font='bold 10px Segoe UI,sans-serif'; 
-                    ctx.fillStyle='#4F46E5';
+                    ctx.font = 'bold 10px Segoe UI,sans-serif'; 
+                    ctx.fillStyle = colorValores;
                     ctx.fillText(MINUTOS_B[i], bar.x, bar.y - 14);
-                    ctx.font='10px Segoe UI,sans-serif'; ctx.fillStyle='#9CA3AF';
+                    ctx.font = '10px Segoe UI,sans-serif'; ctx.fillStyle = '#9CA3AF';
                     ctx.fillText('('+NPAROS_B[i]+')', bar.x, bar.y - 3);
                 }else{
-                    ctx.font='bold 10px Segoe UI,sans-serif'; 
-                    ctx.fillStyle='#4F46E5';
+                    ctx.font = 'bold 10px Segoe UI,sans-serif'; 
+                    ctx.fillStyle = colorValores;
                     ctx.fillText(''+MINUTOS_B[i]+' min', bar.x, bar.y - 14);
-                    ctx.font='10px Segoe UI,sans-serif'; ctx.fillStyle='#9CA3AF';
+                    ctx.font = '10px Segoe UI,sans-serif'; ctx.fillStyle = '#9CA3AF';
                     ctx.fillText(''+NPAROS_B[i]+' Paros', bar.x, bar.y - 3);
                 }
                 ctx.restore();
@@ -96,7 +117,8 @@ function crearGraficaBarrasAnalisis(canvasId) {
         }}]
     });
 }
-const chartBarrasOriginal = crearGraficaBarrasAnalisis('chartBarras');
+
+let chartBarrasOriginal = crearGraficaBarrasAnalisis('chartBarras');
 
 // ── Tendecia ──────────────────────────────────────────────────────────────────
 function crearGraficaTendencia(canvasId, labels, data, opciones) {
@@ -105,6 +127,9 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
 
     const defaults = { labelTop: true, fontSize: 11, autoSkip: false, maxRotation: 0 };
     const cfg = Object.assign({}, defaults, opciones);
+    const indigoSolid  = colorIndigo();
+    const indigoAlpha  = colorIndigoRgba(0.75);
+    const colorValores = esModoOscuro() ? '#FFFFFF' : indigoSolid;
 
     new Chart(ctx, {
         type: 'bar',
@@ -113,8 +138,8 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
             datasets: [{
                 label: 'Minutos',
                 data: data,
-                backgroundColor: 'rgba(79,70,229,0.75)',
-                borderColor: '#4F46E5',
+                backgroundColor: indigoAlpha,
+                borderColor: indigoSolid,
                 borderWidth: 1,
                 borderRadius: 4,
             }]
@@ -141,7 +166,7 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
                     const ctx2  = chart.ctx;
                     ctx2.save();
                     ctx2.font      = `bold ${cfg.fontSize}px sans-serif`;
-                    ctx2.fillStyle = '#4F46E5';
+                    ctx2.fillStyle = colorValores;
                     ctx2.textAlign = 'center';
                     chart.data.datasets[0].data.forEach((val, i) => {
                         if (val === 0) return;
@@ -161,10 +186,40 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
 
 // ── Toggle período ────────────────────────────────────────────────────────────
 function togglePeriodo(v) {
-    document.getElementById('wrap-semana').style.display = v==='semana' ? 'flex' : 'none';
-    document.getElementById('wrap-desde').style.display  = v==='custom' ? 'flex' : 'none';
-    document.getElementById('wrap-hasta').style.display  = v==='custom' ? 'flex' : 'none';
+    document.getElementById('wrap-semana').style.display        = v==='semana'  ? 'flex' : 'none';
+    document.getElementById('wrap-desde').style.display         = v==='custom'  ? 'flex' : 'none';
+    document.getElementById('wrap-hasta').style.display         = v==='custom'  ? 'flex' : 'none';
+    document.getElementById('wrap-mes').style.display           = v==='mes'     ? 'flex' : 'none';
+    document.getElementById('wrap-meses').style.display         = v==='meses'   ? 'flex' : 'none';
+    document.getElementById('wrap-anio-semanas').style.display  = v==='semanas' ? 'flex' : 'none';
 }
+
+// ── Selector de año (Por semana - año actual) ──────────────────────────────────
+function cambiarAnioSemanas(delta) {
+    const el = document.getElementById('input-anio-semanas');
+    if (!el) return;
+    const min = parseInt(el.min, 10);
+    const max = parseInt(el.max, 10);
+    let val = (parseInt(el.value, 10) || new Date().getFullYear()) + delta;
+    if (!isNaN(min)) val = Math.max(min, val);
+    if (!isNaN(max)) val = Math.min(max, val);
+    el.value = val;
+    prepararExclusiones();
+}
+
+// ── Selector de año (Por meses - año completo) ──────────────────────────────────
+function cambiarAnioMeses(delta) {
+    const el = document.getElementById('input-anio-meses');
+    if (!el) return;
+    const min = parseInt(el.min, 10);
+    const max = parseInt(el.max, 10);
+    let val = (parseInt(el.value, 10) || new Date().getFullYear()) + delta;
+    if (!isNaN(min)) val = Math.max(min, val);
+    if (!isNaN(max)) val = Math.min(max, val);
+    el.value = val;
+    prepararExclusiones();
+}
+
 togglePeriodo(document.getElementById('sel-periodo').value);
 
 // ── Toggle modo Pareto ────────────────────────────────────────────────────────
@@ -338,5 +393,24 @@ document.getElementById('modal-grafico').addEventListener('click', function (e) 
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && document.getElementById('modal-grafico').style.display === 'flex') {
         cerrarModalGrafico();
+    }
+});
+
+// ── Redibujar gráficas al cambiar el color de acento o el tema ────────────
+// Chart.js pinta colores resueltos en píxeles al crear el chart; no reaccionan
+// solos a un cambio de var(--indigo), así que hay que volver a crearlos.
+document.addEventListener('accentchange', function () {
+    if (chartParetoOriginal) {
+        chartParetoOriginal.destroy();
+        chartParetoOriginal = crearGraficaPareto('chartPareto');
+    }
+    if (chartBarrasOriginal) {
+        chartBarrasOriginal.destroy();
+        chartBarrasOriginal = crearGraficaBarrasAnalisis('chartBarras');
+    }
+    const tendenciaExistente = Chart.getChart('chartTendenciaAnalisis');
+    if (tendenciaExistente && typeof LABELS_T !== 'undefined') {
+        tendenciaExistente.destroy();
+        crearGraficaTendencia('chartTendenciaAnalisis', LABELS_T, MINUTOS_T, { fontSize: 11, maxRotation: 45, autoSkip: LABELS_T.length > 20 });
     }
 });

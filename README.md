@@ -105,8 +105,9 @@ Configurar en Coolify → Persistent Storage:
 | Source Path (servidor) | Destination Path (contenedor) | Descripción |
 |---|---|---|
 | `/opt/paros/media` | `/app/media` | Imágenes subidas por usuarios |
+| `/opt/paros/respaldos` | `/app/respaldos` | Respaldos de la base de datos |
 
-> Sin este volumen las imágenes se pierden en cada redeploy.
+> Sin estos volúmenes las imágenes y los respaldos se pierden en cada redeploy.
 
 ## Comandos útiles
 
@@ -166,6 +167,8 @@ python manage.py collectstatic --noinput
 | `DJANGO_SUPERUSER_USERNAME` | Usuario administrador inicial | `admin` |
 | `DJANGO_SUPERUSER_EMAIL` | Email del administrador | `admin@empresa.com` |
 | `DJANGO_SUPERUSER_PASSWORD` | Contraseña del administrador | `password-seguro` |
+| `APP_NAME` *(opcional)* | Nombre de la app mostrado en el login | `STOPLINE` |
+| `ENABLE_REQUEST_TIMING` *(opcional)* | Loguea el tiempo de cada request | `False` |
 
 ---
 

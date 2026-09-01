@@ -19,21 +19,21 @@ function abrirModalBitacora() {
     document.getElementById('modal-bitacora').style.display = 'flex';
 }
 
-function abrirModalEditar(ds) {
+function abrirModalEditar(id, url, area, fecha, equipo, actividad, pendiente, responsable) {
     document.getElementById('modal-titulo-bitacora').textContent = 'Editar registro';
-    document.getElementById('form-bitacora').action = ds.url;
+    document.getElementById('form-bitacora').action = url;
     const areaSelect = document.getElementById('bit-area');
-    if (areaSelect) areaSelect.value = ds.area;
-    document.getElementById('bit-fecha').value       = ds.fecha;
-    document.getElementById('bit-equipo').value      = ds.equipo;
-    document.getElementById('bit-responsable').value = ds.responsable;
-    document.getElementById('bit-actividad').value   = ds.actividad;
-    document.getElementById('bit-pendiente').value   = ds.pendiente;
+    if (areaSelect) areaSelect.value = area;
+    document.getElementById('bit-fecha').value       = fecha;
+    document.getElementById('bit-equipo').value      = equipo;
+    document.getElementById('bit-responsable').value = responsable;
+    document.getElementById('bit-actividad').value   = actividad;
+    document.getElementById('bit-pendiente').value   = pendiente;
     _actualizarContadores();
     _bitResetImagenes();
     document.getElementById('modal-bitacora').style.display = 'flex';
 
-    fetch(`${cfg.urlImagenesBase}${ds.id}/imagenes/`)
+    fetch(`${cfg.urlImagenesBase}${id}/imagenes/`)
         .then(r => r.json())
         .then(data => {
             _bitImagenesExistentes = data.imagenes || [];

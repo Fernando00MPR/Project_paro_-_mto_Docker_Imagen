@@ -1,15 +1,52 @@
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+    :root {
+        --mc-text-strong:  #1a1830;
+        --mc-text-mid:     #3c3952;
+        --mc-text-soft:    #6e6b82;
+        --mc-text-faint:   #9d9ab0;
+        --mc-border:       #e6e5ee;
+        --mc-border-div:   #ecebf2;
+        --mc-border-input: #dcdae7;
+        --mc-card-bg:      #ffffff;
+        --mc-subtle-bg:    #fbfbfd;
+        --mc-primary:        #5b4bd6;
+        --mc-primary-hover:  #4c3dc4;
+        --mc-primary-border: #4c3dc4;
+        --mc-primary-tint:       #f0eefc;
+        --mc-primary-tint-border:#e0dcfa;
+        --mc-success:      #1f6f4a;
+        --mc-success-bg:   #e8f6ee;
+        --mc-success-border: #cfeadb;
+        --mc-success-dot:  #34a06a;
+        --mc-warn:         #8a6410;
+        --mc-warn-bg:      #fdf3dd;
+        --mc-warn-border:  #f3e2b6;
+        --mc-info:         #33499b;
+        --mc-info-bg:      #e9eefc;
+        --mc-info-border:  #d3ddf8;
+        --mc-neutral:      #a8a5b8;
+        --mc-neutral-bg:   #f6f6fa;
+        --mc-neutral-border: #ebeaf1;
+        --mc-danger:       #a34455;
+        --mc-danger-hover: #7d2b3a;
+    }
+
     * { box-sizing: border-box; }
     html, body {
         margin: 0;
         padding: 0;
         height: 100%;
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'Manrope', sans-serif;
         font-size: 14px;
+        color: var(--mc-text-mid);
     }
 
     /* El body del modal es un flex-column que ocupa toda la altura del iframe padre */
@@ -19,19 +56,22 @@
         overflow: hidden; /* sin scroll en el body */
     }
 
+    .mc-mono { font-family: 'IBM Plex Mono', monospace; }
+
     /* Secciones fijas (no scrollean) */
-    .modal-header,
-    .modal-nav,
-    .modal-legend,
-    .panel-registro {
+    .mc-header,
+    .mc-nav,
+    .mc-cal-strip {
         flex-shrink: 0;
     }
 
-    /* El grid de semanas toma el espacio restante y scrollea */
-    .modal-grid-wrapper {
+    /* Todo el contenido de alto variable (form de registro, Seguimiento,
+       Semanas del año) comparte una sola zona con scroll — el modal externo
+       mide un alto fijo, así que si entre todo eso crece más de lo que cabe,
+       aquí es donde se desborda en vez de recortarse o encimarse. */
+    .mc-scroll-area {
         flex: 1;
         overflow-y: auto;
-        padding: 16px 24px;
     }
 
     .badge {
@@ -42,180 +82,274 @@
         font-size: 11px;
         font-weight: 600;
     }
+
+    /* ── Encabezado ── */
+    .mc-header {
+        padding: 18px 24px 16px;
+        border-bottom: 1px solid var(--mc-border-div);
+    }
+    .mc-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap:12px; }
+    .mc-meta { display: flex; align-items: center; gap: 8px; }
+    .mc-chip-code {
+        font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500;
+        background: var(--mc-primary-tint); color: var(--mc-primary); border-radius: 6px; padding: 3px 8px;
+    }
+    .mc-dot { width: 3px; height: 3px; border-radius: 50%; background: #c6c3d4; flex-shrink:0; }
+    .mc-meta-text { font-size: 12.5px; color: var(--mc-text-faint); }
+    .mc-title { margin-top: 6px; font-size: 21px; font-weight: 700; letter-spacing: -.015em; color: var(--mc-text-strong); }
+    .mc-title-id { font-weight: 500; color: var(--mc-text-faint); }
+    .mc-header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .mc-proxima-box {
+        background: #f7f6fb; border: 1px solid var(--mc-border-div); border-radius: 9px;
+        padding: 7px 12px; text-align: right; white-space: nowrap;
+    }
+    .mc-proxima-label { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .12em; color: var(--mc-text-faint); }
+    .mc-proxima-valor { font-size: 13.5px; font-weight: 600; color: var(--mc-text-strong); margin-top: 2px; }
+    .mc-btn-close {
+        width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--mc-border-div);
+        background: transparent; cursor: pointer; font-size: 15px; color: var(--mc-text-soft);
+        display: flex; align-items: center; justify-content: center; transition: background .15s;
+    }
+    .mc-btn-close:hover { background: var(--mc-subtle-bg); }
+
+    /* ── Barra de año ── */
+    .mc-nav {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 26px; background: var(--mc-subtle-bg); border-bottom: 1px solid var(--mc-border-div);
+    }
+    .mc-nav-count { font-size: 12.5px; color: var(--mc-text-soft); }
+    .mc-nav-count strong { font-size: 15px; font-weight: 700; color: var(--mc-text-strong); margin-right: 4px; }
+    .mc-year-seg {
+        display: flex; align-items: center; gap: 2px;
+        background: #f0eff5; border: 1px solid var(--mc-border); border-radius: 9px; padding: 2px;
+    }
+    .mc-year-btn {
+        border: none; background: transparent; border-radius: 7px; padding: 5px 12px;
+        font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--mc-text-soft); cursor: pointer;
+    }
+    .mc-year-btn.active {
+        background: #fff; color: var(--mc-text-strong); font-weight: 700;
+        box-shadow: 0 1px 2px rgba(24,20,50,.1);
+    }
+
+    /* ── Calendario compacto ── */
+    .mc-cal-strip { padding: 14px 26px; border-bottom: 1px solid var(--mc-border-div); }
+    .mc-cal-strip-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .mc-mono-label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .1em; color: var(--mc-text-faint); }
+    .mc-cal-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+    .mc-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--mc-text-soft); }
+    .mc-legend-dot { width: 9px; height: 9px; border-radius: 3px; border: 1px solid transparent; }
+    .mc-dot-completada { background: var(--mc-success-bg); border-color: var(--mc-success-border); }
+    .mc-dot-pendiente   { background: var(--mc-warn-bg); border-color: var(--mc-warn-border); }
+    .mc-dot-reagendada  { background: var(--mc-info-bg); border-color: var(--mc-info-border); }
+    .mc-dot-vacio       { background: var(--mc-neutral-bg); border-color: var(--mc-neutral-border); }
+
+    .mc-cal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18px,1fr)); gap: 4px; }
+    .mc-cal-cell {
+        height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid transparent;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
+    }
+    .mc-cell-completada  { background: var(--mc-success-bg); border-color: var(--mc-success-border); color: var(--mc-success); }
+    .mc-cell-pendiente   { background: var(--mc-warn-bg); border-color: var(--mc-warn-border); color: var(--mc-warn); }
+    .mc-cell-reagendada  { background: var(--mc-info-bg); border-color: var(--mc-info-border); color: var(--mc-info); }
+    .mc-cell-cancelada   { background: #fbe9ec; border-color: #f2c9d0; color: var(--mc-danger); }
+    .mc-cell-vacio       { background: var(--mc-neutral-bg); border-color: var(--mc-neutral-border); color: var(--mc-neutral); }
+    .mc-cell-actual      { box-shadow: 0 0 0 2px var(--mc-primary); }
+
+    /* ── Fila colapsable (Semanas del año) ── */
+    .mc-collapse-wrap { padding: 8px 24px; }
+    .mc-collapse {
+        background: #fff; border: 1px solid var(--mc-border); border-radius: 11px; overflow: hidden;
+    }
+    .mc-collapse-head {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 13px 16px; cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .mc-collapse-head:hover { background: var(--mc-subtle-bg); }
+    .mc-collapse-left { display: flex; align-items: center; gap: 10px; }
+    .mc-collapse-icon {
+        width: 26px; height: 26px; border-radius: 7px; background: var(--mc-neutral-bg); color: var(--mc-text-soft);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .mc-collapse-title { font-size: 13.5px; font-weight: 600; color: var(--mc-text-strong); }
+    .mc-collapse-right { display: flex; align-items: center; gap: 10px; }
+    .mc-collapse-meta { font-size: 11.5px; color: var(--mc-text-faint); }
+    .mc-chevron { width: 11px; height: 11px; color: var(--mc-text-faint); transition: transform .2s; }
+
+    .modal-grid-wrapper { padding: 0 24px 16px; }
 </style>
 </head>
 <body>
 
     <!-- Encabezado -->
-    <div class="modal-header" style="display:flex; align-items:flex-start; justify-content:space-between;
-                padding:20px 24px 16px; border-bottom:1px solid #E5E4F0;">
-        <div>
-            <div style="font-size:17px; font-weight:600; color:#1E1B4B;">{{ plan.actividad }}</div>
-            <div style="font-size:12px; color:#9CA3AF; margin-top:2px;">
-                {{ plan.codigo }} &middot; {{ plan.area }} &middot; {{ plan.get_frecuencia_display }}
-            </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-            {% if proxima %}
-            <div style="text-align:right;">
-                <div style="font-size:10px; color:#9CA3AF; text-transform:uppercase; letter-spacing:.05em;">Proximo</div>
-                <div style="font-size:13px; font-weight:600; color:#4F46E5;">
-                    S{{ proxima.semana }} · {{ proxima.fecha|date:"d M Y" }}
+    <div class="mc-header">
+        <div class="mc-header-top">
+            <div>
+                <div class="mc-meta">
+                    <span class="mc-chip-code">{{ plan.codigo }}</span>
+                    <span class="mc-dot"></span>
+                    <span class="mc-meta-text">{{ plan.area }} &middot; {{ plan.get_frecuencia_display }}</span>
                 </div>
+                <div class="mc-title">{{ plan.actividad }} <span class="mc-title-id">({{ plan.pk }})</span></div>
             </div>
-            {% endif %}
-            <button onclick="cerrarModal()"
-                    style="width:30px; height:30px; border-radius:6px; border:1px solid #E5E4F0;
-                           background:transparent; cursor:pointer; font-size:16px; color:#6B7280;
-                           display:flex; align-items:center; justify-content:center;">
-                &#10005;
-            </button>
+            <div class="mc-header-right">
+                {% if proxima %}
+                <div class="mc-proxima-box">
+                    <div class="mc-proxima-label">{% trans "PRÓXIMA" %}</div>
+                    <div class="mc-proxima-valor">S{{ proxima.semana }} &middot; {{ proxima.fecha|date:"d M Y" }}</div>
+                </div>
+                {% endif %}
+                <button class="mc-btn-close" onclick="cerrarModal()">&#10005;</button>
+            </div>
         </div>
     </div>
 
-    <!-- Navegación año -->
-    <div class="modal-nav" style="display:flex; align-items:center; justify-content:space-between;
-                padding:12px 24px; background:#F8F7FF; border-bottom:1px solid #E5E4F0;">
-        <span style="font-size:12px; color:#6B7280;">{{ fechas|length }} ocurrencia(s) en {{ anio }}</span>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <button onclick="cambiarAnio({{ anio_anterior }})"
-                    style="padding:4px 10px; border:1px solid #E5E4F0; border-radius:6px;
-                           background:white; cursor:pointer; font-size:12px; color:#6B7280;">
-                &#8592; {{ anio_anterior }}
-            </button>
-            <span style="font-size:14px; font-weight:600; color:#1E1B4B;">{{ anio }}</span>
-            <button onclick="cambiarAnio({{ anio_siguiente }})"
-                    style="padding:4px 10px; border:1px solid #E5E4F0; border-radius:6px;
-                           background:white; cursor:pointer; font-size:12px; color:#6B7280;">
-                {{ anio_siguiente }} &#8594;
-            </button>
+    <!-- Barra de año -->
+    <div class="mc-nav">
+        <div class="mc-nav-count"><strong>{{ fechas|length }}</strong> {% trans "ocurrencias programadas" %}</div>
+        <div class="mc-year-seg">
+            <button class="mc-year-btn" onclick="cambiarAnio({{ anio_anterior }})">{{ anio_anterior }}</button>
+            <button class="mc-year-btn active">{{ anio }}</button>
+            <button class="mc-year-btn" onclick="cambiarAnio({{ anio_siguiente }})">{{ anio_siguiente }}</button>
         </div>
     </div>
 
-    <!-- Leyenda -->
-    <div class="modal-legend" style="display:flex; gap:14px; padding:10px 24px; flex-wrap:wrap; border-bottom:1px solid #E5E4F0;">
-        <div style="display:flex; align-items:center; gap:5px; font-size:11px; color:#6B7280;">
-            <div style="width:10px; height:10px; border-radius:2px; background:#D1FAE5;"></div> Completada
+    <!-- Calendario compacto -->
+    <div class="mc-cal-strip">
+        <div class="mc-cal-strip-top">
+            <span class="mc-mono-label">{% trans "CALENDARIO" %} {{ anio }}</span>
+            <div class="mc-cal-legend">
+                <span class="mc-legend-item"><span class="mc-legend-dot mc-dot-completada"></span>{% trans "Completada" %}</span>
+                <span class="mc-legend-item"><span class="mc-legend-dot mc-dot-pendiente"></span>{% trans "Pendiente" %}</span>
+                <span class="mc-legend-item"><span class="mc-legend-dot mc-dot-reagendada"></span>{% trans "Reagendada" %}</span>
+                <span class="mc-legend-item"><span class="mc-legend-dot mc-dot-vacio"></span>{% trans "Sin generar" %}</span>
+            </div>
         </div>
-        <div style="display:flex; align-items:center; gap:5px; font-size:11px; color:#6B7280;">
-            <div style="width:10px; height:10px; border-radius:2px; background:#FEF3C7;"></div> Pendiente
-        </div>
-        <div style="display:flex; align-items:center; gap:5px; font-size:11px; color:#6B7280;">
-            <div style="width:10px; height:10px; border-radius:2px; background:#E0E7FF;"></div> Reagendada
-        </div>
-        <div style="display:flex; align-items:center; gap:5px; font-size:11px; color:#6B7280;">
-            <div style="width:10px; height:10px; border-radius:2px; background:#F1EFF8; border:1px solid #E5E4F0;"></div> Sin generar
-        </div>
-        <div style="display:flex; align-items:center; gap:5px; font-size:11px; color:#6B7280;">
-            <div style="width:10px; height:10px; border-radius:2px; border:2px solid #4F46E5;"></div> Semana actual
+        <div class="mc-cal-grid">
+            {% for item in fechas %}
+            <div class="mc-cal-cell {% if item.registro %}mc-cell-{{ item.registro.estado }}{% else %}mc-cell-vacio{% endif %}{% if item.actual %} mc-cell-actual{% endif %}"
+                 title="{% trans 'Semana' %} {{ item.semana }} &middot; {% if item.registro %}{{ item.registro.get_estado_display }}{% else %}{% trans 'Sin generar' %}{% endif %}"
+                 onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">{{ item.semana }}
+            </div>
+            {% endfor %}
         </div>
     </div>
 
-    <!-- Panel de registro (iframe autoajustable) — ANTES del grid para que quede arriba -->
-    <div id="panel-registro" class="panel-registro" style="display:none; border-bottom:1px solid #E5E4F0;">
+    <div class="mc-scroll-area">
+
+    <!-- Panel de registro (iframe autoajustable) -->
+    <div id="panel-registro" class="panel-registro" style="display:none;">
         <iframe id="iframe-registro" src=""
                 style="width:100%; border:none; display:block; height:0;"
                 scrolling="no">
         </iframe>
     </div>
 
+        <script>
+        window.MODAL_CONFIG = {
+            plan_pk: {{ plan.pk }},
+        };
+        </script>
+        {% load static %}
+        <script src="{% static 'mto_app/js/modal_calendario.js' %}"></script>
 
-    
-
-<script>
-window.MODAL_CONFIG = {
-    plan_pk: {{ plan.pk }},
-};
-</script>
-{% load static %}
-<script src="{% static 'mto_app/js/modal_calendario.js' %}"></script>
-
-    <!-- Header colapsable de semanas -->
-    <div style="padding:8px 16px;">
-        <div style="border-radius:12px;overflow:hidden;border:0.5px solid #E5E4F0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#F8F7FF;cursor:pointer;"
-                 onclick="toggleSemanas()">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <svg width="15" height="15" fill="none" stroke="#6B7280" viewBox="0 0 24 24">
-                        <rect x="3" y="4" width="18" height="18" rx="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    <span style="font-size:13px;font-weight:500;color:#1E1B4B;">Semanas del año</span>
+        {% if auto_semana %}
+        <script>
+        // Se abrió desde una lista filtrada por semana — se muestra directo
+        // el formulario de "Registrar ejecución" de esa semana.
+        abrirFormRegistro({{ plan.pk }}, {{ auto_semana }}, {{ anio }});
+        </script>
+        {% endif %}
+        
+        <!-- Semanas del año (colapsable) -->
+        <div class="mc-collapse-wrap">
+            <div class="mc-collapse">
+                <div class="mc-collapse-head" onclick="toggleSemanas()">
+                    <div class="mc-collapse-left">
+                        <div class="mc-collapse-icon">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8M8 13h8M8 17h5"/>
+                            </svg>
+                        </div>
+                        <span class="mc-collapse-title">{% trans "Semanas del año" %}</span>
+                    </div>
+                    <div class="mc-collapse-right">
+                        <span class="mc-collapse-meta">{% trans "Detalle por semana" %}</span>
+                        <svg id="chevron-semanas" class="mc-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
                 </div>
-                <svg id="chevron-semanas" width="14" height="14" fill="none" stroke="#9CA3AF" viewBox="0 0 24 24"
-                    style="transition:transform .2s;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
             </div>
         </div>
-    </div>
 
-    <!-- Grid de semanas — scrolleable -->
-    <div id="grid-semanas" class="modal-grid-wrapper">
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:8px;">
-            {% for item in fechas %}
-                {% if item.registro %}
-                    {% if item.registro.estado == 'completada' %}
-                        {% with bg="#D1FAE5" border="#6EE7B7" tc="#065F46" %}
-                        <div style="padding:10px 12px; border-radius:8px; background:{{ bg }}; border:{% if item.actual %}2px solid #4F46E5{% else %}1px solid {{ border }}{% endif %}; cursor:pointer;"
-                             onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
-                            <div style="font-size:10px; font-weight:700; color:{{ tc }}; letter-spacing:.05em;">S{{ item.semana }}</div>
-                            <div style="font-size:12px; font-weight:600; color:{{ tc }}; margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
-                            <div style="font-size:10px; color:{{ tc }}; margin-top:3px; opacity:.85;">Completada</div>
-                        </div>
-                        {% endwith %}
-                    {% elif item.registro.estado == 'reagendada' %}
-                        <div style="padding:10px 12px; border-radius:8px; background:#E0E7FF;
-                                    border:{% if item.actual %}2px solid #4F46E5{% else %}1px solid #A5B4FC{% endif %};
-                                    cursor:pointer;"
-                             onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
-                            <div style="font-size:10px; font-weight:700; color:#3730A3; letter-spacing:.05em;">S{{ item.semana }}</div>
-                            <div style="font-size:12px; font-weight:600; color:#3730A3; margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
-                            <div style="font-size:10px; color:#3730A3; margin-top:3px; opacity:.85;">Reagendada</div>
-                        </div>
-                    {% elif item.registro.estado == 'cancelada' %}
-                        <div style="padding:10px 12px; border-radius:8px; background:#FEE2E2;
-                                    border:{% if item.actual %}2px solid #4F46E5{% else %}1px solid #FCA5A5{% endif %};
-                                    cursor:pointer;"
-                             onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
-                            <div style="font-size:10px; font-weight:700; color:#991B1B; letter-spacing:.05em;">S{{ item.semana }}</div>
-                            <div style="font-size:12px; font-weight:600; color:#991B1B; margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
-                            <div style="font-size:10px; color:#991B1B; margin-top:3px; opacity:.85;">Cancelada</div>
-                        </div>
+        <!-- Grid de semanas — scrolleable -->
+        <div id="grid-semanas" class="modal-grid-wrapper" style="display:none;" data-cerrado="1">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:8px;">
+                {% for item in fechas %}
+                    {% if item.registro %}
+                        {% if item.registro.estado == 'completada' %}
+                            {% with bg="#D1FAE5" border="#6EE7B7" tc="#065F46" %}
+                            <div style="padding:10px 12px; border-radius:8px; background:{{ bg }}; border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid {{ border }}{% endif %}; cursor:pointer;"
+                                onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
+                                <div style="font-size:10px; font-weight:700; color:{{ tc }}; letter-spacing:.05em;">S{{ item.semana }}</div>
+                                <div style="font-size:12px; font-weight:600; color:{{ tc }}; margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
+                                <div style="font-size:10px; color:{{ tc }}; margin-top:3px; opacity:.85;">{% trans "Completada" %}</div>
+                            </div>
+                            {% endwith %}
+                        {% elif item.registro.estado == 'reagendada' %}
+                            <div style="padding:10px 12px; border-radius:8px; background:#E0E7FF;
+                                        border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid var(--mc-info){% endif %};
+                                        cursor:pointer;"
+                                onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
+                                <div style="font-size:10px; font-weight:700; color:var(--mc-info); letter-spacing:.05em;">S{{ item.semana }}</div>
+                                <div style="font-size:12px; font-weight:600; color:var(--mc-info); margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
+                                <div style="font-size:10px; color:var(--mc-info); margin-top:3px; opacity:.85;">{% trans "Reagendada" %}</div>
+                            </div>
+                        {% elif item.registro.estado == 'cancelada' %}
+                            <div style="padding:10px 12px; border-radius:8px; background:#FEE2E2;
+                                        border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid #FCA5A5{% endif %};
+                                        cursor:pointer;"
+                                onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
+                                <div style="font-size:10px; font-weight:700; color:#991B1B; letter-spacing:.05em;">S{{ item.semana }}</div>
+                                <div style="font-size:12px; font-weight:600; color:#991B1B; margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
+                                <div style="font-size:10px; color:#991B1B; margin-top:3px; opacity:.85;">{% trans "Cancelada" %}</div>
+                            </div>
+                        {% else %}
+                            <div style="padding:10px 12px; border-radius:8px; background:var(--mc-warn-bg);
+                                        border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid var(--mc-warn-border){% endif %};
+                                        cursor:pointer;"
+                                onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
+                                <div style="font-size:10px; font-weight:700; color:var(--mc-warn); letter-spacing:.05em;">S{{ item.semana }}</div>
+                                <div style="font-size:12px; font-weight:600; color:var(--mc-warn); margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
+                                <div style="font-size:10px; color:var(--mc-warn); margin-top:3px; opacity:.85;">{{ item.registro.get_estado_display }}</div>
+                            </div>
+                        {% endif %}
                     {% else %}
-                        <div style="padding:10px 12px; border-radius:8px; background:#FEF3C7;
-                                    border:{% if item.actual %}2px solid #4F46E5{% else %}1px solid #FCD34D{% endif %};
+                        <div style="padding:10px 12px; border-radius:8px;
+                                    background:{% if item.pasada %}var(--mc-neutral-bg){% else %}var(--mc-subtle-bg){% endif %};
+                                    border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid var(--mc-border){% endif %};
                                     cursor:pointer;"
-                             onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
-                            <div style="font-size:10px; font-weight:700; color:#92400E; letter-spacing:.05em;">S{{ item.semana }}</div>
-                            <div style="font-size:12px; font-weight:600; color:#92400E; margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
-                            <div style="font-size:10px; color:#92400E; margin-top:3px; opacity:.85;">{{ item.registro.get_estado_display }}</div>
+                            onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
+                            <div style="font-size:10px; font-weight:700;
+                                        color:{% if item.pasada %}var(--mc-text-faint){% else %}var(--mc-text-soft){% endif %};
+                                        letter-spacing:.05em;">S{{ item.semana }}</div>
+                            <div style="font-size:12px; font-weight:600;
+                                        color:{% if item.pasada %}var(--mc-text-faint){% else %}var(--mc-text-strong){% endif %};
+                                        margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
+                            <div style="font-size:10px; color:var(--mc-text-faint); margin-top:3px;">
+                                {% if item.pasada %}{% trans "Sin registro" %}{% else %}{% trans "Por registrar" %}{% endif %}
+                            </div>
                         </div>
                     {% endif %}
-                {% else %}
-                    <div style="padding:10px 12px; border-radius:8px;
-                                background:{% if item.pasada %}#F1EFF8{% else %}#F8F7FF{% endif %};
-                                border:{% if item.actual %}2px solid #4F46E5{% else %}1px solid #E5E4F0{% endif %};
-                                cursor:pointer;"
-                         onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
-                        <div style="font-size:10px; font-weight:700;
-                                    color:{% if item.pasada %}#9CA3AF{% else %}#6B7280{% endif %};
-                                    letter-spacing:.05em;">S{{ item.semana }}</div>
-                        <div style="font-size:12px; font-weight:600;
-                                    color:{% if item.pasada %}#9CA3AF{% else %}#1E1B4B{% endif %};
-                                    margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
-                        <div style="font-size:10px; color:#9CA3AF; margin-top:3px;">
-                            {% if item.pasada %}Sin registro{% else %}Por registrar{% endif %}
-                        </div>
+                {% empty %}
+                    <div style="grid-column:1/-1; text-align:center; color:var(--mc-text-faint); padding:32px;">
+                        {% trans "No hay fechas para este año." %}
                     </div>
-                {% endif %}
-            {% empty %}
-                <div style="grid-column:1/-1; text-align:center; color:#9CA3AF; padding:32px;">
-                    No hay fechas para este año.
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 </body>

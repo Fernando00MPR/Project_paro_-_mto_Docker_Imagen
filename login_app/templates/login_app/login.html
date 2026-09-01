@@ -1,402 +1,934 @@
 {% load i18n %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ LANGUAGE_CODE|default:'es' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234F46E5' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='8' r='4'/><path d='M4 21c0-4 4-6 8-6s8 2 8 6'/></svg>">
     <title>{% trans "Iniciar sesión || Gestión de Paros" %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+    (function() {
+        try {
+            var stored = localStorage.getItem('loginTheme');
+            var theme = (stored === 'light' || stored === 'dark')
+                ? stored
+                : ((window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-login-theme', theme);
+        } catch (e) {
+            document.documentElement.setAttribute('data-login-theme', 'dark');
+        }
+    })();
+    </script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        :root {
+            --login-frame: #1b1740;
+            --login-grad: radial-gradient(120% 90% at 50% 55%, #2e2769 0%, #241f52 45%, #17133a 100%);
+            --login-grad-m: radial-gradient(120% 70% at 50% 0%, #2e2769 0%, #241f52 45%, #17133a 100%);
+            --login-card2: rgba(28,23,66,.82);
+            --login-panel: rgba(28,23,66,.94);
+            --login-input-bg: rgba(17,13,44,.8);
+            --login-hex-bg: #1c1742;
+            --login-border: rgba(139,124,246,.3);
+            --login-text: #ffffff;
+            --login-sub: #a8a2d8;
+            --login-foot: #9a94cf;
+            --login-accent: #fbbf24;
+            --login-head-paros: #a5b4fc;
+            --login-head-mto: #34d399;
+            --login-head-glow: 0 0 24px rgba(129,110,247,.5);
+            --login-knob-track: rgba(255,255,255,.16);
+            --login-knob-pos: flex-start;
+            --login-error-bg: rgba(239,68,68,.12);
+            --login-error-text: #fecaca;
+            --login-error-border: rgba(239,68,68,.35);
+        }
+        [data-login-theme="light"] {
+            --login-frame: #eceafb;
+            --login-grad: radial-gradient(120% 90% at 50% 55%, #ffffff 0%, #eeecfb 45%, #ddd9f5 100%);
+            --login-grad-m: radial-gradient(120% 70% at 50% 0%, #ffffff 0%, #eeecfb 45%, #ddd9f5 100%);
+            --login-card2: rgba(255,255,255,.9);
+            --login-panel: #ffffff;
+            --login-input-bg: #f6f5fd;
+            --login-hex-bg: #ffffff;
+            --login-border: rgba(91,75,240,.22);
+            --login-text: #1b1740;
+            --login-sub: #6f6a94;
+            --login-foot: #6f6a94;
+            --login-accent: #b45309;
+            --login-head-paros: #4a3ada;
+            --login-head-mto: #0f9b72;
+            --login-head-glow: none;
+            --login-knob-track: rgba(91,75,240,.18);
+            --login-knob-pos: flex-end;
+            --login-error-bg: #fee2e2;
+            --login-error-text: #991b1b;
+            --login-error-border: #fca5a5;
+        }
+
         body {
-            font-family: 'DM Sans', sans-serif;
-            background-color: #1E1B4B;
+            font-family: 'Barlow', sans-serif;
+            background: var(--login-frame);
+            overflow-x: hidden;
+        }
+
+        @keyframes lcSpin        { to { transform: rotate(360deg); } }
+        @keyframes lcSpinRev     { to { transform: rotate(-360deg); } }
+        @keyframes lcAlertPulse  { 0%, 100% { transform: scale(1); opacity: .9; } 50% { transform: scale(1.1); opacity: 1; } }
+        @keyframes lcBlink       { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+        @keyframes lcRiseBar     { 0% { transform: scaleY(.12); } 32%, 100% { transform: scaleY(1); } }
+        @keyframes lcPeakBar     {
+            0%  { transform: scaleY(.12); background-color: #fbbf24; }
+            32% { transform: scaleY(1);   background-color: #fbbf24; }
+            42%, 100% { transform: scaleY(1); background-color: #ef4444; box-shadow: 0 0 12px rgba(239,68,68,.65); }
+        }
+        @keyframes lcHexFloat {
+            0%, 100% { transform: translateY(0);     filter: drop-shadow(0 0 6px rgba(52,211,153,.25)); }
+            50%      { transform: translateY(-9px);  filter: drop-shadow(0 0 18px rgba(52,211,153,.55)); }
+        }
+        @keyframes lcHexPop {
+            0%   { transform: scale(1); }
+            35%  { transform: scale(1.16); filter: drop-shadow(0 0 22px rgba(251,191,36,.85)); }
+            100% { transform: scale(1);    filter: drop-shadow(0 0 8px rgba(251,191,36,.3)); }
+        }
+
+        /* ── Lienzo ─────────────────────────────────────────────────── */
+        .login-canvas {
+            position: relative;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .login-wrap {
-            display: flex;
             width: 100%;
-            max-width: 860px;
-            background: #fff;
-            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.3);
+            background: var(--login-frame);
+        }
+        .lc-bg-grad, .lc-bg-grid, .lc-bg-dots, .lc-horizon, .lc-bg-dots-bottom {
+            position: absolute; inset: 0; pointer-events: none;
+        }
+        .lc-bg-grad { background: var(--login-grad); }
+        .lc-bg-grid {
+            background-image:
+                linear-gradient(rgba(139,124,246,.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139,124,246,.06) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+        .lc-bg-dots {
+            background-image: radial-gradient(rgba(165,150,255,.5) 1px, transparent 1.4px);
+            background-size: 120px 96px;
+            background-position: 18px 30px;
+            opacity: .3;
+        }
+        .lc-horizon-1 {
+            left: -12%; right: -12%; top: auto; bottom: -330px; height: 520px; border-radius: 50%;
+            border-top: 1px solid rgba(129,110,247,.5); box-shadow: 0 -2px 34px rgba(99,80,240,.3);
+        }
+        .lc-horizon-2 {
+            left: -16%; right: -4%; top: auto; bottom: -380px; height: 520px; border-radius: 50%;
+            border-top: 1px solid rgba(129,110,247,.3);
+        }
+        .lc-bg-dots-bottom {
+            top: auto; bottom: 0; height: 170px;
+            background-image: radial-gradient(rgba(165,150,255,.85) 1px, transparent 1.2px);
+            background-size: 26px 22px; opacity: .2;
         }
 
-        /* Panel izquierdo decorativo */
-        .login-panel {
-            width: 340px;
-            background: #4F46E5;
-            padding: 48px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            flex-shrink: 0;
-        }
+        /* ── Encabezados decorativos ────────────────────────────────── */
+        .lc-header { position: absolute; top: 70px; display: flex; align-items: center; gap: 20px; pointer-events: none; }
+        .lc-header-paros { left: 56px; }
+        .lc-header-mto   { right: 56px; text-align: right; }
 
-        .panel-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .lc-ring {
+            position: relative; width: 74px; height: 74px; border-radius: 50%;
+            border: 1px solid rgba(148,163,184,.25);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        .panel-brand-dot {
-            width: 10px; height: 10px;
-            background: #A5B4FC;
-            border-radius: 50%;
+        .lc-ring-spin-paros {
+            position: absolute; inset: -1px; border-radius: 50%; border: 2px solid transparent;
+            border-bottom-color: #ef4444; border-left-color: #ef4444;
+            box-shadow: 0 0 20px rgba(239,68,68,.4); animation: lcSpin 5.5s linear infinite;
         }
-        .panel-brand span {
-            color: #fff;
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: .04em;
+        .lc-ring-spin-mto {
+            position: absolute; inset: -1px; border-radius: 50%; border: 2px solid transparent;
+            border-top-color: #34d399; border-right-color: #34d399;
+            box-shadow: 0 0 20px rgba(52,211,153,.35); animation: lcSpinRev 7s linear infinite;
         }
+        .lc-alert { position: relative; width: 42px; height: 39px; animation: lcAlertPulse 2s ease-in-out infinite; }
+        .lc-alert-bang {
+            position: absolute; left: 0; right: 0; top: 17px; text-align: center;
+            font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 700; color: #fecaca;
+            line-height: 1; animation: lcBlink 2s ease-in-out infinite;
+        }
+        .lc-gear { position: relative; width: 44px; height: 44px; animation: lcSpin 11s linear infinite; }
+        .lc-gear-tooth {
+            position: absolute; left: 50%; top: 50%; width: 7px; height: 10px;
+            margin: -5px 0 0 -3.5px; border-radius: 3px; background: #6ee7b7;
+        }
+        .lc-gear-body   { position: absolute; inset: 6px;  border-radius: 50%; background: #6ee7b7; }
+        .lc-gear-hole   { position: absolute; inset: 9px;  border-radius: 50%; background: #0b1830; }
+        .lc-gear-center { position: absolute; inset: 16px; border-radius: 50%; background: #6ee7b7; }
 
-        .panel-body h2 {
-            color: #fff;
-            font-size: 26px;
-            font-weight: 600;
-            line-height: 1.3;
-            margin-bottom: 12px;
+        .lc-head-eyebrow {
+            font-family: 'Barlow Condensed', sans-serif; font-size: 20px; letter-spacing: .22em; color: var(--login-sub);
         }
-        .panel-body p {
-            color: #C7D2FE;
-            font-size: 14px;
-            line-height: 1.7;
+        .lc-head-title {
+            font-family: 'Barlow Condensed', sans-serif; font-size: 34px; letter-spacing: .06em; font-weight: 700;
+            text-shadow: var(--login-head-glow);
         }
+        .lc-head-title-paros { color: var(--login-head-paros); }
+        .lc-head-title-mto   { color: var(--login-head-mto); }
 
-        .panel-dots {
-            display: flex;
-            gap: 6px;
+        /* ── Idioma + tema ──────────────────────────────────────────── */
+        .lc-top-controls { position: absolute; top: 18px; right: 56px; display: flex; align-items: center; gap: 6px; z-index: 2; }
+        .lc-lang-form { display: flex; gap: 6px; }
+        .lc-lang-btn {
+            padding: 5px 10px; border-radius: 3px; border: none; cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+            background: rgba(148,163,184,.14); color: #9fb4cd;
         }
+        .lc-lang-btn.active { background: #5b4bf0; color: #fff; }
+        .lc-theme-toggle {
+            margin-left: 8px; display: flex; align-items: center; gap: 7px;
+            padding: 4px 10px 4px 5px; border: 1px solid var(--login-border); border-radius: 999px;
+            background: var(--login-card2); color: var(--login-sub);
+            font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; cursor: pointer;
+            transition: border-color .15s, color .15s;
+        }
+        .lc-theme-toggle:hover, .lc-theme-toggle:focus-visible { border-color: #fbbf24; color: #fbbf24; }
+        .lc-theme-knob-track {
+            width: 26px; height: 15px; border-radius: 999px; background: var(--login-knob-track);
+            display: flex; align-items: center; padding: 2px; box-sizing: border-box;
+            justify-content: var(--login-knob-pos); transition: all .25s ease;
+        }
+        .lc-theme-knob { width: 11px; height: 11px; border-radius: 50%; background: #fbbf24; }
 
-        .panel-slide {
-            flex: 0 0 100%;
-            min-width: 100%;
-            box-sizing: border-box;
+        /* ── Mini gráfico ───────────────────────────────────────────── */
+        .lc-mini-chart {
+            position: absolute; left: 56px; bottom: 44px; width: 250px; z-index: 1;
+            padding: 16px 18px; border-radius: 14px;
+            background: var(--login-card2); border: 1px solid var(--login-border);
+            box-shadow: 0 20px 50px rgba(4,2,20,.25); pointer-events: none;
         }
+        .lc-mini-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+        .lc-mini-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; color: var(--login-sub); }
+        .lc-mini-figure { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; color: var(--login-accent); }
+        .lc-mini-bars { display: flex; align-items: flex-end; gap: 7px; height: 64px; border-bottom: 1px solid var(--login-border); padding-bottom: 2px; }
+        .lc-bar {
+            flex: 1; height: var(--h); opacity: var(--o); border-radius: 3px 3px 0 0;
+            background: var(--login-accent); transform-origin: bottom;
+            animation: lcRiseBar 7s ease-in-out infinite; animation-delay: var(--d);
+        }
+        .lc-bar-peak { animation-name: lcPeakBar; }
+        .lc-mini-scale { margin-top: 10px; display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .1em; color: var(--login-sub); }
 
-        @keyframes fadeSlide {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .panel-dots span {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.3);
-            transition: background .3s, width .3s, border-radius .3s;
-            display: inline-block;
-        }
-
-        .panel-dots span.active {
-            background: #fff;
-            width: 18px;
-            border-radius: 3px;
-        }
-
-        .panel-dots span:first-child { background: #fff; }
-
-        /* Panel derecho: formulario */
-        .login-form-wrap {
-            flex: 1;
-            padding: 48px 44px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .login-form-wrap h3 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1E1B4B;
-            margin-bottom: 6px;
-        }
-        .login-form-wrap p {
-            font-size: 13.5px;
-            color: #9CA3AF;
-            margin-bottom: 30px;
-        }
-
-        .form-field {
-            margin-bottom: 18px;
-        }
-        .form-field label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: #6B7280;
-            letter-spacing: .04em;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
-        .form-field input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #E5E4F0;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 14px;
-            color: #1E1B4B;
-            background: #fff;
-            outline: none;
-            transition: border-color .15s, box-shadow .15s;
-        }
-        .form-field input:focus {
-            border-color: #4F46E5;
-            box-shadow: 0 0 0 3px rgba(79,70,229,.1);
-        }
-
-        .error-msg {
-            background: #FEE2E2;
-            color: #991B1B;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 13px;
-            margin-bottom: 20px;
-        }
-
-        .btn-login {
-            width: 100%;
-            background: #4F46E5;
-            color: #fff;
+        /* ── Hexágonos KPI ──────────────────────────────────────────── */
+        .lc-hex-col { position: absolute; right: 52px; bottom: 44px; z-index: 1; display: flex; flex-direction: column; gap: 14px; align-items: flex-end; }
+        .lc-hex-offset { margin-right: 52px; }
+        .lc-hex {
+            position: relative; width: 128px; height: 142px;
+            clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+            background: rgba(251,191,36,.42); padding: 1.5px; box-sizing: border-box; display: flex;
+            cursor: pointer; animation: lcHexFloat 5s ease-in-out infinite;
+            transition: transform .25s ease, background .25s ease, filter .25s ease;
             border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .15s;
-            margin-top: 8px;
         }
-        .btn-login:hover { background: #3730A3; }
+        .lc-hex:hover, .lc-hex:focus-visible { transform: scale(1.07); background: #fbbf24; filter: drop-shadow(0 0 18px rgba(251,191,36,.75)); }
+        .lc-hex.lc-hex-hit { animation: lcHexPop .55s ease; background: #fbbf24; filter: drop-shadow(0 0 22px rgba(251,191,36,.85)); }
+        .lc-hex-inner {
+            position: relative; flex: 1; box-sizing: border-box;
+            clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+            background: var(--login-hex-bg);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+            text-align: center; padding: 0 12px; overflow: hidden;
+        }
+        .lc-hex-inner::before {
+            content: ""; position: absolute; inset: 0;
+            background: radial-gradient(120% 80% at 50% 0%, rgba(251,191,36,.16), transparent 62%);
+        }
+        .lc-hex-value { position: relative; font-family: 'Barlow Condensed', sans-serif; font-size: 34px; line-height: 1; font-weight: 700; letter-spacing: .03em; color: var(--login-text); }
+        .lc-hex-label { position: relative; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; line-height: 1; font-weight: 600; letter-spacing: .16em; color: var(--login-text); opacity: .85; }
+        .lc-hex-sep   { position: relative; width: 20px; height: 1px; background: rgba(251,191,36,.42); margin: 2px 0; }
+        .lc-hex-sub   { position: relative; font-family: 'IBM Plex Mono', monospace; font-size: 7.5px; letter-spacing: .1em; color: var(--login-sub); line-height: 1.3; }
+        .lc-hex-hit .lc-hex-value, .lc-hex-hit .lc-hex-label { color: #fbbf24; }
 
-        input[type="password"]::-ms-reveal,
-        input[type="password"]::-ms-clear { display: none; }
-        input[type="password"]::-webkit-contacts-auto-fill-button,
-        input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidden; }
+        @keyframes lcParosTick {
+            0%   { transform: scale(1);    color: #ef4444; }
+            40%  { transform: scale(1.22); color: #f87171; }
+            100% { transform: scale(1);    color: var(--login-text); }
+        }
+        .lc-paros-tick { display: inline-block; animation: lcParosTick .5s ease; }
 
-        @media (max-width: 640px) {
-            .login-panel { display: none; }
-            .login-form-wrap { padding: 36px 28px; }
+        .lc-paros-value-wrap { position: relative; display: inline-flex; align-items: flex-start; }
+        .lc-paros-plus {
+            position: absolute; left: 50%; bottom: 100%; margin-bottom: 3px;
+            font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+            color: #34d399; opacity: 0; pointer-events: none; white-space: nowrap;
+            transform: translate(-50%, 4px);
         }
-
-        @keyframes drift1 { 
-            0%  {transform:translate(0,0)} 
-            20% {transform:translate(40px,-30px)} 
-            40% {transform:translate(-30px,50px)} 
-            60% {transform:translate(50px,20px)} 
-            80% {transform:translate(-20px,-40px)} 
-            100%{transform:translate(0,0)} 
-        }
-        @keyframes drift2 { 
-            0%  {transform:translate(0,0)} 
-            20% {transform:translate(-50px,30px)} 
-            40% {transform:translate(40px,-50px)} 
-            60% {transform:translate(-30px,40px)} 
-            80% {transform:translate(50px,-20px)} 
-            100%{transform:translate(0,0)} 
-        }
-        @keyframes drift3 { 
-            0%  {transform:translate(0,0)} 
-            20% {transform:translate(30px,50px)} 
-            40% {transform:translate(-50px,-30px)} 
-            60% {transform:translate(40px,-50px)} 
-            80% {transform:translate(-40px,30px)} 
-            100%{transform:translate(0,0)} 
+        .lc-paros-plus.show { animation: lcParosPlus 2.2s ease-out; }
+        @keyframes lcParosPlus {
+            0%   { opacity: 0; transform: translate(-50%, 4px); }
+            10%  { opacity: 1; transform: translate(-50%, 0); }
+            70%  { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -10px); }
         }
 
+        /* ── Tarjeta de login ───────────────────────────────────────── */
+        .lc-card {
+            position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%);
+            width: 840px; max-width: 92vw; display: flex;
+            border-radius: 12px; overflow: hidden;
+            border: 1px solid rgba(139,124,246,.3); box-shadow: 0 34px 90px rgba(2,8,20,.65);
+        }
+
+        .lc-card-left {
+            position: relative; width: 400px; flex-shrink: 0;
+            background: linear-gradient(165deg, #5b4bf0 0%, #4a3ada 60%, #3a2cb8 100%);
+            padding: 38px 36px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
+        }
+        .lc-card-left::before {
+            content: ""; position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+            background-size: 100% 34px; pointer-events: none;
+        }
+
+        .lc-brand { position: relative; display: flex; align-items: center; gap: 14px; }
+        .lc-brand-logo {
+            position: relative; width: 48px; height: 48px; border-radius: 11px; background: #fbbf24;
+            box-shadow: 0 6px 18px rgba(180,120,10,.35); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .lc-brand-ring { width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid #3a2cb8; border-right-color: transparent; animation: lcSpin 6s linear infinite; }
+        .lc-brand-dot  { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #3a2cb8; }
+        .lc-brand-name { font-family: 'Barlow Condensed', sans-serif; font-size: 40px; line-height: 1; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff; text-shadow: 0 0 22px rgba(199,210,254,.55); }
+        .lc-brand-tag  { margin-top: 2px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .3em; text-transform: uppercase; color: rgba(214,214,255,.7); }
+
+        .lc-carousel { position: relative; overflow: hidden; }
+        .lc-carousel-track { display: flex; transition: transform .5s ease; }
+        .lc-slide { flex: 0 0 100%; min-width: 100%; box-sizing: border-box; padding-right: 6px; }
+        .lc-slide-icon { width: 46px; height: 46px; border-radius: 11px; background: #fbbf24; box-shadow: 0 6px 18px rgba(180,120,10,.35); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+        .lc-slide-title { margin: 0; font-family: 'Barlow', sans-serif; font-size: 27px; line-height: 1.2; font-weight: 600; color: #fff; }
+        .lc-slide-text  { margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: rgba(226,239,251,.78); }
+
+        .lc-dots { position: relative; display: flex; gap: 7px; align-items: center; }
+        .lc-dots span { display: inline-block; height: 5px; width: 8px; border-radius: 3px; background: rgba(255,255,255,.28); cursor: pointer; transition: all .3s ease; }
+        .lc-dots span.active { width: 26px; background: #c7d2fe; }
+
+        .lc-card-right { flex: 1; background: var(--login-panel); padding: 44px 44px 32px; display: flex; flex-direction: column; gap: 20px; }
+        .lc-form-title { font-size: 29px; font-weight: 600; color: var(--login-text); }
+        .lc-form-sub   { margin-top: 5px; font-size: 15px; color: var(--login-sub); }
+
+        .lc-error { background: var(--login-error-bg); color: var(--login-error-text); border: 1px solid var(--login-error-border); border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+
+        .lc-field { display: flex; flex-direction: column; gap: 7px; }
+        .lc-field label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .1em; color: var(--login-sub); text-transform: uppercase; }
+        .lc-field input {
+            width: 100%; box-sizing: border-box; padding: 14px;
+            background: var(--login-input-bg); border: 1px solid var(--login-border); border-radius: 5px;
+            color: var(--login-text); font-family: 'Barlow', sans-serif; font-size: 16px; outline: none;
+            transition: border-color .15s;
+        }
+        .lc-field input:focus { border-color: #8b7cf6; }
+
+        .lc-pwd-wrap { position: relative; display: flex; }
+        .lc-pwd-wrap input { padding-right: 48px; }
+        .lc-pwd-toggle {
+            position: absolute; right: 6px; top: 6px; bottom: 6px; width: 38px;
+            border: none; background: transparent; color: var(--login-sub); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: color .15s;
+        }
+        .lc-pwd-toggle:hover, .lc-pwd-toggle:focus-visible { color: #a5b4fc; }
+
+        .lc-btn-login {
+            margin-top: 4px; padding: 16px; border: none; border-radius: 5px;
+            background: linear-gradient(90deg, #5b4bf0, #7c6df5); color: #fff;
+            font-family: 'Barlow', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;
+            transition: filter .15s;
+        }
+        .lc-btn-login:hover { filter: brightness(1.12); }
+
+        .lc-form-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--login-border); font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--login-foot); }
+
+        input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display: none; }
+        input[type="password"]::-webkit-contacts-auto-fill-button, input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidden; }
+
+        /* ── Escritorio (≥1024px): tarjeta partida ─────────────────── */
+        .lc-desktop { position: relative; min-height: 100vh; }
+        .lc-mobile  { display: none; }
+
+        /* ── Móvil (<1024px): apilado, variante "5a" ───────────────── */
+        @media (max-width: 1023px) {
+            .lc-desktop { display: none; }
+            .lc-mobile {
+                position: relative; display: flex; flex-direction: column;
+                min-height: 100vh; overflow: hidden; background: var(--login-frame);
+            }
+        }
+        .lc-m-bg-grad, .lc-m-bg-grid, .lc-m-horizon { position: absolute; inset: 0; pointer-events: none; }
+        .lc-m-bg-grad { background: var(--login-grad-m); }
+        .lc-m-bg-grid {
+            background-image:
+                linear-gradient(rgba(139,124,246,.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139,124,246,.06) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .lc-m-horizon {
+            top: auto; left: -30%; right: -30%; bottom: -180px; height: 320px; border-radius: 50%;
+            border-top: 1px solid rgba(129,110,247,.5); box-shadow: 0 -2px 30px rgba(99,80,240,.3);
+        }
+
+        .lc-m-topbar {
+            position: relative; z-index: 1;
+            padding: max(28px, calc(env(safe-area-inset-top) + 12px)) 22px 0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .lc-m-brand { display: flex; align-items: center; gap: 10px; }
+        .lc-brand-logo-m { width: 40px; height: 40px; border-radius: 10px; }
+        .lc-brand-ring-m { width: 17px; height: 17px; }
+        .lc-m-brand-name { font-family: 'Barlow Condensed', sans-serif; font-size: 27px; line-height: 1; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--login-text); }
+        .lc-m-brand-tag  { margin-top: 1px; font-family: 'IBM Plex Mono', monospace; font-size: 7px; letter-spacing: .24em; color: var(--login-sub); }
+        .lc-m-lang { display: flex; gap: 4px; }
+        .lc-lang-btn-m { font-size: 9px; padding: 4px 7px; }
+
+        .lc-m-carousel {
+            position: relative; z-index: 1; margin: 18px 22px 0; padding: 18px 20px; border-radius: 16px;
+            background: linear-gradient(165deg, #5b4bf0 0%, #3a2cb8 100%); overflow: hidden;
+        }
+        .lc-m-carousel-inner { position: relative; overflow: hidden; }
+        .lc-slide-icon-m { width: 38px; height: 38px; border-radius: 10px; margin-bottom: 12px; }
+        .lc-slide-title-m { font-size: 19px; }
+        .lc-slide-text-m { margin-top: 7px; font-size: 12.5px; line-height: 1.5; }
+        .lc-dots-m { margin-top: 14px; }
+        .lc-dots-m span { height: 4px; }
+
+        .lc-m-kpis { position: relative; z-index: 1; margin: 16px 22px 0; display: flex; gap: 8px; }
+        .lc-kpi {
+            flex: 1; padding: 11px 8px; border-radius: 12px; background: var(--login-card2);
+            border: 1px solid rgba(251,191,36,.42); text-align: center; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            transition: transform .25s ease, filter .25s ease;
+            font: inherit; color: inherit;
+        }
+        .lc-kpi:hover, .lc-kpi:focus-visible { transform: translateY(-3px); }
+        .lc-kpi-value { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; line-height: 1; font-weight: 700; color: var(--login-text); }
+        .lc-kpi-label { font-family: 'IBM Plex Mono', monospace; font-size: 7px; letter-spacing: .12em; color: var(--login-sub); }
+        .lc-kpi.lc-hex-hit { filter: drop-shadow(0 0 10px rgba(251,191,36,.5)); }
+        .lc-kpi.lc-hex-hit .lc-kpi-value, .lc-kpi.lc-hex-hit .lc-kpi-label { color: #fbbf24; }
+
+        .lc-m-form { position: relative; z-index: 1; margin: 20px 22px 0; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+        .lc-form-title-m { font-size: 23px; }
+        .lc-form-sub-m { margin-top: 3px; font-size: 13px; }
+        .lc-field-m input { border-radius: 10px; }
+        .lc-pwd-toggle-m { width: 44px; }
+
+        .lc-m-foot {
+            position: relative; z-index: 1; margin-top: auto;
+            padding: 14px 22px calc(14px + env(safe-area-inset-bottom));
+            display: flex; justify-content: space-between;
+            font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--login-foot);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .lc-ring-spin-paros, .lc-ring-spin-mto, .lc-alert, .lc-alert-bang, .lc-gear,
+            .lc-bar, .lc-hex, .lc-hex.lc-hex-hit, .lc-kpi.lc-hex-hit, .lc-brand-ring, .lc-paros-tick, .lc-paros-plus.show {
+                animation: none !important;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="login-wrap" style="position:relative; z-index:1;">
+    <div class="login-canvas">
+        <div class="lc-desktop">
+            <div class="lc-bg-grad"></div>
+            <div class="lc-bg-grid"></div>
+            <div class="lc-bg-dots"></div>
+            <div class="lc-horizon lc-horizon-1"></div>
+            <div class="lc-horizon lc-horizon-2"></div>
+            <div class="lc-bg-dots-bottom"></div>
 
-        <div class="login-panel">
-            <div class="panel-brand">
-                <div class="panel-brand-dot"></div>
-                <span>{% trans "Gestión de Paros" %}</span>
-            </div>
-
-            <div class="panel-body" style="overflow:hidden; position:relative;">
-                <div id="panel-track" style="display:flex; transition:transform .5s ease;">
-
-                    <div class="panel-slide">
-                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,.12);
-                                    display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
-                            <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
-                            </svg>
-                        </div>
-                        <h2>{% trans "Control de paros de producción" %}</h2>
-                        <p>{% trans "Registra, consulta y analiza los paros por área, turno y tiempo de manera rápida." %}</p>
+            <div class="lc-header lc-header-paros">
+                <div class="lc-ring">
+                    <div class="lc-ring-spin-paros"></div>
+                    <div class="lc-alert">
+                        <svg viewBox="0 0 54 50" width="42" height="39" style="display:block">
+                            <path d="M27 7 L48 43 H6 Z" fill="rgba(239,68,68,.14)" stroke="#f87171" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"/>
+                        </svg>
+                        <div class="lc-alert-bang">!</div>
                     </div>
-
-                    <div class="panel-slide">
-                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,.12);
-                                    display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
-                            <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                        </div>
-                        <h2>{% trans "Mantenimiento bajo control" %}</h2>
-                        <p>{% trans "Planea, ejecuta y da seguimiento a las rutinas de mantenimiento preventivo y correctivo." %}</p>
-                    </div>
-
-                    <div class="panel-slide">
-                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,.12);
-                                    display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
-                            <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 20V10M12 20V4M6 20v-6"/>
-                            </svg>
-                        </div>
-                        <h2>{% trans "Indicadores en tiempo real" %}</h2>
-                        <p>{% trans "Visualiza tendencias, tiempos perdidos y desempeño por área al instante." %}</p>
-                    </div>
-
-                    <div class="panel-slide">
-                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,.12);
-                                    display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
-                            <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                            </svg>
-                        </div>
-                        <h2>{% trans "Inventario siempre actualizado" %}</h2>
-                        <p>{% trans "Controla refacciones, stock mínimo y movimientos de almacén sin complicaciones." %}</p>
-                    </div>
-
+                </div>
+                <div>
+                    <div class="lc-head-eyebrow">{% trans "GESTIÓN DE" %}</div>
+                    <div class="lc-head-title lc-head-title-paros">{% trans "PAROS DE PRODUCCIÓN" %}</div>
                 </div>
             </div>
 
-            <div class="panel-dots" id="panel-dots">
-                <span class="active" data-dot="0"></span>
-                <span data-dot="1"></span>
-                <span data-dot="2"></span>
-                <span data-dot="3"></span>
+            <div class="lc-header lc-header-mto">
+                <div>
+                    <div class="lc-head-eyebrow">{% trans "GESTIÓN DE" %}</div>
+                    <div class="lc-head-title lc-head-title-mto">{% trans "MANTENIMIENTO" %}</div>
+                </div>
+                <div class="lc-ring">
+                    <div class="lc-ring-spin-mto"></div>
+                    <div class="lc-gear">
+                        <div class="lc-gear-tooth" style="transform:rotate(0deg) translateY(-17px)"></div>
+                        <div class="lc-gear-tooth" style="transform:rotate(45deg) translateY(-17px)"></div>
+                        <div class="lc-gear-tooth" style="transform:rotate(90deg) translateY(-17px)"></div>
+                        <div class="lc-gear-tooth" style="transform:rotate(135deg) translateY(-17px)"></div>
+                        <div class="lc-gear-tooth" style="transform:rotate(180deg) translateY(-17px)"></div>
+                        <div class="lc-gear-tooth" style="transform:rotate(225deg) translateY(-17px)"></div>
+                        <div class="lc-gear-tooth" style="transform:rotate(270deg) translateY(-17px)"></div>
+                        <div class="lc-gear-tooth" style="transform:rotate(315deg) translateY(-17px)"></div>
+                        <div class="lc-gear-body"></div>
+                        <div class="lc-gear-hole"></div>
+                        <div class="lc-gear-center"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lc-top-controls">
+                <form action="{% url 'set_language' %}" method="post" class="lc-lang-form">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.path }}">
+                    <button type="submit" name="language" value="es" class="lc-lang-btn{% if request.LANGUAGE_CODE == 'es' %} active{% endif %}">ES</button>
+                    <button type="submit" name="language" value="en" class="lc-lang-btn{% if request.LANGUAGE_CODE == 'en' %} active{% endif %}">EN</button>
+                </form>
+                <button type="button" id="lc-theme-toggle" class="lc-theme-toggle" onclick="toggleLoginTheme()" title="{% trans 'Modo claro / oscuro' %}" aria-pressed="false">
+                    <span class="lc-theme-knob-track"><span class="lc-theme-knob"></span></span>
+                    <span id="lc-theme-label">{% trans "OSCURO" %}</span>
+                </button>
+            </div>
+
+            <div class="lc-mini-chart">
+                <div class="lc-mini-head">
+                    <span class="lc-mini-label">{% trans "MIN. DE PARO / SEMANA" %}</span>
+                    <span class="lc-mini-figure">-18%</span>
+                </div>
+                <div class="lc-mini-bars">
+                    <div class="lc-bar" style="--h:78%;--o:.45;--d:0s"></div>
+                    <div class="lc-bar lc-bar-peak" style="--h:94%;--o:1;--d:.08s"></div>
+                    <div class="lc-bar" style="--h:62%;--o:.55;--d:.16s"></div>
+                    <div class="lc-bar" style="--h:70%;--o:.6;--d:.24s"></div>
+                    <div class="lc-bar" style="--h:48%;--o:.7;--d:.32s"></div>
+                    <div class="lc-bar" style="--h:55%;--o:.8;--d:.4s"></div>
+                    <div class="lc-bar" style="--h:34%;--o:.9;--d:.48s"></div>
+                    <div class="lc-bar" style="--h:28%;--o:1;--d:.56s"></div>
+                </div>
+                <div class="lc-mini-scale"><span>S1</span><span>S8</span></div>
+            </div>
+
+            <div class="lc-hex-col">
+                <button type="button" class="lc-hex" onclick="hexHit(this)" style="animation-delay:0s">
+                    <span class="lc-hex-inner">
+                        <span class="lc-hex-value">18</span>
+                        <span class="lc-hex-label">OTs</span>
+                        <span class="lc-hex-sep"></span>
+                        <span class="lc-hex-sub">{% trans "ÓRDENES ABIERTAS" %}</span>
+                    </span>
+                </button>
+                <button type="button" class="lc-hex lc-hex-offset" onclick="hexHit(this); animateKpiPercent(document.getElementById('lc-kpi-pct'), 94)" style="animation-delay:.7s">
+                    <span class="lc-hex-inner">
+                        <span class="lc-hex-value" id="lc-kpi-pct">94%</span>
+                        <span class="lc-hex-label">KPIs</span>
+                        <span class="lc-hex-sep"></span>
+                        <span class="lc-hex-sub">{% trans "DISPONIBILIDAD" %}</span>
+                    </span>
+                </button>
+                <button type="button" class="lc-hex" onclick="hexHit(this)" style="animation-delay:1.4s">
+                    <span class="lc-hex-inner">
+                        <span class="lc-paros-value-wrap">
+                            <span class="lc-hex-value" id="lc-paros-count">7</span>
+                            <span class="lc-paros-plus" id="lc-paros-plus">+1</span>
+                        </span>
+                        <span class="lc-hex-label">PAROS</span>
+                        <span class="lc-hex-sep"></span>
+                        <span class="lc-hex-sub">{% trans "TURNO ACTUAL" %}</span>
+                    </span>
+                </button>
+            </div>
+
+            <div class="lc-card">
+                <div class="lc-card-left">
+                    <div class="lc-brand">
+                        <div class="lc-brand-logo">
+                            <div class="lc-brand-ring"></div>
+                            <div class="lc-brand-dot"></div>
+                        </div>
+                        <div>
+                            <div class="lc-brand-name">{{ app_name|default:"STOPLINE" }}</div>
+                            <div class="lc-brand-tag">{% trans "PAROS · MANTENIMIENTO" %}</div>
+                        </div>
+                    </div>
+
+                    <div class="lc-carousel">
+                        <div id="panel-track" class="lc-carousel-track">
+
+                            <div class="lc-slide">
+                                <div class="lc-slide-icon">
+                                    <svg width="23" height="23" fill="none" stroke="#3a2cb8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                                    </svg>
+                                </div>
+                                <h2 class="lc-slide-title">{% trans "Control de paros de producción" %}</h2>
+                                <p class="lc-slide-text">{% trans "Registra, consulta y analiza los paros por área, turno y tiempo de manera rápida." %}</p>
+                            </div>
+
+                            <div class="lc-slide">
+                                <div class="lc-slide-icon">
+                                    <svg width="23" height="23" fill="none" stroke="#3a2cb8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                                <h2 class="lc-slide-title">{% trans "Mantenimiento bajo control" %}</h2>
+                                <p class="lc-slide-text">{% trans "Planea, ejecuta y da seguimiento a las rutinas de mantenimiento preventivo y correctivo." %}</p>
+                            </div>
+
+                            <div class="lc-slide">
+                                <div class="lc-slide-icon">
+                                    <svg width="23" height="23" fill="none" stroke="#3a2cb8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 20V10M12 20V4M6 20v-6"/>
+                                    </svg>
+                                </div>
+                                <h2 class="lc-slide-title">{% trans "Indicadores en tiempo real" %}</h2>
+                                <p class="lc-slide-text">{% trans "Visualiza tendencias, tiempos perdidos y desempeño por área al instante." %}</p>
+                            </div>
+
+                            <div class="lc-slide">
+                                <div class="lc-slide-icon">
+                                    <svg width="23" height="23" fill="none" stroke="#3a2cb8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                </div>
+                                <h2 class="lc-slide-title">{% trans "Inventario siempre actualizado" %}</h2>
+                                <p class="lc-slide-text">{% trans "Controla refacciones, stock mínimo y movimientos de almacén sin complicaciones." %}</p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="lc-dots" id="panel-dots">
+                        <span class="active" data-dot="0"></span>
+                        <span data-dot="1"></span>
+                        <span data-dot="2"></span>
+                        <span data-dot="3"></span>
+                    </div>
+                </div>
+
+                <div class="lc-card-right">
+                    <div>
+                        <div class="lc-form-title">{% trans "Bienvenido" %}</div>
+                        <div class="lc-form-sub">{% trans "Ingresa tus credenciales para continuar" %}</div>
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="lc-error">{% trans "Usuario o contraseña incorrectos. Inténtalo de nuevo." %}</div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'login' %}" style="display:flex;flex-direction:column;gap:20px;flex:1;">
+                        {% csrf_token %}
+                        <div class="lc-field">
+                            <label for="id_username">{% trans "Usuario" %}</label>
+                            <input type="text" name="username" id="id_username" required autofocus autocomplete="username" placeholder="{% trans 'Nº de nómina' %}">
+                        </div>
+                        <div class="lc-field">
+                            <label for="id_password">{% trans "Contraseña" %}</label>
+                            <div class="lc-pwd-wrap">
+                                <input type="password" name="password" id="id_password" required autocomplete="current-password" placeholder="••••••••">
+                                <button type="button" onclick="togglePwd(this)" class="lc-pwd-toggle" aria-label="{% trans 'Mostrar contraseña' %}">
+                                    <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                                        <line x1="1" y1="1" x2="23" y2="23"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="next" value="{{ next }}">
+                        <button type="submit" class="lc-btn-login">{% trans "Entrar" %}</button>
+
+                        <div class="lc-form-foot">V1.0.1</div>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <div class="login-form-wrap">
-            <h3>{% trans "Bienvenido" %}</h3>
-            <p>{% trans "Ingresa tus credenciales para continuar" %}</p>
+        <div class="lc-mobile">
+            <div class="lc-m-bg-grad"></div>
+            <div class="lc-m-bg-grid"></div>
+            <div class="lc-m-horizon"></div>
 
-            {% if form.errors %}
-            <div class="error-msg">{% trans "Usuario o contraseña incorrectos. Inténtalo de nuevo." %}</div>
-            {% endif %}
-
-            <form method="post" action="{% url 'login' %}">
-                {% csrf_token %}
-                <div class="form-field">
-                    <label for="id_username">{% trans "Usuario" %}</label>
-                    <input type="text" name="username" id="id_username" required autofocus autocomplete="username">
-                </div>
-                <div class="form-field">
-                    <label for="id_password">{% trans "Contraseña" %}</label>
-                    <div style="position:relative;">
-                        <input type="password" name="password" id="id_password" required autocomplete="current-password" style="padding-right:42px;width:100%;box-sizing:border-box;">
-                        <button type="button" id="toggle-pwd"
-                                onclick="togglePwd()"
-                                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:#9CA3AF;display:flex;align-items:center;">
-                            <svg id="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                            <svg id="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
-                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
-                                <line x1="1" y1="1" x2="23" y2="23"/>
-                            </svg>
-                        </button>
+            <div class="lc-m-topbar">
+                <div class="lc-m-brand">
+                    <div class="lc-brand-logo lc-brand-logo-m">
+                        <div class="lc-brand-ring lc-brand-ring-m"></div>
+                        <div class="lc-brand-dot"></div>
+                    </div>
+                    <div>
+                        <div class="lc-m-brand-name">{{ app_name|default:"STOPLINE" }}</div>
+                        <div class="lc-m-brand-tag">{% trans "PAROS · MANTENIMIENTO" %}</div>
                     </div>
                 </div>
-                <script>
-                function togglePwd() {
-                    var input = document.getElementById('id_password');
-                    var eyeOn  = document.getElementById('icon-eye');
-                    var eyeOff = document.getElementById('icon-eye-off');
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        eyeOn.style.display  = 'block';
-                        eyeOff.style.display = 'none';
-                    } else {
-                        input.type = 'password';
-                        eyeOn.style.display  = 'none';
-                        eyeOff.style.display = 'block';
-                    }
-                }
-                </script>
-                <input type="hidden" name="next" value="{{ next }}">
-                <button type="submit" class="btn-login">{% trans "Entrar" %}</button>
-
-                <div style="text-align:center; padding-top:12px; margin-top:4px; border-top:1px solid #E5E4F0;">
-                    <span style="font-size:14px; color:#9CA3AF;">{% trans "Versión" %} 1.0.0</span>
+                <div class="lc-m-lang">
+                    <form action="{% url 'set_language' %}" method="post" class="lc-lang-form">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.path }}">
+                        <button type="submit" name="language" value="es" class="lc-lang-btn lc-lang-btn-m{% if request.LANGUAGE_CODE == 'es' %} active{% endif %}">ES</button>
+                        <button type="submit" name="language" value="en" class="lc-lang-btn lc-lang-btn-m{% if request.LANGUAGE_CODE == 'en' %} active{% endif %}">EN</button>
+                    </form>
                 </div>
-                
-            </form>
-        </div>
+            </div>
 
-    </div>
-    <!-- Language selector -->
-    <div style="position:fixed; top:16px; right:20px; display:flex; gap:6px;">
-        <form action="{% url 'set_language' %}" method="post" style="display:flex; gap:6px;">
-            {% csrf_token %}
-            <input name="next" type="hidden" value="{{ request.path }}">
-            <button type="submit" name="language" value="es"
-                    style="padding:5px 10px; border-radius:7px; border:1px solid rgba(255,255,255,0.15);
-                        background:{% if request.LANGUAGE_CODE == 'es' %}#4F46E5{% else %}transparent{% endif %};
-                        color:{% if request.LANGUAGE_CODE == 'es' %}#fff{% else %}#6B7280{% endif %};
-                        cursor:pointer; font-family:inherit; font-size:12px; font-weight:600;">
-                🇲🇽 ES
-            </button>
-            <button type="submit" name="language" value="en"
-                    style="padding:5px 10px; border-radius:7px; border:1px solid rgba(255,255,255,0.15);
-                        background:{% if request.LANGUAGE_CODE == 'en' %}#4F46E5{% else %}transparent{% endif %};
-                        color:{% if request.LANGUAGE_CODE == 'en' %}#fff{% else %}#6B7280{% endif %};
-                        cursor:pointer; font-family:inherit; font-size:12px; font-weight:600;">
-                🇺🇸 EN
-            </button>
-        </form>
+            <div class="lc-m-carousel">
+                <div class="lc-m-carousel-inner">
+                    <div class="lc-carousel-track">
+
+                        <div class="lc-slide">
+                            <div class="lc-slide-icon lc-slide-icon-m">
+                                <svg width="20" height="20" fill="none" stroke="#3a2cb8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                                </svg>
+                            </div>
+                            <h2 class="lc-slide-title lc-slide-title-m">{% trans "Control de paros de producción" %}</h2>
+                            <p class="lc-slide-text lc-slide-text-m">{% trans "Registra, consulta y analiza los paros por área, turno y tiempo de manera rápida." %}</p>
+                        </div>
+
+                        <div class="lc-slide">
+                            <div class="lc-slide-icon lc-slide-icon-m">
+                                <svg width="20" height="20" fill="none" stroke="#3a2cb8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <h2 class="lc-slide-title lc-slide-title-m">{% trans "Mantenimiento bajo control" %}</h2>
+                            <p class="lc-slide-text lc-slide-text-m">{% trans "Planea, ejecuta y da seguimiento a las rutinas de mantenimiento preventivo y correctivo." %}</p>
+                        </div>
+
+                        <div class="lc-slide">
+                            <div class="lc-slide-icon lc-slide-icon-m">
+                                <svg width="20" height="20" fill="none" stroke="#3a2cb8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 20V10M12 20V4M6 20v-6"/>
+                                </svg>
+                            </div>
+                            <h2 class="lc-slide-title lc-slide-title-m">{% trans "Indicadores en tiempo real" %}</h2>
+                            <p class="lc-slide-text lc-slide-text-m">{% trans "Visualiza tendencias, tiempos perdidos y desempeño por área al instante." %}</p>
+                        </div>
+
+                        <div class="lc-slide">
+                            <div class="lc-slide-icon lc-slide-icon-m">
+                                <svg width="20" height="20" fill="none" stroke="#3a2cb8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                </svg>
+                            </div>
+                            <h2 class="lc-slide-title lc-slide-title-m">{% trans "Inventario siempre actualizado" %}</h2>
+                            <p class="lc-slide-text lc-slide-text-m">{% trans "Controla refacciones, stock mínimo y movimientos de almacén sin complicaciones." %}</p>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="lc-dots lc-dots-m">
+                    <span class="active" data-dot="0"></span>
+                    <span data-dot="1"></span>
+                    <span data-dot="2"></span>
+                    <span data-dot="3"></span>
+                </div>
+            </div>
+
+            <div class="lc-m-kpis">
+                <button type="button" class="lc-kpi" onclick="hexHit(this)">
+                    <span class="lc-kpi-value">18</span>
+                    <span class="lc-kpi-label">OTs</span>
+                </button>
+                <button type="button" class="lc-kpi" onclick="hexHit(this); animateKpiPercent(document.getElementById('lc-kpi-pct-m'), 94)">
+                    <span class="lc-kpi-value" id="lc-kpi-pct-m">94%</span>
+                    <span class="lc-kpi-label">KPIs</span>
+                </button>
+                <button type="button" class="lc-kpi" onclick="hexHit(this)">
+                    <span class="lc-paros-value-wrap">
+                        <span class="lc-kpi-value" id="lc-paros-count-m">7</span>
+                        <span class="lc-paros-plus" id="lc-paros-plus-m">+1</span>
+                    </span>
+                    <span class="lc-kpi-label">PAROS</span>
+                </button>
+            </div>
+
+            <div class="lc-m-form">
+                <div>
+                    <div class="lc-form-title lc-form-title-m">{% trans "Bienvenido" %}</div>
+                    <div class="lc-form-sub lc-form-sub-m">{% trans "Ingresa tus credenciales" %}</div>
+                </div>
+
+                {% if form.errors %}
+                <div class="lc-error">{% trans "Usuario o contraseña incorrectos. Inténtalo de nuevo." %}</div>
+                {% endif %}
+
+                <form method="post" action="{% url 'login' %}" style="display:flex;flex-direction:column;gap:14px;">
+                    {% csrf_token %}
+                    <div class="lc-field lc-field-m">
+                        <label for="id_username_m">{% trans "Usuario" %}</label>
+                        <input type="text" name="username" id="id_username_m" required autofocus autocomplete="username" placeholder="{% trans 'Nº de nómina' %}">
+                    </div>
+                    <div class="lc-field lc-field-m">
+                        <label for="id_password_m">{% trans "Contraseña" %}</label>
+                        <div class="lc-pwd-wrap">
+                            <input type="password" name="password" id="id_password_m" required autocomplete="current-password" placeholder="••••••••">
+                            <button type="button" onclick="togglePwd(this)" class="lc-pwd-toggle lc-pwd-toggle-m" aria-label="{% trans 'Mostrar contraseña' %}">
+                                <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="next" value="{{ next }}">
+                    <button type="submit" class="lc-btn-login lc-btn-login-m">{% trans "Entrar" %}</button>
+                </form>
+            </div>
+
+            <div class="lc-m-foot">
+                <span>V1.0.1</span>
+            </div>
+        </div>
     </div>
 
     <script>
+    function togglePwd(btn) {
+        var wrap   = btn.closest('.lc-pwd-wrap');
+        var input  = wrap.querySelector('input');
+        var eyeOn  = wrap.querySelector('.icon-eye');
+        var eyeOff = wrap.querySelector('.icon-eye-off');
+        if (input.type === 'password') {
+            input.type = 'text';
+            eyeOn.style.display  = 'block';
+            eyeOff.style.display = 'none';
+        } else {
+            input.type = 'password';
+            eyeOn.style.display  = 'none';
+            eyeOff.style.display = 'block';
+        }
+    }
+
     (function() {
-        const track = document.getElementById('panel-track');
-        const dots  = document.querySelectorAll('#panel-dots span');
-        const total = dots.length;
-        let actual  = 0;
+        const tracks     = document.querySelectorAll('.lc-carousel-track');
+        const dotGroups  = document.querySelectorAll('.lc-dots');
+        const total      = 4;
+        let actual       = 0;
+        let timer        = null;
 
         function mostrar(index) {
-            track.style.transform = `translateX(-${index * 100}%)`;
-            dots.forEach((d, i) => d.classList.toggle('active', i === index));
+            tracks.forEach(track => { track.style.transform = `translateX(-${index * 100}%)`; });
+            dotGroups.forEach(group => {
+                group.querySelectorAll('span').forEach((d, i) => d.classList.toggle('active', i === index));
+            });
             actual = index;
         }
 
-        setInterval(() => {
-            mostrar((actual + 1) % total);
-        }, 4000);
+        function reiniciarTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => mostrar((actual + 1) % total), 4500);
+        }
+
+        dotGroups.forEach(group => {
+            group.querySelectorAll('span').forEach((d, i) => d.addEventListener('click', () => { mostrar(i); reiniciarTimer(); }));
+        });
+        reiniciarTimer();
     })();
+
+    function hexHit(el) {
+        el.classList.add('lc-hex-hit');
+        clearTimeout(el._lcHexTimer);
+        el._lcHexTimer = setTimeout(() => el.classList.remove('lc-hex-hit'), 560);
+    }
+
+    function animateKpiPercent(el, target) {
+        if (!el) return;
+        var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced) {
+            el.textContent = target + '%';
+            el.style.color = 'rgb(52,211,153)';
+            return;
+        }
+        if (el._kpiRAF) cancelAnimationFrame(el._kpiRAF);
+        var from = [239, 68, 68];   // rojo
+        var to   = [52, 211, 153];  // verde
+        var duration = 10000;
+        var start = null;
+
+        function step(ts) {
+            if (!start) start = ts;
+            var p = Math.min((ts - start) / duration, 1);
+            var eased = 1 - Math.pow(1 - p, 3);
+            var r = Math.round(from[0] + (to[0] - from[0]) * eased);
+            var g = Math.round(from[1] + (to[1] - from[1]) * eased);
+            var b = Math.round(from[2] + (to[2] - from[2]) * eased);
+            el.textContent = Math.round(eased * target) + '%';
+            el.style.color = 'rgb(' + r + ',' + g + ',' + b + ')';
+            el._kpiRAF = p < 1 ? requestAnimationFrame(step) : null;
+        }
+
+        el.textContent = '0%';
+        el.style.color = 'rgb(239,68,68)';
+        el._kpiRAF = requestAnimationFrame(step);
+    }
+
+    function reiniciarAnimacionKpi() {
+        animateKpiPercent(document.getElementById('lc-kpi-pct'), 94);
+        animateKpiPercent(document.getElementById('lc-kpi-pct-m'), 94);
+    }
+    reiniciarAnimacionKpi();
+    setInterval(reiniciarAnimacionKpi, 20000);
+
+    function sumarParo(el, plusEl) {
+        if (!el) return;
+        var actual = parseInt(el.textContent, 10) || 0;
+        el.textContent = actual + 1;
+        var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced) return;
+        el.classList.remove('lc-paros-tick');
+        void el.offsetWidth; // reinicia la animación aunque se dispare seguido
+        el.classList.add('lc-paros-tick');
+         if (plusEl) {
+            plusEl.classList.remove('show');
+            void plusEl.offsetWidth;
+            plusEl.classList.add('show');
+        }
+    }
+
+    setInterval(function() {
+        sumarParo(document.getElementById('lc-paros-count'), document.getElementById('lc-paros-plus'));
+        sumarParo(document.getElementById('lc-paros-count-m'), document.getElementById('lc-paros-plus-m'));
+    }, 6000);
+
+    var LC_LABEL_OSCURO = "{% trans 'OSCURO' %}";
+    var LC_LABEL_CLARO  = "{% trans 'CLARO' %}";
+
+    function updateThemeLabel(theme) {
+        var label = document.getElementById('lc-theme-label');
+        var btn   = document.getElementById('lc-theme-toggle');
+        if (label) label.textContent = (theme === 'light') ? LC_LABEL_CLARO : LC_LABEL_OSCURO;
+        if (btn)   btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+    }
+
+    function toggleLoginTheme() {
+        var html    = document.documentElement;
+        var current = html.getAttribute('data-login-theme') === 'light' ? 'light' : 'dark';
+        var next    = current === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-login-theme', next);
+        try { localStorage.setItem('loginTheme', next); } catch (e) {}
+        updateThemeLabel(next);
+    }
+
+    updateThemeLabel(document.documentElement.getAttribute('data-login-theme') || 'dark');
     </script>
-
 </body>
-    <div style="position:fixed; top:-80px; left:-80px; width:400px; height:400px; border-radius:50%;
-                background:rgba(99,102,241,0.15); pointer-events:none; z-index:0;
-                animation:drift1 12s ease-in-out infinite;"></div>
-
-    <div style="position:fixed; bottom:-100px; right:-60px; width:460px; height:460px; border-radius:50%;
-                background:rgba(139,92,246,0.12); pointer-events:none; z-index:0;
-                animation:drift2 14s ease-in-out infinite;"></div>
-
-    <div style="position:fixed; top:30%; right:5%; width:220px; height:220px; border-radius:50%;
-                background:rgba(165,180,252,0.08); pointer-events:none; z-index:0;
-                animation:drift3 10s ease-in-out infinite;"></div>
 </html>

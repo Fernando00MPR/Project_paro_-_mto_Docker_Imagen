@@ -72,23 +72,27 @@ function renderDt(id, planeado, muerto, downtime) {
 function editarEquipo(td) {
     const tr     = td.closest('tr');
     const regId  = tr.dataset.id;
-    const turno  = tr.dataset.turno;
     const actual = td.textContent.trim();
     const areaId = tr.dataset.area;
 
-    const equipos = [...document.querySelectorAll(`#eq-${areaId} option`)].map(o => o.value).filter(v => v);
+    const equipos = equiposValidos(areaId);
     if (equipos.length === 0) return;
 
-    const sel = document.createElement('select');
-    sel.style.cssText = 'width:95%;height:28px;padding:0 6px;border:1.5px solid var(--indigo);border-radius:4px;font-size:12px;background:var(--white);color:var(--text);';
-    sel.innerHTML = `<option value="">— Área completa —</option>` +
-        equipos.map(e => `<option value="${e}" ${e === actual ? 'selected' : ''}>${e}</option>`).join('');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id   = 'editar-equipo-' + regId;
+    input.value = actual === 'Área completa' ? '' : actual;
+    input.autocomplete = 'off';
+    input.style.cssText = 'width:95%;height:28px;padding:0 6px;border:1.5px solid var(--indigo);border-radius:4px;font-size:12px;background:var(--white);color:var(--text);';
     td.innerHTML = '';
-    td.appendChild(sel);
-    sel.focus();
+    td.appendChild(input);
+    input.focus();
+    filtrarEquipoDropdown(input, areaId);
+    input.addEventListener('input', () => filtrarEquipoDropdown(input, areaId));
 
     const save = async () => {
-        const nuevo = sel.value;
+        validarEquipoTexto(input, areaId);
+        const nuevo = input.value.trim();
         td.textContent    = nuevo || 'Área completa';
         tr.dataset.equipo = nuevo || 'Área completa';
         const res = await fetch(URL_UPD + regId + '/', {
@@ -97,17 +101,20 @@ function editarEquipo(td) {
             body: JSON.stringify({ equipo: nuevo })
         });
         const data = await res.json();
-        if (data.ok) { 
-            renderDt(regId, data.planeado, data.muerto, data.downtime); 
-            showToast('Registro actualizado correctamente.', 'success'); 
-        } else { 
+        if (data.ok) {
+            renderDt(regId, data.planeado, data.muerto, data.downtime);
+            showToast('Registro actualizado correctamente.', 'success');
+        } else {
             showToast(data.error || 'No se pudo actualizar el turno.', 'error');
-            td.innerHTML = `<span class="badge ${actual===1?'badge-t1':'badge-t2'}">Turno ${actual}</span>`;
-            tr.dataset.turno = actual;
+            td.textContent    = actual;
+            tr.dataset.equipo = actual;
         }
     };
-    sel.addEventListener('blur', save);
-    sel.addEventListener('change', () => sel.blur());
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter')  input.blur();
+        if (e.key === 'Escape') { td.textContent = actual; getEquipoDropdown().style.display = 'none'; }
+    });
 }
 
 // ── Editar turno ──────────────────────────────────────────────────────────────
@@ -319,49 +326,302 @@ async function agregarRegistro(areaId) {
 
 // ── Eliminar registro ─────────────────────────────────────────────────────────
 let regIdPendiente = null;
+let modalEliminarTrigger = null;
 
-document.getElementById('btn-cancelar-modal').onclick = () => {
+function cerrarModalEliminar() {
     document.getElementById('modal-eliminar').style.display = 'none';
     regIdPendiente = null;
-};
+    if (modalEliminarTrigger) { modalEliminarTrigger.focus(); modalEliminarTrigger = null; }
+}
+
+document.getElementById('btn-cancelar-modal').onclick = cerrarModalEliminar;
+
+document.getElementById('modal-eliminar').addEventListener('keydown', e => {
+    if (e.key === 'Escape') cerrarModalEliminar();
+});
 
 document.getElementById('btn-confirmar-eliminar').onclick = async () => {
     if (!regIdPendiente) return;
+    const idBorrado = regIdPendiente;
+    const trigger    = modalEliminarTrigger;
     document.getElementById('modal-eliminar').style.display = 'none';
-    const res = await fetch(URL_ELIM + regIdPendiente + '/', {
+    regIdPendiente = null;
+    modalEliminarTrigger = null;
+    const res = await fetch(URL_ELIM + idBorrado + '/', {
         method: 'POST',
         headers: { 'X-CSRFToken': CSRF }
     });
     const data = await res.json();
     if (data.ok) {
         showToast('Registro eliminado.', 'success');
-        document.getElementById('row-' + regIdPendiente).remove();
+        document.getElementById('row-' + idBorrado).remove();
     } else {
         showToast('Error al eliminar el registro.', 'error');
+        if (trigger) trigger.focus();
     }
-    regIdPendiente = null;
 };
 
-function eliminarRegistro(regId) {
+function eliminarRegistro(regId, trigger) {
     regIdPendiente = regId;
+    modalEliminarTrigger = trigger || document.activeElement;
+    const tr      = document.getElementById('row-' + regId);
+    const detalle = document.getElementById('modal-eliminar-detalle');
+    if (tr && detalle) {
+        detalle.textContent = `${tr.dataset.equipo} · ${TXT_TURNO} ${tr.dataset.turno} · ${tr.dataset.inicio}–${tr.dataset.fin}`;
+    }
     document.getElementById('modal-eliminar').style.display = 'flex';
+    document.getElementById('btn-cancelar-modal').focus();
 }
 
-// ── Mover filas ───────────────────────────────────────────────────────────────
-function moverFila(btn, dir) {
-    const tr    = btn.closest('tr');
-    const tbody = tr.parentElement;
-    const filas = [...tbody.querySelectorAll('tr[id^="row-"]')];
-    const idx   = filas.indexOf(tr);
+// ── Exportar registros ────────────────────────────────────────────────────────
+let modalExportarTrigger = null;
+
+function abrirModalExportar() {
+    modalExportarTrigger = document.activeElement;
+    const modal = document.getElementById('modal-exportar');
+    modal.style.display = 'flex';
+    const control = document.getElementById('exp-rango-control');
+    if (control) control.focus();
+    if (typeof solicitarConteoExport === 'function') solicitarConteoExport();
+}
+
+function cerrarModalExportar() {
+    if (typeof cerrarCalendarioExport === 'function') cerrarCalendarioExport();
+    document.getElementById('modal-exportar').style.display = 'none';
+    if (modalExportarTrigger) { modalExportarTrigger.focus(); modalExportarTrigger = null; }
+}
+
+
+document.getElementById('modal-exportar').addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        if (typeof expCal !== 'undefined' && expCal.abierto) {
+            cerrarCalendarioExport();
+        } else {
+            cerrarModalExportar();
+        }
+        return;
+    }
+    if (e.key !== 'Tab') return;
+    const modal = document.getElementById('modal-exportar');
+    const focusables = [...modal.querySelectorAll(
+        'button:not([disabled]), [href], input:not([type=hidden]), select, [tabindex]:not([tabindex="-1"])'
+    )].filter(el => el.offsetParent !== null);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last  = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+    }
+});
+
+// ── Menú ⋯ de fila ───────────────────────────────────────────────────────────────
+let menuFilaState = null; // { trigger }
+
+function getMenuFilaPopover() {
+    let popover = document.getElementById('menu-fila-popover');
+    if (!popover) {
+        popover = document.createElement('div');
+        popover.id = 'menu-fila-popover';
+        popover.className = 'menu-fila-popover';
+        popover.setAttribute('role', 'menu');
+        document.body.appendChild(popover);
+    }
+    return popover;
+}
+
+function cerrarMenuFila() {
+    const popover = getMenuFilaPopover();
+    popover.style.display = 'none';
+    if (menuFilaState) {
+        menuFilaState.trigger.setAttribute('aria-expanded', 'false');
+        menuFilaState.trigger.classList.remove('open');
+        menuFilaState.trigger.focus();
+    }
+    menuFilaState = null;
+}
+
+function toggleMenuFila(btn) {
+    if (menuFilaState && menuFilaState.trigger === btn) {
+        cerrarMenuFila();
+        return;
+    }
+    cerrarMenuFila();
+    const regId   = btn.dataset.registro;
+    const popover = getMenuFilaPopover();
+    popover.innerHTML = `
+        <button type="button" class="menu-fila-item delete" role="menuitem"
+                onmousedown="event.preventDefault();"
+                onclick="onMenuFilaEliminar('${regId}')">${TXT_ELIMINAR}</button>
+    `;
+    const rect = btn.getBoundingClientRect();
+    popover.style.display = 'block';
+    let left = rect.right - popover.offsetWidth;
+    if (left < 8) left = 8;
+    popover.style.left = left + 'px';
+    popover.style.top  = (rect.bottom + 4) + 'px';
+    btn.setAttribute('aria-expanded', 'true');
+    btn.classList.add('open');
+    menuFilaState = { trigger: btn };
+    const first = popover.querySelector('.menu-fila-item');
+    if (first) first.focus();
+}
+
+function onMenuFilaEliminar(regId) {
+    const trigger = menuFilaState ? menuFilaState.trigger : null;
+    cerrarMenuFila();
+    eliminarRegistro(regId, trigger);
+}
+
+document.addEventListener('click', e => {
+    if (!menuFilaState) return;
+    const popover = getMenuFilaPopover();
+    if (popover.contains(e.target) || e.target === menuFilaState.trigger) return;
+    cerrarMenuFila();
+});
+
+document.addEventListener('keydown', e => {
+    if (!menuFilaState) return;
+    const popover = getMenuFilaPopover();
+    const items = [...popover.querySelectorAll('.menu-fila-item:not(:disabled)')];
+    const idx   = items.indexOf(document.activeElement);
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        cerrarMenuFila();
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (items.length) items[(idx + 1) % items.length].focus();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (items.length) items[(idx - 1 + items.length) % items.length].focus();
+    }
+});
+
+// ── Reordenar filas (arrastrar handle + teclado) ──────────────────────────────
+let dragState = null; // { tr, tbody, ordenAntes }
+
+function ordenActual(tbody) {
+    return [...tbody.querySelectorAll('tr[id^="row-"]')].map(r => r.id.replace('row-', ''));
+}
+
+function aplicarOrden(tbody, ordenIds) {
+    ordenIds.forEach(id => {
+        const tr = document.getElementById('row-' + id);
+        if (tr) tbody.appendChild(tr);
+    });
+}
+
+function limpiarIndicadoresDrop() {
+    document.querySelectorAll('tr.drop-above, tr.drop-below').forEach(r => r.classList.remove('drop-above', 'drop-below'));
+}
+
+async function persistirOrden(tbody, ordenPrevio) {
+    const nuevoOrden = ordenActual(tbody);
+    let data = { ok: false };
+    try {
+        const res = await fetch(URL_ORD, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ orden: nuevoOrden })
+        });
+        data = await res.json();
+    } catch (err) { /* data.ok se queda en false */ }
+    if (!data.ok) {
+        aplicarOrden(tbody, ordenPrevio);
+        showToast('No se pudo guardar el nuevo orden.', 'error');
+    }
+}
+
+function anunciarOrden(tr, tbody) {
+    const filas = ordenActual(tbody);
+    const pos   = filas.indexOf(tr.id.replace('row-', '')) + 1;
+    const anuncio = document.getElementById('orden-anuncio');
+    if (anuncio) anuncio.textContent = `Fila movida a la posición ${pos} de ${filas.length}`;
+}
+
+function moverFilaPos(tr, dir) {
+    const tbody      = tr.parentElement;
+    const ordenAntes = ordenActual(tbody);
+    const filas      = [...tbody.querySelectorAll('tr[id^="row-"]')];
+    const idx        = filas.indexOf(tr);
     if (dir === -1 && idx > 0) {
         tbody.insertBefore(tr, filas[idx - 1]);
     } else if (dir === 1 && idx < filas.length - 1) {
         tbody.insertBefore(filas[idx + 1], tr);
+    } else {
+        return;
     }
-    const nuevoOrden = [...tbody.querySelectorAll('tr[id^="row-"]')].map(r => r.id.replace('row-', ''));
-    fetch(URL_ORD, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
-        body: JSON.stringify({ orden: nuevoOrden })
+    anunciarOrden(tr, tbody);
+    persistirOrden(tbody, ordenAntes);
+}
+
+let handleSnapshot = null; // { tbody, orden }
+
+function initDragHandle(handle) {
+    handle.addEventListener('dragstart', e => {
+        const tr = handle.closest('tr');
+        dragState = { tr, tbody: tr.parentElement, ordenAntes: ordenActual(tr.parentElement) };
+        tr.classList.add('dragging-row');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', tr.dataset.id);
+    });
+    handle.addEventListener('dragend', () => {
+        if (dragState) dragState.tr.classList.remove('dragging-row');
+        limpiarIndicadoresDrop();
+        dragState = null;
+    });
+    handle.addEventListener('focus', () => {
+        const tr = handle.closest('tr');
+        handleSnapshot = { tbody: tr.parentElement, orden: ordenActual(tr.parentElement) };
+    });
+    handle.addEventListener('blur', () => { handleSnapshot = null; });
+    handle.addEventListener('keydown', e => {
+        const tr = handle.closest('tr');
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            moverFilaPos(tr, -1);
+            handle.focus();
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            moverFilaPos(tr, 1);
+            handle.focus();
+        } else if (e.key === 'Escape' && handleSnapshot) {
+            e.preventDefault();
+            const tbody = handleSnapshot.tbody;
+            const ordenAntesDeRevertir = ordenActual(tbody);
+            aplicarOrden(tbody, handleSnapshot.orden);
+            anunciarOrden(tr, tbody);
+            persistirOrden(tbody, ordenAntesDeRevertir);
+            handle.focus();
+        }
     });
 }
+
+function initTbodyDragTarget(tbody) {
+    tbody.addEventListener('dragover', e => {
+        if (!dragState) return;
+        const tr = e.target.closest('tr[id^="row-"]');
+        if (!tr || tr.dataset.area !== dragState.tr.dataset.area) return;
+        e.preventDefault();
+        limpiarIndicadoresDrop();
+        const rect   = tr.getBoundingClientRect();
+        const before = (e.clientY - rect.top) < rect.height / 2;
+        tr.classList.add(before ? 'drop-above' : 'drop-below');
+    });
+    tbody.addEventListener('drop', e => {
+        if (!dragState) return;
+        const tr = e.target.closest('tr[id^="row-"]');
+        if (!tr || tr === dragState.tr || tr.dataset.area !== dragState.tr.dataset.area) return;
+        e.preventDefault();
+        const rect   = tr.getBoundingClientRect();
+        const before = (e.clientY - rect.top) < rect.height / 2;
+        tbody.insertBefore(dragState.tr, before ? tr : tr.nextSibling);
+        limpiarIndicadoresDrop();
+        anunciarOrden(dragState.tr, tbody);
+        persistirOrden(tbody, dragState.ordenAntes);
+    });
+}
+
+document.querySelectorAll('.drag-handle').forEach(initDragHandle);
+document.querySelectorAll('tbody[id^="tbody-"]').forEach(initTbodyDragTarget);

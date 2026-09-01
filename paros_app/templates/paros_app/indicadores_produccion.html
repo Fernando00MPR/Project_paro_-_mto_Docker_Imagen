@@ -7,8 +7,15 @@
 {% endblock %}
 {% block content %}
 
-<div class="card-title">{% trans "Indicadores de producción" %}</div>
-<div class="card-subtitle">{% trans "Análisis histórico de downtime, disponibilidad, MTTR y MTBF por área" %}</div>
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+    <div>
+        <div class="card-title">{% trans "Indicadores de producción" %}</div>
+        <div class="card-subtitle">{% trans "Análisis histórico de downtime, disponibilidad, MTTR y MTBF por área" %}</div>
+    </div>
+    <div style="padding-top:20px; margin-left:auto;">
+        {% include 'menu_app/_language_selector.html' %}
+    </div>
+</div>
 
 <!-- Filtros -->
 <div class="card p-16" style="margin-bottom:16px;">
@@ -26,10 +33,21 @@
             <div class="filter-group">
                 <label class="filter-label">{% trans "Período" %}</label>
                 <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value, true)" class="filter-select">
-                    <option value="semana"     {% if periodo == 'semana'     %}selected{% endif %}>{% trans "Esta semana" %}</option>
-                    <option value="mes"        {% if periodo == 'mes'        %}selected{% endif %}>{% trans "Este mes" %}</option>
-                    <option value="semana_num" {% if periodo == 'semana_num' %}selected{% endif %}>{% trans "Por número de semana" %}</option>
-                    <option value="custom"     {% if periodo == 'custom'     %}selected{% endif %}>{% trans "Rango personalizado" %}</option>
+                    <option value="semana"      {% if periodo == 'semana'      %}selected{% endif %}>{% trans "Esta semana" %}</option>
+                    <option value="mes"         {% if periodo == 'mes'         %}selected{% endif %}>{% trans "Este mes" %}</option>
+                    <option value="semana_num"  {% if periodo == 'semana_num'  %}selected{% endif %}>{% trans "Por número de semana" %}</option>
+                    <option value="mes_elegido" {% if periodo == 'mes_elegido' %}selected{% endif %}>{% trans "Por mes" %}</option>
+                    <option value="custom"      {% if periodo == 'custom'      %}selected{% endif %}>{% trans "Rango personalizado" %}</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">{% trans "Sub área" %}</label>
+                <select name="sub_area" class="filter-select" onchange="this.form.submit()">
+                    <option value="" {% if not sub_area_sel %}selected{% endif %}>— {% trans "Todas" %} —</option>
+                    {% for sa in subareas_disponibles %}
+                    <option value="{{ sa }}" {% if sub_area_sel == sa %}selected{% endif %}>{{ sa }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
@@ -46,6 +64,20 @@
             <div id="wrap-semana-num" style="display:none;" class="filter-group">
                 <label class="filter-label">{% trans "Semana" %}</label>
                 <input type="number" name="semana_num" value="{{ semana_num|default:semana_actual }}" min="1" max="53" class="filter-input filter-input-number" onchange="this.form.submit()">
+            </div>
+
+            <div id="wrap-mes-elegido" style="display:none;" class="filter-group">
+                <label class="filter-label">{% trans "Mes" %}</label>
+                <select name="mes_num" class="filter-select" onchange="this.form.submit()">
+                    {% for num, nombre in meses %}
+                    <option value="{{ num }}" {% if mes_num|default:mes_actual|stringformat:"s" == num|stringformat:"s" %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="wrap-anio-mes-elegido" style="display:none;" class="filter-group">
+                <label class="filter-label">{% trans "Año" %}</label>
+                <input type="number" name="anio_mes" value="{{ anio_mes|default:anio_actual }}" min="2015" max="{{ anio_actual }}" class="filter-input filter-input-number" onchange="this.form.submit()">
             </div>
 
             <div id="wrap-desde" style="display:none;" class="filter-group">
@@ -94,7 +126,11 @@
 <!-- Gráfica de tendencia (semana / mes / año) -->
 <div class="card p-16" style="margin-bottom:16px;">
     <div class="flex-between">
-        <div style="font-size:13px; font-weight:600; color:var(--text);">
+        <div style="font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px; cursor:pointer;"
+             onclick="toggleTendencia()">
+            <svg id="chev-tendencia" class="chev-tendencia" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
             {% trans "Tendencia" %} — <span id="tendencia-ind-label"></span>
         </div>
         <div class="flex-row gap-8">
@@ -133,6 +169,16 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
             </div>
+            <div id="wrap-anio-mes" class="anio-selector" style="display:none;">
+                <button type="button" onclick="cambiarAnio('tendencia-anio-mes', -1)" aria-label="{% trans 'Año anterior' %}" class="anio-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <input type="number" id="tendencia-anio-mes" value="{% now "Y" %}" min="2000" max="2099"
+                    onchange="cargarTendencia()" class="anio-input">
+                <button type="button" onclick="cambiarAnio('tendencia-anio-mes', 1)" aria-label="{% trans 'Año siguiente' %}" class="anio-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
             <div class="btn-icon-group">
                 <button id="btn-gran-semana" onclick="cambiarGranularidadTendencia('semana')" class="btn-icon active">{% trans "Semana" %}</button>
                 <button id="btn-gran-mes" onclick="cambiarGranularidadTendencia('mes')" class="btn-icon inactive">{% trans "Mes" %}</button>
@@ -142,10 +188,12 @@
         </div>
     </div>
 
-    <div class="mb-14" style="font-size:11px; color:var(--text-3);" id="tendencia-periodo-label"></div>
+    <div id="tendencia-content" class="area-content">
+        <div class="mb-14" style="font-size:11px; color:var(--text-3);" id="tendencia-periodo-label"></div>
 
-    <div class="mt-14" style="height:280px;">
-        <canvas id="chartTendencia" style="height:280px;"></canvas>
+        <div class="mt-14" style="height:280px;">
+            <canvas id="chartTendencia" style="height:280px;"></canvas>
+        </div>
     </div>
 </div>
 
@@ -172,7 +220,7 @@
                     {% trans "Área" %}
                 </button>
             </div>
-            {% if indicador != 't_muerto_mant' %}
+            {% if indicador != 't_muerto_mant' and indicador != 'planeado' %}
             <button onclick="abrirModalTarget()" class="btn-outline">
                 <svg width="12" height="12" viewBox="0 0 16 16"><line x1="1" y1="8" x2="15" y2="8" stroke="#F59E0B" stroke-width="2" stroke-dasharray="3 2"/></svg>
                 {% if target_valor is not None %}Target: {{ target_valor }}{% if indicador == 'downtime' or indicador == 'disponibilidad' %}%{% elif indicador == 'mttr' %} min{% else %} h{% endif %}{% else %}{% trans "Agregar target" %}{% endif %}
@@ -187,7 +235,7 @@
     </div>
 </div>
 
-{% if indicador != 'disponibilidad' and indicador != 't_muerto_mant' %}
+{% if indicador != 'disponibilidad' and indicador != 't_muerto_mant' and indicador != 'planeado' %}
     <!-- Tabla -->
     <div class="card p-0">
         <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border);">
@@ -198,8 +246,11 @@
                     {{ indicador_label }}
                 </span>
             <div class="flex-row gap-8">
+
                 <button id="btn-filtrar" onclick="toggleSinRegistros()" class="btn-outline">{% trans "Ocultar sin registro" %}</button>
                 <button onclick="exportarExcel()" class="btn-outline">⬇ {% trans "Excel" %}</button>
+                <button id="btn-imagen" onclick="descargarTablaImagen()" class="btn-outline">⬇ {% trans "Imagen" %}</button>
+
                 <div class="col-panel-wrap">
                    
                     <button onclick="toggleColPanel()" class="btn-outline">⚙ {% trans "Columnas" %}</button>
@@ -227,11 +278,18 @@
             </div>
         </div>
 
+        <datalist id="datalist-responsables">
+            {% for u in usuarios %}
+            <option value="{{ u.get_full_name }}"></option>
+            {% endfor %}
+        </datalist>
+        <div id="resp-autocomplete" class="resp-autocomplete" role="listbox" style="display:none;"></div>
+
         <div class="table-wrapper">
             <table style="border-collapse:collapse; font-size:11px; white-space:nowrap; width:max-content; min-width:100%;">
                 <thead>
                     <tr style="background:var(--surface);">
-                        <th rowspan="2" style="padding:7px 12px; text-align:left; border-bottom:1px solid var(--border); border-right:2px solid var(--border); position:sticky; left:0; z-index:4; background:var(--surface); min-width:88px;">{% trans "Fecha" %}</th>
+                        <th rowspan="2" class="cell-sticky"  style="padding:7px 12px; text-align:left; border-bottom:1px solid var(--border); border-right:2px solid var(--border); position:sticky; left:0; z-index:4; background:var(--surface); min-width:88px;">{% trans "Fecha" %}</th>
                         <th rowspan="2" class="col-problema" style="padding:7px 12px; min-width:190px; text-align:left; border-bottom:1px solid var(--border);">{% trans "Problema" %}</th>
                         <th rowspan="2" class="col-equipo"   style="padding:7px 12px; min-width:90px;  text-align:left; border-bottom:1px solid var(--border);">{% trans "Equipo" %}</th>
                         <th rowspan="2" class="col-planeado" style="padding:7px 12px; min-width:85px;  text-align:center; border-bottom:1px solid var(--border); display:none;">{% trans "Planeado" %}</th>
@@ -242,24 +300,18 @@
                         <th rowspan="2" class="col-dt th-ind"  style="padding:7px 12px; min-width:95px; text-align:center; border-bottom:1px solid var(--border);">{% trans "Downtime %" %}</th>
                         <th rowspan="2" class="col-mttr th-ind" style="padding:7px 12px; min-width:95px; text-align:center; border-bottom:1px solid var(--border);">{% trans "MTTR (min)" %}</th>
                         <th rowspan="2" class="col-mtbf th-ind" style="padding:7px 12px; min-width:95px; text-align:center; border-bottom:1px solid var(--border);">{% trans "MTBF (h)" %}</th>
-                        <th colspan="4" class="col-cont th-cont sep-cont" style="border-bottom:1px solid var(--border); text-align:center;">{% trans "Contención" %}</th>
-                        <th colspan="4" class="col-corr th-corr sep-corr" style="border-bottom:1px solid var(--border); text-align:center;">{% trans "Correctiva" %}</th>
-                        <th colspan="4" class="col-prev th-prev sep-prev" style="border-bottom:1px solid var(--border); text-align:center;">{% trans "Preventiva" %}</th>
+                        <th colspan="2" class="col-cont th-cont sep-cont" style="border-bottom:1px solid var(--border); text-align:center;">{% trans "Contención" %}</th>
+                        <th colspan="2" class="col-corr th-corr sep-corr" style="border-bottom:1px solid var(--border); text-align:center;">{% trans "Correctiva" %}</th>
+                        <th colspan="2" class="col-prev th-prev sep-prev" style="border-bottom:1px solid var(--border); text-align:center;">{% trans "Preventiva" %}</th>
                         <th rowspan="2" class="col-resp" style="padding:7px 12px; min-width:160px; text-align:left; border-bottom:1px solid var(--border);">{% trans "Responsable" %}</th>
                     </tr>
                     <tr style="background:var(--surface);">
                         <th class="col-cont bg-cont sep-cont" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:150px;">{% trans "Acción" %}</th>
-                        <th class="col-cont bg-cont" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. inicio" %}</th>
-                        <th class="col-cont bg-cont" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. cierre" %}</th>
-                        <th class="col-cont bg-cont" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:85px;">{% trans "Estatus" %}</th>
+                        <th class="col-cont bg-cont" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:208px;">{% trans "Fechas" %}</th>
                         <th class="col-corr bg-corr sep-corr" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:150px;">{% trans "Acción" %}</th>
-                        <th class="col-corr bg-corr" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. inicio" %}</th>
-                        <th class="col-corr bg-corr" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. cierre" %}</th>
-                        <th class="col-corr bg-corr" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:85px;">{% trans "Estatus" %}</th>
+                        <th class="col-corr bg-corr" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:208px;">{% trans "Fechas" %}</th>
                         <th class="col-prev bg-prev sep-prev" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:150px;">{% trans "Acción" %}</th>
-                        <th class="col-prev bg-prev" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. inicio" %}</th>
-                        <th class="col-prev bg-prev" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:82px;">{% trans "F. cierre" %}</th>
-                        <th class="col-prev bg-prev" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:85px;">{% trans "Estatus" %}</th>
+                        <th class="col-prev bg-prev" style="padding:6px 10px; text-align:center; border-bottom:1px solid var(--border); min-width:208px;">{% trans "Fechas" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -298,57 +350,186 @@
                             
                             {% if d.tiene_registros %}
                             <div>
-                                <textarea class="accion-input cont-accion" rows="2" maxlength="100" placeholder="{% trans 'Describir acción…' %}">{% if d.accion %}{{ d.accion.cont_accion }}{% endif %}</textarea>
-                                <div class="char-counter">0/100</div>
+                                <textarea class="accion-input cont-accion" rows="2" maxlength="200" placeholder="{% trans 'Describir acción…' %}">{% if d.accion %}{{ d.accion.cont_accion }}{% endif %}</textarea>
+                                <div class="char-counter">0/200</div>
                             </div>
                             {% else %}—{% endif %}
                         </td>
-                        <td class="col-cont bg-cont" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc cont-fi">{% else %}—{% endif %}</td>
-                        <td class="col-cont bg-cont" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc cont-ff">{% else %}—{% endif %}</td>
-                        <td class="col-cont bg-cont" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}{% if d.accion.cont_estatus == 'e' %}<button class="btn-est est-e cont-est" onclick="ciclarEst(this)">{% trans "En proceso" %}</button>{% elif d.accion.cont_estatus == 'c' %}<button class="btn-est est-c cont-est" onclick="ciclarEst(this)">{% trans "Cerrada" %}</button>{% else %}<button class="btn-est est-p cont-est" onclick="ciclarEst(this)">{% trans "Pendiente" %}</button>{% endif %}{% else %}—{% endif %}</td>
+                        <td class="col-cont bg-cont" style="padding:8px 10px; text-align:center;">
+                            {% if d.tiene_registros %}
+                            <input type="hidden" class="cont-fi">
+                            <input type="hidden" class="cont-ff">
+                            <input type="hidden" class="cont-status" value="{% if d.accion %}{{ d.accion.cont_estatus }}{% else %}p{% endif %}">
+                            <div class="rango-fechas rango-cont rango-vacia" role="button" tabindex="0"
+                                 aria-label="{% trans 'Editar fechas de contención' %}"
+                                 onclick="abrirModalFechas(this,'cont')"
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalFechas(this,'cont');}">
+                                <button type="button" class="rango-dot-btn" aria-haspopup="menu" title="Pendiente" aria-label="{% trans 'Estatus' %}: Pendiente"
+                                        onclick="event.stopPropagation(); abrirMenuEstatus(event, this, 'cont');">
+                                    <span class="rango-dot rango-dot-n"></span>
+                                </button>
+                                <span class="rango-placeholder">{% trans "Fijar fechas" %}</span>
+                            </div>
+                            {% else %}—{% endif %}
+                        </td>
+                    
                         <!-- Correctiva -->
                         <td class="col-corr bg-corr sep-corr" style="padding:8px 10px;">
                             {% if d.tiene_registros %}
                             <div>
-                                <textarea class="accion-input corr-accion" rows="2" maxlength="100" placeholder="{% trans 'Describir acción…' %}">{% if d.accion %}{{ d.accion.corr_accion }}{% endif %}</textarea>
-                                <div class="char-counter">0/100</div>
+                                <textarea class="accion-input corr-accion" rows="2" maxlength="200" placeholder="{% trans 'Describir acción…' %}">{% if d.accion %}{{ d.accion.corr_accion }}{% endif %}</textarea>
+                                <div class="char-counter">0/200</div>
                             </div>
                             {% else %}—{% endif %}
                         </td>
-                        <td class="col-corr bg-corr" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc corr-fi">{% else %}—{% endif %}</td>
-                        <td class="col-corr bg-corr" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc corr-ff">{% else %}—{% endif %}</td>
-                        <td class="col-corr bg-corr" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}{% if d.accion.corr_estatus == 'e' %}<button class="btn-est est-e corr-est" onclick="ciclarEst(this)">{% trans "En proceso" %}</button>{% elif d.accion.corr_estatus == 'c' %}<button class="btn-est est-c corr-est" onclick="ciclarEst(this)">{% trans "Cerrada" %}</button>{% else %}<button class="btn-est est-p corr-est" onclick="ciclarEst(this)">{% trans "Pendiente" %}</button>{% endif %}{% else %}—{% endif %}</td>
+                        <td class="col-corr bg-corr" style="padding:8px 10px; text-align:center;">
+                            {% if d.tiene_registros %}
+                            <input type="hidden" class="corr-fi">
+                            <input type="hidden" class="corr-ff">
+                            <input type="hidden" class="corr-status" value="{% if d.accion %}{{ d.accion.corr_estatus }}{% else %}p{% endif %}">
+                            <div class="rango-fechas rango-corr rango-vacia" role="button" tabindex="0"
+                                 aria-label="{% trans 'Editar fechas de la acción correctiva' %}"
+                                 onclick="abrirModalFechas(this,'corr')"
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalFechas(this,'corr');}">
+                                <button type="button" class="rango-dot-btn" aria-haspopup="menu" title="Pendiente" aria-label="{% trans 'Estatus' %}: Pendiente"
+                                        onclick="event.stopPropagation(); abrirMenuEstatus(event, this, 'corr');">
+                                    <span class="rango-dot rango-dot-n"></span>
+                                </button>
+                                <span class="rango-placeholder">{% trans "Fijar fechas" %}</span>
+                            </div>
+                            {% else %}—{% endif %}
+                        </td>
+                        
                         <!-- Preventiva -->
                         <td class="col-prev bg-prev sep-prev" style="padding:8px 10px;">
                             {% if d.tiene_registros %}
                             <div>
-                                <textarea class="accion-input prev-accion" rows="2" maxlength="100" placeholder="{% trans 'Describir acción…' %}">{% if d.accion %}{{ d.accion.prev_accion }}{% endif %}</textarea>
-                                <div class="char-counter">0/100</div>
+                                <textarea class="accion-input prev-accion" rows="2" maxlength="200" placeholder="{% trans 'Describir acción…' %}">{% if d.accion %}{{ d.accion.prev_accion }}{% endif %}</textarea>
+                                <div class="char-counter">0/200</div>
                             </div>
                             {% else %}—{% endif %}
                         </td>
-                        <td class="col-prev bg-prev" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc prev-fi">{% else %}—{% endif %}</td>
-                        <td class="col-prev bg-prev" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}<input type="date" class="fecha-acc prev-ff">{% else %}—{% endif %}</td>
-                        <td class="col-prev bg-prev" style="padding:8px 10px; text-align:center;">{% if d.tiene_registros %}{% if d.accion.prev_estatus == 'e' %}<button class="btn-est est-e prev-est" onclick="ciclarEst(this)">{% trans "En proceso" %}</button>{% elif d.accion.prev_estatus == 'c' %}<button class="btn-est est-c prev-est" onclick="ciclarEst(this)">{% trans "Cerrada" %}</button>{% else %}<button class="btn-est est-p prev-est" onclick="ciclarEst(this)">{% trans "Pendiente" %}</button>{% endif %}{% else %}—{% endif %}</td>
+                        <td class="col-prev bg-prev" style="padding:8px 10px; text-align:center;">
+                            {% if d.tiene_registros %}
+                            <input type="hidden" class="prev-fi">
+                            <input type="hidden" class="prev-ff">
+                            <input type="hidden" class="prev-status" value="{% if d.accion %}{{ d.accion.prev_estatus }}{% else %}p{% endif %}">
+                            <div class="rango-fechas rango-prev rango-vacia" role="button" tabindex="0"
+                                 aria-label="{% trans 'Editar fechas de la acción preventiva' %}"
+                                 onclick="abrirModalFechas(this,'prev')"
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalFechas(this,'prev');}">
+                                <button type="button" class="rango-dot-btn" aria-haspopup="menu" title="Pendiente" aria-label="{% trans 'Estatus' %}: Pendiente"
+                                        onclick="event.stopPropagation(); abrirMenuEstatus(event, this, 'prev');">
+                                    <span class="rango-dot rango-dot-n"></span>
+                                </button>
+                                <span class="rango-placeholder">{% trans "Fijar fechas" %}</span>
+                            </div>
+                            {% else %}—{% endif %}
+                        </td>
+                        
                         <td class="col-resp" style="color:var(--text-2); ">
                             {% if d.tiene_registros %}
-                            <select class="fecha-acc resp-input" style="width:100%;">
-                                <option value="">— {% trans "Responsable" %} —</option>
-                                {% for u in usuarios %}
-                                <option value="{{ u.get_full_name }}"
-                                    {% if d.accion.responsable == u.get_full_name %}selected{% endif %}>
-                                    {{ u.get_full_name }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            <input type="text" class="fecha-acc resp-input" autocomplete="off"
+                                   placeholder="— {% trans 'Responsable' %} —"
+                                   value="{% if d.accion %}{{ d.accion.responsable }}{% endif %}">
                             {% else %}—{% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+   
+        </div>
+
+        <div class="leyenda-estatus" id="leyenda-estatus">
+            <div class="leyenda-estatus-header" role="button" tabindex="0"
+                 onclick="toggleLeyendaEstatus()"
+                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleLeyendaEstatus();}">
+                <span>{% trans "Leyenda" %}</span>
+                <span class="leyenda-estatus-toggle" id="leyenda-estatus-toggle">▾</span>
+            </div>
+            <div class="leyenda-estatus-body" id="leyenda-estatus-body">
+                <span class="leyenda-item"><span class="rango-dot rango-dot-p"></span>{% trans "Pendiente" %}</span>
+                <span class="leyenda-item"><span class="rango-dot rango-dot-e"></span>{% trans "En proceso" %}</span>
+                <span class="leyenda-item"><span class="rango-dot rango-dot-c"></span>{% trans "Cerrada" %}</span>
+                <span class="leyenda-item"><span class="rango-dot rango-dot-n"></span>{% trans "No aplica" %}</span>
+            </div>
+        </div>
+    
+    </div>
+
+    <!-- Menú de estatus manual (contención / correctiva / preventiva) -->
+    <div id="menu-estatus" class="menu-estatus" role="menu" style="display:none;">
+        <button type="button" class="menu-estatus-item" role="menuitemradio" data-val="p" onclick="seleccionarEstatusMenu('p')">
+            <span class="rango-dot rango-dot-p"></span>
+            <span class="menu-estatus-label">{% trans "Pendiente" %}</span>
+            <span class="menu-estatus-actual">{% trans "actual" %}</span>
+        </button>
+        <button type="button" class="menu-estatus-item" role="menuitemradio" data-val="e" onclick="seleccionarEstatusMenu('e')">
+            <span class="rango-dot rango-dot-e"></span>
+            <span class="menu-estatus-label">{% trans "En proceso" %}</span>
+            <span class="menu-estatus-actual">{% trans "actual" %}</span>
+        </button>
+        <button type="button" class="menu-estatus-item" role="menuitemradio" data-val="c" onclick="seleccionarEstatusMenu('c')">
+            <span class="rango-dot rango-dot-c"></span>
+            <span class="menu-estatus-label">{% trans "Cerrada" %}</span>
+            <span class="menu-estatus-actual">{% trans "actual" %}</span>
+        </button>
+        <button type="button" class="menu-estatus-item" role="menuitemradio" data-val="n" onclick="seleccionarEstatusMenu('n')">
+            <span class="rango-dot rango-dot-n"></span>
+            <span class="menu-estatus-label">{% trans "No aplica" %}</span>
+            <span class="menu-estatus-actual">{% trans "actual" %}</span>
+        </button>
+        <div class="menu-estatus-footer">
+            <button type="button" class="menu-estatus-auto" onclick="seleccionarEstatusMenu(null)">{% trans "Usar fechas automáticas" %}</button>
+            <div class="menu-estatus-nota">{% trans "Un estatus fijado a mano no se sobrescribe al guardar fechas." %}</div>
         </div>
     </div>
+
+    <!-- Modal edición de fechas (contención / correctiva / preventiva) -->
+    <div id="modal-fechas" class="modal-fechas-overlay">
+        <div class="modal-fechas-panel fase-cont" role="dialog" aria-modal="true" aria-labelledby="modal-fechas-titulo">
+            <div class="modal-fechas-header">
+                <div>
+                    <div class="modal-fechas-titulo" id="modal-fechas-titulo">{% trans "Fechas de" %} <span id="modal-fechas-fase-label"></span></div>
+                    <div class="modal-fechas-subtitulo" id="modal-fechas-subtitulo"></div>
+                </div>
+                <button type="button" class="modal-fechas-cerrar" onclick="cerrarModalFechas()" aria-label="{% trans 'Cerrar' %}">×</button>
+            </div>
+            <div class="modal-fechas-body">
+                <div class="modal-fechas-campos">
+                    <div class="modal-fechas-campo">
+                        <label for="modal-fecha-inicio">{% trans "F. inicio" %}</label>
+                        <input type="date" id="modal-fecha-inicio" class="modal-fechas-input">
+                        <div class="modal-fechas-error" id="modal-fechas-error-inicio"></div>
+                    </div>
+                    <div class="modal-fechas-campo">
+                        <label for="modal-fecha-cierre">{% trans "F. cierre" %}</label>
+                        <input type="date" id="modal-fecha-cierre" class="modal-fechas-input">
+                        <div class="modal-fechas-error" id="modal-fechas-error-cierre"></div>
+                    </div>
+                </div>
+                <div class="modal-fechas-atajos">
+                    <button type="button" class="chip-atajo chip-atajo-color" onclick="modalAtajoInicioHoy()">{% trans "Inicio hoy" %}</button>
+                    <button type="button" class="chip-atajo chip-atajo-color" onclick="modalAtajoCierreHoy()">{% trans "Cerrar hoy" %}</button>
+                    <button type="button" class="chip-atajo" onclick="modalAtajoMismoDia()">{% trans "Mismo día" %}</button>
+                    <button type="button" class="chip-atajo" onclick="modalAtajoSinCierre()">{% trans "Sin cierre" %}</button>
+                </div>
+                <div class="modal-fechas-resumen">
+                    <span class="modal-fechas-resumen-label">{% trans "Duración" %}</span>
+                    <span class="modal-fechas-resumen-valor" id="modal-fechas-duracion">—</span>
+                </div>
+            </div>
+            <div class="modal-fechas-footer">
+                <span class="modal-fechas-hint">Esc {% trans "cancela" %} · ⌘⏎ {% trans "guarda" %}</span>
+                <div class="modal-fechas-acciones">
+                    <button type="button" class="btn-modal-cancelar" onclick="cerrarModalFechas()">{% trans "Cancelar" %}</button>
+                    <button type="button" class="btn-modal-guardar" id="modal-fechas-guardar" onclick="guardarModalFechas()">{% trans "Guardar" %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% else %}
     <div class="card" style="text-align:center; padding:40px; color:var(--text-3);">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
@@ -368,7 +549,7 @@
 {% endif %}
 
 
-{% if indicador != 't_muerto_mant' %}
+{% if indicador != 't_muerto_mant' and indicador != 'planeado' %}
 <!-- Modal target -->
 <div id="modal-target" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
     <div style="background:var(--white); border-radius:12px; padding:24px; width:320px;">
@@ -389,7 +570,7 @@
             <button onclick="cerrarModalTarget()" style="padding:6px 14px; border:1px solid var(--border); border-radius:7px; font-size:12px; background:var(--white); color:var(--text); cursor:pointer; font-family:inherit;">
                 {% trans "Cancelar" %}
             </button>
-            <button onclick="guardarTarget()" style="padding:6px 14px; border:none; border-radius:7px; font-size:12px; background:#4F46E5; color:#fff; cursor:pointer; font-family:inherit; font-weight:600;">
+           <button onclick="guardarTarget()" style="padding:6px 14px; border:none; border-radius:7px; font-size:12px; background:var(--indigo); color:#fff; cursor:pointer; font-family:inherit; font-weight:600;">
                 {% trans "Guardar" %}
             </button>
         </div>
@@ -441,8 +622,13 @@
     window.AREA_NOMBRE = "{{ area_sel.nombre }}";
     window.SEMANA_ACTUAL = {{ semana_actual|default:"null" }};
     window.TARGET_VALOR = {% if target_valor is not None %}{{ target_valor|stringformat:"g" }}{% else %}null{% endif %};
+
+    // Textos traducidos usados dinámicamente desde indicadores_produccion.js
+    window.TXT_MOSTRAR_SIN_REGISTRO = "{% trans 'Mostrar sin registro' %}";
+    window.TXT_OCULTAR_SIN_REGISTRO = "{% trans 'Ocultar sin registro' %}";
+    window.TXT_GENERANDO_IMAGEN = "{% trans 'Generando…' %}";
 </script>
 
 <script src="{% static 'paros_app/js/indicadores_produccion.js' %}"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/html2canvas-pro@2.4.0/dist/html2canvas-pro.min.js"></script>
 {% endblock %}
