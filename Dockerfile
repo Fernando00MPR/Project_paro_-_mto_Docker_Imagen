@@ -4,6 +4,13 @@ FROM python:3.12-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# ── Diagnóstico temporal de red (quitar una vez identificada la causa) ─────────
+RUN echo "== resolv.conf ==" && cat /etc/resolv.conf; \
+    echo "== DNS lookup (getent) ==" && getent hosts deb.debian.org; \
+    echo "== DNS lookup (python) ==" && python3 -c "import socket; print(socket.gethostbyname('deb.debian.org'))"; \
+    echo "== HTTP por IPv4 ==" && python3 -c "import urllib.request,socket; socket.setdefaulttimeout(10); print(urllib.request.urlopen('http://deb.debian.org').status)"; \
+    echo "== FIN DIAGNOSTICO =="
+    
 # ── Dependencias del sistema ───────────────────────────────────────────────────
 RUN apt-get update \
     -o Acquire::ForceIPv4=true \
