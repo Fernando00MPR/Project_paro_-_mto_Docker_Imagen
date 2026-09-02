@@ -5,7 +5,12 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # ── Dependencias del sistema ───────────────────────────────────────────────────
-RUN apt-get update -o Acquire::Retries=3 && apt-get install -y \
+RUN apt-get update \
+    -o Acquire::ForceIPv4=true \
+    -o Acquire::Retries=3 \
+    -o Acquire::http::Timeout=30 \
+    -o Acquire::https::Timeout=30 \
+    && apt-get install -y \
     gettext \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
