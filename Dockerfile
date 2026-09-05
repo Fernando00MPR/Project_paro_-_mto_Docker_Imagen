@@ -5,12 +5,27 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # ── Diagnóstico temporal de red (quitar una vez identificada la causa) ─────────
-RUN echo "== resolv.conf ==" && cat /etc/resolv.conf; \
-    echo "== DNS lookup (getent) ==" && getent hosts deb.debian.org; \
-    echo "== DNS lookup (python) ==" && python3 -c "import socket; print(socket.gethostbyname('deb.debian.org'))"; \
-    echo "== HTTP por IPv4 ==" && python3 -c "import urllib.request,socket; socket.setdefaulttimeout(10); print(urllib.request.urlopen('http://deb.debian.org').status)"; \
-    echo "== FIN DIAGNOSTICO =="
-    
+RUN printf '%s\n' \
+    "import socket, urllib.request, time" \
+    "orig = socket.getaddrinfo" \
+    "def test(family, label):" \
+    "    def filtered(*a, **k):" \
+    "        r = [x for x in orig(*a, **k) if x[0] == family]" \
+    "        if not r: raise Exception('sin direcciones de esta familia')" \
+    "        return r" \
+    "    socket.getaddrinfo = filtered" \
+    "    t0 = time.time()" \
+    "    try:" \
+    "        resp = urllib.request.urlopen('http://deb.debian.org', timeout=8)" \
+    "        print(f'{label}: OK status={resp.status} en {time.time()-t0:.1f}s')" \
+    "    except Exception as e:" \
+    "        print(f'{label}: FALLO -> {e} (tras {time.time()-t0:.1f}s)')" \
+    "    finally:" \
+    "        socket.getaddrinfo = orig" \
+    "test(socket.AF_INET, 'IPv4')" \
+    "test(socket.AF_INET6, 'IPv6')" \
+    > /tmp/diag.py && python3 /tmp/diag.py && rm /tmp/diag.py
+
 # ── Dependencias del sistema ───────────────────────────────────────────────────
 RUN apt-get update \
     -o Acquire::ForceIPv4=true \
