@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.urls import reverse
+from django.db.models import Q
 from mto_app.models import Area
 from ..models import Refaccion, SeguimientoRefaccion
 from datetime import date
@@ -58,10 +59,13 @@ def lista_seguimientos_refaccion(request):
         seguimientos = seguimientos.filter(numero_po__icontains=filtro_po)
     if filtro_sr:
         seguimientos = seguimientos.filter(numero_sr__icontains=filtro_sr)
+    # Sin Fecha PR (aún no capturada) siempre se muestra: si no, un seguimiento
+    # recién creado sin esa fecha desaparece de la lista en cuanto el rango por
+    # defecto (1 ene - hoy) entra en juego, aunque sí exista en la base de datos.
     if fecha_pr_desde:
-        seguimientos = seguimientos.filter(fecha_pr__gte=fecha_pr_desde)
+        seguimientos = seguimientos.filter(Q(fecha_pr__gte=fecha_pr_desde) | Q(fecha_pr__isnull=True))
     if fecha_pr_hasta:
-        seguimientos = seguimientos.filter(fecha_pr__lte=fecha_pr_hasta)
+        seguimientos = seguimientos.filter(Q(fecha_pr__lte=fecha_pr_hasta) | Q(fecha_pr__isnull=True))
 
     seguimientos_list = list(seguimientos)
 
@@ -212,9 +216,9 @@ def exportar_seguimientos_refaccion(request):
     if filtro_sr:
         seguimientos = seguimientos.filter(numero_sr__icontains=filtro_sr)
     if fecha_pr_desde:
-        seguimientos = seguimientos.filter(fecha_pr__gte=fecha_pr_desde)
+        seguimientos = seguimientos.filter(Q(fecha_pr__gte=fecha_pr_desde) | Q(fecha_pr__isnull=True))
     if fecha_pr_hasta:
-        seguimientos = seguimientos.filter(fecha_pr__lte=fecha_pr_hasta)
+        seguimientos = seguimientos.filter(Q(fecha_pr__lte=fecha_pr_hasta) | Q(fecha_pr__isnull=True))
 
     seguimientos_lista = list(seguimientos)
     if filtro_estatus:

@@ -562,7 +562,19 @@
             background: var(--white) !important;
         }
         .filter-actions { display: flex; gap: 8px; align-items: flex-end; }
-
+        /* Flechas nativas de <input type="number"> en todo el sitio: en Firefox,
+           combinadas con background/color-scheme personalizados, se dibujan como
+           una cajita suelta y desalineada del input (bug de renderizado nativo).
+           Se ocultan en todos los navegadores, igual que ya se reemplazó la
+           flecha nativa de los <select> por un chevron propio. */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
         /* Stat bar */
         .stat-bar { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
         .stat-item {
@@ -1758,6 +1770,12 @@ function abrirModalConAnimacion(modalId, event) {
     if (box) box.removeAttribute('data-closing');
     modal.style.display = 'flex';
     if (box) {
+        // Reinicia el override inline que deja el listener de animationend de
+        // abajo (tanto en la caja como en cada .modal-row) para que la
+        // animación de apertura y la cascada vuelvan a reproducirse cada vez
+        // que se abre el modal.
+        box.style.animation = '';
+        box.querySelectorAll('.modal-row').forEach(function (fila) { fila.style.animation = ''; });
         box.offsetHeight; // fuerza reflow: poder medir el modal ya visible antes de pintar
         if (event && event.currentTarget) {
             const r  = event.currentTarget.getBoundingClientRect();
@@ -1784,6 +1802,30 @@ function cerrarModalConAnimacion(modalId, alCerrar) {
         if (typeof alCerrar === 'function') alCerrar();
     }, 120);
 }
+/* .modal-row y .modal-box/.mf-box (modal-box-in) usan "animation: ... both",
+   así que el transform del último fotograma (translateY(0) / scale(1)) se
+   queda aplicado para siempre — y cualquier transform, aunque sea "cero" o
+   "uno", convierte al elemento en un nuevo contexto de apilamiento Y, si es
+   ancestro de un position:fixed, en su containing block. Eso rompe dos cosas
+   dentro de un modal:
+     - los z-index de dropdowns/popovers que viven DENTRO de un .modal-row
+       cuando otro .modal-row hermano viene después en el DOM (el hermano
+       posterior siempre pinta encima, sin importar el z-index del dropdown);
+     - CUALQUIER position:fixed dentro de la caja del modal (p. ej. el
+       calendario .dp-popover de menu_app/_date_picker.html), que deja de
+       posicionarse contra el viewport y pasa a posicionarse contra la caja
+       transformada — mientras el modal esté abierto, no solo durante la
+       animación.
+   Al terminar cada animación se le quita la animación por completo (no solo
+   el transform) para que el elemento vuelva a "transform: none" y deje de
+   crear containing block/contexto de apilamiento; abrirModalConAnimacion()
+   limpia este override al reabrir el modal para que la animación y la
+   cascada se reproduzcan de nuevo. */
+document.addEventListener('animationend', function (e) {
+    if (e.animationName === 'modal-row-in' || e.animationName === 'modal-box-in') {
+        e.target.style.animation = 'none';
+    }
+}, true);
 </script>
 </body>
 </html>

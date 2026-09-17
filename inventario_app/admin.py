@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CategoriaRefaccion, Refaccion, ImagenRefaccion
+from .models import CategoriaRefaccion, Refaccion, ImagenRefaccion, SeguimientoRefaccion
 from .models import TipoServicio, SeguimientoServicio
 
 
@@ -42,6 +42,23 @@ class RefaccionAdmin(admin.ModelAdmin):
     bajo_minimo_display.short_description = 'Bajo mínimo'
 
 
+@admin.register(SeguimientoRefaccion)
+class SeguimientoRefaccionAdmin(admin.ModelAdmin):
+    list_display = ['numero_pr', 'refaccion', 'cantidad', 'area_display', 'estatus_display']
+    list_filter = ['refaccion__area']
+    search_fields = ['numero_pr', 'numero_po', 'numero_sr', 'refaccion__no_item', 'refaccion__nombre']
+    ordering = ['-creado_en']
+    readonly_fields = ['creado_en', 'modificado_en']
+
+    def area_display(self, obj):
+        return obj.area
+    area_display.short_description = 'Área'
+
+    def estatus_display(self, obj):
+        return obj.estatus
+    estatus_display.short_description = 'Estatus'
+
+    
 @admin.register(TipoServicio)
 class TipoServicioAdmin(admin.ModelAdmin):
     list_display = ['nombre']
