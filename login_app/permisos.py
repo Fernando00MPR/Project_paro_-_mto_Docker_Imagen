@@ -10,6 +10,19 @@ def get_perfil(user):
         return None
 
 
+def puede_mto(user, campo):
+    """True si el usuario tiene acceso a `campo` de AccesoMto (mto_app),
+    o si es superusuario / administrador (ambos con acceso total implícito).
+    `campo` es el nombre del BooleanField en AccesoMto (p.ej. 'ver_inventario')."""
+    if user.is_superuser:
+        return True
+    perfil = get_perfil(user)
+    if perfil and perfil.es_admin:
+        return True
+    acceso = getattr(user, 'acceso_mto', None)
+    return bool(acceso and getattr(acceso, campo, False))
+
+
 def permiso_requerido(campo):
     def decorator(view_func):
         @wraps(view_func)

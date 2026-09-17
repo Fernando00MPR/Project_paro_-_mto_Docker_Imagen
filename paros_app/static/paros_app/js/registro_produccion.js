@@ -1,7 +1,8 @@
 /* registro_produccion.js */
 
-const FECHA = document.getElementById('filtro-fecha');
+const FECHA = document.querySelector('#dp-filtro-fecha .dp-value');
 const TURNO = document.getElementById('filtro-turno');
+FECHA.addEventListener('change', aplicarFiltros);
 
 function aplicarFiltros() {
     window.location.href = `?fecha=${FECHA.value}&turno=${TURNO.value}`;
@@ -376,29 +377,63 @@ function eliminarRegistro(regId, trigger) {
 // ── Exportar registros ────────────────────────────────────────────────────────
 let modalExportarTrigger = null;
 
-function abrirModalExportar() {
+function abrirModalExportar(event) {
     modalExportarTrigger = document.activeElement;
     const modal = document.getElementById('modal-exportar');
+    const box   = modal.querySelector('.exp-modal');
+    modal.removeAttribute('data-closing');
+    box.removeAttribute('data-closing');
     modal.style.display = 'flex';
-    const control = document.getElementById('exp-rango-control');
+
+    // Origen de la animación: el centro del botón que abrió el modal. Fuerza
+    // reflow (offsetHeight) para poder medir el modal ya visible en el mismo
+    // tick, antes de que el navegador pinte el primer frame de la animación.
+    box.offsetHeight;
+    if (event && event.currentTarget) {
+        const r  = event.currentTarget.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const b  = box.getBoundingClientRect();
+        box.style.transformOrigin = `${((cx - b.left) / b.width) * 100}% ${((cy - b.top) / b.height) * 100}%`;
+    } else {
+        box.style.transformOrigin = '50% 50%';
+    }
+
+    const control = document.querySelector('#dpr-export .dpr-control');
     if (control) control.focus();
     if (typeof solicitarConteoExport === 'function') solicitarConteoExport();
 }
 
 function cerrarModalExportar() {
-    if (typeof cerrarCalendarioExport === 'function') cerrarCalendarioExport();
-    document.getElementById('modal-exportar').style.display = 'none';
+    // El popover del rango vive en <body> (lo mueve date_range_picker.js para
+    // escapar el overflow:hidden del modal), así que hay que cerrarlo a mano;
+    // si no, se queda flotando después de que el modal desaparece.
+    const popover = document.querySelector('#dpr-export .dpr-popover');
+    const control = document.querySelector('#dpr-export .dpr-control');
+    if (popover) popover.classList.remove('dpr-abierto');
+    if (control) control.classList.remove('dpr-abierto');
+
+    const modal = document.getElementById('modal-exportar');
+    const box   = modal.querySelector('.exp-modal');
+    modal.setAttribute('data-closing', '');
+    box.setAttribute('data-closing', '');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.removeAttribute('data-closing');
+        box.removeAttribute('data-closing');
+    }, 120);
+
     if (modalExportarTrigger) { modalExportarTrigger.focus(); modalExportarTrigger = null; }
 }
 
-
 document.getElementById('modal-exportar').addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-        if (typeof expCal !== 'undefined' && expCal.abierto) {
-            cerrarCalendarioExport();
-        } else {
-            cerrarModalExportar();
-        }
+        // Si el popover del calendario está abierto, el listener global de
+        // date_range_picker.js ya lo cierra con este mismo Escape (el evento
+        // sigue burbujeando hasta document); solo cerramos el modal si no.
+        const popoverAbierto = document.querySelector('#dpr-export .dpr-popover.dpr-abierto');
+        if (popoverAbierto) return;
+        cerrarModalExportar();
         return;
     }
     if (e.key !== 'Tab') return;

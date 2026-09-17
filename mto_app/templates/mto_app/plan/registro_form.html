@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-{% load static %}
+{% load static i18n %}
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
 <style>
     :root {
         --rf-text-strong:  #1a1830;
@@ -38,9 +39,24 @@
         --rf-danger-hover:  #7d2b3a;
         --rf-danger-bg:     #fdeef1;
         --rf-danger-border: #f7d9e0;
+
+        /* Este documento es una página aparte (se carga en un <iframe>, ver
+           registro_ejecucion() con @xframe_options_exempt) — no hereda las
+           variables de base_menu.html. El selector de fecha reutilizable
+           (menu_app/_date_picker.html) usa esos nombres globales, así que se
+           mapean aquí a la paleta propia de esta página. */
+        --indigo:    var(--rf-primary);
+        --indigo-dk: var(--rf-primary-hover);
+        --indigo-lt: var(--rf-primary-tint);
+        --border:    var(--rf-border-input);
+        --white:     var(--rf-card-bg);
+        --text:      var(--rf-text-strong);
+        --text-2:    var(--rf-text-mid);
+        --text-3:    var(--rf-text-soft);
+        --surface:   var(--rf-subtle-bg);
     }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Manrope',sans-serif; font-size:14px; background:#fff; color:var(--rf-text-mid); }
+    body { font-family:'Manrope',sans-serif; font-size:14px; background:#fff; color:var(--rf-text-mid); user-select:none; -webkit-user-select:none; }
     .rf-mono { font-family:'IBM Plex Mono',monospace; }
 
     /* ── Tarjeta "Registrar ejecución" ── */
@@ -81,6 +97,10 @@
         transition: border-color .15s;
     }
     .field input:focus, .field textarea:focus, .rf-select:focus { border-color: var(--rf-primary); }
+    /* El selector de fecha trae 42px por defecto (compartido con el resto del
+       sitio); se achica al mismo box-model que .field input (padding 10px
+       12px, sin altura fija, radio 9px). */
+    .field-fecha .dp-control { height: auto; padding: 10px 12px; border-radius: 9px; }
     .field textarea { resize:vertical; min-height:70px; }
 
     .field-fecha { max-width: 260px; }
@@ -96,8 +116,10 @@
     }
     .rf-select-chevron {
         position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-        pointer-events: none; font-size: 11px; color: var(--rf-text-faint);
+        pointer-events: none; color: var(--rf-text-strong);
+        display: flex; align-items: center; justify-content: center;
     }
+    .rf-select-chevron svg { display: block; }
     .rf-select-wrap.is-completada .rf-select { background: #f4fbf7; border-color: var(--rf-success-border); color: var(--rf-success); font-weight: 600; }
     .rf-select-wrap.is-completada .rf-select-chevron { color: var(--rf-success); }
     .rf-select-wrap.is-pendiente .rf-select { background: var(--rf-warn-bg); border-color: var(--rf-warn-border); color: var(--rf-warn); font-weight: 600; }
@@ -194,8 +216,8 @@
     <div class="rf-card">
         <div class="rf-card-head">
             <div>
-                <div class="rf-card-title">Registrar ejecuci&oacute;n</div>
-                <div class="rf-card-subtitle">Semana {{ semana }} &middot; {{ lunes|date:"d M" }} &ndash; {{ domingo|date:"d M Y" }}</div>
+                 <div class="rf-card-title">{% trans "Registrar ejecución" %}</div>
+                <div class="rf-card-subtitle">{% trans "Semana" %} {{ semana }} &middot; {{ lunes|date:"d M" }} &ndash; {{ domingo|date:"d M Y" }}</div>
             </div>
             {% if semana == hoy_semana and anio == hoy_anio %}
             <span class="rf-chip-semana-actual"><span class="rf-dot"></span>Semana actual</span>
@@ -207,40 +229,44 @@
             <div class="rf-card-body">
                 <div class="rf-row-2">
                     <div class="field">
-                        <label>Responsable</label>
+                        <label>{% trans "Responsable" %}</label>
                         <div class="rf-select-wrap">
                             <select name="responsable" id="responsable" class="rf-select">
-                                <option value="">-- Sin asignar --</option>
+                                <option value="">-- {% trans "Sin asignar" %} --</option>
                                 {% for r in responsables %}
                                 <option value="{{ r.pk }}" {% if registro and registro.responsable_id == r.pk %}selected{% endif %}>
                                     {{ r.numero_nomina }} — {{ r.nombre }} {{ r.apellidos }}
                                 </option>
                                 {% endfor %}
                             </select>
-                            <span class="rf-select-chevron">&#9662;</span>
+                            <span class="rf-select-chevron">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+                            </span>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Estado <span class="rf-req">*</span></label>
+                        <label>{% trans "Estado" %} <span class="rf-req">*</span></label>
                         <div class="rf-select-wrap" id="wrap-estado">
                             <select name="estado" id="select-estado" class="rf-select" required onchange="rfActualizarTintaEstado(this)">
-                                <option value="">-- Seleccionar estado --</option>
+                                <option value="">-- {% trans "Seleccionar estado" %} --</option>
                                 {% for val, label in estados %}
                                 <option value="{{ val }}" {% if registro and registro.estado == val %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
-                            <span class="rf-select-chevron">&#9662;</span>
+                            <span class="rf-select-chevron">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+                            </span>
                         </div>
                     </div>
                 </div>
 
                 <div class="field field-fecha">
-                    <label>Fecha de ejecuci&oacute;n</label>
-                    <input type="date" name="fecha_ejecucion" value="{{ registro.fecha_ejecucion|date:'Y-m-d'|default:'' }}">
+                    <label>{% trans "Fecha de ejecución" %}</label>
+                    {% include 'menu_app/_date_picker.html' with name='fecha_ejecucion' initial=registro.fecha_ejecucion|date:'Y-m-d' dp_id='dp-fecha-ejecucion' %}
                 </div>
 
                 <div class="field">
-                    <label>Observaciones <span class="rf-opcional">Opcional</span></label>
+                    <label>{% trans "Observaciones" %} <span class="rf-opcional">{% trans "Opcional" %}</span></label>
                     <textarea name="observaciones" placeholder="Describe lo realizado, materiales usados, anomal&iacute;as detectadas&hellip;">{{ registro.observaciones|default:'' }}</textarea>
                 </div>
             </div>
@@ -248,14 +274,14 @@
             <div class="rf-card-foot">
                 {% if registro %}
                 <button type="button" class="btn btn-danger"
-                        onclick="document.getElementById('modal-confirm').style.display='flex'">Eliminar</button>
+                        onclick="document.getElementById('modal-confirm').style.display='flex'">{% trans "Eliminar" %}</button>
                 {% else %}
                 <span></span>
                 {% endif %}
                 <div style="display:flex; gap:8px;">
                     <button type="button" class="btn btn-ghost"
-                            onclick="window.parent.postMessage('cerrar_form_registro', '*')">Cancelar</button>
-                    <button type="button" id="btn-guardar" onclick="guardarRegistro()" class="btn btn-primary">Guardar</button>
+                            onclick="window.parent.postMessage('cerrar_form_registro', '*')">{% trans "Cancelar" %}</button>
+                    <button type="button" id="btn-guardar" onclick="guardarRegistro()" class="btn btn-primary">{% trans "Guardar" %}</button>
                 </div>
             </div>
         </form>
@@ -302,12 +328,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3.5 2"/>
                     </svg>
                 </div>
-                <span class="rf-collapse-title">Seguimiento</span>
+                <span class="rf-collapse-title">{% trans "Seguimiento" %}</span>
                 <span id="badge-seguimientos" class="rf-chip-count" style="display:none;"></span>
             </div>
             <div class="rf-collapse-right">
                 <button type="button" class="rf-btn-seguir" onclick="event.stopPropagation(); abrirModalSeguimiento()">
-                    + Dar seguimiento
+                    + {% trans "Dar seguimiento" %}
                 </button>
                 <span class="rf-chevron-btn" aria-hidden="true">
                     <svg id="chevron-seg" class="rf-chevron" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,34 +364,34 @@
                         <span class="rf-seg-actions">
                             <button type="button" class="rf-seg-action-btn rf-seg-action-editar"
                                 onclick="editarSeguimiento({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')">Editar</button>
-                            <button type="button" class="rf-seg-action-btn rf-seg-action-eliminar" onclick="confirmarEliminarSeg({{ seg.id }})">Eliminar</button>
+                            <button type="button" class="rf-seg-action-btn rf-seg-action-eliminar" onclick="confirmarEliminarSeg({{ seg.id }})">{% trans "Eliminar" %}</button>
                         </span>
                     </div>
                     <div class="rf-seg-title">{{ seg.problema }}</div>
                     {% if seg.accion %}<div class="rf-seg-desc">{{ seg.accion }}</div>{% endif %}
                     {% if seg.notas %}
                     <div>
-                        <div class="rf-seg-notas-label">NOTAS</div>
+                        <div class="rf-seg-notas-label">{% trans "NOTAS" %}</div>
                         <div class="rf-seg-notas">{{ seg.notas }}</div>
                     </div>
                     {% endif %}
                     <div class="rf-seg-foot">
                         {% if seg.fecha_compromiso %}
                         <div data-compromiso="{{ seg.fecha_compromiso|date:'d/m/Y' }}">
-                            <div class="rf-seg-foot-label">COMPROMISO</div>
+                            <div class="rf-seg-foot-label">{% trans "COMPROMISO" %}</div>
                             <div class="rf-seg-foot-value">{{ seg.fecha_compromiso|date:"d/m/Y" }}<span class="rf-seg-nota"></span></div>
                         </div>
                         {% endif %}
                         {% if seg.responsable %}
                         <div>
-                            <div class="rf-seg-foot-label">RESPONSABLE</div>
+                            <div class="rf-seg-foot-label">{% trans "RESPONSABLE" %}</div>
                             <div class="rf-seg-foot-value">{{ seg.responsable }}</div>
                         </div>
                         {% endif %}
                     </div>
                 </div>
                 {% empty %}
-                <div id="empty-seg" class="rf-seg-empty">Sin seguimientos registrados.</div>
+                <div id="empty-seg" class="rf-seg-empty">{% trans "Sin seguimientos registrados." %}</div>
                 {% endfor %}
             </div>
         </div>
@@ -378,11 +404,11 @@
      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
             z-index:99999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:12px; padding:24px 28px; min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:15px; font-weight:600; color:var(--rf-text-strong); margin-bottom:8px;">Eliminar seguimiento</div>
-        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">Esta acción no se puede deshacer.</div>
+        <div style="font-size:15px; font-weight:600; color:var(--rf-text-strong); margin-bottom:8px;">{% trans "Eliminar seguimiento" %}</div>
+        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">{% trans "Esta acción no se puede deshacer." %}</div>
         <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button onclick="document.getElementById('modal-confirm-seg').style.display='none'" class="btn btn-ghost">Cancelar</button>
-            <button onclick="eliminarSeguimientoConfirmado()" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">Sí, eliminar</button>
+            <button onclick="document.getElementById('modal-confirm-seg').style.display='none'" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <button onclick="eliminarSeguimientoConfirmado()" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
         </div>
     </div>
 </div>
@@ -393,11 +419,11 @@
     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
             z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:12px; padding:24px 28px; min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:15px; font-weight:600; color:var(--rf-text-strong); margin-bottom:8px;">Eliminar registro</div>
-        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">Esta accion no se puede deshacer.</div>
+        <div style="font-size:15px; font-weight:600; color:var(--rf-text-strong); margin-bottom:8px;">{% trans "Eliminar registro" %}</div>
+        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">{% trans "Esta accion no se puede deshacer." %}</div>
         <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button onclick="document.getElementById('modal-confirm').style.display='none'" class="btn btn-ghost">Cancelar</button>
-            <button onclick="confirmarEliminar()" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">Si, eliminar</button>
+            <button onclick="document.getElementById('modal-confirm').style.display='none'" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <button onclick="confirmarEliminar()" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Si, eliminar" %}</button>
         </div>
     </div>
 </div>
@@ -408,7 +434,7 @@
             background:#065F46; color:#fff; padding:10px 20px; border-radius:8px;
             font-size:13px; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.2);
             align-items:center; gap:8px; z-index:9999; white-space:nowrap;">
-    ✓ Registro guardado
+    ✓ {% trans "Registro guardado" %}
 </div>
 
 <!-- Variables Django para JS -->
@@ -419,6 +445,7 @@ window.REGISTRO_CONFIG = {
     semana:  {{ semana }},
 };
 </script>
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 <script src="{% static 'mto_app/js/registro_form.js' %}"></script>
 
 {% if registro and registro.estado == 'completada' %}

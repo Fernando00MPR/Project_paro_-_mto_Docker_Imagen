@@ -1,6 +1,24 @@
 {% extends "menu_app/base_menu.html" %}
 {% load i18n %}
 {% block title %}{% if plan %}{% trans "Editar" %}{% else %}{% trans "Nueva" %}{% endif %} {% trans "tarea" %}{% endblock %}
+{% block extra_css %}
+<style>
+    /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+       Mismo tono que el texto (--text): hex literal porque no se puede meter
+       var() dentro del data URI. */
+    .form-field select {
+        padding-right: 34px;
+        appearance: none; -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 14px;
+    }
+    [data-theme="dark"] .form-field select {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    }
+</style>
+{% endblock %}
 {% block content %}
 <div class="card" style="max-width:680px;">
     <div class="card-header">

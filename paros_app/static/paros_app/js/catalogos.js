@@ -16,18 +16,12 @@ document.querySelectorAll('.area-content').forEach(el => {
     }
 });
 
-function confirmarLimpiar(areaId, areaNombre, tipo) {
+function confirmarLimpiar(event, areaId, areaNombre, tipo) {
     document.getElementById('modal-limpiar-msg').textContent = `${i18n.eliminarTodos} ${tipo} ${i18n.delArea} "${areaNombre}"?`;
     document.getElementById('form-limpiar').action = `/catalogos/${tipo}/limpiar/${areaId}/`;
-    document.getElementById('modal-limpiar').style.display = 'flex';
+    abrirModalConAnimacion('modal-limpiar', event);
 }
-
-const modalLimpiar = document.getElementById('modal-limpiar');
-if (modalLimpiar) {
-    modalLimpiar.addEventListener('click', function(e) {
-        if (e.target === this) this.style.display = 'none';
-    });
-}
+function cerrarModalLimpiar() { cerrarModalConAnimacion('modal-limpiar'); }
 
 function filtrarCatalogo(areaId, q, singular, plural) {
     q = q.toLowerCase().trim();
@@ -48,8 +42,18 @@ function filtrarFallas(areaId, q)       { filtrarCatalogo(areaId, q, 'falla', 'f
 function filtrarEquipos(areaId, q)      { filtrarCatalogo(areaId, q, 'equipo', 'equipos'); }
 function filtrarResponsables(areaId, q) { filtrarCatalogo(areaId, q, 'responsable', 'responsables'); }
 
-function abrirModalAgregar(areaId, areaNombre, url) {
-    document.getElementById('modal-agregar-titulo').textContent = `${i18n.agregar} — ` + areaNombre;
+function abrirModalAgregar(event, areaId, areaNombre, url) {
+
+    // Páginas con #modal-agregar-subtitulo (rediseño de "Agregar falla"):
+    // el título se queda fijo ("Agregar falla") y el área va en el subtítulo.
+    // Páginas sin ese elemento (equipos, responsables): comportamiento de
+    // siempre, el área se agrega al título.
+    const subtitulo = document.getElementById('modal-agregar-subtitulo');
+    if (subtitulo) {
+        subtitulo.textContent = areaNombre;
+    } else {
+        document.getElementById('modal-agregar-titulo').textContent = `${i18n.agregar} — ` + areaNombre;
+    }
     document.getElementById('form-agregar').action = url;
 
     const campoCodigoEl = document.getElementById('agregar-codigo');
@@ -91,16 +95,19 @@ function abrirModalAgregar(areaId, areaNombre, url) {
         .catch(() => {
             campoCodigoEl.placeholder = 'ej. código';
         });
-
-    document.getElementById('modal-agregar').style.display = 'flex';
+    abrirModalConAnimacion('modal-agregar', event);
+    setTimeout(() => campoCodigoEl.focus(), 50);
 }
 
-const modalAgregar = document.getElementById('modal-agregar');
-if (modalAgregar) {
-    modalAgregar.addEventListener('click', function(e) {
-        if (e.target === this) this.style.display = 'none';
+function cerrarModalAgregar() { cerrarModalConAnimacion('modal-agregar'); }
+
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    ['modal-agregar', 'modal-editar'].forEach(id => {
+        const m = document.getElementById(id);
+        if (m && m.style.display !== 'none') cerrarModalConAnimacion(id);
     });
-}
+});
 
 function validarCampo(input) {
     const val = input.value.trim();
@@ -145,9 +152,16 @@ if (formAgregar) {
 }
 
 // ── Editar catalogos ──────────────────────────────────────────────────────────
-function abrirModalEditar(id, codigo, nombre, url, areaOrigen = '', nombreEs = '', nombreEn = '', subareaEs = '', subareaEn = '', tipoFallaEs = '', tipoFallaEn = '') {
-    document.getElementById('editar-codigo').value = codigo;
+function abrirModalEditar(event, id, codigo, nombre, url, areaOrigen = '', nombreEs = '', nombreEn = '', subareaEs = '', subareaEn = '', tipoFallaEs = '', tipoFallaEn = '') {
+    const editarCodigoEl = document.getElementById('editar-codigo');
+    editarCodigoEl.value = codigo;
     document.getElementById('form-editar').action  = url;
+
+    // Páginas con #modal-editar-subtitulo (rediseño de "Editar falla"):
+    // muestra el código bajo el título. Páginas sin ese elemento
+    // (equipos, responsables): sin cambio.
+    const subtituloEditar = document.getElementById('modal-editar-subtitulo');
+    if (subtituloEditar) subtituloEditar.textContent = codigo;
 
     const areaOrigenEl = document.getElementById('editar-area-origen');
     if (areaOrigenEl) areaOrigenEl.value = areaOrigen;
@@ -170,27 +184,16 @@ function abrirModalEditar(id, codigo, nombre, url, areaOrigen = '', nombreEs = '
     if (editarTipoEs) editarTipoEs.value = tipoFallaEs;
     if (editarTipoEn) editarTipoEn.value = tipoFallaEn;
 
-    document.getElementById('modal-editar').style.display = 'flex';
+    abrirModalConAnimacion('modal-editar', event);
+    setTimeout(() => editarCodigoEl.focus(), 50);
 }
+
+function cerrarModalEditar() { cerrarModalConAnimacion('modal-editar'); }
 
 // ── Eliminar catalogos ────────────────────────────────────────────────────────
-function confirmarEliminar(id, nombre, url) {
+function confirmarEliminar(event, id, nombre, url) {
     document.getElementById('modal-eliminar-msg').textContent = `${i18n.eliminar} "${nombre}"?`;
     document.getElementById('form-eliminar').action = url;
-    document.getElementById('modal-eliminar').style.display = 'flex';
+    abrirModalConAnimacion('modal-eliminar', event);
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    const modalEliminar = document.getElementById('modal-eliminar');
-    if (modalEliminar) {
-        modalEliminar.addEventListener('click', function(e) {
-            if (e.target === this) this.style.display = 'none';
-        });
-    }
-    const modalEditar = document.getElementById('modal-editar');
-    if (modalEditar) {
-        modalEditar.addEventListener('click', function(e) {
-            if (e.target === this) this.style.display = 'none';
-        });
-    }
-});
+function cerrarModalEliminar() { cerrarModalConAnimacion('modal-eliminar'); }

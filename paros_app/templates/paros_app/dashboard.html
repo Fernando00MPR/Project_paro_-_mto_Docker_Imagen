@@ -1,6 +1,10 @@
 {% extends 'menu_app/base_menu.html' %}
 {% load i18n %}
 {% block title %}Dashboard{% endblock %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+{% endblock %}
 {% block content %}
 {% trans "Total de paros" as lbl_total %}
 {% trans "Minutos perdidos" as lbl_minutos %}
@@ -29,7 +33,33 @@
 
     <div style="display:flex; flex-direction:row; align-items:center; gap:20px;">
         
-        <form method="get" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end;">
+        <style>
+          /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+             Usa !important porque cada select trae su padding en el atributo
+             style="" (mayor especificidad que una regla de clase normal). */
+          .paros-dsh-filtros select {
+              padding-right: 34px !important;
+              appearance: none !important; -webkit-appearance: none !important;
+              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+              background-repeat: no-repeat !important;
+              background-position: right 10px center !important;
+              background-size: 14px !important;
+          }
+          [data-theme="dark"] .paros-dsh-filtros select {
+              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+              background-repeat: no-repeat !important;
+              background-position: right 10px center !important;
+              background-size: 14px !important;
+          }
+          /* El selector de fecha trae 42px por defecto (compartido con el
+             resto del sitio); se achica a la misma altura que el resto de
+             los filtros de este dashboard (33px / radio 6px). */
+          .paros-dsh-filtros .dp-control {
+              height: 33px;
+              border-radius: 6px;
+          }
+        </style>
+        <form method="get" class="paros-dsh-filtros" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end;">
             <div style="display:flex; flex-direction:column; gap:4px;">
                 <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Área" %}</label>
                 <select name="area" onchange="this.form.submit()"
@@ -115,14 +145,12 @@
 
             <div id="wrap-desde" style="display:{% if rango == 'custom' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
                 <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{% trans "Desde" %}</label>
-                <input type="date" name="fecha_ini" value="{{ fecha_ini|date:'Y-m-d' }}"
-                       style="height:33px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text);">
+                {% include 'menu_app/_date_picker.html' with name='fecha_ini' initial=fecha_ini|date:'Y-m-d' dp_id='dp-fecha-ini' %}
             </div>
 
             <div id="wrap-hasta" style="display:{% if rango == 'custom' %}flex{% else %}none{% endif %};flex-direction:column;gap:4px;">
                 <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{% trans "Hasta" %}</label>
-                <input type="date" name="fecha_fin" value="{{ fecha_fin|date:'Y-m-d' }}"
-                       style="height:33px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text);">
+                {% include 'menu_app/_date_picker.html' with name='fecha_fin' initial=fecha_fin|date:'Y-m-d' dp_id='dp-fecha-fin' %}
             </div>
 
             <button type="submit" id="btn-aplicar-custom" class="btn btn-primary"
@@ -325,7 +353,7 @@
 {% block extra_js %}
 {% load static %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 <script>
 
     // Datos de Django que dashboard.js no puede leer directamente

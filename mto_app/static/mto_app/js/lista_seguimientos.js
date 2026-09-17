@@ -4,40 +4,52 @@
 // Estas constantes se definen en el template con valores de Django:
 // CSRF_SM, AREA_ID_SM, URL_SM_ADD, URL_SM_EDIT, URL_SM_DEL, URL_OT_EDIT, URL_OT_DEL
 
+// "Fecha compromiso" es el selector de fecha único; su valor real vive en el
+// hidden .dp-value dentro de #dp-sm-fecha. setSmFecha() dispara 'change' para
+// que el widget se resincronice y repinte (ver date_picker.js).
+function getSmFecha() {
+    return document.querySelector('#dp-sm-fecha .dp-value').value;
+}
+function setSmFecha(iso) {
+    const hidden = document.querySelector('#dp-sm-fecha .dp-value');
+    hidden.value = iso || '';
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 // ── Editar OT ─────────────────────────────────────────────────────────────────
-function editarOT(id, problema, accion, responsable, fecha, estatus, notas) {
+function editarOT(event, id, problema, accion, responsable, fecha, estatus, notas) {
     document.getElementById('modal-manual-titulo').textContent = 'Editar seguimiento OT';
     document.getElementById('sm-problema').value    = problema;
     document.getElementById('sm-accion').value      = accion;
     document.getElementById('sm-responsable').value = responsable;
-    document.getElementById('sm-fecha').value       = fecha;
+    setSmFecha(fecha);
     document.getElementById('sm-notas').value       = notas;
     document.getElementById('sm-id').value          = '';
     document.getElementById('sm-ot-id').value       = id;
     smEstatus(estatus);
     smArchivosNuevos = [];
     smCargarImagenesExistentes('ot', id);
-    document.getElementById('modal-manual').style.display = 'flex';
+    abrirModalConAnimacion('modal-manual', event);
 }
 
 // ── Eliminar ──────────────────────────────────────────────────────────────────
 let _delId   = null;
 let _delTipo = null;
 
-function confirmarEliminarOT(id) {
+function confirmarEliminarOT(event, id) {
     _delId   = id;
     _delTipo = 'ot';
-    document.getElementById('modal-confirm-del').style.display = 'flex';
+    abrirModalConAnimacion('modal-confirm-del', event);
 }
 
-function confirmarEliminarManual(id) {
+function confirmarEliminarManual(event, id) {
     _delId   = id;
     _delTipo = 'manual';
-    document.getElementById('modal-confirm-del').style.display = 'flex';
+    abrirModalConAnimacion('modal-confirm-del', event);
 }
 
 function cerrarModalDel() {
-    document.getElementById('modal-confirm-del').style.display = 'none';
+    cerrarModalConAnimacion('modal-confirm-del');
     _delId = null; _delTipo = null;
 }
 
@@ -86,39 +98,39 @@ function actualizarFilaOT(data, otId) {
 }
 
 // ── Modal nuevo/editar manual ─────────────────────────────────────────────────
-function abrirModalManual() {
+function abrirModalManual(event) {
     document.getElementById('modal-manual-titulo').textContent  = 'Nuevo seguimiento';
     document.getElementById('sm-problema').value                = '';
     document.getElementById('sm-accion').value                  = '';
     document.getElementById('sm-responsable').value             = '';
-    document.getElementById('sm-fecha').value                   = '';
+    setSmFecha('');
     document.getElementById('sm-notas').value                   = '';
     document.getElementById('sm-id').value                      = '';
     document.getElementById('sm-ot-id').value                   = '';
     smEstatus('pendiente');
     smArchivosNuevos = [];
     smCargarImagenesExistentes(null, null);
-    document.getElementById('modal-manual').style.display = 'flex';
+    abrirModalConAnimacion('modal-manual', event);
     setTimeout(() => document.getElementById('sm-problema').focus(), 50);
 }
 
-function editarManual(id, problema, accion, responsable, fecha, estatus, notas) {
+function editarManual(event, id, problema, accion, responsable, fecha, estatus, notas) {
     document.getElementById('modal-manual-titulo').textContent  = 'Editar seguimiento';
     document.getElementById('sm-problema').value                = problema;
     document.getElementById('sm-accion').value                  = accion;
     document.getElementById('sm-responsable').value             = responsable;
-    document.getElementById('sm-fecha').value                   = fecha;
+    setSmFecha(fecha);
     document.getElementById('sm-notas').value                   = notas;
     document.getElementById('sm-id').value                      = id;
     document.getElementById('sm-ot-id').value                   = '';
     smEstatus(estatus);
     smArchivosNuevos = [];
     smCargarImagenesExistentes('manual', id);
-    document.getElementById('modal-manual').style.display = 'flex';
+    abrirModalConAnimacion('modal-manual', event);
 }
 
 function cerrarModalManual() {
-    document.getElementById('modal-manual').style.display = 'none';
+    cerrarModalConAnimacion('modal-manual');
 }
 
 // ── Pills de estatus ──────────────────────────────────────────────────────────
@@ -131,9 +143,9 @@ function smEstatus(val) {
     };
     document.querySelectorAll('.sm-pill').forEach(btn => {
         const v = btn.dataset.val;
-        btn.style.background = v === val ? estilos[v].bg    : 'var(--white)';
-        btn.style.color      = v === val ? estilos[v].color : 'var(--text-2)';
-        btn.style.border     = v === val ? estilos[v].border : '1px solid var(--border)';
+        btn.style.background = v === val ? estilos[v].bg    : '#fff';
+        btn.style.color      = v === val ? estilos[v].color : '#33333c';
+        btn.style.border     = v === val ? estilos[v].border : '1px solid #d8d8e0';
     });
 }
 
@@ -155,7 +167,7 @@ function guardarManual() {
             problema:         problema,
             accion:           document.getElementById('sm-accion').value.trim(),
             responsable:      document.getElementById('sm-responsable').value.trim(),
-            fecha_compromiso: document.getElementById('sm-fecha').value,
+            fecha_compromiso: getSmFecha(),
             estatus:          document.getElementById('sm-estatus').value,
             notas:            document.getElementById('sm-notas').value.trim(),
             area_id:          AREA_ID_SM || null,
@@ -218,7 +230,7 @@ function agregarFilaManual(data) {
         <td style="text-align:center;">
             <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
                 ${data.imagenes_count > 0 ? `
-                <button onclick="verImagenesSeg('manual', ${data.id}, '${data.fecha_creacion}', '${AREA_NOMBRE_SM}', '${data.estatus}', '${data.estatus_display}')"
+                <button onclick="verImagenesSeg(event, 'manual', ${data.id}, '${data.fecha_creacion}', '${AREA_NOMBRE_SM}', '${data.estatus}', '${data.estatus_display}')"
                         title="Ver imágenes"
                         style="display:inline-flex; align-items:center; justify-content:center;
                             width:32px; height:32px; border-radius:6px; border:1px solid var(--border);
@@ -229,7 +241,7 @@ function agregarFilaManual(data) {
                     </svg>
                 </button>` : `
                 <div style="width:32px; height:32px; flex-shrink:0;"></div>`}
-                <button onclick="editarManual(${data.id},'${data.problema.replace(/'/g,"\\'")}','${(data.accion||'').replace(/'/g,"\\'")}','${(data.responsable||'').replace(/'/g,"\\'")}','${data.fecha_compromiso||''}','${data.estatus}','${(data.notas||'').replace(/'/g,"\\'")}')"
+                <button onclick="editarManual(event, ${data.id},'${data.problema.replace(/'/g,"\\'")}','${(data.accion||'').replace(/'/g,"\\'")}','${(data.responsable||'').replace(/'/g,"\\'")}','${data.fecha_compromiso||''}','${data.estatus}','${(data.notas||'').replace(/'/g,"\\'")}')"
                         style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                             font-size:12px; border-radius:6px; border:1px solid var(--border);
                             background:var(--surface); color:var(--text); cursor:pointer;
@@ -240,7 +252,7 @@ function agregarFilaManual(data) {
                     </svg>
                     Editar
                 </button>
-                <button onclick="confirmarEliminarManual(${data.id})"
+                <button onclick="confirmarEliminarManual(event, ${data.id})"
                         style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                             font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
                             background:#FFF5F5; color:#DC2626; cursor:pointer;
@@ -348,10 +360,10 @@ function smInicializarDropzone() {
     input.onchange = () => smAgregarArchivos(Array.from(input.files));
 
     zona.ondragover = (e) => { e.preventDefault(); zona.style.borderColor = 'var(--indigo)'; };
-    zona.ondragleave = () => { zona.style.borderColor = 'var(--border)'; };
+    zona.ondragleave = () => { zona.style.borderColor = '#d8d8e0'; };
     zona.ondrop = (e) => {
         e.preventDefault();
-        zona.style.borderColor = 'var(--border)';
+        zona.style.borderColor = '#d8d8e0';
         smAgregarArchivos(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
     };
 }
@@ -455,22 +467,34 @@ let lightboxSegImagenes = [];
 let lightboxSegIndice   = 0;
 let lightboxSegMeta     = {};
 
-function verImagenesSeg(tipo, segId, fecha, area, estatus, estatusLabel) {
+function verImagenesSeg(event, tipo, segId, fecha, area, estatus, estatusLabel) {
     lightboxSegMeta = { fecha: fecha || '', area: area || '', estatus: estatus || '', label: estatusLabel || '' };
+    const trigger = event ? { currentTarget: event.currentTarget } : null;
     fetch(`/mto/seguimiento/${tipo}/${segId}/imagenes/`)
         .then(r => r.json())
         .then(data => {
             lightboxSegImagenes = data.imagenes;
             lightboxSegIndice   = 0;
             renderLightboxSeg();
-            document.getElementById('modal-imagenes-seg').style.display = 'flex';
+            abrirModalConAnimacion('modal-imagenes-seg', trigger);
         });
 }
 
 function renderLightboxSeg() {
     if (!lightboxSegImagenes.length) return;
 
-    document.getElementById('lightbox-seg-img-principal').src = lightboxSegImagenes[lightboxSegIndice].url;
+    // Imagen principal: skeleton + spinner mientras carga, fade-in al terminar
+    // (mismo tratamiento que el lightbox de paros_app/lista_paros.js).
+    const imgPrincipal = document.getElementById('lightbox-seg-img-principal');
+    const skeleton      = document.getElementById('lightbox-seg-skeleton');
+    imgPrincipal.style.opacity = '0';
+    skeleton.style.display = 'block';
+    imgPrincipal.onload = () => {
+        imgPrincipal.style.transition = 'opacity .2s ease';
+        imgPrincipal.style.opacity = '1';
+        skeleton.style.display = 'none';
+    };
+    imgPrincipal.src = lightboxSegImagenes[lightboxSegIndice].url;
 
     // Contador
     document.getElementById('lightbox-seg-contador').textContent =
@@ -492,14 +516,29 @@ function renderLightboxSeg() {
     const cont = document.getElementById('lightbox-seg-miniaturas');
     cont.innerHTML = '';
     lightboxSegImagenes.forEach((img, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'img-loading-wrap';
+        wrap.style.cssText = 'width:52px; height:52px;';
+
+        const thumbSkeleton = document.createElement('div');
+        thumbSkeleton.className = 'img-skeleton';
+        const thumbSpinner = document.createElement('div');
+        thumbSpinner.className = 'img-spinner img-spinner-sm';
+        thumbSkeleton.appendChild(thumbSpinner);
+        wrap.appendChild(thumbSkeleton);
+
         const thumb = document.createElement('img');
+        thumb.loading = 'lazy';
         thumb.src = img.url;
         thumb.onclick = () => { lightboxSegIndice = i; renderLightboxSeg(); };
+        thumb.onload = () => { thumb.style.opacity = '1'; thumbSkeleton.style.display = 'none'; };
         thumb.style.cssText = `
             width:52px; height:52px; object-fit:cover; border-radius:8px; cursor:pointer;
             border:2px solid ${i === lightboxSegIndice ? 'var(--indigo)' : 'transparent'};
+            position:relative; opacity:0; transition:opacity .2s ease;
         `;
-        cont.appendChild(thumb);
+        wrap.appendChild(thumb);
+        cont.appendChild(wrap);
     });
 }
 
@@ -524,7 +563,7 @@ function descargarImagenSegActual() {
 }
 
 function cerrarModalImagenesSeg() {
-    document.getElementById('modal-imagenes-seg').style.display = 'none';
+    cerrarModalConAnimacion('modal-imagenes-seg');
 }
 
 document.getElementById('modal-imagenes-seg')?.addEventListener('click', function(e) {

@@ -1,6 +1,6 @@
 {% load i18n %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ LANGUAGE_CODE|default:'es' }}">
 <head>
 <script>
 // Aplicar tema ANTES de que el navegador pinte — evita flash blanco
@@ -420,6 +420,10 @@
         .btn-danger { background: transparent; color: var(--red); border-color: #FECACA; padding: 5px 10px; font-size: 12px; }
         .btn-danger:hover { background: var(--red-lt); }
         .btn-sm { padding: 5px 10px; font-size: 12px; }
+        /* Botones "Limpiar" (filtros): mismo acento elegido por el usuario que
+           ya usa el resto de estados hover del sitio (sidebar, paginación),
+           en vez del gris genérico de .btn-ghost:hover. */
+        .btn-limpiar:hover { background: var(--indigo-lt); color: var(--indigo); border-color: var(--indigo); }
 
         /* ── Tabla — table-layout:fixed mantiene anchos estables al editar ── */
         .table-wrap { overflow-x: auto; margin-top: 4px; }
@@ -594,6 +598,55 @@
         }
         .modal-box p { font-size: 15px; font-weight: 500; margin-bottom: 20px; color: var(--text); }
         .modal-actions { display: flex; gap: 10px; justify-content: center; }
+
+        /* ── Animación global de modales: escala desde el botón + cascada ──
+           Aplicada a las clases compartidas .modal-backdrop/.modal-box, así
+           que cubre todos los modales del sitio sin tocar cada página. El
+           origen de la escala es 50%/50% por defecto (fade + escala normal);
+           las páginas que llaman a abrirModalConAnimacion() en modal-anim.js
+           lo sobreescriben con la posición del botón que abrió el modal.
+           Los "renglones" de contenido que quieran la cascada llevan la
+           clase .modal-row (opt-in, no es automático). ── */
+        @keyframes modal-overlay-in {
+            from { opacity: 0 }
+            to   { opacity: 1 }
+        }
+        @keyframes modal-box-in {
+            from { opacity: 0; transform: scale(.6) }
+            to   { opacity: 1; transform: scale(1) }
+        }
+        @keyframes modal-row-in {
+            from { opacity: 0; transform: translateY(8px) }
+            to   { opacity: 1; transform: translateY(0) }
+        }
+        .modal-backdrop {
+            animation: modal-overlay-in 220ms both;
+        }
+        .modal-backdrop .modal-box {
+            transform-origin: 50% 50%;
+            animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
+        }
+        .modal-row {
+            animation: modal-row-in 240ms cubic-bezier(.2, .8, .2, 1) both;
+        }
+        .modal-row:nth-child(1) { animation-delay: 140ms }
+        .modal-row:nth-child(2) { animation-delay: 190ms }
+        .modal-row:nth-child(3) { animation-delay: 240ms }
+        .modal-row:nth-child(4) { animation-delay: 290ms }
+        .modal-row:nth-child(5) { animation-delay: 340ms }
+        .modal-row:nth-child(n+6) { animation-delay: 340ms }
+        .modal-backdrop[data-closing],
+        .modal-backdrop[data-closing] .modal-box {
+            animation: none;
+            opacity: 0;
+            transition: opacity 120ms ease-out, transform 120ms ease-out;
+        }
+        .modal-backdrop[data-closing] .modal-box { transform: scale(.97); }
+        @media (prefers-reduced-motion: reduce) {
+            .modal-backdrop, .modal-backdrop .modal-box, .modal-row {
+                animation: none;
+            }
+        }
 
         /* ── Toast ── */
         #toast-container {
@@ -1075,7 +1128,7 @@
             {% endif %}
 
         <!-- ── Producción ── -->
-            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_hora_hora or perfil.ver_bitacora_agv or perfil.areas_produccion.exists or perfil.ver_indicadores %}
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_hora_hora or perfil.ver_bitacora_agv %}
                 <div class="sidebar-section" style="margin-top:4px;">{% trans "Producción" %}</div>
             {% endif %}
 
@@ -1102,6 +1155,25 @@
                 </svg>
                 <span class="nav-label">{% trans "Bitácora de AGVs" %}</span>
             </a>
+            {% endif %}
+
+            <!-- ── Panel de Tareas (WCS) ── -->
+            {% if request.user.is_superuser or perfil.es_admin or perfil.ver_bitacora_agv %}
+            <a href="{% url 'inventario:panel_wcs' %}" data-tooltip="{% trans 'Panel de Tareas' %}"
+               class="{% if request.resolver_match.url_name == 'panel_wcs' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/>
+                </svg>
+                <span class="nav-label">{% trans "Panel de Tareas" %}</span>
+            </a>
+            {% endif %}
+
+        <!-- ── Indicadores ── -->
+            {% if request.user.is_superuser or perfil.es_admin or perfil.areas_produccion.exists or perfil.ver_indicadores %}
+                <div class="sidebar-section" style="margin-top:4px;">{% trans "Indicadores" %}</div>
             {% endif %}
             
             <!-- ── Tiempo de producción ── -->
@@ -1663,5 +1735,55 @@ document.getElementById('modal-usuario').addEventListener('click', function(e) {
 
 {% block extra_js %}
 {% endblock %}
+<!-- ── Animación compartida de modales (ver .modal-backdrop/.modal-box/.modal-row
+     en el <style> de arriba) ── -->
+<script>
+/* Uso:
+     onclick="abrirModalConAnimacion('modal-x', event)"
+     ...
+     function cerrarModalX() {
+         cerrarModalConAnimacion('modal-x', () => {
+             // limpieza propia (popovers, foco, reset de campos, etc.)
+         });
+     }
+   La "caja" del modal es .modal-box si existe, si no el primer hijo del
+   backdrop — funciona igual con clases propias (.exp-modal, .mf-box, etc.),
+   siempre que esas páginas agreguen su propia regla CSS de animación
+   (transform-origin + animation: modal-box-in ...), como en registro_produccion.html. */
+function abrirModalConAnimacion(modalId, event) {
+    const modal = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+    if (!modal) return;
+    const box = modal.querySelector('.modal-box') || modal.firstElementChild;
+    modal.removeAttribute('data-closing');
+    if (box) box.removeAttribute('data-closing');
+    modal.style.display = 'flex';
+    if (box) {
+        box.offsetHeight; // fuerza reflow: poder medir el modal ya visible antes de pintar
+        if (event && event.currentTarget) {
+            const r  = event.currentTarget.getBoundingClientRect();
+            const cx = r.left + r.width / 2;
+            const cy = r.top + r.height / 2;
+            const b  = box.getBoundingClientRect();
+            box.style.transformOrigin = `${((cx - b.left) / b.width) * 100}% ${((cy - b.top) / b.height) * 100}%`;
+        } else {
+            box.style.transformOrigin = '50% 50%';
+        }
+    }
+}
+
+function cerrarModalConAnimacion(modalId, alCerrar) {
+    const modal = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+    if (!modal) return;
+    const box = modal.querySelector('.modal-box') || modal.firstElementChild;
+    modal.setAttribute('data-closing', '');
+    if (box) box.setAttribute('data-closing', '');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.removeAttribute('data-closing');
+        if (box) box.removeAttribute('data-closing');
+        if (typeof alCerrar === 'function') alCerrar();
+    }, 120);
+}
+</script>
 </body>
 </html>

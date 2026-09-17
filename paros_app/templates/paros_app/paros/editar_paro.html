@@ -3,6 +3,31 @@
 {% block extra_css %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'paros_app/css/paros.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<style>
+  /* "Hora" queda a la altura del selector de fecha (.dp-control = 42px,
+     compartido con el resto del sitio) en vez de encoger la fecha — mismo
+     ajuste que en crear_paro.html. */
+  #id_hora_picker {
+      height: 42px;
+      box-sizing: border-box;
+      border-radius: 10px;
+  }
+  /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+     Mismo tono que el texto (--text): hex literal porque no se puede meter
+     var() dentro del data URI. */
+  .form-field select {
+      padding-right: 34px;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 14px;
+  }
+  [data-theme="dark"] .form-field select {
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  }
+</style>
 {% endblock %}
 
 {% block title %}{% trans "Edición e historial de paro" %}{% endblock %}
@@ -53,8 +78,8 @@
                 </div>
 
                 <div class="form-field">
-                    <label for="id_fecha_picker">{% trans "Fecha" %}<span style="color:var(--red)">*</span></label>
-                    <input type="date" id="id_fecha_picker" required>
+                    <label>{% trans "Fecha" %}<span style="color:var(--red)">*</span></label>
+                    {% include 'menu_app/_date_picker.html' with name='fecha_iso' dp_id='dp-fecha' %}
                     <input type="hidden" name="fecha" id="id_fecha" value="{{ form.fecha.value|default:'' }}">
                     {% if form.fecha.errors %}<ul class="errorlist">{% for e in form.fecha.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
                 </div>
@@ -387,5 +412,6 @@ document.addEventListener('keydown', function(e) {
 {% load static %}
 <script src="{% static 'paros_app/js/autocomplete.js' %}" defer></script>
 <script src="{% static 'paros_app/js/editar_paro.js' %}" defer></script>
+<script src="{% static 'menu_app/js/date_picker.js' %}" defer></script>
 <script src="{% static 'paros_app/js/crear_paro.js' %}" defer></script>
 {% endblock %}

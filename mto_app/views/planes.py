@@ -468,11 +468,12 @@ def importar_plan(request):
 
             creados = actualizados = omitidos = 0
             errores = []
+            avisos  = []
 
-            codigos_existentes = {
-                p.codigo: p.area.nombre
-                for p in PlanMantenimiento.objects.select_related('area').exclude(area=area)
-            }
+            # El mismo código SÍ puede repetirse en otras áreas (son planes
+            # independientes); solo nos importa si ya existe dentro de esta
+            # misma área, en cuyo caso se actualiza en vez de duplicarlo.
+
             planes_del_area   = {p.codigo: p for p in PlanMantenimiento.objects.filter(area=area)}
             nuevos_por_codigo = {}
             a_actualizar_por_pk = {}
@@ -514,14 +515,6 @@ def importar_plan(request):
                         omitidos += 1
                         continue
 
-                    if codigo in codigos_existentes:
-                        errores.append(
-                            f"Código '{codigo}' ya existe en el área '{codigos_existentes[codigo]}' "
-                            f"— omitido para evitar sobreescritura."
-                        )
-                        omitidos += 1
-                        continue
-
                     try:
                         duracion_h       = float(str(duracion_raw).replace(',', '.')) if duracion_raw else 1.0
                         duracion_minutos = max(5, int(duracion_h * 60))
@@ -560,6 +553,7 @@ def importar_plan(request):
                     ya_pendiente    = nuevos_por_codigo.get(codigo)
 
                     if plan_existente:
+                        avisos.append(f"Código '{codigo}' ya existía en esta área — se actualizó.")
                         for campo, valor in defaults.items():
                             setattr(plan_existente, campo, valor)
                         a_actualizar_por_pk[plan_existente.pk] = plan_existente
@@ -585,6 +579,10 @@ def importar_plan(request):
                 messages.warning(request, f"Importacion con advertencias — {resumen}")
                 for err in errores[:5]:
                     messages.error(request, err)
+            elif avisos:
+                messages.warning(request, f"Importacion con avisos — {resumen}")
+                for aviso in avisos[:5]:
+                    messages.warning(request, aviso)
             else:
                 messages.success(request, f"Importacion exitosa — {resumen}")
 

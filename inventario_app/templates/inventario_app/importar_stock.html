@@ -101,12 +101,13 @@
         <tbody>
             <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>A</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "No. Item" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">001</td></tr>
             <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>B</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Nombre" %} <span style="color:var(--text-3);">({% trans "se ignora" %})</span></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">Rodamiento 6205</td></tr>
-            <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>C</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Cantidad" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">12</td></tr>
-            <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>F</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Ubicación" %} <span style="color:var(--text-3);">({% trans "se ignora" %})</span></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">Rack 3, Nivel B</td></tr>
+            <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>C</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Stock actual" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">12</td></tr>
+            <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>D</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Ubicación" %} <span style="color:var(--text-3);">({% trans "opcional" %})</span></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">A12</td></tr>
         </tbody>
     </table>
         <div style="margin-top:12px; padding:10px 12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; font-size:12px; color:var(--text-2);">
             {% trans "El No. Item debe existir previamente en el área seleccionada; si no existe, esa fila se ignora." %}
+            {% trans "Si la columna Ubicación viene vacía, se conserva la ubicación que ya tenía la refacción." %}
         </div>
     </div>
 

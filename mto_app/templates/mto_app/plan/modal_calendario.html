@@ -47,6 +47,7 @@
         font-family: 'Manrope', sans-serif;
         font-size: 14px;
         color: var(--mc-text-mid);
+        user-select: none; -webkit-user-select: none;
     }
 
     /* El body del modal es un flex-column que ocupa toda la altura del iframe padre */
@@ -108,9 +109,9 @@
     .mc-btn-close {
         width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--mc-border-div);
         background: transparent; cursor: pointer; font-size: 15px; color: var(--mc-text-soft);
-        display: flex; align-items: center; justify-content: center; transition: background .15s;
+        display: flex; align-items: center; justify-content: center; transition: background .15s, color .15s, border-color .15s;
     }
-    .mc-btn-close:hover { background: var(--mc-subtle-bg); }
+    .mc-btn-close:hover { background: #EF4444; border-color: #EF4444; color: #fff; } 
 
     /* ── Barra de año ── */
     .mc-nav {
@@ -149,6 +150,7 @@
         height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid transparent;
         display: flex; align-items: center; justify-content: center;
         font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
+        user-select: none; -webkit-user-select: none;
     }
     .mc-cell-completada  { background: var(--mc-success-bg); border-color: var(--mc-success-border); color: var(--mc-success); }
     .mc-cell-pendiente   { background: var(--mc-warn-bg); border-color: var(--mc-warn-border); color: var(--mc-warn); }

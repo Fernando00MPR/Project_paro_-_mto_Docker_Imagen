@@ -66,13 +66,13 @@
             {% if puede_gestionar and area.num_responsables > 0 %}
                 <button type="button" class="btn btn-sm"
                         style="border-color:var(--red); color:var(--red); background:transparent;"
-                        onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'responsables')">
+                        onclick="confirmarLimpiar(event, '{{ area.id }}', '{{ area.nombre }}', 'responsables')">
                     🗑 {% trans "Limpiar" %}
                 </button>
             {% endif %}
             {% if puede_agregar %}
                 <button type="button" class="btn btn-primary btn-sm"
-                        onclick="abrirModalAgregar('{{ area.id }}', '{{ area.nombre }}', '/catalogos/responsables/agregar/{{ area.id }}/')">
+                        onclick="abrirModalAgregar(event, '{{ area.id }}', '{{ area.nombre }}', '/catalogos/responsables/agregar/{{ area.id }}/')">
                     + {% trans "Agregar" %}
                 </button>
                 {% endif %}
@@ -104,13 +104,13 @@
                             <div style="display:flex; gap:6px;">
                                 {% if puede_editar %}
                                 <button type="button" class="btn btn-ghost btn-sm" style="min-width:80px;"
-                                        onclick="abrirModalEditar('{{ resp.id }}', '{{ resp.codigo }}', '{{ resp.responsable }}', '/catalogos/responsables/editar/{{ resp.id }}/', '', '{{ resp.responsable_es }}', '{{ resp.responsable_en }}')">
+                                        onclick="abrirModalEditar(event, '{{ resp.id }}', '{{ resp.codigo }}', '{{ resp.responsable }}', '/catalogos/responsables/editar/{{ resp.id }}/', '', '{{ resp.responsable_es }}', '{{ resp.responsable_en }}')">
                                     ✏️ {% trans "Editar" %}
                                 </button>
                                 {% endif %}
                                 {% if puede_eliminar %}
                                 <button type="button" class="btn btn-sm" style="min-width:80px; border-color:var(--red); color:var(--red); background:transparent;"
-                                        onclick="confirmarEliminar('{{ resp.id }}', '{{ resp.responsable }}', '/catalogos/responsables/eliminar/{{ resp.id }}/')">
+                                        onclick="confirmarEliminar(event, '{{ resp.id }}', '{{ resp.responsable }}', '/catalogos/responsables/eliminar/{{ resp.id }}/')">
                                     🗑  {% trans "Eliminar" %}
                                 </button>
                                 {% endif %}
@@ -147,81 +147,184 @@
                     {% trans "Sí, eliminar todo" %}
                 </button>
             </form>
-                <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-limpiar').style.display='none'">
+                <button type="button" class="btn btn-ghost" onclick="cerrarModalLimpiar()">
                     {% trans "Cancelar" %}
                 </button>
         </div>
     </div>
 </div>
 
+<!-- Modales agregar/editar responsable — mismo rediseño aplicado en Fallas/Equipos (opción 1a). -->
+<style>
+    #modal-agregar .modal-box, #modal-editar .modal-box {
+        width: 480px; max-width: calc(100vw - 32px); min-width: 0;
+        padding: 0; text-align: left;
+        border-radius: 14px; overflow: hidden;
+        box-shadow: 0 18px 50px rgba(29,29,36,.13);
+        background: #fff;
+    }
+    #modal-agregar .mf-header, #modal-editar .mf-header {
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+        padding: 20px 24px 16px; border-bottom: 1px solid #ececf0;
+    }
+    #modal-agregar .mf-title, #modal-editar .mf-title { font-size: 17px; font-weight: 600; color: #1d1d24; margin: 0; }
+    #modal-agregar .mf-subtitle, #modal-editar .mf-subtitle { font-size: 13px; font-weight: 400; color: #7c7c88; margin: 3px 0 0; }
+    #modal-agregar .mf-close, #modal-editar .mf-close {
+        width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent;
+        color: #8a8a96; cursor: pointer; font-size: 15px; line-height: 1; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        transition: background .15s, color .15s;
+    }
+    #modal-agregar .mf-close:hover, #modal-editar .mf-close:hover { background: #EF4444; color: #fff; }
+    #modal-agregar .mf-body, #modal-editar .mf-body {
+        padding: 20px 24px 24px;
+        max-height: calc(100vh - 160px); overflow-y: auto;
+        display: flex; flex-direction: column; gap: 22px;
+    }
+    #modal-agregar .mf-group, #modal-editar .mf-group { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+    #modal-agregar .mf-group legend, #modal-editar .mf-group legend {
+        font-size: 11px; font-weight: 600; color: #9b9ba6; text-transform: uppercase;
+        letter-spacing: .1em; padding: 0; margin-bottom: 2px;
+    }
+    #modal-agregar .form-field, #modal-editar .form-field { margin: 0; gap: 0; }
+    #modal-agregar .mf-row, #modal-editar .mf-row { display: flex; gap: 12px; }
+    #modal-agregar .mf-row .form-field, #modal-editar .mf-row .form-field { flex: 1; min-width: 0; }
+    #modal-agregar .form-field label, #modal-editar .form-field label {
+        font-size: 13px; font-weight: 500; color: #33333c; margin-bottom: 6px;
+        letter-spacing: normal; text-transform: none;
+    }
+    #modal-agregar .mf-req, #modal-editar .mf-req { color: #c0356f; }
+    #modal-agregar .form-field input, #modal-editar .form-field input {
+        width: 100%; box-sizing: border-box; padding: 9px 12px;
+        border: 1px solid #d8d8e0; border-radius: 8px;
+        color: #1d1d24; background: #fff; font-size: 14px; font-family: inherit;
+        outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    #modal-agregar .form-field input::placeholder, #modal-editar .form-field input::placeholder { color: #9b9ba6; }
+    #modal-agregar .form-field input:focus, #modal-editar .form-field input:focus {
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+    #modal-agregar .mf-footer, #modal-editar .mf-footer {
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        padding: 14px 24px; border-top: 1px solid #ececf0; background: #fafafb;
+    }
+    #modal-agregar .mf-required, #modal-editar .mf-required { font-size: 12px; color: #8a8a96; }
+    #modal-agregar .mf-actions, #modal-editar .mf-actions { display: flex; gap: 10px; }
+    #modal-agregar .btn-mf-secondary, #modal-editar .btn-mf-secondary {
+        padding: 9px 16px; border-radius: 8px; border: 1px solid #d8d8e0;
+        background: #fff; color: #33333c; font-weight: 500; font-size: 14px;
+        cursor: pointer; font-family: inherit; transition: background .15s;
+    }
+    #modal-agregar .btn-mf-secondary:hover, #modal-editar .btn-mf-secondary:hover { background: #f2f2f5; }
+    #modal-agregar .btn-mf-primary, #modal-editar .btn-mf-primary {
+        padding: 9px 18px; border-radius: 8px; border: none;
+        background: var(--indigo); color: #fff; font-weight: 600; font-size: 14px;
+        cursor: pointer; font-family: inherit; transition: background .15s;
+    }
+    #modal-agregar .btn-mf-primary:hover, #modal-editar .btn-mf-primary:hover { background: var(--indigo-dk); }
+    #modal-agregar .btn-mf-primary:focus-visible, #modal-editar .btn-mf-primary:focus-visible {
+        outline: none; box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+</style>
 <!-- Modal agregar responsable -->
 <div id="modal-agregar" class="modal-backdrop" style="display:none;">
-    <div class="modal-box">
-        <div style="font-weight:600; font-size:14px; margin-bottom:16px;" id="modal-agregar-titulo">
-            {% trans "Agregar responsable" %}
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-agregar-titulo">
+        <div class="mf-header">
+            <div>
+                <h2 class="mf-title" id="modal-agregar-titulo">{% trans "Agregar responsable" %}</h2>
+                <p class="mf-subtitle" id="modal-agregar-subtitulo"></p>
+            </div>
+            <button type="button" class="mf-close" aria-label="{% trans 'Cerrar' %}"
+                    onclick="cerrarModalAgregar()">✕</button>
         </div>
         <form id="form-agregar" method="post" action="">
             {% csrf_token %}
-            <div class="form-field" style="margin-bottom:12px;">
-                <label>{% trans "Código" %}<span style="color:var(--red)">*</span></label>
-                <input type="text" name="codigo" id="agregar-codigo" required
-                       placeholder="ej. R-016"
-                       style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            <div class="mf-body">
+                <fieldset class="mf-group modal-row">
+                    <legend>{% trans "Identificación" %}</legend>
+                    <div class="form-field">
+                        <label for="agregar-codigo">{% trans "Código" %} <span class="mf-req">*</span></label>
+                        <input type="text" name="codigo" id="agregar-codigo" required aria-required="true"
+                               placeholder="ej. R-016">
+                    </div>
+                </fieldset>
+
+                <fieldset class="mf-group modal-row">
+                    <legend>{% trans "Nombre del responsable" %}</legend>
+                    <div class="form-field">
+                        <label for="agregar-nombre-es">{% trans "Español" %} <span class="mf-req">*</span></label>
+                        <input type="text" name="responsable_es" id="agregar-nombre-es" required aria-required="true"
+                            placeholder="{% trans 'Nombre en español' %}">
+                    </div>
+                    <div class="form-field">
+                        <label for="agregar-nombre-en">{% trans "Inglés" %}</label>
+                        <input type="text" name="responsable_en" id="agregar-nombre-en"
+                            placeholder="Name in english">
+                    </div>
+                </fieldset>
             </div>
-            <div class="form-field" style="margin-bottom:12px;">
-                <label>{% trans "Responsable (ES)" %}<span style="color:var(--red)">*</span></label>
-                <input type="text" name="responsable_es" id="agregar-nombre-es" required
-                    placeholder="Nombre en español…"
-                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
-            </div>
-            <div class="form-field" style="margin-bottom:16px;">
-                <label>{% trans "Responsable (EN)" %}</label>
-                <input type="text" name="responsable_en" id="agregar-nombre-en"
-                    placeholder="Name in english…"
-                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
-            </div>
-            <div class="modal-actions">
-                <button type="submit" class="btn btn-primary">
-                    {% trans "Guardar responsable" %}
-                </button>
-                <button type="button" class="btn btn-ghost"
-                        onclick="document.getElementById('modal-agregar').style.display='none'">
-                    {% trans "Cancelar" %}
-                </button>
+            <div class="mf-footer">
+                <span class="mf-required"><span class="mf-req">*</span> {% trans "Campos obligatorios" %}</span>
+                <div class="mf-actions">
+                    <button type="button" class="btn-mf-secondary"
+                            onclick="cerrarModalAgregar()">
+                        {% trans "Cancelar" %}
+                    </button>
+                    <button type="submit" class="btn-mf-primary">
+                        {% trans "Guardar responsable" %}
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal editar  responsable -->
+<!-- Modal editar responsable -->
 <div id="modal-editar" class="modal-backdrop" style="display:none;">
-    <div class="modal-box">
-        <div style="font-weight:600; font-size:14px; margin-bottom:16px;">{% trans "Editar" %}</div>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-editar-titulo">
+        <div class="mf-header">
+            <div>
+                <h2 class="mf-title" id="modal-editar-titulo">{% trans "Editar responsable" %}</h2>
+                <p class="mf-subtitle" id="modal-editar-subtitulo"></p>
+            </div>
+            <button type="button" class="mf-close" aria-label="{% trans 'Cerrar' %}"
+                    onclick="cerrarModalEditar()">✕</button>
+        </div>
         <form id="form-editar" method="post" action="">
             {% csrf_token %}
-            <div class="form-field" style="margin-bottom:12px;">
-                <label>{% trans "Código" %}<span style="color:var(--red)">*</span></label>
-                <input type="text" name="codigo" id="editar-codigo" required
-                       style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            <div class="mf-body">
+                <fieldset class="mf-group modal-row">
+                    <legend>{% trans "Identificación" %}</legend>
+                    <div class="form-field">
+                        <label for="editar-codigo">{% trans "Código" %} <span class="mf-req">*</span></label>
+                        <input type="text" name="codigo" id="editar-codigo" required aria-required="true">
+                    </div>
+                </fieldset>
+
+                <fieldset class="mf-group modal-row">
+                    <legend>{% trans "Nombre del responsable" %}</legend>
+                    <div class="form-field">
+                        <label for="editar-nombre-es">{% trans "Español" %} <span class="mf-req">*</span></label>
+                        <input type="text" name="responsable_es" id="editar-nombre-es" required aria-required="true">
+                    </div>
+                    <div class="form-field">
+                        <label for="editar-nombre-en">{% trans "Inglés" %}</label>
+                        <input type="text" name="responsable_en" id="editar-nombre-en">
+                    </div>
+                </fieldset>
             </div>
-            <div class="form-field" style="margin-bottom:12px;">
-                <label>{% trans "Responsable (ES)" %}<span style="color:var(--red)">*</span></label>
-                <input type="text" name="responsable_es" id="editar-nombre-es" required
-                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
-            </div>
-            <div class="form-field" style="margin-bottom:16px;">
-                <label>{% trans "Responsable (EN)" %}</label>
-                <input type="text" name="responsable_en" id="editar-nombre-en"
-                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
-            </div>
-            <div class="modal-actions">
-                <button type="submit" class="btn btn-primary">
-                    {% trans "Guardar cambios" %}
-                </button>
-                <button type="button" class="btn btn-ghost"
-                        onclick="document.getElementById('modal-editar').style.display='none'">
-                    {% trans "Cancelar" %}
-                </button>
+            <div class="mf-footer">
+                <span class="mf-required"><span class="mf-req">*</span> {% trans "Campos obligatorios" %}</span>
+                <div class="mf-actions">
+                    <button type="button" class="btn-mf-secondary"
+                            onclick="cerrarModalEditar()">
+                        {% trans "Cancelar" %}
+                    </button>
+                    <button type="submit" class="btn-mf-primary">
+                        {% trans "Guardar cambios" %}
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -241,7 +344,7 @@
                 </button>
             </form>
                 <button type="button" class="btn btn-ghost"
-                        onclick="document.getElementById('modal-eliminar').style.display='none'">
+                        onclick="cerrarModalEliminar()">
                     {% trans "Cancelar" %}
                 </button>
         </div>

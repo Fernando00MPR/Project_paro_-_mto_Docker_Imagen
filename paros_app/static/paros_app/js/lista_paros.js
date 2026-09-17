@@ -305,19 +305,19 @@ const modal    = document.getElementById('modal-eliminar');
 const formElim = document.getElementById('form-eliminar');
 
 document.querySelectorAll('.btn-eliminar-icono').forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function(event) {
         formElim.action = this.dataset.url;
-        modal.style.display = 'flex';
+        abrirModalConAnimacion(modal, event);
     });
 });
 
 document.getElementById('btn-cancelar-modal').addEventListener('click', () => {
-    modal.style.display = 'none';
+    cerrarModalConAnimacion(modal);
 });
 
 // Cerrar el modal haciendo clic en el fondo oscuro
 modal.addEventListener('click', e => {
-    if (e.target === modal) modal.style.display = 'none';
+    if (e.target === modal) cerrarModalConAnimacion(modal);
 });
 
 // ── Filtro Columnas ────────────────────────────────────────────────────────────
@@ -434,7 +434,8 @@ const ESTATUS_BADGE = {
 };
 
 // Abre el modal; carga imágenes, área, fecha y estatus del paro via fetch JSON.
-function verImagenes(paroId) {
+function verImagenes(event, paroId) {
+    const trigger = event ? { currentTarget: event.currentTarget } : null;
     fetch(`/paros/${paroId}/imagenes/`)
         .then(r => r.json())
         .then(data => {
@@ -449,7 +450,7 @@ function verImagenes(paroId) {
                 [data.area, data.fecha].filter(Boolean).join('  -  ') + badge;
 
             renderLightbox();
-            document.getElementById('modal-imagenes').style.display = 'flex';
+            abrirModalConAnimacion('modal-imagenes', trigger);
         });
 }
 
@@ -523,7 +524,7 @@ function lightboxSiguiente() {
 }
 
 function cerrarModalImagenes() {
-    document.getElementById('modal-imagenes').style.display = 'none';
+    cerrarModalConAnimacion('modal-imagenes');
 }
 
 // Descarga la imagen actual usando un <a> temporal con el atributo download

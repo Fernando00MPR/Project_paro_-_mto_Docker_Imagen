@@ -2,6 +2,9 @@ from .inventario import (
     lista_refacciones,
     form_refaccion,
     eliminar_refaccion,
+    eliminar_todas_refacciones_area,
+    crear_categoria_refaccion,
+    editar_categoria_refaccion,
     subir_imagenes_refaccion,
     imagenes_refaccion,
     eliminar_imagen_refaccion,
@@ -25,4 +28,9 @@ from .seguimiento_servicios import (
     guardar_seguimiento_servicio,
     eliminar_seguimiento_servicio,
     exportar_seguimientos_servicio,
+)
+
+from .wcs_panel import (
+    panel_wcs,
+    procesar_wcs,
 )

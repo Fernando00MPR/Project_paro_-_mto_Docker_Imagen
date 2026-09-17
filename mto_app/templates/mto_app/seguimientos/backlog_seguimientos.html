@@ -17,6 +17,35 @@
 
     <!-- Filtro área -->
     <div class="bl-filter" style="padding:10px 14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px;">
+        <style>
+          /* Flecha nativa del select pegada al borde → chevron propio con espacio + más ancho.
+             Mismo tono que el texto (--text): hex literal porque no se puede
+             meter var() dentro del data URI. */
+          .bl-filter select {
+              width: 260px;
+              height: 40px;
+              box-sizing: border-box;
+              padding: 0 34px 0 10px;
+              border-radius: 8px;
+              font-size: 14px;
+              appearance: none; -webkit-appearance: none;
+              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+              background-repeat: no-repeat;
+              background-position: right 10px center;
+              background-size: 14px;
+              background-color: var(--white);
+          }
+          /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
+             select { background: var(--white) !important; }, que borra el chevron de
+             arriba por especificidad + !important. Se repite aquí con el mismo peso
+             para ganar por ir declarada después en el documento. */
+          [data-theme="dark"] .bl-filter select {
+              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+              background-repeat: no-repeat !important;
+              background-position: right 10px center !important;
+              background-size: 14px !important;
+          }
+        </style>
         <form method="get" class="bl-filter-form" style="display:flex; gap:10px; align-items:flex-end;">
             <div class="filter-group">
                 <label>{% trans "Área" %}</label>

@@ -1,0 +1,539 @@
+{% extends "menu_app/base_menu.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Panel de Tareas WCS" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<style>
+    .wcs-wrap { max-width: 1400px; margin: 0 auto; }
+
+    .wcs-header { margin-bottom: 20px; }
+    .wcs-title { font-size: 20px; font-weight: 700; color: var(--text); }
+    .wcs-subtitle { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+
+    .card {
+        background: var(--white); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+        box-shadow: var(--shadow);
+    }
+
+    /* Dropzone — estado "sin archivo" (grande) */
+    #wcs-dropzone {
+        border: 1.5px dashed var(--border); border-radius: 10px;
+        padding: 20px; text-align: center; cursor: pointer;
+        background: var(--surface); min-height: 104px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    #wcs-dropzone.is-dragover { border-color: var(--indigo); background: var(--indigo-lt); }
+    .wcs-dropzone-link { color: var(--indigo); font-weight: 600; }
+
+    /* Estado "cargando" — mientras el backend procesa el archivo */
+    #wcs-cargando {
+        border: 1.5px solid var(--border); border-radius: 10px;
+        padding: 20px; text-align: center; background: var(--surface); min-height: 104px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    }
+    .wcs-spinner {
+        width: 22px; height: 22px; border-radius: 50%;
+        border: 3px solid var(--border); border-top-color: var(--indigo);
+        animation: wcs-girar .7s linear infinite;
+    }
+    @keyframes wcs-girar { to { transform: rotate(360deg); } }
+
+    /* Estado "archivo cargado" (compacto) */
+    .wcs-archivo-cargado {
+        display: flex; align-items: center; gap: 10px;
+        padding: 12px 16px; border-radius: 10px;
+        background: #ECFDF5; border: 1px solid #A7F3D0;
+        font-size: 13px;
+    }
+    [data-theme="dark"] .wcs-archivo-cargado { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.35); }
+    .wcs-archivo-dot { width: 8px; height: 8px; border-radius: 50%; background: #10B981; flex-shrink: 0; }
+    .wcs-archivo-nombre { font-weight: 700; color: var(--text); }
+    .wcs-archivo-info { color: var(--text-3); font-family: 'DM Mono', monospace; font-size: 12px; }
+    .wcs-archivo-reemplazar { margin-left: auto; color: var(--indigo); font-weight: 600; text-decoration: none; font-size: 13px; }
+    .wcs-archivo-reemplazar:hover { text-decoration: underline; }
+    #wcs-error { display: none; margin-top: 14px; padding: 10px 14px; border-radius: 8px;
+                 background: #FEF2F2; color: #B91C1C; font-size: 13px; }
+
+    /* Dashboard (oculto hasta que haya datos) */
+    #wcs-dashboard { display: none; }
+
+    /* KPIs */
+    .wcs-kpis {
+        display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px;
+    }
+    .wcs-kpi { padding: 16px; }
+    .wcs-kpi-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; }
+    .wcs-kpi-value { font-size: 24px; font-weight: 700; margin-top: 6px; color: var(--text); }
+
+    /* Filtros */
+    .wcs-filtros { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+    .wcs-filtro-group { display: flex; flex-direction: column; gap: 4px; }
+    .wcs-filtro-group label { font-size: 11px; color: var(--text-3); font-weight: 600; text-transform: uppercase; }
+    .wcs-filtro-group input, .wcs-filtro-group select {
+        border: 1px solid var(--border); border-radius: 7px; padding: 7px 10px;
+        font-size: 13px; font-family: inherit; background: var(--white); color: var(--text);
+    }
+    /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+       Mismo tono que el texto (--text): hex literal porque no se puede meter
+       var() dentro del data URI. */
+    .wcs-filtro-group select {
+        padding-right: 34px;
+        appearance: none; -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 14px;
+    }
+    [data-theme="dark"] .wcs-filtro-group select {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 10px center !important;
+        background-size: 14px !important;
+    }
+    /* El selector de fecha trae 42px por defecto (compartido con el resto del
+       sitio); se achica al mismo box-model que .wcs-filtro-group input
+       (padding 7px 10px, sin altura fija, radio 7px). */
+    .wcs-filtro-group .dp-control {
+        height: auto;
+        padding: 7px 10px;
+        border-radius: 7px;
+    }
+    .wcs-btn-limpiar {
+        border: 1px solid var(--border); border-radius: 7px; padding: 7px 14px;
+        font-size: 13px; font-family: inherit; background: var(--white); color: var(--text-2);
+        cursor: pointer; white-space: nowrap; transition: all .15s;
+    }
+    .wcs-btn-limpiar:hover { background: var(--indigo-lt); color: var(--indigo); border-color: var(--indigo); }
+    .wcs-stackers { display: flex; gap: 8px; flex-wrap: wrap; }
+    .wcs-stacker-chip {
+        display: flex; align-items: center; gap: 5px; padding: 5px 10px;
+        border: 1px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer;
+        user-select: none;
+    }
+
+    /* Gráficos */
+    .wcs-charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .wcs-chart-card { position: relative; }
+    .wcs-chart-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; flex-wrap: wrap; row-gap: 8px; justify-content: space-between; align-items: center; }
+    .wcs-chart-title-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; row-gap: 8px; }
+    .wcs-chart-modo { display: inline-flex; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 2px; }
+    .wcs-chart-modo button {
+        border: none; background: none; cursor: pointer; font-family: inherit;
+        font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 5px; color: var(--text-3);
+    }
+    .wcs-chart-modo button.current { background: var(--indigo); color: #fff; }
+    .wcs-chart-expand { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 14px; }
+    .wcs-chart-box { position: relative; height: 260px; }
+    .wcs-chart-box--tall { height: 420px; }
+    .wcs-chart-box--md { height: 320px; }
+
+    /* Percentiles de duración (p75/p90/p95), dentro de la tarjeta de
+       "Distribución de duración" — la mediana no va aquí, se ve como línea
+       en el gráfico (igual que el promedio). */
+    .wcs-dist-stats { display: flex; justify-content: center; gap: 12px; margin-bottom: 14px; }
+    .wcs-dist-stat-box {
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        padding: 8px 20px; border: 1px solid var(--border); border-radius: 10px;
+        background: var(--surface); min-width: 80px;
+    }
+    .wcs-dist-stat-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; }
+    .wcs-dist-stat-value { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 2px; }
+
+    /* Tarjeta colapsable (ej. Ubicaciones de destino) — mismo patrón que
+       .leyenda-estatus en indicadores_produccion.html. */
+    .wcs-colapsable-header { cursor: pointer; margin-bottom: 0; }
+    .wcs-colapsable-toggle { transition: transform .15s; color: var(--text-3); font-size: 12px; }
+    .wcs-colapsable.wcs-colapsado .wcs-colapsable-toggle { transform: rotate(-90deg); }
+    .wcs-colapsable.wcs-colapsado .wcs-colapsable-body { display: none; }
+    .wcs-colapsable-body { margin-top: 12px; }
+
+    /* Tabla — table-layout:fixed + <colgroup> (ver HTML) fuerza el ancho de
+       cada columna; sin esto, "Material" (texto largo) se desborda visualmente
+       sobre las columnas vecinas en vez de truncarse. */
+    /* min-width = suma de todas las columnas del <colgroup> (incluida Material
+       a 450px) — por debajo de eso, .wcs-tabla-wrap muestra scroll horizontal
+       en vez de truncar Material; por encima, la tabla se estira a 100%. */
+    /* .wcs-tabla-wrap ancla el ancho al contenedor (.card) y contiene el
+       overflow horizontal de la tabla — sin esto, la tabla ancha se desborda
+       de la página entera en vez de quedarse dentro de su tarjeta. */
+    .wcs-tabla-wrap { width: 100%; max-width: 100%; overflow-x: auto; }
+    table.wcs-tabla { width: 100%; min-width: 1660px; border-collapse: collapse; font-size: 12.5px; table-layout: fixed; }
+    
+    table.wcs-tabla th {
+        text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border);
+        color: var(--text-3); font-weight: 600; cursor: pointer;
+        white-space: normal; line-height: 1.3;
+    }
+
+    /* Popover de filtro en los encabezados de Origen/Destino — en estas 2
+       columnas el clic en el th abre este popover en vez de ordenar.
+       position:fixed (no absolute anidado en el th) porque un elemento
+       posicionado dentro de una celda de tabla puede quedar recortado o
+       pintado detrás de otras celdas por las reglas de renderizado de
+       tablas — mismo motivo por el que .menu-fila-popover (registro_produccion)
+       también usa fixed en vez de vivir dentro de la fila. */
+    .wcs-th-popover {
+        display: none;
+        position: fixed; z-index: 9999;
+        background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+        box-shadow: var(--shadow); padding: 8px; min-width: 160px;
+    }
+    .wcs-th-popover.is-open { display: block; }
+    .wcs-th-popover input {
+        width: 100%; box-sizing: border-box; padding: 6px 8px;
+        border: 1px solid var(--border); border-radius: 6px;
+        font-size: 12px; font-weight: 400; text-transform: none;
+        background: var(--white); color: var(--text); cursor: text;
+    }
+
+    table.wcs-tabla td {
+        padding: 7px 10px; border-bottom: 1px solid var(--border); white-space: nowrap;
+        font-family: 'DM Mono', monospace;
+        overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Material (3ra columna): nunca se trunca — si no cabe en 450px, hace
+       salto de línea dentro de la celda en vez de cortar el texto. */
+    table.wcs-tabla td:nth-child(3) {
+        white-space: normal; overflow: visible; text-overflow: clip;
+        word-break: break-word; font-family: inherit;
+    }
+
+    /* Paginación — mismo estilo que .pagination en menu_app/base_menu.html,
+       pero con <button> en vez de <a> (esta tabla no recarga la página). */
+
+    .wcs-porpagina { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text-2); }
+    .wcs-porpagina button {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 34px; height: 34px; border-radius: 7px;
+        font-size: 13px; font-weight: 500; font-family: inherit;
+        color: var(--text-2); border: 1px solid var(--border);
+        background: var(--white); transition: all .15s; cursor: pointer;
+    }
+    .wcs-porpagina button:hover { background: var(--indigo-lt); color: var(--indigo); border-color: var(--indigo); }
+    .wcs-porpagina button.current { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+    /* Dropdown de mostrar/ocultar columnas — mismo patrón que .col-toggle-item
+       de lista_paros.html (paros_app). */
+    .wcs-col-toggle-item {
+        display: flex; align-items: center; gap: 8px;
+        padding: 6px 14px; cursor: pointer; font-size: 12px;
+        color: var(--text);
+    }
+    .wcs-col-toggle-item:hover { background: var(--surface); }
+    .wcs-col-toggle-item input { accent-color: var(--indigo); width: 14px; height: 14px; flex-shrink: 0; }
+    .pagination { display: flex; align-items: center; gap: 4px; margin-top: 12px; justify-content: flex-end; }
+    .pagination button, .pagination span {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 34px; height: 34px; border-radius: 7px;
+        font-size: 13px; font-weight: 500; font-family: inherit;
+        color: var(--text-2); border: 1px solid var(--border);
+        background: var(--white); transition: all .15s; cursor: pointer;
+    }
+    .pagination button:hover { background: var(--indigo-lt); color: var(--indigo); border-color: var(--indigo); }
+    .pagination .current { background: var(--indigo); color: #fff; border-color: var(--indigo); cursor: default; }
+    .pagination .disabled { opacity: .4; pointer-events: none; cursor: default; }
+
+    /* Modal de gráfico en pantalla completa */
+    .wcs-modal {
+        display: none; position: fixed; inset: 0; background: rgba(30,27,75,.5);
+        z-index: 1000; align-items: center; justify-content: center; padding: 30px;
+    }
+    .wcs-modal.is-open { display: flex; }
+    .wcs-modal-box { background: var(--white); border-radius: var(--radius); padding: 24px;
+                      width: 100%; height: 80vh; display: flex; flex-direction: column; }
+    .wcs-modal-close { align-self: flex-end; background: none; border: none; cursor: pointer; font-size: 20px; color: var(--text-3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wcs-wrap">
+
+    <div class="wcs-header">
+        <div class="wcs-title">{% trans "Panel de Tareas WCS" %}</div>
+        <div class="wcs-subtitle">{% trans "Sube el log de ejecución del WCS para ver el detalle de tareas del almacén automático" %}</div>
+    </div>
+
+    <div class="card" id="wcs-upload-card">
+        <!-- Estado: sin archivo (grande) -->
+        <div id="wcs-dropzone" onclick="document.getElementById('wcs-archivo').click()">
+            <div>{% trans "Arrastra el log del WCS aquí o" %} <span class="wcs-dropzone-link">{% trans "haz clic para seleccionarlo" %}</span></div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:4px;">.xlsx · {% trans "máx. 50 MB" %}</div>
+        </div>
+
+        <!-- Estado: cargando (mientras el backend procesa el archivo) -->
+        <div id="wcs-cargando" style="display:none;">
+            <div class="wcs-spinner"></div>
+            <div>{% trans "Procesando archivo…" %}</div>
+        </div>
+
+        <!-- Estado: archivo cargado (compacto) -->
+        <div id="wcs-archivo-cargado" class="wcs-archivo-cargado" style="display:none;">
+            <span class="wcs-archivo-dot"></span>
+            <span class="wcs-archivo-nombre" id="wcs-archivo-nombre"></span>
+            <span class="wcs-archivo-info" id="wcs-archivo-info"></span>
+            <a href="#" id="wcs-reemplazar" class="wcs-archivo-reemplazar">{% trans "Reemplazar" %}</a>
+        </div>
+        <input type="file" id="wcs-archivo" accept=".xlsx,.xls" style="display:none;">
+        <div id="wcs-error"></div>
+    </div>
+
+    <div id="wcs-dashboard">
+
+        <div class="card">
+            <div class="wcs-filtros">
+                <div class="wcs-filtro-group" style="flex:1; min-width:200px;">
+                    <label>{% trans "Buscar" %}</label>
+                    <input type="text" id="wcs-buscar" placeholder="{% trans 'Item, rack, material o ubicación… (usa -&- para varios)' %}">
+                </div>
+                <div class="wcs-filtro-group">
+                    <label>{% trans "Movimiento" %}</label>
+                    <select id="wcs-movimiento">
+                        <option value="">{% trans "Todos" %}</option>
+                        <option value="Subida">{% trans "Subida" %}</option>
+                        <option value="Bajada">{% trans "Bajada" %}</option>
+                        <option value="Traslado">{% trans "Traslado" %}</option>
+                        <option value="traslado_1d_1k_1h">{% trans "Traslado 1D → 1K/1H" %}</option>
+                        <option value="traslado_1d_1k">{% trans "Traslado 1D a 1K" %}</option>
+                        <option value="traslado_1d_1h">{% trans "Traslado 1D a 1H" %}</option>
+                        <option value="traslado_1c_1d">{% trans "Traslado 1C a 1D" %}</option>
+                        <option value="traslado_1c_1z">{% trans "Traslado 1C a 1Z" %}</option>
+                        <option value="traslado_1t_1c">{% trans "Traslado 1T a 1C" %}</option>
+                        <option value="traslado_1b_1t">{% trans "Traslado 1B a 1T" %}</option>
+                        <option value="traslado_1t1001_1009_1c">{% trans "Traslado (1T1001 a 1T1009) a 1C" %}</option>
+                        <option value="traslado_1t1010_1035_1c">{% trans "Traslado (1T1010 a 1T1035) a 1C" %}</option>
+                        <option value="traslado_1b_1t1010_1035">{% trans "Traslado 1B a (1T1010 a 1T1035)" %}</option>
+                        <option value="traslado_1b_1t1001_1009">{% trans "Traslado 1B a (1T1001 a 1T1009)" %}</option>
+                        <option value="traslado_1z_1d">{% trans "Traslado 1Z a 1D" %}</option>
+                        <option value="traslado_1z_1t">{% trans "Traslado 1Z a 1T" %}</option>
+                        <option value="traslado_1z_1f">{% trans "Traslado 1Z a 1F" %}</option>
+                        <option value="traslado_1z_1c">{% trans "Traslado 1Z a 1C" %}</option>
+                        <option value="traslado_2z_2t">{% trans "Traslado 2Z a 2T" %}</option>
+                        <option value="traslado_2z_2b">{% trans "Traslado 2Z a 2B" %}</option>
+                        <option value="traslado_2z_2b10">{% trans "Traslado 2Z a 2B10" %}</option>
+                        <option value="traslado_2z_2b11">{% trans "Traslado 2Z a 2B11" %}</option>
+                        <option value="traslado_2z_2b20">{% trans "Traslado 2Z a 2B20" %}</option>
+                        <option value="traslado_2z_2f">{% trans "Traslado 2Z a 2F" %}</option>
+                        <option value="traslado_2b10_2t">{% trans "Traslado 2B10 a 2T" %}</option>
+                        <option value="traslado_2b11_2t">{% trans "Traslado 2B11 a 2T" %}</option>
+                        <option value="traslado_2b20_2t">{% trans "Traslado 2B20 a 2T" %}</option>
+                        <option value="traslado_2b_2z">{% trans "Traslado 2B a 2Z" %}</option>
+                        <option value="traslado_2b20_2z">{% trans "Traslado 2B20 a 2Z" %}</option>
+                    </select>
+                </div>
+                <div class="wcs-filtro-group">
+                    <label>{% trans "Status" %}</label>
+                    <select id="wcs-status">
+                        <option value="">{% trans "Todos" %}</option>
+                    </select>
+                </div>
+                <div class="wcs-filtro-group">
+                    <label>{% trans "Desde" %}</label>
+                    {% include 'menu_app/_date_picker.html' with name='wcs_desde_iso' dp_id='dp-wcs-desde' %}
+                </div>
+                <div class="wcs-filtro-group">
+                    <label>{% trans "Hasta" %}</label>
+                    {% include 'menu_app/_date_picker.html' with name='wcs_hasta_iso' dp_id='dp-wcs-hasta' %}
+                </div>
+                <div class="wcs-filtro-group">
+                    <label>{% trans "Hora desde" %}</label>
+                    <input type="time" id="wcs-hora-desde">
+                </div>
+                <div class="wcs-filtro-group">
+                    <label>{% trans "Hora hasta" %}</label>
+                    <input type="time" id="wcs-hora-hasta">
+                </div>
+                <div class="wcs-filtro-group">
+                    <label>&nbsp;</label>
+                    <button type="button" class="wcs-btn-limpiar" id="wcs-limpiar-filtros">{% trans "Limpiar filtros" %}</button>
+                </div>
+            </div>
+            <div class="wcs-stackers" id="wcs-stackers" style="margin-top:14px;"></div>
+        </div>
+
+        <div class="wcs-kpis" id="wcs-kpis"></div>
+
+        <div class="wcs-charts-row">
+            <div class="card wcs-chart-card">
+                <div class="wcs-chart-title">
+                    <span id="wcs-titulo-stacker">{% trans "Duración promedio por Ubicaciones" %}</span>
+                    <div class="wcs-chart-title-right">
+                        <div class="wcs-chart-modo" id="wcs-modo-stacker">
+                            <button type="button" data-modo="duracion" class="current">{% trans "Duración" %}</button>
+                            <button type="button" data-modo="cantidad">{% trans "Cantidad" %}</button>
+                        </div>
+                        <div class="wcs-chart-modo" id="wcs-categoria-stacker">
+                            <button type="button" data-categoria="inyeccion" class="current">{% trans "Inyección" %}</button>
+                            <button type="button" data-categoria="pintura">{% trans "Pintura" %}</button>
+                        </div>
+                        <button class="wcs-chart-expand" data-chart="stacker">⤢</button>
+                    </div>
+                </div>
+                <div class="wcs-chart-box wcs-chart-box--tall" id="wcs-chart-stacker-box"><canvas id="wcs-chart-stacker"></canvas></div>
+            </div>
+            <div class="card wcs-chart-card">
+                <div class="wcs-chart-title">
+                    <span>{% trans "Distribución de duración" %}</span>
+                    <button class="wcs-chart-expand" data-chart="histograma">⤢</button>
+                </div>
+                <div class="wcs-dist-stats" id="wcs-dist-stats"></div>
+                <div class="wcs-chart-box wcs-chart-box--md"><canvas id="wcs-chart-histograma"></canvas></div>
+            </div>
+        </div>
+
+        <div class="card wcs-chart-card wcs-colapsable" id="wcs-card-destinos">
+            <div class="wcs-chart-title wcs-colapsable-header" role="button" tabindex="0"
+                 onclick="wcsToggleGraficoDestinos()"
+                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();wcsToggleGraficoDestinos();}">
+                <span>{% trans "Ubicaciones de destino" %}</span>
+                <div class="wcs-chart-title-right">
+                <div class="wcs-chart-modo" id="wcs-categoria-destino" onclick="event.stopPropagation();">
+                        <button type="button" data-categoria="inyeccion" class="current">{% trans "Inyección" %}</button>
+                        <button type="button" data-categoria="pintura">{% trans "Pintura" %}</button>
+                </div>
+                    <span class="wcs-colapsable-toggle" id="wcs-toggle-destinos">▾</span>
+                    <button class="wcs-chart-expand" data-chart="destinos" onclick="event.stopPropagation();">⤢</button>
+                </div>
+            </div>
+            <div class="wcs-colapsable-body" id="wcs-body-destinos">
+                <div class="wcs-stackers" id="wcs-chips-destino" style="margin-bottom:14px;"></div>
+                <div class="wcs-chart-box" id="wcs-chart-destinos-box"><canvas id="wcs-chart-destinos"></canvas></div>
+            </div>
+        </div>
+
+        <div class="card wcs-chart-card">
+            <div class="wcs-chart-title">
+                <span>{% trans "Tendencia de tareas por franja horaria" %}</span>
+                <button class="wcs-chart-expand" data-chart="tendencia">⤢</button>
+            </div>
+            <div class="wcs-chart-box"><canvas id="wcs-chart-tendencia"></canvas></div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:flex-end; margin-bottom:10px; position:relative;" id="wcs-col-picker-wrap">
+                <button id="wcs-btn-columnas" onclick="wcsToggleDropdownColumnas()" class="btn btn-ghost btn-sm">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+                    </svg>
+                    {% trans "Columnas" %}
+                </button>
+                <div id="wcs-dropdown-columnas" style="display:none; position:absolute; right:0; top:36px;
+                                            background:var(--white); border:1px solid var(--border);
+                                            border-radius:10px; padding:8px 0; width:210px; z-index:100;
+                                            box-shadow:var(--shadow-md); max-height:340px; overflow-y:auto;">
+                    <div style="font-size:11px; font-weight:600; color:var(--text-3); padding:4px 14px 8px;
+                                text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border);
+                                margin-bottom:4px;">{% trans "Mostrar columnas" %}</div>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="0" onchange="wcsToggleColumna(this)"> {% trans "Número de serie" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="1" onchange="wcsToggleColumna(this)"> {% trans "Código" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="2" onchange="wcsToggleColumna(this)"> {% trans "Rack" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="3" onchange="wcsToggleColumna(this)"> {% trans "Material" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="4" onchange="wcsToggleColumna(this)"> {% trans "Status" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="5" onchange="wcsToggleColumna(this)"> {% trans "Creado" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="6" onchange="wcsToggleColumna(this)"> {% trans "Finalizado" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="7" onchange="wcsToggleColumna(this)"> {% trans "Duración (min)" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="8" onchange="wcsToggleColumna(this)"> {% trans "Movimiento" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="9" onchange="wcsToggleColumna(this)"> {% trans "Stacker" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="10" onchange="wcsToggleColumna(this)"> {% trans "Ubicación origen" %}</label>
+                    <label class="wcs-col-toggle-item"><input type="checkbox" checked data-colidx="11" onchange="wcsToggleColumna(this)"> {% trans "Ubicación destino" %}</label>
+                </div>
+            </div>
+            <div class="wcs-tabla-wrap">
+                <table class="wcs-tabla" id="wcs-tabla">
+                    <colgroup>
+                        <col style="width:110px;">
+                        <col style="width:100px;">
+                        <col style="width:90px;">
+                        <col style="width:450px;">
+                        <col style="width:70px;">
+                        <col style="width:155px;">
+                        <col style="width:155px;">
+                        <col style="width:90px;">
+                        <col style="width:90px;">
+                        <col style="width:110px;">
+                        <col style="width:120px;">
+                        <col style="width:120px;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th data-col="serial">{% trans "Número de serie" %}</th>
+                            <th data-col="codigo">{% trans "Código" %}</th>
+                            <th data-col="rack">{% trans "Rack" %}</th>
+                            <th data-col="material">{% trans "Material" %}</th>
+                            <th data-col="status">{% trans "Status" %}</th>
+                            <th data-col="creado">{% trans "Creado" %}</th>
+                            <th data-col="finalizado">{% trans "Finalizado" %}</th>
+                            <th data-col="duracion_min">{% trans "Duración (min)" %}</th>
+                            <th data-col="movimiento">{% trans "Movimiento" %}</th>
+                            <th data-col="stacker">{% trans "Stacker" %}</th>
+                            <th data-col="origen" class="wcs-th-filtrable" id="wcs-th-origen">
+                                {% trans "Ubicación origen" %}
+                                <div class="wcs-th-popover" id="wcs-popover-origen">
+                                    <input type="text" id="wcs-filtro-col-origen" placeholder="{% trans 'Filtrar…' %}">
+                                </div>
+                            </th>
+                            <th data-col="destino" class="wcs-th-filtrable" id="wcs-th-destino">
+                                {% trans "Ubicación destino" %}
+                                <div class="wcs-th-popover" id="wcs-popover-destino">
+                                    <input type="text" id="wcs-filtro-col-destino" placeholder="{% trans 'Filtrar…' %}">
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="wcs-tabla-body"></tbody>
+                </table>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px;">
+                <div class="wcs-porpagina">
+                    <span>{% trans "Mostrar" %}</span>
+                    <button type="button" data-porpagina="20" class="current">20</button>
+                    <button type="button" data-porpagina="50">50</button>
+                    <button type="button" data-porpagina="100">100</button>
+                </div>
+                <div class="pagination" id="wcs-paginacion"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de gráfico en pantalla completa -->
+<div class="wcs-modal" id="wcs-modal">
+    <div class="wcs-modal-box">
+        <button class="wcs-modal-close" id="wcs-modal-close">✕</button>
+        <div style="flex:1; position:relative;"><canvas id="wcs-modal-canvas"></canvas></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
+<script>
+window.WCS_CFG = {
+    urlProcesar: "{% url 'inventario:procesar_wcs' %}",
+    csrfToken: "{{ csrf_token }}",
+};
+window.WCS_I18N = {
+    tareas: "{% trans 'Tareas' %}",
+    duracionPromedio: "{% trans 'Duración promedio' %}",
+    duracionFrecuente: "{% trans 'Duración más frecuente' %}",
+    sinFinalizar: "{% trans 'Sin finalizar' %}",
+    stackerMasUsado: "{% trans 'Stacker más usado' %}",
+    racksDistintos: "{% trans 'Racks distintos' %}",
+    todos: "{% trans 'Todos' %}",
+    errorConexion: "{% trans 'Error de conexión al procesar el archivo.' %}",
+    total: "{% trans 'Total' %}",
+    registros: "{% trans 'registros' %}",
+    cantidad: "{% trans 'Cantidad de tareas' %}",
+    mediana: "{% trans 'Mediana' %}",
+};
+</script>
+<script src="{% static 'inventario_app/js/wcs/upload.js' %}"></script>
+<script src="{% static 'inventario_app/js/wcs/filtros.js' %}"></script>
+<script src="{% static 'inventario_app/js/wcs/graficos.js' %}"></script>
+<script src="{% static 'inventario_app/js/wcs/tabla.js' %}"></script>
+{% endblock %}

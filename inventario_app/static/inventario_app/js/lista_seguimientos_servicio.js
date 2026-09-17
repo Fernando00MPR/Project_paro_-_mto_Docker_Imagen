@@ -1,13 +1,24 @@
 /* lista_seguimientos_servicio.js (inventario_app) */
 
+// Fecha PR/PO/SR son el selector de fecha único; su valor real vive en el
+// hidden .dp-value (name=... es el que de verdad envía el <form>). Fijarlo
+// desde fuera exige disparar 'change' para que el widget se resincronice y
+// repinte (ver date_picker.js).
+function setServFecha(dpId, iso) {
+    const hidden = document.querySelector('#' + dpId + ' .dp-value');
+    hidden.value = iso || '';
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 // ── Modal eliminar ────────────────────────────────────────────────────────────
-function confirmarEliminarServ(url) {
+function confirmarEliminarServ(event, url) {
     document.getElementById('form-eliminar-serv').action = url;
-    document.getElementById('modal-eliminar-serv').style.display = 'flex';
+    document.getElementById('elim-serv-volver').value = window.location.search;
+    abrirModalConAnimacion('modal-eliminar-serv', event);
 }
 
 function cerrarModalEliminarServ() {
-    document.getElementById('modal-eliminar-serv').style.display = 'none';
+    cerrarModalConAnimacion('modal-eliminar-serv');
 }
 
 document.getElementById('modal-eliminar-serv').addEventListener('click', function(e) {
@@ -22,9 +33,10 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ── Modal nuevo/editar seguimiento ────────────────────────────────────────────
-function abrirModalServ() {
+function abrirModalServ(event) {
     document.getElementById('modal-serv-titulo').textContent = 'Nuevo seguimiento';
     document.getElementById('form-serv').action = '/inventario/servicios/nuevo/';
+    document.getElementById('serv-volver').value = window.location.search;
 
     document.getElementById('serv-no-item').value     = '';
     document.getElementById('serv-nombre').value      = '';
@@ -32,20 +44,21 @@ function abrirModalServ() {
     document.getElementById('serv-tipo').value        = '';
     document.getElementById('serv-motivo').value      = '';
     document.getElementById('serv-numero-pr').value   = '';
-    document.getElementById('serv-fecha-pr').value    = '';
+    setServFecha('dp-serv-fecha-pr', '');
     document.getElementById('serv-numero-po').value   = '';
-    document.getElementById('serv-fecha-po').value    = '';
+    setServFecha('dp-serv-fecha-po', '');
     document.getElementById('serv-numero-sr').value   = '';
-    document.getElementById('serv-fecha-sr').value    = '';
+    setServFecha('dp-serv-fecha-sr', '');
     document.getElementById('serv-comentarios').value = '';
 
-    document.getElementById('modal-serv').style.display = 'flex';
+    abrirModalConAnimacion('modal-serv', event);
     setTimeout(() => document.getElementById('serv-no-item').focus(), 50);
 }
 
-function editarServ(id, noItem, nombre, cantidad, motivo, tipoId, numeroPr, fechaPr, numeroPo, fechaPo, numeroSr, fechaSr, comentarios) {
+function editarServ(event, id, noItem, nombre, cantidad, motivo, tipoId, numeroPr, fechaPr, numeroPo, fechaPo, numeroSr, fechaSr, comentarios) {
     document.getElementById('modal-serv-titulo').textContent = 'Editar seguimiento';
     document.getElementById('form-serv').action = `/inventario/servicios/editar/${id}/`;
+    document.getElementById('serv-volver').value = window.location.search;
 
     document.getElementById('serv-no-item').value     = noItem;
     document.getElementById('serv-nombre').value      = nombre;
@@ -53,23 +66,19 @@ function editarServ(id, noItem, nombre, cantidad, motivo, tipoId, numeroPr, fech
     document.getElementById('serv-tipo').value        = tipoId;
     document.getElementById('serv-motivo').value      = motivo;
     document.getElementById('serv-numero-pr').value   = numeroPr;
-    document.getElementById('serv-fecha-pr').value    = fechaPr;
+    setServFecha('dp-serv-fecha-pr', fechaPr);
     document.getElementById('serv-numero-po').value   = numeroPo;
-    document.getElementById('serv-fecha-po').value    = fechaPo;
+    setServFecha('dp-serv-fecha-po', fechaPo);
     document.getElementById('serv-numero-sr').value   = numeroSr;
-    document.getElementById('serv-fecha-sr').value    = fechaSr;
+    setServFecha('dp-serv-fecha-sr', fechaSr);
     document.getElementById('serv-comentarios').value = comentarios;
 
-    document.getElementById('modal-serv').style.display = 'flex';
+    abrirModalConAnimacion('modal-serv', event);
 }
 
 function cerrarModalServ() {
-    document.getElementById('modal-serv').style.display = 'none';
+    cerrarModalConAnimacion('modal-serv');
 }
-
-document.getElementById('modal-serv').addEventListener('click', function(e) {
-    if (e.target === this) cerrarModalServ();
-});
 
 const SERV_COLS = [
     'serv-col-item', 'serv-col-nombre', 'serv-col-cantidad', 'serv-col-motivo',

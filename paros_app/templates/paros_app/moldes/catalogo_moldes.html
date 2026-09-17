@@ -64,13 +64,13 @@
             {% if puede_gestionar and area.num_moldes > 0 %}
                 <button type="button" class="btn btn-sm"
                         style="border-color:var(--red); color:var(--red); background:transparent;"
-                        onclick="confirmarLimpiar('{{ area.id }}', '{{ area.nombre }}', 'moldes')">
+                        onclick="confirmarLimpiar(event, '{{ area.id }}', '{{ area.nombre }}', 'moldes')">
                     🗑 {% trans "Limpiar" %}
                 </button>
             {% endif %}
             {% if puede_agregar %}
                 <button type="button" class="btn btn-primary btn-sm"
-                        onclick="abrirModalAgregarMolde('{{ area.id }}', '{{ area.nombre }}', '/catalogos/moldes/agregar/{{ area.id }}/')">
+                        onclick="abrirModalAgregarMolde(event, '{{ area.id }}', '{{ area.nombre }}', '/catalogos/moldes/agregar/{{ area.id }}/')">
                     + {% trans "Agregar" %}
                 </button>
                 {% endif %}
@@ -102,13 +102,13 @@
                             <div style="display:flex; gap:6px;">
                                 {% if puede_editar %}
                                 <button type="button" class="btn btn-ghost btn-sm" style="min-width:80px;"
-                                        onclick="abrirModalEditarMolde('{{ molde.id }}', '{{ molde.numero_molde }}', '{{ molde.nombre_molde|escapejs }}', '/catalogos/moldes/editar/{{ molde.id }}/')">
+                                        onclick="abrirModalEditarMolde(event, '{{ molde.id }}', '{{ molde.numero_molde }}', '{{ molde.nombre_molde|escapejs }}', '/catalogos/moldes/editar/{{ molde.id }}/')">
                                     ✏️ {% trans "Editar" %}
                                 </button>
                                 {% endif %}
                                 {% if puede_eliminar %}
                                 <button type="button" class="btn btn-sm" style="min-width:80px; border-color:var(--red); color:var(--red); background:transparent;"
-                                        onclick="confirmarEliminar('{{ molde.id }}', '{{ molde.nombre_molde|escapejs }}', '/catalogos/moldes/eliminar/{{ molde.id }}/')">
+                                        onclick="confirmarEliminar(event, '{{ molde.id }}', '{{ molde.nombre_molde|escapejs }}', '/catalogos/moldes/eliminar/{{ molde.id }}/')">
                                     🗑  {% trans "Eliminar" %}
                                 </button>
                                 {% endif %}
@@ -151,41 +151,127 @@
                     {% trans "Sí, eliminar todo" %}
                 </button>
             </form>
-                <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-limpiar').style.display='none'">
+                <button type="button" class="btn btn-ghost" onclick="cerrarModalLimpiar()">
                     {% trans "Cancelar" %}
                 </button>
         </div>
     </div>
 </div>
 
+<!-- Modales agregar/editar molde — mismo rediseño aplicado en Fallas/Equipos/Responsables (opción 1a). -->
+<style>
+    #modal-agregar-molde .modal-box, #modal-editar-molde .modal-box {
+        width: 480px; max-width: calc(100vw - 32px); min-width: 0;
+        padding: 0; text-align: left;
+        border-radius: 14px; overflow: hidden;
+        box-shadow: 0 18px 50px rgba(29,29,36,.13);
+        background: #fff;
+    }
+    #modal-agregar-molde .mf-header, #modal-editar-molde .mf-header {
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+        padding: 20px 24px 16px; border-bottom: 1px solid #ececf0;
+    }
+    #modal-agregar-molde .mf-title, #modal-editar-molde .mf-title { font-size: 17px; font-weight: 600; color: #1d1d24; margin: 0; }
+    #modal-agregar-molde .mf-subtitle, #modal-editar-molde .mf-subtitle { font-size: 13px; font-weight: 400; color: #7c7c88; margin: 3px 0 0; }
+    #modal-agregar-molde .mf-close, #modal-editar-molde .mf-close {
+        width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent;
+        color: #8a8a96; cursor: pointer; font-size: 15px; line-height: 1; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        transition: background .15s, color .15s;
+    }
+    #modal-agregar-molde .mf-close:hover, #modal-editar-molde .mf-close:hover { background: #EF4444; color: #fff; }
+    #modal-agregar-molde .mf-body, #modal-editar-molde .mf-body {
+        padding: 20px 24px 24px;
+        max-height: calc(100vh - 160px); overflow-y: auto;
+        display: flex; flex-direction: column; gap: 22px;
+    }
+    #modal-agregar-molde .mf-group, #modal-editar-molde .mf-group { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+    #modal-agregar-molde .mf-group legend, #modal-editar-molde .mf-group legend {
+        font-size: 11px; font-weight: 600; color: #9b9ba6; text-transform: uppercase;
+        letter-spacing: .1em; padding: 0; margin-bottom: 2px;
+    }
+    #modal-agregar-molde .form-field, #modal-editar-molde .form-field { margin: 0; gap: 0; }
+    #modal-agregar-molde .form-field label, #modal-editar-molde .form-field label {
+        font-size: 13px; font-weight: 500; color: #33333c; margin-bottom: 6px;
+        letter-spacing: normal; text-transform: none;
+    }
+    #modal-agregar-molde .mf-req, #modal-editar-molde .mf-req { color: #c0356f; }
+    #modal-agregar-molde .form-field input, #modal-editar-molde .form-field input {
+        width: 100%; box-sizing: border-box; padding: 9px 12px;
+        border: 1px solid #d8d8e0; border-radius: 8px;
+        color: #1d1d24; background: #fff; font-size: 14px; font-family: inherit;
+        outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    #modal-agregar-molde .form-field input::placeholder, #modal-editar-molde .form-field input::placeholder { color: #9b9ba6; }
+    #modal-agregar-molde .form-field input:focus, #modal-editar-molde .form-field input:focus {
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+    #modal-agregar-molde .mf-footer, #modal-editar-molde .mf-footer {
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        padding: 14px 24px; border-top: 1px solid #ececf0; background: #fafafb;
+    }
+    #modal-agregar-molde .mf-required, #modal-editar-molde .mf-required { font-size: 12px; color: #8a8a96; }
+    #modal-agregar-molde .mf-actions, #modal-editar-molde .mf-actions { display: flex; gap: 10px; }
+    #modal-agregar-molde .btn-mf-secondary, #modal-editar-molde .btn-mf-secondary {
+        padding: 9px 16px; border-radius: 8px; border: 1px solid #d8d8e0;
+        background: #fff; color: #33333c; font-weight: 500; font-size: 14px;
+        cursor: pointer; font-family: inherit; transition: background .15s;
+    }
+    #modal-agregar-molde .btn-mf-secondary:hover, #modal-editar-molde .btn-mf-secondary:hover { background: #f2f2f5; }
+    #modal-agregar-molde .btn-mf-primary, #modal-editar-molde .btn-mf-primary {
+        padding: 9px 18px; border-radius: 8px; border: none;
+        background: var(--indigo); color: #fff; font-weight: 600; font-size: 14px;
+        cursor: pointer; font-family: inherit; transition: background .15s;
+    }
+    #modal-agregar-molde .btn-mf-primary:hover, #modal-editar-molde .btn-mf-primary:hover { background: var(--indigo-dk); }
+    #modal-agregar-molde .btn-mf-primary:focus-visible, #modal-editar-molde .btn-mf-primary:focus-visible {
+        outline: none; box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+</style>
 <!-- Modal agregar molde -->
 <div id="modal-agregar-molde" class="modal-backdrop" style="display:none;">
-    <div class="modal-box">
-        <div style="font-weight:600; font-size:14px; margin-bottom:16px;" id="modal-agregar-molde-titulo">
-            {% trans "Agregar molde" %}
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-agregar-molde-titulo">
+        <div class="mf-header">
+            <div>
+                <h2 class="mf-title" id="modal-agregar-molde-titulo">{% trans "Agregar molde" %}</h2>
+                <p class="mf-subtitle" id="modal-agregar-molde-subtitulo"></p>
+            </div>
+            <button type="button" class="mf-close" aria-label="{% trans 'Cerrar' %}"
+                    onclick="cerrarModalAgregarMolde()">✕</button>
         </div>
         <form id="form-agregar-molde" method="post" action="">
             {% csrf_token %}
-            <div class="form-field" style="margin-bottom:12px;">
-                <label>{% trans "Número de molde" %}<span style="color:var(--red)">*</span></label>
-                <input type="text" name="numero_molde" id="agregar-molde-numero" required maxlength="30"
-                       placeholder="ej. M-016"
-                       style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            <div class="mf-body">
+                <fieldset class="mf-group modal-row">
+                    <legend>{% trans "Identificación" %}</legend>
+                    <div class="form-field">
+                        <label for="agregar-molde-numero">{% trans "Número de molde" %} <span class="mf-req">*</span></label>
+                        <input type="text" name="numero_molde" id="agregar-molde-numero" required aria-required="true" maxlength="30"
+                               placeholder="ej. M-016">
+                    </div>
+                </fieldset>
+
+                <fieldset class="mf-group modal-row">
+                    <legend>{% trans "Nombre de molde" %}</legend>
+                    <div class="form-field">
+                        <label for="agregar-molde-nombre">{% trans "Nombre" %} <span class="mf-req">*</span></label>
+                        <input type="text" name="nombre_molde" id="agregar-molde-nombre" required aria-required="true" maxlength="300"
+                            placeholder="{% trans 'Nombre del molde…' %}">
+                    </div>
+                </fieldset>
             </div>
-            <div class="form-field" style="margin-bottom:16px;">
-                <label>{% trans "Nombre de molde" %}<span style="color:var(--red)">*</span></label>
-                <input type="text" name="nombre_molde" id="agregar-molde-nombre" required maxlength="300"
-                    placeholder="{% trans 'Nombre del molde…' %}"
-                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
-            </div>
-            <div class="modal-actions">
-                <button type="submit" class="btn btn-primary">
-                    {% trans "Guardar molde" %}
-                </button>
-                <button type="button" class="btn btn-ghost"
-                        onclick="document.getElementById('modal-agregar-molde').style.display='none'">
-                    {% trans "Cancelar" %}
-                </button>
+            <div class="mf-footer">
+                <span class="mf-required"><span class="mf-req">*</span> {% trans "Campos obligatorios" %}</span>
+                <div class="mf-actions">
+                    <button type="button" class="btn-mf-secondary"
+                            onclick="cerrarModalAgregarMolde()">
+                        {% trans "Cancelar" %}
+                    </button>
+                    <button type="submit" class="btn-mf-primary">
+                        {% trans "Guardar molde" %}
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -193,28 +279,45 @@
 
 <!-- Modal editar molde -->
 <div id="modal-editar-molde" class="modal-backdrop" style="display:none;">
-    <div class="modal-box">
-        <div style="font-weight:600; font-size:14px; margin-bottom:16px;">{% trans "Editar molde" %}</div>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-editar-molde-titulo">
+        <div class="mf-header">
+            <div>
+                <h2 class="mf-title" id="modal-editar-molde-titulo">{% trans "Editar molde" %}</h2>
+                <p class="mf-subtitle" id="modal-editar-molde-subtitulo"></p>
+            </div>
+            <button type="button" class="mf-close" aria-label="{% trans 'Cerrar' %}"
+                    onclick="cerrarModalEditarMolde()">✕</button>
+        </div>
         <form id="form-editar-molde" method="post" action="">
             {% csrf_token %}
-            <div class="form-field" style="margin-bottom:12px;">
-                <label>{% trans "Número de molde" %}<span style="color:var(--red)">*</span></label>
-                <input type="text" name="numero_molde" id="editar-molde-numero" required maxlength="30"
-                       style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            <div class="mf-body">
+                <fieldset class="mf-group modal-row">
+                    <legend>{% trans "Identificación" %}</legend>
+                    <div class="form-field">
+                        <label for="editar-molde-numero">{% trans "Número de molde" %} <span class="mf-req">*</span></label>
+                        <input type="text" name="numero_molde" id="editar-molde-numero" required aria-required="true" maxlength="30">
+                    </div>
+                </fieldset>
+
+                <fieldset class="mf-group modal-row">
+                    <legend>{% trans "Nombre de molde" %}</legend>
+                    <div class="form-field">
+                        <label for="editar-molde-nombre">{% trans "Nombre" %} <span class="mf-req">*</span></label>
+                        <input type="text" name="nombre_molde" id="editar-molde-nombre" required aria-required="true" maxlength="300">
+                    </div>
+                </fieldset>
             </div>
-            <div class="form-field" style="margin-bottom:16px;">
-                <label>{% trans "Nombre de molde" %}<span style="color:var(--red)">*</span></label>
-                <input type="text" name="nombre_molde" id="editar-molde-nombre" required maxlength="300"
-                    style="width:100%; height:34px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
-            </div>
-            <div class="modal-actions">
-                <button type="submit" class="btn btn-primary">
-                    {% trans "Guardar cambios" %}
-                </button>
-                <button type="button" class="btn btn-ghost"
-                        onclick="document.getElementById('modal-editar-molde').style.display='none'">
-                    {% trans "Cancelar" %}
-                </button>
+            <div class="mf-footer">
+                <span class="mf-required"><span class="mf-req">*</span> {% trans "Campos obligatorios" %}</span>
+                <div class="mf-actions">
+                    <button type="button" class="btn-mf-secondary"
+                            onclick="cerrarModalEditarMolde()">
+                        {% trans "Cancelar" %}
+                    </button>
+                    <button type="submit" class="btn-mf-primary">
+                        {% trans "Guardar cambios" %}
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -234,7 +337,7 @@
                 </button>
             </form>
                 <button type="button" class="btn btn-ghost"
-                        onclick="document.getElementById('modal-eliminar').style.display='none'">
+                        onclick="cerrarModalEliminar()">
                     {% trans "Cancelar" %}
                 </button>
         </div>
@@ -256,34 +359,34 @@
 <script>
     function filtrarMoldes(areaId, q) { filtrarCatalogo(areaId, q, "{% trans 'molde' %}", "{% trans 'moldes' %}"); }
 
-    function abrirModalAgregarMolde(areaId, areaNombre, url) {
-        document.getElementById('modal-agregar-molde-titulo').textContent = "{% trans 'Agregar molde' %} — " + areaNombre;
+    function abrirModalAgregarMolde(event, areaId, areaNombre, url) {
+        document.getElementById('modal-agregar-molde-subtitulo').textContent = areaNombre;
         document.getElementById('form-agregar-molde').action = url;
-        document.getElementById('agregar-molde-numero').value = '';
+        const campoNumeroEl = document.getElementById('agregar-molde-numero');
+        campoNumeroEl.value = '';
         document.getElementById('agregar-molde-nombre').value = '';
-        document.getElementById('modal-agregar-molde').style.display = 'flex';
+        abrirModalConAnimacion('modal-agregar-molde', event);
+        setTimeout(() => campoNumeroEl.focus(), 50);
     }
+    function cerrarModalAgregarMolde() { cerrarModalConAnimacion('modal-agregar-molde'); }
 
-    function abrirModalEditarMolde(id, numero, nombre, url) {
+    function abrirModalEditarMolde(event, id, numero, nombre, url) {
         document.getElementById('form-editar-molde').action = url;
-        document.getElementById('editar-molde-numero').value = numero;
+        document.getElementById('modal-editar-molde-subtitulo').textContent = numero;
+        const editarNumeroEl = document.getElementById('editar-molde-numero');
+        editarNumeroEl.value = numero;
         document.getElementById('editar-molde-nombre').value = nombre;
-        document.getElementById('modal-editar-molde').style.display = 'flex';
+        abrirModalConAnimacion('modal-editar-molde', event);
+        setTimeout(() => editarNumeroEl.focus(), 50);
     }
+    function cerrarModalEditarMolde() { cerrarModalConAnimacion('modal-editar-molde'); }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const modalAgregarMolde = document.getElementById('modal-agregar-molde');
-        if (modalAgregarMolde) {
-            modalAgregarMolde.addEventListener('click', function(e) {
-                if (e.target === this) this.style.display = 'none';
-            });
-        }
-        const modalEditarMolde = document.getElementById('modal-editar-molde');
-        if (modalEditarMolde) {
-            modalEditarMolde.addEventListener('click', function(e) {
-                if (e.target === this) this.style.display = 'none';
-            });
-        }
+    document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Escape') return;
+        ['modal-agregar-molde', 'modal-editar-molde'].forEach(id => {
+            const m = document.getElementById(id);
+            if (m && m.style.display !== 'none') cerrarModalConAnimacion(id);
+        });
     });
 </script>
 {% endblock %}

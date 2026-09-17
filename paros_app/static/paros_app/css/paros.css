@@ -109,9 +109,9 @@
 
 
 /* ── editar_paro — colores de estatus en el select ────────────────────────── */
-#id_estatus.estatus-rojo     { background: #FEE2E2 !important; color: #991B1B !important; border-color: #FECACA !important; }
-#id_estatus.estatus-amarillo { background: #FEF3C7 !important; color: #92400E !important; border-color: #FDE68A !important; }
-#id_estatus.estatus-verde    { background: #D1FAE5 !important; color: #065F46 !important; border-color: #6EE7B7 !important; }
+#id_estatus.estatus-rojo     { background-color: #FEE2E2 !important; color: #991B1B !important; border-color: #FECACA !important; }
+#id_estatus.estatus-amarillo { background-color: #FEF3C7 !important; color: #92400E !important; border-color: #FDE68A !important; }
+#id_estatus.estatus-verde    { background-color: #D1FAE5 !important; color: #065F46 !important; border-color: #6EE7B7 !important; }
 
 @media (max-width: 768px) {
     .editar-grid { grid-template-columns: 1fr !important; }

@@ -1,0 +1,84 @@
+/* ==========================================================================
+   Selector de rango de fechas reutilizable (menu_app/_date_range_picker.html)
+   Usa las variables globales del tema (base_menu.html), no crea paleta propia,
+   así que sigue el acento y el modo claro/oscuro de cualquier página.
+   ========================================================================== */
+
+.dpr-wrap { position: relative; display: block; width: 100%; }
+
+.dpr-control {
+    display: flex; align-items: stretch; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--white); overflow: hidden; cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+}
+.dpr-control:hover { border-color: var(--text-3); }
+.dpr-control.dpr-abierto,
+.dpr-control:focus-visible {
+    outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-lt);
+}
+
+.dpr-slot { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; min-width: 0; }
+.dpr-slot-label { font-size: 11px; color: var(--text-3); }
+.dpr-text { font-size: 14px; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dpr-text--vacio { color: var(--text-3); }
+.dpr-sep { width: 1px; background: var(--border); }
+.dpr-icon-wrap {
+    display: grid; place-items: center; padding: 0 12px; border-left: 1px solid var(--border);
+    color: var(--text); flex: none;
+}
+.dpr-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.dpr-chip {
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border); background: var(--white); color: var(--text-2); cursor: pointer;
+}
+.dpr-chip:hover { background: var(--surface); }
+.dpr-chip.active { background: var(--indigo-lt); border-color: var(--indigo); color: var(--indigo); }
+.dpr-popover {
+    display: none; position: fixed; z-index: 4000; width: 300px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 18px 44px -12px rgba(16,18,32,.28), 0 2px 4px rgba(16,18,32,.06);
+    padding: 12px;
+}
+.dpr-popover.dpr-abierto { display: block; }
+[data-theme="dark"] .dpr-popover {
+    border-color: color-mix(in oklab, var(--indigo) 50%, transparent);
+}
+.dpr-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dpr-cal-title { font-size: 13px; font-weight: 600; color: var(--text); text-transform: capitalize; }
+.dpr-cal-nav {
+    width: 26px; height: 26px; border: none; background: transparent; border-radius: 6px;
+    cursor: pointer; color: var(--text-2); font-size: 15px; font-family: inherit; line-height: 1;
+}
+.dpr-cal-nav:hover { background: var(--indigo-lt); color: var(--indigo); }
+
+.dpr-cal-dow, .dpr-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.dpr-dow { font-size: 10px; color: var(--text-3); text-align: center; padding: 4px 0; font-weight: 600; }
+.dpr-day {
+    position: relative; height: 30px; border: none; background: transparent;
+    font-size: 12.5px; color: var(--text); cursor: pointer; font-family: inherit;
+}
+.dpr-day:hover:not(:disabled):not(.dpr-day--sel) { background: var(--surface); }
+.dpr-day--sel:hover { background: var(--indigo-dk); }
+.dpr-day--fuera { color: var(--text-3); opacity: .4; cursor: default; }
+.dpr-day--hoy::after {
+    content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+    width: 3px; height: 3px; border-radius: 50%; background: var(--indigo);
+}
+.dpr-day--sel.dpr-day--hoy::after { background: #fff; }
+.dpr-day--medio { background: var(--indigo-lt); color: var(--indigo); border-radius: 0; }
+.dpr-day--medio:hover { background: var(--indigo-lt); filter: brightness(0.95); }
+.dpr-day--sel { background: var(--indigo); color: #fff; font-weight: 600; }
+.dpr-day--inicio { border-radius: 8px 0 0 8px; }
+.dpr-day--fin { border-radius: 0 8px 8px 0; }
+.dpr-day--inicio.dpr-day--fin { border-radius: 8px; }
+.dpr-cal-footer {
+    display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+.dpr-cal-conteo { font-size: 11.5px; color: var(--text-3); }
+.dpr-cal-listo {
+    height: 30px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; border: 1px solid var(--indigo);
+    background: var(--indigo); color: #fff;
+}
+.dpr-cal-listo:hover { background: var(--indigo-dk); }

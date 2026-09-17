@@ -1,0 +1,63 @@
+/* ==========================================================================
+   Selector de fecha única reutilizable (menu_app/_date_picker.html)
+   Usa las variables globales del tema (base_menu.html), no crea paleta propia,
+   así que sigue el acento y el modo claro/oscuro de cualquier página.
+   ========================================================================== */
+
+.dp-wrap { position: relative; display: block; width: 100%; }
+.dp-control {
+    height: 42px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 0 12px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--white); cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+}
+.dp-control:hover { border-color: var(--text-3); }
+.dp-control.dp-abierto,
+.dp-control:focus-visible {
+    outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-lt);
+}
+.dp-text { font-size: 14px; color: var(--text); font-variant-numeric: tabular-nums; }
+.dp-text--vacio { color: var(--text); }
+.dp-icon { flex: none; color: var(--text); }
+.dp-popover {
+    display: none; position: fixed; z-index: 4000; width: 280px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 18px 44px -12px rgba(16,18,32,.28), 0 2px 4px rgba(16,18,32,.06);
+    padding: 12px;
+}
+.dp-popover.dp-abierto { display: block; }
+[data-theme="dark"] .dp-popover {
+    border-color: color-mix(in oklab, var(--indigo) 50%, transparent);
+}
+.dp-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dp-cal-title { font-size: 13px; font-weight: 600; color: var(--text); text-transform: capitalize; }
+.dp-cal-nav {
+    width: 26px; height: 26px; border: none; background: transparent; border-radius: 6px;
+    cursor: pointer; color: var(--text-2); font-size: 15px; font-family: inherit; line-height: 1;
+}
+.dp-cal-nav:hover { background: var(--indigo-lt); color: var(--indigo); }
+.dp-cal-dow, .dp-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.dp-dow { font-size: 10px; color: var(--text-3); text-align: center; padding: 4px 0; font-weight: 600; }
+
+.dp-day {
+    height: 30px; border: none; background: transparent; border-radius: 8px;
+    font-size: 12.5px; color: var(--text); cursor: pointer; font-family: inherit;
+}
+.dp-day:hover:not(:disabled) { background: var(--surface); }
+.dp-day--fuera { color: var(--text-3); opacity: .4; cursor: default; }
+.dp-day--hoy { font-weight: 700; box-shadow: inset 0 0 0 1px var(--indigo); }
+.dp-day--sel { background: var(--indigo); color: #fff; }
+.dp-day--sel.dp-day--hoy { box-shadow: none; }
+.dp-cal-footer {
+    display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+.dp-cal-hoy, .dp-cal-listo {
+    height: 30px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; border: 1px solid var(--border);
+    background: var(--white); color: var(--text-2);
+}
+.dp-cal-hoy:hover { background: var(--indigo-lt); color: var(--indigo); }
+.dp-cal-listo { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+.dp-cal-listo:hover { background: var(--indigo-dk); }

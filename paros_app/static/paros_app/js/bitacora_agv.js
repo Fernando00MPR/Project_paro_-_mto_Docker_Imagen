@@ -172,6 +172,53 @@ function enviarValorAgv(td, valor, comentario) {
 }
 
 // ── Gráfico de cumplimiento ─────────────────────────────────────────────────────
+
+// Límite de días entre "Desde" y "Hasta" (vista Día): un rango de varios años
+// hace que la consulta día a día sea muy lenta. Si se excede, se recorta el
+// campo que NO se acaba de tocar para mantener el límite, avisando con un toast.
+const EF_LIMITE_DIAS = 90;
+let _efAjustandoRango = false;
+
+function _efPad(n) { return String(n).padStart(2, '0'); }
+function _efIsoLocal(d) { return d.getFullYear() + '-' + _efPad(d.getMonth() + 1) + '-' + _efPad(d.getDate()); }
+function _efParseIsoLocal(s) {
+    if (!s) return null;
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+
+// Devuelve true si tuvo que ajustar el rango (en ese caso ya disparó su propia
+// carga vía el evento 'change' del campo corregido; el llamador no debe volver
+// a cargar).
+function limitarRangoEf(dpIdCambiado) {
+    if (_efAjustandoRango) return false;
+    const desdeEl = document.querySelector('#dp-ef-desde .dp-value');
+    const hastaEl = document.querySelector('#dp-ef-hasta .dp-value');
+    const desde = _efParseIsoLocal(desdeEl.value);
+    const hasta = _efParseIsoLocal(hastaEl.value);
+    if (!desde || !hasta) return false;
+
+    const diffDias = Math.round((hasta - desde) / 86400000);
+    if (diffDias <= EF_LIMITE_DIAS) return false;
+
+    _efAjustandoRango = true;
+    if (dpIdCambiado === 'dp-ef-desde') {
+        const nuevaHasta = new Date(desde);
+        nuevaHasta.setDate(nuevaHasta.getDate() + EF_LIMITE_DIAS);
+        hastaEl.value = _efIsoLocal(nuevaHasta);
+        hastaEl.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+        const nuevaDesde = new Date(hasta);
+        nuevaDesde.setDate(nuevaDesde.getDate() - EF_LIMITE_DIAS);
+        desdeEl.value = _efIsoLocal(nuevaDesde);
+        desdeEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    _efAjustandoRango = false;
+    const msg = (cfgAgv.i18n && cfgAgv.i18n.rangoMaxDias) || 'El rango máximo es de {dias} días; se ajustó automáticamente.';
+    showToast(msg.replace('{dias}', EF_LIMITE_DIAS), 'warning');
+    return true;
+}
+
 function setVistaEf(vista, btn) {
     vistaEfAgv = vista;
     ['dia', 'mes', 'anio'].forEach(v => {
@@ -191,7 +238,7 @@ function cargarCumplimiento() {
     let url = `${cfgAgv.urlCumplimiento}?area_interna=${interna}&vista=${vistaEfAgv}`;
 
     if (vistaEfAgv === 'dia') {
-        url += `&desde=${document.getElementById('ef-desde').value}&hasta=${document.getElementById('ef-hasta').value}`;
+        url += `&desde=${document.querySelector('#dp-ef-desde .dp-value').value}&hasta=${document.querySelector('#dp-ef-hasta .dp-value').value}`;
     } else if (vistaEfAgv === 'mes') {
         url += `&anio=${document.getElementById('ef-mes-anio').value}&mes_desde=${document.getElementById('ef-mes-desde').value}&mes_hasta=${document.getElementById('ef-mes-hasta').value}`;
     } else if (vistaEfAgv === 'anio') {
@@ -317,22 +364,24 @@ function renderizarCumplimiento(datos) {
 }
 
 // ── Targets ────────────────────────────────────────────────────────────────────
-function abrirModalTarget(claveInterna, nombreInterna) {
+function abrirModalTarget(event, claveInterna, nombreInterna) {
     targetInternaId = claveInterna;
     document.getElementById('modal-target-agv-subtitulo').textContent =
         `${nombreInterna} — ${cfgAgv.mesNombre} ${cfgAgv.anio}`;
+
+    const trigger = event ? { currentTarget: event.currentTarget } : null;
 
     fetch(`${cfgAgv.urlTargetGet}?area_interna=${claveInterna}&anio=${cfgAgv.anio}&mes=${cfgAgv.mes}`)
         .then(r => r.json())
         .then(mensual => {
         document.getElementById('modal-target-agv-mensual').value = mensual.target_cantidad ?? '';
-        document.getElementById('modal-target-agv').style.display = 'flex';
+        abrirModalConAnimacion('modal-target-agv', trigger);
         document.getElementById('modal-target-agv-mensual').focus();
     });
 }
 
 function cerrarModalTarget() {
-    document.getElementById('modal-target-agv').style.display = 'none';
+    cerrarModalConAnimacion('modal-target-agv');
     targetInternaId = null;
 }
 
@@ -431,6 +480,20 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarTargets().then(() => {
         INTERNAS.forEach(interna => aplicarColoresCeldas(interna));
         if (document.getElementById('chartCumplimiento')) cargarCumplimiento();
+    });
+
+    // Desde/Hasta son el selector de fecha único; no soporta onchange="" inline
+    // como el <input type="date"> nativo que reemplazó, se engancha aquí.
+    // limitarRangoEf() recorta el rango si excede EF_LIMITE_DIAS; si lo hizo,
+    // ya disparó su propia carga (vía el 'change' del campo que corrigió) y
+    // no hay que llamar cargarCumplimiento() de nuevo aquí.
+    document.querySelector('#dp-ef-desde .dp-value').addEventListener('change', function () {
+        if (limitarRangoEf('dp-ef-desde')) return;
+        cargarCumplimiento();
+    });
+    document.querySelector('#dp-ef-hasta .dp-value').addEventListener('change', function () {
+        if (limitarRangoEf('dp-ef-hasta')) return;
+        cargarCumplimiento();
     });
 });
 

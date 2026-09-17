@@ -7,7 +7,10 @@ urlpatterns = [
     path('nueva/',                              views.form_refaccion,                  name='nueva_refaccion'),
     path('editar/<int:pk>/',                    views.form_refaccion,                  name='editar_refaccion'),
     path('eliminar/<int:pk>/',                  views.eliminar_refaccion,              name='eliminar_refaccion'),
-
+    path('eliminar-todas/',                     views.eliminar_todas_refacciones_area, name='eliminar_todas_refacciones_area'),
+    path('categorias/crear/',                   views.crear_categoria_refaccion,       name='crear_categoria_refaccion'),
+    path('categorias/editar/<int:pk>/',         views.editar_categoria_refaccion,      name='editar_categoria_refaccion'),
+    
     # Refacciones imagenes
     path('<int:refaccion_pk>/imagenes/subir/',  views.subir_imagenes_refaccion,        name='subir_imagenes_refaccion'),
     path('<int:refaccion_pk>/imagenes/',        views.imagenes_refaccion,              name='imagenes_refaccion'),
@@ -32,4 +35,8 @@ urlpatterns = [
     path('servicios/editar/<int:pk>/',          views.guardar_seguimiento_servicio,    name='editar_seguimiento_servicio'),
     path('servicios/eliminar/<int:pk>/',        views.eliminar_seguimiento_servicio,   name='eliminar_seguimiento_servicio'),
     path('servicios/exportar/',                 views.exportar_seguimientos_servicio,  name='exportar_seguimientos_servicio'),
+
+    # Panel de tareas WCS (almacén automático)
+    path('wcs/',                                views.panel_wcs,                       name='panel_wcs'),
+    path('wcs/procesar/',                       views.procesar_wcs,                    name='procesar_wcs'),
 ]

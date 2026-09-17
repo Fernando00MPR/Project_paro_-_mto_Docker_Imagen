@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
+from django.core.paginator import Paginator
 
 from .utils import areas_permitidas_mto
 from ..models import Area, Bitacora, Responsable, ImagenBitacora
@@ -43,8 +44,13 @@ def lista_bitacora(request):
     elif filtro_pendiente == '0':
         registros = registros.filter(Q(pendiente='') | Q(pendiente__isnull=True))
 
+    per_page = request.GET.get('per_page', '20')
+    paginator = Paginator(registros, int(per_page) if per_page.isdigit() else 20)
+    page_nume= request.GET.get('page', 1)
+    registros_page = paginator.get_page(page_nume)
+
     ctx = {
-        'registros':         registros,
+        'registros':         registros_page,
         'areas':             areas_permitidas_mto(request),
         'filtro_area':       area_id,
         'today':             date.today(),
@@ -53,6 +59,8 @@ def lista_bitacora(request):
         'filtro_fecha':      filtro_fecha,
         'filtro_q':          filtro_q,
         'filtro_pendiente':  filtro_pendiente,
+        'per_page':          per_page,
+        'total_registros':    paginator.count,
     }
     return render(request, 'mto_app/bitacora/lista.html', ctx)
 

@@ -24,7 +24,7 @@
 
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             {% if puede_editar_inventario %}
-                <button type="button" onclick="abrirModalRefaccion()" class="btn btn-primary">+ {% trans "Nueva refacción" %}</button>
+                <button type="button" onclick="abrirModalRefaccion(event)" class="btn btn-primary">+ {% trans "Nueva refacción" %}</button>
                 <a href="{% url 'inventario:importar_stock' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}" class="btn btn-ghost">↑ {% trans "Actualizar stock" %}</a>
                 <a href="{% url 'inventario:importar_completo' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}" class="btn btn-ghost">↑ {% trans "Importar completo" %}</a>
             {% endif %}
@@ -34,16 +34,64 @@
     </div>
 
     <!-- ── Filtros ── -->
-    <form method="get" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;
-                            padding:14px; background:var(--surface); border:1px solid var(--border);
-                            border-radius:var(--radius); align-items:flex-end;">
+    <style>
+      .filter-bar .filter-group > label { display:block; margin-bottom:6px; }
+      .filter-bar select,
+      .filter-bar input[type="text"],
+      .filter-bar .btn {
+          height: 40px;
+          box-sizing: border-box;
+          border-radius: 8px;
+          font-size: 14px;
+      }
+      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+         Mismo tono que el texto (--text): hex literal porque no se puede
+         meter var() dentro del data URI. */
+      .filter-bar select {
+          padding: 0 34px 0 10px;
+          appearance: none; -webkit-appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          background-size: 14px;
+      }
+      /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
+         select { background: var(--white) !important; }, que borra el chevron de
+         arriba por especificidad + !important. Se repite aquí con el mismo peso
+         para ganar por ir declarada después en el documento. */
+      [data-theme="dark"] .filter-bar select {
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 10px center !important;
+          background-size: 14px !important;
+      }
+      .filter-bar .btn {
+          display: inline-flex;
+          align-items: center;
+          padding: 0 16px;
+          font-weight: 500;
+          white-space: nowrap;
+          text-decoration: none;
+      }
+      .filter-bar .filter-divider {
+          width: 1px;
+          height: 40px;
+          background: var(--border);
+          margin: 0 4px;
+          align-self: flex-end;
+      }
+    </style>
+    <form method="get" class="filter-bar"
+          style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px;
+                 padding:14px; background:var(--surface); border:1px solid var(--border);
+                 border-radius:var(--radius); align-items:flex-end;">
         {% if filtro_area %}
         <input type="hidden" name="area" value="{{ filtro_area }}">
         {% endif %}
 
         <div class="filter-group">
             <label>{% trans "Categoría" %}</label>
-            <select style="width: 200px;" name="categoria" onchange="this.form.submit()">
+            <select style="width:200px;" name="categoria" onchange="this.form.submit()">
                 <option value="">{% trans "Todas" %}</option>
                 {% for cat in categorias %}
                 <option value="{{ cat.pk }}" {% if filtro_categoria == cat.pk|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>
@@ -53,7 +101,7 @@
 
         <div class="filter-group">
             <label>{% trans "Buscar" %}</label>
-            <input style="width: 400px;" type="text" name="q" value="{{ busqueda }}" placeholder="{% trans 'No. Item o nombre...' %}"
+            <input style="width:400px;" type="text" name="q" value="{{ busqueda }}" placeholder="{% trans 'No. Item o nombre...' %}"
                 oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
         </div>
 
@@ -78,12 +126,21 @@
             </select>
         </div>
 
-        <div class="filter-group">
-            <label>&nbsp;</label>
-            <a href="{% url 'inventario:lista_refacciones' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
-            class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
-        </div>
+        <div class="filter-divider"></div>
 
+        <a href="{% url 'inventario:lista_refacciones' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
+           class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
+
+        {% if puede_eliminar_todas_refacciones and filtro_area and total_refacciones_area %}
+            <button type="button" class="btn btn-danger" style="margin-left:auto;"
+                    onclick="confirmarEliminarTodasRefacciones(event, '{{ filtro_area }}', {{ total_refacciones_area }})">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6"/>
+                </svg>
+                {% trans "Eliminar todas las refacciones" %}
+            </button>
+        {% endif %}
     </form>
 
     <!-- ── Indicadores ── -->
@@ -105,7 +162,17 @@
 <div class="card">
 
     <!-- ── Selector de columnas ── -->
-    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
+        {% if puede_editar_inventario %}
+        <button type="button" onclick="abrirModalCategorias(event)" class="btn btn-ghost btn-sm"
+                style="display:flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M7 7h.01M7 3h5.586a1 1 0 01.707.293l7.414 7.414a1 1 0 010 1.414l-8.586 8.586a1 1 0 01-1.414 0L3.293 13.293A1 1 0 013 12.586V7a4 4 0 014-4z"/>
+            </svg>
+            {% trans "Categorías" %}
+        </button>
+        {% endif %}
         <div style="position:relative;" id="inv-col-picker-wrap">
             <button onclick="toggleInvColPicker()" class="btn btn-ghost btn-sm"
                     style="display:flex; align-items:center; gap:6px;">
@@ -200,7 +267,7 @@
                     <td style="text-align:center;">
                         <div style="display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:nowrap;">
                             {% if r.num_imagenes %}
-                            <button type="button" onclick="verImagenesRefaccion({{ r.pk }}, '{{ r.area.nombre|escapejs }}', '{{ r.descripcion|escapejs }}')"
+                            <button type="button" onclick="verImagenesRefaccion(event, {{ r.pk }}, '{{ r.area.nombre|escapejs }}', '{{ r.descripcion|escapejs }}')"
                                     title="{% trans 'Ver imágenes' %}"
                                     style="display:inline-flex; align-items:center; justify-content:center;
                                         width:30px; height:30px; border-radius:6px; border:1px solid var(--border);
@@ -215,7 +282,7 @@
                             {% endif %}
 
                             {% if puede_editar_inventario %}
-                            <button type="button" onclick="editarRefaccion({{ r.pk }}, '{{ r.no_item|escapejs }}', '{{ r.nombre|escapejs }}', {{ r.area_id }}, {{ r.categoria_id|default:'null' }}, '{{ r.unidad }}', '{{ r.criticidad }}', {{ r.stock_actual }}, {{ r.stock_minimo }}, {{ r.stock_maximo }}, '{{ r.ubicacion|escapejs }}', '{{ r.proveedor|escapejs }}', '{{ r.costo_unitario|default:'' }}', '{{ r.descripcion|escapejs }}', {{ r.activo|yesno:'true,false' }})"
+                            <button type="button" onclick="editarRefaccion(event, {{ r.pk }}, '{{ r.no_item|escapejs }}', '{{ r.nombre|escapejs }}', {{ r.area_id }}, {{ r.categoria_id|default:'null' }}, '{{ r.unidad }}', '{{ r.criticidad }}', {{ r.stock_actual }}, {{ r.stock_minimo }}, {{ r.stock_maximo }}, '{{ r.ubicacion|escapejs }}', '{{ r.proveedor|escapejs }}', '{{ r.costo_unitario|default:'' }}', '{{ r.descripcion|escapejs }}', {{ r.activo|yesno:'true,false' }})"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid var(--border);
                                         background:var(--surface); color:var(--text); cursor:pointer;
@@ -230,7 +297,7 @@
 
                             {% if puede_eliminar_inventario %}
                             <button type="button"
-                                    onclick="confirmarEliminarRefaccion('{% url 'inventario:eliminar_refaccion' r.pk %}')"
+                                    onclick="confirmarEliminarRefaccion(event, '{% url 'inventario:eliminar_refaccion' r.pk %}')"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
                                         background:#FFF5F5; color:#DC2626; cursor:pointer;
@@ -262,33 +329,148 @@
     <!-- ── Paginación ── -->
     <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
         <div class="pagination" style="margin:0;">
+            
             {% if refacciones.has_previous %}
-            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_categoria %}categoria={{ filtro_categoria }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ refacciones.previous_page_number }}">‹</a>
+                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_categoria %}categoria={{ filtro_categoria }}&{% endif %}{% if filtro_criticidad %}criticidad={{ filtro_criticidad }}&{% endif %}{% if estatus_stock %}estatus_stock={{ estatus_stock }}&{% endif %}{% if busqueda %}q={{ busqueda|urlencode }}&{% endif %}per_page={{ per_page }}&page={{ refacciones.previous_page_number }}">‹</a>
             {% else %}
-            <span class="disabled">‹</span>
+                <span class="disabled">‹</span>
             {% endif %}
             {% for num in refacciones.paginator.page_range %}
                 {% if refacciones.number == num %}
-                <span class="current">{{ num }}</span>
+                    <span class="current">{{ num }}</span>
                 {% elif num > refacciones.number|add:'-3' and num < refacciones.number|add:'3' %}
-                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_categoria %}categoria={{ filtro_categoria }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
+                    <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_categoria %}categoria={{ filtro_categoria }}&{% endif %}{% if filtro_criticidad %}criticidad={{ filtro_criticidad }}&{% endif %}{% if estatus_stock %}estatus_stock={{ estatus_stock }}&{% endif %}{% if busqueda %}q={{ busqueda|urlencode }}&{% endif %}per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
                 {% endif %}
             {% endfor %}
             {% if refacciones.has_next %}
-            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_categoria %}categoria={{ filtro_categoria }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ refacciones.next_page_number }}">›</a>
+                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_categoria %}categoria={{ filtro_categoria }}&{% endif %}{% if filtro_criticidad %}criticidad={{ filtro_criticidad }}&{% endif %}{% if estatus_stock %}estatus_stock={{ estatus_stock }}&{% endif %}{% if busqueda %}q={{ busqueda|urlencode }}&{% endif %}per_page={{ per_page }}&page={{ refacciones.next_page_number }}">›</a>
             {% else %}
-            <span class="disabled">›</span>
+                <span class="disabled">›</span>
             {% endif %}
         </div>
     </div>
 
 </div>
 
-<!-- ── Modal confirmar eliminar ── -->
-<div id="modal-eliminar-refaccion"
+
+<!-- ── Modal categorías — fondo blanco fijo como en los catálogos ── -->
+<style>
+    #modal-categorias .mf-box { background: #fff; }
+    #modal-categorias .mf-doc-title { color: #1d1d24; }
+    #modal-categorias input[type="text"] { color: #1d1d24; border-color: #d8d8e0; }
+    #modal-categorias input[type="text"]::placeholder { color: #9b9ba6; }
+    #modal-categorias input[type="text"]:focus {
+        outline: none; border-color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+    #modal-categorias .cat-existentes-label { color: #9b9ba6; }
+    #modal-categorias .cat-edit-row { border-color: #ececf0; }
+    #modal-categorias .cat-edit-row input { color: #33333c; }
+    /* Animación (ver keyframes globales en base_menu.html): este modal no usa
+       .modal-backdrop/.modal-box, así que se declara aparte. */
+    #modal-categorias { animation: modal-overlay-in 220ms both; }
+    #modal-categorias .mf-box {
+        transform-origin: 50% 50%;
+        animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+    #modal-categorias[data-closing],
+    #modal-categorias[data-closing] .mf-box {
+        animation: none; opacity: 0;
+        transition: opacity 120ms ease-out, transform 120ms ease-out;
+    }
+    #modal-categorias[data-closing] .mf-box { transform: scale(.97); }
+</style>
+<div id="modal-categorias"
      style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
             z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+    <div class="mf-box" style="border-radius:14px; padding:28px 32px;
+                min-width:340px; max-width:420px; width:100%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div class="mf-doc-title" style="font-size:16px; font-weight:600;">{% trans "Categorías de refacciones" %}</div>
+            <button type="button" onclick="cerrarModalCategorias()"
+                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                    style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;">✕</button>
+        </div>
+
+        <form method="post" action="{% url 'inventario:crear_categoria_refaccion' %}" style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
+            {% csrf_token %}
+            <input type="hidden" name="volver" id="cat-volver" value="">
+            {% if filtro_area %}<input type="hidden" name="area" value="{{ filtro_area }}">{% endif %}
+            <input type="text" name="nombre_es" required maxlength="100" placeholder="{% trans 'Nombre en español' %}"
+                   style="padding:8px 12px; border:1px solid #d8d8e0; border-radius:8px; font-size:13px; background:#fff;">
+            <input type="text" name="nombre_en" maxlength="100" placeholder="{% trans 'Name in English (opcional)' %}"
+                   style="padding:8px 12px; border:1px solid #d8d8e0; border-radius:8px; font-size:13px; background:#fff;">
+            <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end;">{% trans "Agregar" %}</button>
+        </form>
+
+        <div class="cat-existentes-label" style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">
+            {% trans "Existentes" %} ({{ categorias|length }})
+        </div>
+        <div id="cat-lista" style="display:flex; flex-direction:column; gap:6px;">
+            {% for cat in categorias %}
+            <form method="post" action="{% url 'inventario:editar_categoria_refaccion' cat.pk %}"
+                  class="cat-edit-row"
+                  style="display:flex; align-items:center; gap:6px; padding:6px 8px;
+                         border:1px solid #ececf0; border-radius:8px;">
+                {% csrf_token %}
+                <input type="hidden" name="volver" class="cat-edit-volver" value="">
+                {% if filtro_area %}<input type="hidden" name="area" value="{{ filtro_area }}">{% endif %}
+                <input type="text" name="nombre_es" required maxlength="100" value="{{ cat.nombre_es|default:cat.nombre }}"
+                       style="flex:1; min-width:0; padding:6px 8px; border:1px solid transparent; border-radius:6px;
+                              background:transparent; font-size:13px;"
+                       onfocus="this.style.borderColor='#d8d8e0'; this.style.background='#fff';"
+                       onblur="this.style.borderColor='transparent'; this.style.background='transparent';">
+                <input type="text" name="nombre_en" maxlength="100" value="{{ cat.nombre_en }}" placeholder="{% trans 'English' %}"
+                       style="flex:1; min-width:0; padding:6px 8px; border:1px solid transparent; border-radius:6px;
+                              background:transparent; font-size:13px; color:#9b9ba6;"
+                       onfocus="this.style.borderColor='#d8d8e0'; this.style.background='#fff';"
+                       onblur="this.style.borderColor='transparent'; this.style.background='transparent';">
+                <button type="submit" class="btn btn-ghost btn-sm" style="padding:4px 8px; display:inline-flex; align-items:center; justify-content:center;" title="{% trans 'Guardar' %}">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-8H7v8M7 3v5h8"/>
+                    </svg>
+                </button>
+            </form>
+            {% empty %}
+                <div style="font-size:12px; color:#9b9ba6; text-align:center; padding:16px 0;">{% trans "Sin categorías registradas." %}</div>
+            {% endfor %}
+        </div>
+        <div id="cat-paginacion" style="display:none; align-items:center; justify-content:center; gap:6px; margin-top:12px;"></div>
+    </div>
+</div>
+
+
+<!-- ── Modal confirmar eliminar TODAS las refacciones del área ── -->
+<div id="modal-eliminar-todas-refacciones" class="modal-backdrop"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left;
+                min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar todas las refacciones del área" %}</div>
+        <div id="texto-eliminar-todas-refacciones" style="font-size:13px; color:var(--text-2); margin-bottom:24px;"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="cerrarModalEliminarTodasRefacciones()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <form id="form-eliminar-todas-refacciones" method="post"
+                  action="{% url 'inventario:eliminar_todas_refacciones_area' %}" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="area" id="input-area-eliminar-todas-refacciones" value="">
+                <button type="submit" class="btn btn-danger"
+                        style="background:#EF4444; color:#fff; border-color:#EF4444; padding:8px 16px; font-size:13px;">
+                    {% trans "Sí, eliminar todas" %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- ── Modal confirmar eliminar ── -->
+<div id="modal-eliminar-refaccion" class="modal-backdrop"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left;
                 min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar refacción" %}</div>
         <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">{% trans "Esta acción no se puede deshacer. ¿Confirmas que deseas eliminar esta refacción?" %}</div>
@@ -296,37 +478,129 @@
             <button onclick="cerrarModalEliminarRefaccion()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
             <form id="form-eliminar-refaccion" method="post" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
+                <input type="hidden" name="volver" id="elim-ref-volver" value="">
+                <button type="submit" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
             </form>
         </div>
     </div>
 </div>
 
-<!-- ── Modal nuevo/editar refacción ── -->
+<!-- ── Modal nuevo/editar refacción — fondo blanco fijo como en los catálogos ── -->
+<style>
+    #modal-refaccion .mf-box { background: #fff; }
+    #modal-refaccion .mf-doc-title { color: #1d1d24; }
+    #modal-refaccion .form-field label { color: #33333c; }
+    #modal-refaccion .form-field .help { color: #9b9ba6; }
+    #modal-refaccion .form-field input,
+    #modal-refaccion .form-field select,
+    #modal-refaccion .form-field textarea {
+        background: #fff; color: #1d1d24; border-color: #d8d8e0;
+    }
+    #modal-refaccion .form-field select {
+        appearance: none; -webkit-appearance: none;
+        padding-right: 34px;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231d1d24' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 14px;
+    }
+    #modal-refaccion .form-field input::placeholder,
+    #modal-refaccion .form-field textarea::placeholder { color: #9b9ba6; }
+    #modal-refaccion .form-field input:focus,
+    #modal-refaccion .form-field select:focus,
+    #modal-refaccion .form-field textarea:focus {
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+    #modal-refaccion .btn-ghost { color: #33333c; border-color: #d8d8e0; }
+    #modal-refaccion .btn-ghost:hover { background: #f2f2f5; color: #1d1d24; }
+    #modal-refaccion .ref-row-3 { display:grid; grid-template-columns: repeat(5, 1fr); gap:18px 24px; }
+    #modal-refaccion .ref-row-3 .ref-span2 { grid-column: span 4; }
+    #modal-refaccion .ref-row-4 { display:grid; grid-template-columns: repeat(5, 1fr); gap:18px 24px; }
+    #modal-refaccion .ref-row-5 { display:grid; grid-template-columns: repeat(5, 1fr); gap:14px 20px; }
+    #modal-refaccion .ref-row-2 { display:grid; grid-template-columns: 1fr 1fr; gap:18px 24px; }
+    #modal-refaccion .ref-row-3fields { display:grid; grid-template-columns: 1fr 1fr 2fr; gap:18px 24px; }
+    #modal-refaccion .ref-row-3 > .form-field,
+    #modal-refaccion .ref-row-4 > .form-field,
+    #modal-refaccion .ref-row-5 > .form-field,
+    #modal-refaccion .ref-row-2 > .form-field,
+    #modal-refaccion .ref-row-3fields > .form-field { min-width: 0; }
+    #modal-refaccion .ref-row-3 input, #modal-refaccion .ref-row-3 select,
+    #modal-refaccion .ref-row-4 input, #modal-refaccion .ref-row-4 select,
+    #modal-refaccion .ref-row-5 input, #modal-refaccion .ref-row-5 select,
+    #modal-refaccion .ref-row-2 input, #modal-refaccion .ref-row-2 select,
+    #modal-refaccion .ref-row-3fields input, #modal-refaccion .ref-row-3fields select { width: 100%; box-sizing: border-box; }
+    #modal-refaccion .ref-section-label {
+        font-size: 11px; font-weight: 600; color: #9b9ba6; text-transform: uppercase;
+        letter-spacing: .08em; margin: 20px 0 12px;
+    }
+    #modal-refaccion .ref-divider { border: none; border-top: 1px solid #ececf0; margin: 18px 0 0; }
+    #modal-refaccion .ref-info {
+        color: #9b9ba6; cursor: help; flex-shrink: 0;
+    }
+    @media (max-width: 700px) {
+        #modal-refaccion .ref-row-3,
+        #modal-refaccion .ref-row-4,
+        #modal-refaccion .ref-row-5,
+        #modal-refaccion .ref-row-2,
+        #modal-refaccion .ref-row-3fields { grid-template-columns: 1fr; }
+    }
+    /* Animación (ver keyframes globales en base_menu.html): este modal no usa
+       .modal-backdrop/.modal-box, así que se declara aparte. Sin cascada de
+       filas — el formulario ya tiene su propia grilla de columnas (ref-row-*)
+       y escalonarla encima se ve nervioso. */
+    #modal-refaccion { animation: modal-overlay-in 220ms both; }
+    #modal-refaccion .mf-box {
+        transform-origin: 50% 50%;
+        animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+    #modal-refaccion[data-closing],
+    #modal-refaccion[data-closing] .mf-box {
+        animation: none; opacity: 0;
+        transition: opacity 120ms ease-out, transform 120ms ease-out;
+    }
+    #modal-refaccion[data-closing] .mf-box { transform: scale(.97); }
+</style>
 <div id="modal-refaccion"
      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
             z-index:3000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:12px; padding:24px 28px;
-                min-width:360px; max-width:560px; width:90%; max-height:90vh; overflow-y:auto;
+    <div class="mf-box" style="border-radius:12px; padding:24px 28px;
+                min-width:360px; max-width:760px; width:90%; max-height:90vh; overflow-y:auto;
                 box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:16px;" id="modal-refaccion-titulo">
-            {% trans "Nueva refacción" %}
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div class="mf-doc-title" style="font-size:16px; font-weight:600;" id="modal-refaccion-titulo">
+                {% trans "Nueva refacción" %}
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#33333c;">
+                    <input type="checkbox" name="activo" id="ref-activo" checked form="form-refaccion"
+                           style="width:16px; height:16px; accent-color:var(--indigo); margin:0;">
+                    {% trans "Activo" %}
+                </label>
+                <button type="button" onclick="cerrarModalRefaccion()"
+                        onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                        onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                        style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s; flex-shrink:0;">✕</button>
+            </div>
         </div>
 
         <form method="post" action="{% url 'inventario:nueva_refaccion' %}" id="form-refaccion" enctype="multipart/form-data">
             {% csrf_token %}
+            <input type="hidden" name="volver" id="ref-volver" value="">
 
-            <div class="form-grid">
+            <div class="ref-row-3 modal-row">
                 <div class="form-field">
                     <label>{% trans "No. Item" %} *</label>
                     <input type="text" name="no_item" id="ref-no_item" required placeholder="Ej: 001">
                 </div>
 
-                <div class="form-field full">
+                <div class="form-field ref-span2">
                     <label>{% trans "Nombre" %} *</label>
                     <input type="text" name="nombre" id="ref-nombre" required placeholder="Ej: Rodamiento 6205">
                 </div>
+            </div>
 
+            <div class="ref-row-2 modal-row" style="margin-top:18px;">
                 <div class="form-field">
                     <label>{% trans "Área" %} *</label>
                     <select name="area" id="ref-area" required>
@@ -346,7 +620,9 @@
                         {% endfor %}
                     </select>
                 </div>
+            </div>
 
+            <div class="ref-row-3fields modal-row" style="margin-top:18px;">
                 <div class="form-field">
                     <label>{% trans "Unidad" %}</label>
                     <select name="unidad" id="ref-unidad">
@@ -356,7 +632,7 @@
                     </select>
                 </div>
 
-                <div class="form-field">
+                <div class="form-field modal-row">
                     <label>{% trans "Criticidad" %}</label>
                     <select name="criticidad" id="ref-criticidad">
                         {% for val, label in criticidades %}
@@ -365,21 +641,43 @@
                     </select>
                 </div>
 
+                <div class="form-field modal-row">
+                    <label>{% trans "Proveedor" %}</label>
+                    <input type="text" name="proveedor" id="ref-proveedor">
+                </div>
+            </div>
+
+            <hr class="ref-divider">
+            <div class="ref-section-label">{% trans "Inventario" %}</div>
+
+            <div class="ref-row-5 modal-row">
                 <div class="form-field">
                     <label>{% trans "Stock actual" %}</label>
                     <input type="number" name="stock_actual" id="ref-stock_actual" min="0" value="0">
                 </div>
 
                 <div class="form-field">
-                    <label>{% trans "Stock mínimo" %}</label>
+                    <label style="display:flex; align-items:center; gap:5px;">
+                        {% trans "Stock mínimo" %}
+                        <svg class="ref-info" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             title="{% trans 'Se resaltará en rojo si el stock esta abajo de este valor' %}">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path stroke-linecap="round" d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                    </label>
                     <input type="number" name="stock_minimo" id="ref-stock_minimo" min="0" value="0">
-                    <span class="help">{% trans "Se resaltará en rojo si el stock esta abajo de este valor" %}</span>
                 </div>
 
                 <div class="form-field">
-                    <label>{% trans "Stock máximo" %}</label>
+                    <label style="display:flex; align-items:center; gap:5px;">
+                        {% trans "Stock máximo" %}
+                        <svg class="ref-info" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             title="{% trans 'Se resaltará en amarillo si el stock excede este valor' %}">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path stroke-linecap="round" d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                    </label>
                     <input type="number" name="stock_maximo" id="ref-stock_maximo" min="0" value="0">
-                    <span class="help">{% trans "Se resaltará en amarillo si el stock excede este valor" %}</span>
                 </div>
 
                 <div class="form-field">
@@ -388,86 +686,85 @@
                 </div>
 
                 <div class="form-field">
-                    <label>{% trans "Proveedor" %}</label>
-                    <input type="text" name="proveedor" id="ref-proveedor">
-                </div>
-
-                <div class="form-field">
                     <label>{% trans "Costo unitario" %}</label>
                     <input type="number" name="costo_unitario" id="ref-costo_unitario" step="0.01" min="0" placeholder="0.00">
                 </div>
+            </div>
 
-                <div class="form-field full">
-                    <label>{% trans "Descripción" %}</label>
-                    <textarea name="descripcion" id="ref-descripcion" rows="2"></textarea>
+            <hr class="ref-divider">
+
+            <div class="ref-row-2 modal-row" style="margin-top:18px;">
+                <div class="form-field">
+                    <label style="display:flex; justify-content:space-between; align-items:baseline;">
+                        {% trans "Descripción" %}
+                        <span id="ref-descripcion-contador" style="font-size:11px; font-weight:400; color:#9b9ba6;">0/300</span>
+                    </label>
+                    <textarea name="descripcion" id="ref-descripcion" rows="4" maxlength="300" style="resize:vertical;"
+                              oninput="document.getElementById('ref-descripcion-contador').textContent = this.value.length + '/300'"></textarea>
                 </div>
 
                 <div class="form-field">
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                        <input type="checkbox" name="activo" id="ref-activo" checked
-                               style="width:16px; height:16px; accent-color:var(--indigo); margin:0;">
-                        {% trans "Activo" %}
-                    </label>
-                </div>
-            </div>
-
-            <div class="form-field full" style="margin-top:14px;">
-                <label>{% trans "Imágenes" %} <span style="color:var(--text-3); font-weight:400;">({% trans "máximo 2" %})</span></label>
-                <div id="ref-dropzone"
-                    style="border:2px dashed var(--border); border-radius:8px; padding:18px;
-                            text-align:center; cursor:pointer; background:var(--surface);
-                            transition:border-color .15s;">
-                    <svg width="26" height="26" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" style="margin-bottom:6px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    <div style="font-size:12px; color:var(--text-2);">
-                        {% trans "Arrastra imágenes aquí o haz clic para seleccionar" %}
+                    <label>{% trans "Imágenes" %} <span style="color:#9b9ba6; font-weight:400;">({% trans "máximo 2" %})</span></label>
+                    <div id="ref-dropzone"
+                        style="border:2px dashed #d8d8e0; border-radius:8px; padding:18px;
+                                text-align:center; cursor:pointer; background:#fafafb;
+                                transition:border-color .15s; flex:1; display:flex; flex-direction:column; justify-content:center;">
+                        <svg width="26" height="26" fill="none" stroke="#9b9ba6" viewBox="0 0 24 24" style="margin:0 auto 6px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <div style="font-size:12px; color:#33333c;">
+                            {% trans "Arrastra imágenes aquí o haz clic para seleccionar" %}
+                        </div>
+                        <input type="file" name="imagenes" id="ref-input-imagenes" accept="image/*" multiple style="display:none;">
                     </div>
-                    <input type="file" name="imagenes" id="ref-input-imagenes" accept="image/*" multiple style="display:none;">
+                    <div id="ref-preview-imagenes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+                    <div id="ref-imagenes-existentes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
                 </div>
-                <div id="ref-preview-imagenes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
-                <div id="ref-imagenes-existentes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
             </div>
 
-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:20px;">
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:22px;">
                 <button type="button" onclick="cerrarModalRefaccion()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-                <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
+                <button type="submit" class="btn btn-primary">{% trans "Guardar refacción" %}</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Modal imágenes (lightbox + miniaturas) -->
-<div id="modal-imagenes-ref" style="display:none; position:fixed; inset:0;
+<div id="modal-imagenes-ref" class="modal-backdrop" style="display:none; position:fixed; inset:0;
      background:rgba(30,27,75,.45); z-index:5000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:24px;
+    <div class="modal-box" style="background:#fff; border-radius:14px; padding:24px; text-align:left;
                 max-width:700px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
-                    <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes de la refacción" %}</div>
-                    <div id="lightbox-ref-meta" style="display:flex; gap:10px; margin-top:5px; font-size:12px; color:var(--text-2); flex-wrap:wrap; align-items:center;"></div>
+                    <div style="font-size:14px; font-weight:600; color:#1d1d24;">{% trans "Imágenes de la refacción" %}</div>
+                    <div id="lightbox-ref-meta" style="display:flex; gap:10px; margin-top:5px; font-size:12px; color:#33333c; flex-wrap:wrap; align-items:center;"></div>
                 </div>
                 <div style="display:flex; gap:10px; align-items:center; flex-shrink:0; margin-left:12px;">
                     <button onclick="descargarImagenRefActual()" title="{% trans 'Descargar' %}"
-                            style="background:none; border:none; cursor:pointer; color:var(--text-2); display:flex; align-items:center;">
+                            style="background:none; border:none; cursor:pointer; color:#33333c; display:flex; align-items:center;">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-6l-4 4m0 0l-4-4m4 4V4"/>
                         </svg>
                     </button>
                     <button onclick="cerrarModalImagenesRef()"
-                            onmouseover="this.style.color='#EF4444'"
-                            onmouseout="this.style.color='var(--text-3)'"
-                            style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
+                            onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                            onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                            style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;">✕</button>
                 </div>
             </div>
         </div>
 
-        <div style="position:relative; background:var(--surface); border-radius:10px;
+        <div style="position:relative; background:#fafafb; border-radius:10px;
                     height:300px; display:flex; align-items:center; justify-content:center;
                     overflow:hidden; margin-bottom:12px;">
+            <div id="lightbox-ref-skeleton" class="img-skeleton" style="display:none; inset:0; border-radius:10px;">
+                <div class="img-spinner"></div>
+                <div class="img-spinner-label">{% trans "Cargando…" %}</div>
+            </div>
             <img id="lightbox-ref-img-principal" src="" alt=""
                  style="max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-in;"
                  onclick="window.open(this.src, '_blank')">
@@ -486,7 +783,7 @@
 
         <!-- Contador -->
         <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
-            <span id="lightbox-ref-contador" style="font-size:11px; color:var(--text-3);"></span>
+            <span id="lightbox-ref-contador" style="font-size:11px; color:#9b9ba6;"></span>
         </div>
 
         <div id="lightbox-ref-miniaturas" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"></div>

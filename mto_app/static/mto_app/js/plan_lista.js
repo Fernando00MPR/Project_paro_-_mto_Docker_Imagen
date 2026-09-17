@@ -2,6 +2,19 @@
    Depende de: CSRF_MTO (definido en el template)
 */
 
+// "Fecha compromiso" es el selector de fecha único; su valor real vive en el
+// hidden .dp-value dentro de #dp-mseg-fecha. setMsegFecha() dispara 'change'
+// para que el widget se resincronice y repinte (ver date_picker.js).
+
+function getMsegFecha() { 
+    return document.querySelector('#dp-mseg-fecha .dp-value').value;
+}
+function setMsegFecha(iso) {
+    const hidden = document.querySelector('#dp-mseg-fecha .dp-value');
+    hidden.value = iso || '';
+    hidden.dispatchEvent(new Event('change', {bubbles: true}));
+}
+
 // ── Pills de estatus ──────────────────────────────────────────────────────────
 function msegEstatus(val) {
     document.getElementById('mseg-estatus').value = val;
@@ -48,7 +61,7 @@ function guardarMseg() {
             problema:         problema,
             accion:           document.getElementById('mseg-accion').value.trim(),
             responsable:      document.getElementById('mseg-responsable').value.trim(),
-            fecha_compromiso: document.getElementById('mseg-fecha').value,
+            fecha_compromiso: getMsegFecha(),
             estatus:          document.getElementById('mseg-estatus').value,
             notas:            document.getElementById('mseg-notas').value.trim(),
         }),
@@ -86,7 +99,7 @@ window.addEventListener('message', function(e) {
             document.getElementById('mseg-problema').value        = msg.problema  || '';
             document.getElementById('mseg-accion').value          = msg.accion    || '';
             document.getElementById('mseg-responsable').value     = msg.responsable || '';
-            document.getElementById('mseg-fecha').value           = msg.fecha     || '';
+            setMsegFecha(msg.fecha || '');
             document.getElementById('mseg-notas').value           = msg.notas     || '';
             document.getElementById('mseg-id').value              = msg.id        || '';
             document.getElementById('mseg-registro-pk').value     = msg.registro_pk || '';
@@ -220,10 +233,6 @@ function cerrarModal() {
     document.getElementById('modal-iframe').src = '';
     document.body.style.overflow = '';
 }
-
-document.getElementById('modal-backdrop').addEventListener('click', function(e) {
-    if (e.target === this) cerrarModal();
-});
 
 window.addEventListener('message', function(e) {
     if (e.data === 'cerrar_modal') {

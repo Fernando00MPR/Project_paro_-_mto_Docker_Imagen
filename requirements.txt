@@ -10,6 +10,11 @@ gunicorn>=26.0
 # ── Exportación a Excel ────────────────────────────────────────────────────────
 openpyxl>=3.1.5
 
+# ── Lectura rápida de Excel (Panel de Tareas WCS) ──────────────────────────────
+# python-calamine (parser en Rust) es ~5x más rápido que openpyxl para leer
+# archivos grandes — solo lee, no escribe, por eso openpyxl se mantiene para exportar.
+python-calamine>=0.4.0
+
 # ── Sirve archivos estáticos sin necesidad de nginx ────────────────────────────
 whitenoise>=6.9.0
 

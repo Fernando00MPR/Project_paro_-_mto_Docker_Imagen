@@ -1,13 +1,24 @@
 /* lista_seguimientos.js (inventario_app) */
 
+// Fecha PR/PO/SR son el selector de fecha único; su valor real vive en el
+// hidden .dp-value (name=... es el que de verdad envía el <form>). Fijarlo
+// desde fuera exige disparar 'change' para que el widget se resincronice y
+// repinte (ver date_picker.js).
+function setSegFecha(dpId, iso) {
+    const hidden = document.querySelector('#' + dpId + ' .dp-value');
+    hidden.value = iso || '';
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 // ── Modal eliminar ────────────────────────────────────────────────────────────
-function confirmarEliminarSeg(url) {
+function confirmarEliminarSeg(event, url) {
     document.getElementById('form-eliminar-seg').action = url;
-    document.getElementById('modal-eliminar-seg').style.display = 'flex';
+    document.getElementById('elim-seg-volver').value = window.location.search;
+    abrirModalConAnimacion('modal-eliminar-seg', event);
 }
 
 function cerrarModalEliminarSeg() {
-    document.getElementById('modal-eliminar-seg').style.display = 'none';
+    cerrarModalConAnimacion('modal-eliminar-seg');
 }
 
 document.getElementById('modal-eliminar-seg').addEventListener('click', function(e) {
@@ -22,56 +33,54 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ── Modal nuevo/editar seguimiento ────────────────────────────────────────────
-function abrirModalSeg() {
+function abrirModalSeg(event) {
     document.getElementById('modal-seg-titulo').textContent = 'Nuevo seguimiento';
     document.getElementById('form-seg').action = '/inventario/seguimientos/nuevo/';
-
-    document.getElementById('seg-buscar').value           = '';
+    document.getElementById('seg-volver').value = window.location.search;
+    
+    document.getElementById('seg-buscar').value            = '';
     document.getElementById('seg-buscar').disabled         = false;
     document.getElementById('seg-refaccion-id').value      = '';
     document.getElementById('seg-no-item-display').value   = '';
     document.getElementById('seg-nombre-display').value    = '';
     document.getElementById('seg-cantidad').value          = '';
     document.getElementById('seg-numero-pr').value         = '';
-    document.getElementById('seg-fecha-pr').value          = '';
+    setSegFecha('dp-seg-fecha-pr', '');
     document.getElementById('seg-numero-po').value         = '';
-    document.getElementById('seg-fecha-po').value           = '';
-    document.getElementById('seg-numero-sr').value          = '';
-    document.getElementById('seg-fecha-sr').value           = '';
-    document.getElementById('seg-comentarios').value        = '';
+    setSegFecha('dp-seg-fecha-po', '');
+    document.getElementById('seg-numero-sr').value         = '';
+    setSegFecha('dp-seg-fecha-sr', '');
+    document.getElementById('seg-comentarios').value       = '';
 
-    document.getElementById('modal-seg').style.display = 'flex';
+    abrirModalConAnimacion('modal-seg', event);
     setTimeout(() => document.getElementById('seg-buscar').focus(), 50);
 }
 
-function editarSeg(id, refaccionId, noItem, nombre, cantidad, numeroPr, fechaPr, numeroPo, fechaPo, numeroSr, fechaSr, comentarios) {
+function editarSeg(event, id, refaccionId, noItem, nombre, cantidad, numeroPr, fechaPr, numeroPo, fechaPo, numeroSr, fechaSr, comentarios) {
     document.getElementById('modal-seg-titulo').textContent = 'Editar seguimiento';
     document.getElementById('form-seg').action = `/inventario/seguimientos/editar/${id}/`;
+    document.getElementById('seg-volver').value = window.location.search;
 
-    document.getElementById('seg-buscar').value           = `${noItem} — ${nombre}`;
+    document.getElementById('seg-buscar').value            = `${noItem} — ${nombre}`;
     document.getElementById('seg-buscar').disabled         = true;
     document.getElementById('seg-refaccion-id').value      = refaccionId;
     document.getElementById('seg-no-item-display').value   = noItem;
     document.getElementById('seg-nombre-display').value    = nombre;
     document.getElementById('seg-cantidad').value          = cantidad;
     document.getElementById('seg-numero-pr').value         = numeroPr;
-    document.getElementById('seg-fecha-pr').value          = fechaPr;
+    setSegFecha('dp-seg-fecha-pr', fechaPr);
     document.getElementById('seg-numero-po').value         = numeroPo;
-    document.getElementById('seg-fecha-po').value           = fechaPo;
-    document.getElementById('seg-numero-sr').value          = numeroSr;
-    document.getElementById('seg-fecha-sr').value           = fechaSr;
-    document.getElementById('seg-comentarios').value        = comentarios;
+    setSegFecha('dp-seg-fecha-po', fechaPo);
+    document.getElementById('seg-numero-sr').value         = numeroSr;
+    setSegFecha('dp-seg-fecha-sr', fechaSr);
+    document.getElementById('seg-comentarios').value       = comentarios;
 
-    document.getElementById('modal-seg').style.display = 'flex';
+    abrirModalConAnimacion('modal-seg', event);
 }
 
 function cerrarModalSeg() {
-    document.getElementById('modal-seg').style.display = 'none';
+    cerrarModalConAnimacion('modal-seg');
 }
-
-document.getElementById('modal-seg').addEventListener('click', function(e) {
-    if (e.target === this) cerrarModalSeg();
-});
 
 // ── Autocompletado de refacciones ─────────────────────────────────────────────
 (function() {

@@ -2,36 +2,49 @@
 
 const cfg = window.BITACORA_CFG || {};
 
+// "Fecha" del modal es el selector de fecha único; su valor real vive en el
+// hidden .dp-value (name="fecha", el que de verdad envía el <form>).
+// setBitFecha() dispara 'change' para que el widget se resincronice y
+// repinte (ver date_picker.js).
+function setBitFecha(iso) {
+    const hidden = document.querySelector('#dp-bit-fecha .dp-value');
+    hidden.value = iso || '';
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+}
+function getBitFecha() {
+    return document.querySelector('#dp-bit-fecha .dp-value').value;
+}
+
 // ── Modal crear / editar ──────────────────────────────────────────────────────
 
-function abrirModalBitacora() {
+function abrirModalBitacora(event) {
     document.getElementById('modal-titulo-bitacora').textContent = 'Nuevo registro';
     document.getElementById('form-bitacora').action = cfg.urlNuevo;
     const areaSelect = document.getElementById('bit-area');
     if (cfg.filtroArea && areaSelect) areaSelect.value = cfg.filtroArea;
-    document.getElementById('bit-fecha').value       = cfg.hoy || '';
+    setBitFecha(cfg.hoy);
     document.getElementById('bit-equipo').value      = '';
     document.getElementById('bit-responsable').value = '';
     document.getElementById('bit-actividad').value   = '';
     document.getElementById('bit-pendiente').value   = '';
     _actualizarContadores();
     _bitResetImagenes();
-    document.getElementById('modal-bitacora').style.display = 'flex';
+    abrirModalConAnimacion('modal-bitacora', event);
 }
 
-function abrirModalEditar(id, url, area, fecha, equipo, actividad, pendiente, responsable) {
+function abrirModalEditar(event, id, url, area, fecha, equipo, actividad, pendiente, responsable) {
     document.getElementById('modal-titulo-bitacora').textContent = 'Editar registro';
     document.getElementById('form-bitacora').action = url;
     const areaSelect = document.getElementById('bit-area');
     if (areaSelect) areaSelect.value = area;
-    document.getElementById('bit-fecha').value       = fecha;
+    setBitFecha(fecha);
     document.getElementById('bit-equipo').value      = equipo;
     document.getElementById('bit-responsable').value = responsable;
     document.getElementById('bit-actividad').value   = actividad;
     document.getElementById('bit-pendiente').value   = pendiente;
     _actualizarContadores();
     _bitResetImagenes();
-    document.getElementById('modal-bitacora').style.display = 'flex';
+    abrirModalConAnimacion('modal-bitacora', event);
 
     fetch(`${cfg.urlImagenesBase}${id}/imagenes/`)
         .then(r => r.json())
@@ -45,19 +58,29 @@ function abrirModalEditar(id, url, area, fecha, equipo, actividad, pendiente, re
 }
 
 function cerrarModalBitacora() {
-    document.getElementById('modal-bitacora').style.display = 'none';
+    cerrarModalConAnimacion('modal-bitacora');
 }
+
+// "Fecha" ahora es un campo oculto (el widget de calendario no participa de
+// la validación nativa del navegador vía required=""), así que se revisa a
+// mano antes de dejar que el <form> se envíe de verdad.
+document.getElementById('form-bitacora').addEventListener('submit', function (e) {
+    if (!getBitFecha()) {
+        showToast('Selecciona una fecha.', 'warning');
+        e.preventDefault();
+    }
+});
 
 // ── Modal eliminar ────────────────────────────────────────────────────────────
 
-function confirmarEliminarBitacora(url, texto) {
+function confirmarEliminarBitacora(event, url, texto) {
     document.getElementById('form-eliminar-bitacora').action = url;
     document.getElementById('texto-eliminar-bitacora').textContent = texto;
-    document.getElementById('modal-eliminar-bitacora').style.display = 'flex';
+    abrirModalConAnimacion('modal-eliminar-bitacora', event);
 }
 
 function cerrarModalEliminarBitacora() {
-    document.getElementById('modal-eliminar-bitacora').style.display = 'none';
+    cerrarModalConAnimacion('modal-eliminar-bitacora');
 }
 
 // ── Contadores de caracteres ──────────────────────────────────────────────────
@@ -192,28 +215,62 @@ function _bitRenderZonaTexto() {
 let _lightboxBitImagenes = [];
 let _lightboxBitIndice   = 0;
 
-function verImagenesBitacora(bitacoraId) {
+function verImagenesBitacora(event, bitacoraId) {
+    const trigger = event ? { currentTarget: event.currentTarget } : null;
     fetch(`${cfg.urlImagenesBase}${bitacoraId}/imagenes/`)
         .then(r => r.json())
         .then(data => {
             _lightboxBitImagenes = data.imagenes || [];
             _lightboxBitIndice   = 0;
             _renderLightboxBit();
-            document.getElementById('modal-imagenes-bitacora').style.display = 'flex';
+            abrirModalConAnimacion('modal-imagenes-bitacora', trigger);
         });
 }
 
 function _renderLightboxBit() {
     const img = _lightboxBitImagenes[_lightboxBitIndice];
     if (!img) return;
-    document.getElementById('lightbox-bit-img-principal').src = img.url;
 
-    const miniaturas = document.getElementById('lightbox-bit-miniaturas');
-    miniaturas.innerHTML = _lightboxBitImagenes.map((im, i) => `
-        <img src="${im.url}" onclick="_lightboxBitIndice=${i}; _renderLightboxBit();"
-            style="width:56px; height:56px; object-fit:cover; border-radius:6px; cursor:pointer;
-                   border:2px solid ${i === _lightboxBitIndice ? 'var(--indigo)' : 'transparent'};">
-    `).join('');
+    // Imagen principal: skeleton + spinner mientras carga, fade-in al terminar
+    // (mismo tratamiento que el lightbox de paros_app/lista_paros.js).
+    const imgPrincipal = document.getElementById('lightbox-bit-img-principal');
+    const skeleton      = document.getElementById('lightbox-bit-skeleton');
+    imgPrincipal.style.opacity = '0';
+    skeleton.style.display = 'block';
+    imgPrincipal.onload = () => {
+        imgPrincipal.style.transition = 'opacity .2s ease';
+        imgPrincipal.style.opacity = '1';
+        skeleton.style.display = 'none';
+    };
+    imgPrincipal.src = img.url;
+
+    const cont = document.getElementById('lightbox-bit-miniaturas');
+    cont.innerHTML = '';
+    _lightboxBitImagenes.forEach((im, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'img-loading-wrap';
+        wrap.style.cssText = 'width:56px; height:56px;';
+
+        const thumbSkeleton = document.createElement('div');
+        thumbSkeleton.className = 'img-skeleton';
+        const thumbSpinner = document.createElement('div');
+        thumbSpinner.className = 'img-spinner img-spinner-sm';
+        thumbSkeleton.appendChild(thumbSpinner);
+        wrap.appendChild(thumbSkeleton);
+
+        const thumb = document.createElement('img');
+        thumb.loading = 'lazy';
+        thumb.src = im.url;
+        thumb.onclick = () => { _lightboxBitIndice = i; _renderLightboxBit(); };
+        thumb.onload = () => { thumb.style.opacity = '1'; thumbSkeleton.style.display = 'none'; };
+        thumb.style.cssText = `
+            width:56px; height:56px; object-fit:cover; border-radius:6px; cursor:pointer;
+            border:2px solid ${i === _lightboxBitIndice ? 'var(--indigo)' : 'transparent'};
+            position:relative; opacity:0; transition:opacity .2s ease;
+        `;
+        wrap.appendChild(thumb);
+        cont.appendChild(wrap);
+    });
 }
 
 function lightboxBitAnterior() {
@@ -227,7 +284,7 @@ function lightboxBitSiguiente() {
 }
 
 function cerrarModalImagenesBitacora() {
-    document.getElementById('modal-imagenes-bitacora').style.display = 'none';
+    cerrarModalConAnimacion('modal-imagenes-bitacora');
 }
 
 function descargarImagenActualBit() {
@@ -304,9 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
     _autocomplete('bit-responsable', 'responsable-dropdown-bit', cfg.urlBuscarResponsables);
 
     // Cerrar modales con backdrop y ESC
-    document.getElementById('modal-bitacora').addEventListener('click', e => {
-        if (e.target === document.getElementById('modal-bitacora')) cerrarModalBitacora();
-    });
     document.getElementById('modal-eliminar-bitacora').addEventListener('click', e => {
         if (e.target === document.getElementById('modal-eliminar-bitacora')) cerrarModalEliminarBitacora();
     });

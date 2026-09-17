@@ -2,6 +2,9 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Plan de mantenimiento" %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+{% endblock %}
 {% block content %}
 
 <!-- ── Encabezado ── -->
@@ -43,7 +46,54 @@
     </div>
 
     <!-- ── Filtros ── -->
-    <form method="get" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;
+    <style>
+      .plan-filtros select,
+      .plan-filtros input,
+      .plan-filtros .btn {
+          height: 40px;
+          box-sizing: border-box;
+          border-radius: 8px;
+          font-size: 14px;
+      }
+      .plan-filtros .btn {
+          display: inline-flex;
+          align-items: center;
+          padding: 0 16px;
+          font-weight: 500;
+          white-space: nowrap;
+          text-decoration: none;
+      }
+      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+         Mismo tono que el texto (--text): hex literal porque no se puede
+         meter var() dentro del data URI. */
+      .plan-filtros select {
+          padding: 0 34px 0 10px;
+          appearance: none; -webkit-appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          background-size: 14px;
+          background-color: var(--white);
+      }
+      /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
+         select { background: var(--white) !important; }, que borra el chevron de
+         arriba por especificidad + !important. Se repite aquí con el mismo peso
+         para ganar por ir declarada después en el documento. */
+      [data-theme="dark"] .plan-filtros select {
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 10px center !important;
+          background-size: 14px !important;
+      }
+      .plan-filtros .filter-divider {
+          width: 1px;
+          height: 40px;
+          background: var(--border);
+          margin: 0 4px;
+          align-self: flex-end;
+      }
+    </style>
+    <form method="get" class="plan-filtros" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;
                               padding:14px; background:var(--surface); border:1px solid var(--border);
                               border-radius:var(--radius); align-items:flex-end;">
         {% if filtro_area %}
@@ -55,16 +105,18 @@
         <div class="filter-group">
             <label>{% trans "Semana" %}</label>
             <input type="number" name="semana" min="1" max="52"
-                   value="{{ filtro_semana|default:'' }}" placeholder="Ej: 17" style="width:90px;">
+                   value="{{ filtro_semana|default:'' }}" placeholder="Ej: 17" style="width:90px; padding:0 10px; border:1px solid var(--border); background:var(--white); color:var(--text); font-family:inherit;"
+                   onchange="this.form.submit()">
         </div>
         <div class="filter-group">
             <label>{% trans "Año" %}</label>
             <input type="number" name="anio" min="2020" max="2099"
-                   value="{{ filtro_anio|default:anio_actual }}" style="width:90px;">
+                   value="{{ filtro_anio|default:anio_actual }}" style="width:90px; padding:0 10px; border:1px solid var(--border); background:var(--white); color:var(--text); font-family:inherit;"
+                   onchange="this.form.submit()">
         </div>
         <div class="filter-group">
             <label>{% trans "Frecuencia" %}</label>
-            <select name="frecuencia">
+            <select name="frecuencia" onchange="this.form.submit()">
                 <option value="">Todas</option>
                 {% for val, label in frecuencias %}
                 <option value="{{ val }}" {% if filtro_frec == val %}selected{% endif %}>{{ label }}</option>
@@ -73,24 +125,24 @@
         </div>
         <div class="filter-group">
             <label>{% trans "Buscar" %}</label>
-            <input style="width:300px;" type="text" name="q" value="{{ busqueda }}" placeholder="Codigo, equipo o rutina...">
+            <input style="width:300px; padding:0 10px; border:1px solid var(--border); background:var(--white); color:var(--text); font-family:inherit;"
+                   type="text" name="q" value="{{ busqueda }}" placeholder="Codigo, equipo o rutina..."
+                   oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
         </div>
-        <div class="filter-group" style="justify-content:flex-end; margin-top:auto;">
-            <label>&nbsp;</label>
-            <div style="display:flex; gap:8px; align-items:flex-end; height:100%;">
-                <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
-                <a href="{% url 'mto:lista_plan' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
-                   class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
-            </div>
-        </div>
+
+        <div class="filter-divider"></div>
+        <a href="{% url 'mto:lista_plan' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
+           class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
+
         {% if puede_eliminar_todos_planes and filtro_area and total_planes_area %}
-            <div class="filter-group" style="justify-content:flex-end; margin-top:auto; margin-left:auto;">
-                <label>&nbsp;</label>
-                <button type="button" class="btn btn-danger btn-sm"
-                        onclick="confirmarEliminarTodos('{{ filtro_area }}', {{ total_planes_area }})">
-                    {% trans "Eliminar todos los planes" %}
-                </button>
-            </div>
+            <button type="button" class="btn btn-danger" style="margin-left:auto;"
+                    onclick="confirmarEliminarTodos('{{ filtro_area }}', {{ total_planes_area }})">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6"/>
+                </svg>
+                {% trans "Eliminar todos los planes" %}
+            </button>
         {% endif %}
     </form>
 
@@ -460,7 +512,12 @@
         <span style="font-size:12px; color:rgba(255,255,255,0.6);">{% trans "Esto puede tomar unos segundos" %}</span>
     </div>
 </div>
-<style>@keyframes overlay-spin { to { transform: rotate(360deg); } }</style>
+<style>
+@keyframes overlay-spin { to { transform: rotate(360deg); } }
+/* Modal "Nuevo/editar seguimiento" — mismo box-model que el input de fecha
+   nativo que reemplazó (padding 8px 10px, sin altura fija, radio 7px). */
+#modal-seg-padre .dp-control { height: auto; padding: 8px 10px; border-radius: 7px; }
+</style>
 
 <!-- Modal seguimiento -->
 <div id="modal-seg-padre"
@@ -492,8 +549,7 @@
         </div>
         <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
             <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Fecha compromiso" %}</label>
-            <input type="date" id="mseg-fecha"
-                style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px;">
+            {% include 'menu_app/_date_picker.html' with name='mseg_fecha_iso' dp_id='dp-mseg-fecha' %}
         </div>
         <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
             <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Estatus" %}</label>
@@ -531,6 +587,7 @@
     window.MTO_CONFIG = { anio_actual: {{ anio_actual }}, csrf_token: '{{ csrf_token }}' };
     const CSRF_MTO = '{{ csrf_token }}';
 </script>
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 <script src="{% static 'mto_app/js/plan_lista.js' %}"></script>
 <script src="{% static 'mto_app/js/overlay_exportar.js' %}"></script>
 

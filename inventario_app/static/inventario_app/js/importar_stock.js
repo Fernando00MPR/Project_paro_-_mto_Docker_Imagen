@@ -2,7 +2,7 @@
  * importar_stock.js
  * Script para el template importar_stock.html (importar stock de inventario)
  * Maneja drag & drop y vista previa del archivo Excel.
- * Columnas mostradas en preview: No. Item · Nombre · Stock actual
+ * Columnas mostradas en preview: No. Item · Nombre · Stock actual · Ubicación
  */
 
 
@@ -93,7 +93,7 @@ function formatearUbicacionPreview(valor) {
 
 /**
  * Llena la tabla de vista previa con las filas del archivo.
- * Muestra columnas: A=No. Item, B=Nombre, C=Stock actual
+ * Muestra columnas: A=No. Item, B=Nombre, C=Stock actual, D=Ubicación
  *
  * @param {Array}  rows  - Filas a mostrar (máx 9)
  * @param {number} total - Total de filas en el archivo
@@ -108,7 +108,7 @@ function llenarPreview(rows, total) {
             <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text); width:120px;">${row[0] || ''}</td>
             <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text-2);">${row[1] || ''}</td>
             <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text); text-align:center; width:120px;">${formatearStockPreview(row[2])}</td>
-            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text-2); text-align:center; width:140px;">${formatearUbicacionPreview(row[4])}</td>
+            <td style="padding:5px 10px; border-bottom:0.5px solid var(--border); color:var(--text-2); text-align:center; width:140px;">${formatearUbicacionPreview(row[3])}</td>
         `;
         tbody.appendChild(tr);
     });

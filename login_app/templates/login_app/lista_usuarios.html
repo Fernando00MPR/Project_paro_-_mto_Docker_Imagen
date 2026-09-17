@@ -20,224 +20,156 @@
     </div>
 </div>
 
-<form method="get" style="padding:12px 16px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px; display:flex; align-items:center; gap:12px;">
-    <div style="position:relative; min-width:320px;">
-        <svg style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-3); pointer-events:none;"
-             width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-        </svg>
-        <input type="text" name="q" value="{{ busqueda }}" placeholder="Buscar por usuario o nombre..."
-               style="width:100%; padding:7px 10px 7px 32px; border:1px solid var(--border);
-                      border-radius:7px; font-family:inherit; font-size:13px;
-                      background:var(--white); color:var(--text); outline:none;"
-               onchange="this.form.submit()">
+<div class="usr-kpis">
+    <div class="usr-kpi">
+        <span class="usr-kpi-label">{% trans "Total de usuarios" %}</span>
+        <span class="usr-kpi-value">{{ kpi_total }}</span>
     </div>
-    <select name="filtro_area" onchange="this.form.submit()"
-            style="height:33px; border:1px solid var(--border); border-radius:7px;
-                   padding:0 10px; font-size:13px; font-family:inherit;
-                   background:var(--white); color:var(--text); min-width:250px;">
-        <option value="">
-            {% trans "Todas las áreas" %}
-        </option>
-        <option value="admin" {% if area_sel == 'admin' %}selected{% endif %}>
-            {% trans "Administradores" %}
-        </option>
-        {% for area in areas %}
-        <option value="{{ area.id }}" {% if area_sel == area.id|stringformat:'s' %}selected{% endif %}>
-            {{ area.nombre }}
-        </option>
-        {% endfor %}
-    </select>
-</form>
+    <div class="usr-kpi">
+        <span class="usr-kpi-label">{% trans "Con acceso total" %}</span>
+        <span class="usr-kpi-value usr-kpi-value--full">{{ kpi_acceso }}</span>
+    </div>
+    <div class="usr-kpi">
+        <span class="usr-kpi-label">{% trans "Con rol específico" %}</span>
+        <span class="usr-kpi-value usr-kpi-value--scope">{{ kpi_especifico }}</span>
+    </div>
+</div>
 
+<div class="card usr-card" style="padding:0;">
+    <!-- Barra de filtros -->
+    <form method="get" class="usr-filtros">
+        <div class="usr-buscar">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="text" name="q" value="{{ busqueda }}"
+                   placeholder="{% trans 'Buscar por usuario o nombre…' %}" onchange="this.form.submit()">
+        </div>
+        <select name="filtro_area" class="usr-select" onchange="this.form.submit()">
+            <option value="">{% trans "Todas las áreas" %}</option>
+            <option value="admin" {% if area_sel == 'admin' %}selected{% endif %}>{% trans "Administradores" %}</option>
+            {% for area in areas %}
+            <option value="{{ area.id }}" {% if area_sel == area.id|stringformat:'s' %}selected{% endif %}>{{ area.nombre }}</option>
+            {% endfor %}
+        </select>
+        <select name="filtro_rol" class="usr-select" onchange="this.form.submit()">
+            <option value="">{% trans "Todos los roles" %}</option>
+            <option value="admin"      {% if rol_sel == 'admin' %}selected{% endif %}>{% trans "Administrador" %}</option>
+            <option value="especifico" {% if rol_sel == 'especifico' %}selected{% endif %}>{% trans "Rol específico" %}</option>
+            <option value="super"      {% if rol_sel == 'super' %}selected{% endif %}>{% trans "Super usuario" %}</option>
+        </select>
+    </form>
 
-<div class="card" style="padding:0; overflow:hidden;">
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width:120px;">{% trans "Usuario" %}</th>
-                    <th style="width:160px;">{% trans "Nombre completo" %}</th>
-                    <th style="width:130px; text-align: center;">{% trans "Rol" %}</th>
-                    <th style="width:100px; text-align: center;">{% trans "Dashboard y" %}<br>{% trans "Análisis" %}</th>
-                    <th style="width:200px; text-align: center;">{% trans "Áreas de Paros" %}</th>
-                    <th style="width:130px; text-align: center;">{% trans "Permisos" %}<br>{% trans "de paros" %}</th>
-                    <th style="width:140px; text-align: center;">{% trans "Catálogos" %}</th>
-                    <th style="width:100px; text-align: center;">{% trans "Producción" %}</th>
-                    <th style="width:200px; text-align: center;">{% trans "Gestión de MTO" %}</th>
-                    <th style="width:180px;">{% trans "Acciones" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in usuarios %}
-                <tr data-busqueda="{{ u.username|lower }} {{ u.get_full_name|lower }}">
-                    <!-- Usuario -->
-                    <td style="font-weight:600; font-family:'DM Mono',monospace; font-size:13px;">
-                        {{ u.username }}
-                        {% if u == request.user %}
-                        <span style="font-size:10px; color:var(--text-3); font-family:'DM Sans',sans-serif;">{% trans "(tú)" %}</span>
-                        {% endif %}
-                    </td>
-                    <!-- Nombre Completo -->
-                    <td style="color:var(--text-2);">{{ u.get_full_name|default:"—" }}</td>
-                    <!-- Rol -->
-                    <td style="text-align: center;">
-                        {% if u.is_superuser %}
-                            <span class="badge" style="background:#FEF3C7;color:#92400E;">{% trans "Super usuario" %}</span>
-                        {% elif u.perfil.es_admin %}
-                            <span class="badge badge-t1">{% trans "Administrador" %}</span>
-                        {% else %}
-                            <span class="badge" style="background:var(--surface);color:var(--text-3);border:1px solid var(--border);">{% trans "Rol Especifico" %}</span>
-                        {% endif %}
-                    </td>
-                    <!-- Dashboard y Análisis -->
-                    <td style="font-size:12px; text-align: center;">
-                        {% if u.is_superuser or u.perfil.es_admin %}
-                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
-                        {% elif u.perfil.ver_dashboard and u.perfil.ver_analisis %}
-                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
-                                <span class="perm-tag">{% trans "Dashboard" %}</span>
-                                <span class="perm-tag">{% trans "Análisis" %}</span>
-                            </div>
-                        {% elif u.perfil.ver_dashboard %}
-                            <span class="perm-tag">{% trans "Dashboard" %}</span>
-                        {% elif u.perfil.ver_analisis %}
-                            <span class="perm-tag">{% trans "Análisis" %}</span>
-                        {% else %}
-                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
-                        {% endif %}
-                    </td>
-                    <!-- Areas de Paros -->
-                    <td style="font-size:12px; text-align: center;">
-                        {% if u.is_superuser or u.perfil.es_admin %}
-                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
-                        {% elif u.perfil.areas_permitidas.exists %}
-                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
-                                {% for area in u.perfil.areas_permitidas.all %}
-                                    <span class="perm-tag">{{ area.nombre }}</span>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
-                        {% endif %}
-                    </td>
-                    <!-- Permisos de Paros -->
-                    <td style="font-size:12px; text-align: center;">
-                        {% if u.is_superuser or u.perfil.es_admin %}
-                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
-                        {% elif u.perfil.ver_todos_paros or u.perfil.crear_paro or u.perfil.editar_paro or u.perfil.editar_eliminar_paro %}
-                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
-                                {% if u.perfil.ver_todos_paros %}      <span class="perm-tag">{% trans "Ver" %}</span>{% endif %}
-                                {% if u.perfil.crear_paro %}            <span class="perm-tag">{% trans "Crear" %}</span>{% endif %}
-                                {% if u.perfil.editar_paro %}           <span class="perm-tag">{% trans "Editar" %}</span>{% endif %}
-                                {% if u.perfil.editar_eliminar_paro %}  <span class="perm-tag">{% trans "Eliminar" %}</span>{% endif %}
-                            </div>
-                        {% else %}
-                            <span style="color:var(--red);">{% trans "Sin permisos" %}</span>
-                        {% endif %}
-                    </td>
-                    <!-- Catalogos -->
-                    <td style="font-size:12px; text-align: center;">
-                        {% if u.is_superuser or u.perfil.es_admin %}
-                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
-                        {% elif u.perfil.ver_catalogos or u.perfil.gestionar_catalogos %}
-                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
-                                {% if u.perfil.ver_catalogos %}      <span class="perm-tag">{% trans "Ver catalogos" %}</span>{% endif %}
-                                {% if u.perfil.gestionar_catalogos %}<span class="perm-tag">{% trans "Importar y Exportar" %}</span>{% endif %}
-                            </div>
-                        {% else %}
-                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
-                        {% endif %}
-                    </td>
-                    <!-- Producción -->
-                    <td style="font-size:12px; text-align: center;">
-                        {% if u.is_superuser or u.perfil.es_admin %}
-                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
-                        {% elif u.perfil.areas_produccion.exists %}
-                            <div>
-                                <span class="perm-tag">{% trans "Indicadores" %}</span>
-                            </div>
-                        {% else %}
-                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
-                        {% endif %}
-                    </td>
-                    <!-- MTO -->
-                    <td style="font-size:12px; text-align: center;">
-                        {% if u.is_superuser or u.perfil.es_admin %}
-                            <span style="color:var(--green);">{% trans "Acceso total" %}</span>
-                        {% elif u.acceso_mto.pk and u.acceso_mto.activo %}
-                            <div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
-                                {% for area in u.acceso_mto.areas.all %}
-                                    <span class="perm-tag">{{ area.nombre }}</span>
-                                {% empty %}
-                                    <span class="perm-tag">{% trans "Acceso a MTO" %}</span>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <span style="color:var(--red);">{% trans "Sin acceso" %}</span>
-                        {% endif %}
-                    </td>
-                    <!-- Acciones -->
-                    <td>
-                        <div style="display:flex; gap:6px;">
-                            <a href="{% url 'editar_usuario' u.id %}" class="btn btn-ghost btn-sm">{% trans "Editar" %}</a>
-                            {% if u != request.user %}
-                            <button type="button" class="btn btn-danger btn-sm"
-                                    onclick="abrirModalEliminar('{% url 'eliminar_usuario' u.id %}', '{{ u.username }}')">
-                                {% trans "Eliminar" %}
-                            </button>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" style="text-align:center; padding:40px; color:var(--text-3);">
-                        {% trans "No hay usuarios registrados." %}
-                    </td>
-                </tr>
+    <!-- Encabezados -->
+    {% if usuarios %}
+    <div class="usr-thead">
+        <span>{% trans "Usuario" %}</span>
+        <span>{% trans "Alta" %}</span>
+        <span>{% trans "Rol" %}</span>
+        <span>{% trans "Área asignada" %}</span>
+        <span>{% trans "Cobertura" %}</span>
+        <span></span>
+    </div>
+    {% endif %}
+
+    <!-- Lista de usuarios -->
+    {% for u in usuarios %}
+    <div class="usr-item" data-busqueda="{{ u.username|lower }} {{ u.get_full_name|lower }}">
+        <div class="usr-row" role="button" tabindex="0" aria-expanded="false"
+             onclick="usrToggleFila(this)"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();usrToggleFila(this);}">
+            <div class="usr-identidad">
+                <span class="usr-caret" aria-hidden="true">›</span>
+                <span class="usr-avatar usr-avatar--{{ u.avatar_color }}">{{ u.iniciales }}</span>
+                <div style="min-width:0; display:flex; flex-direction:column; gap:3px;">
+                    <span class="usr-nombre">
+                        {{ u.get_full_name|default:u.username }}{% if u == request.user %} <span class="usr-tu">{% trans "(tú)" %}</span>{% endif %}
+                    </span>
+                    <span class="usr-nomina">{{ u.username }}</span>
+                </div>
+            </div>
+            <span class="usr-fecha" title="{% trans 'Fecha de alta' %}">{{ u.date_joined|date:"d/m/Y" }}</span>
+            <span class="usr-rol-pill usr-rol-pill--{% if u.is_superuser %}super{% elif u.perfil.es_admin %}admin{% else %}especifico{% endif %}">
+                {% if u.is_superuser %}{% trans "Super usuario" %}
+                {% elif u.perfil.es_admin %}{% trans "Administrador" %}
+                {% else %}{% trans "Rol específico" %}{% endif %}
+            </span>
+            <span class="usr-area">{{ u.area_asignada }}</span>
+            <div class="usr-cobertura">
+                <span class="usr-cobertura-txt">{{ u.cobertura.texto }}</span>
+                <span class="usr-cobertura-barra">
+                    {% for m in u.modulos %}<span class="cov-seg cov-seg--{{ m.estado }}"></span>{% endfor %}
+                </span>
+            </div>
+            <div class="usr-menu-wrap" onclick="event.stopPropagation();">
+                <button type="button" class="usr-menu-btn" aria-haspopup="menu" aria-expanded="false"
+                        aria-label="{% trans 'Acciones' %}" onclick="usrToggleMenu(this)">
+                    <span></span><span></span><span></span>
+                </button>
+                <div class="usr-menu" role="menu" hidden>
+                    <a href="{% url 'editar_usuario' u.id %}" class="usr-menu-item" role="menuitem">{% trans "Editar permisos" %}</a>
+                    {% if u != request.user and not u.is_superuser %}
+                    <button type="button" class="usr-menu-item usr-menu-item--danger" role="menuitem"
+                            onclick="abrirModalEliminar(event, '{% url 'eliminar_usuario' u.id %}', '{{ u.username }}')">
+                        {% trans "Eliminar usuario" %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="usr-detalle" hidden>
+            <div class="usr-detalle-grid">
+                {% for m in u.modulos %}
+                <div class="usr-mod">
+                    <span class="usr-mod-nombre">{{ m.nombre }}</span>
+                    <span class="usr-mod-estado mod-state--{{ m.estado }}">
+                        <span class="usr-mod-dot"></span>{{ m.etiqueta }}
+                    </span>
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
+            </div>
+        </div>
     </div>
+    {% empty %}
+    <div style="text-align:center; padding:48px 20px; color:var(--text-3); font-size:13px;">
+        {% if busqueda or area_sel or rol_sel %}
+            {% trans "Ningún usuario coincide con los filtros." %}
+            <a href="{% url 'lista_usuarios' %}" style="color:var(--indigo); margin-left:6px;"
+               onmouseover="this.style.color='var(--indigo-dk)'" onmouseout="this.style.color='var(--indigo)'">{% trans "Limpiar filtros" %}</a>
+        {% else %}
+            {% trans "Aún no hay usuarios." %}
+        {% endif %}
+    </div>
+    {% endfor %}
 </div>
 
 {% if page_obj.has_other_pages %}
 <div style="display:flex; justify-content:center; align-items:center; gap:4px; margin-top:16px;">
     {% if page_obj.has_previous %}
-    <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}{% if area_sel %}filtro_area={{ area_sel }}&{% endif %}page={{ page_obj.previous_page_number }}"
-       style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-              border:1px solid var(--border); border-radius:6px; color:var(--text-2);
-              text-decoration:none; font-size:13px;">‹</a>
+    <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}{% if area_sel %}filtro_area={{ area_sel }}&{% endif %}{% if rol_sel %}filtro_rol={{ rol_sel }}&{% endif %}page={{ page_obj.previous_page_number }}"
+       class="usr-pag">‹</a>
     {% endif %}
 
     {% for num in page_obj.paginator.page_range %}
         {% if page_obj.number == num %}
-        <span style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-                     background:var(--indigo); color:#fff; border-radius:6px; font-size:13px; font-weight:600;">
-            {{ num }}
-        </span>
+        <span class="usr-pag usr-pag--current">{{ num }}</span>
         {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-        <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}{% if area_sel %}filtro_area={{ area_sel }}&{% endif %}page={{ num }}"
-           style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-                  border:1px solid var(--border); border-radius:6px; color:var(--text-2);
-                  text-decoration:none; font-size:13px;">{{ num }}</a>
+        <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}{% if area_sel %}filtro_area={{ area_sel }}&{% endif %}{% if rol_sel %}filtro_rol={{ rol_sel }}&{% endif %}page={{ num }}"
+           class="usr-pag">{{ num }}</a>
         {% endif %}
     {% endfor %}
 
     {% if page_obj.has_next %}
-    <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}{% if area_sel %}filtro_area={{ area_sel }}&{% endif %}page={{ page_obj.next_page_number }}"
-       style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-              border:1px solid var(--border); border-radius:6px; color:var(--text-2);
-              text-decoration:none; font-size:13px;">›</a>
+    <a href="?{% if busqueda %}q={{ busqueda }}&{% endif %}{% if area_sel %}filtro_area={{ area_sel }}&{% endif %}{% if rol_sel %}filtro_rol={{ rol_sel }}&{% endif %}page={{ page_obj.next_page_number }}"
+       class="usr-pag">›</a>
     {% endif %}
 </div>
 {% endif %}
 
 <!-- Modal confirmación eliminar usuario -->
-<div id="modal-eliminar" style="display:none; position:fixed; inset:0;
+<div id="modal-eliminar" class="modal-backdrop" style="display:none; position:fixed; inset:0;
      background:rgba(30,27,75,.45); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px;
                 min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18); text-align:center;">
 
         <div style="width:48px; height:48px; border-radius:50%; background:var(--red-lt);
@@ -269,36 +201,276 @@
 </div>
 
 <script>
-function abrirModalEliminar(url, username) {
+function abrirModalEliminar(event, url, username) {
     document.getElementById('modal-eliminar-form').action = url;
     document.getElementById('modal-eliminar-msg').textContent =
         `El usuario "${username}" será eliminado permanentemente. Esta acción no se puede deshacer.`;
-    document.getElementById('modal-eliminar').style.display = 'flex';
+    abrirModalConAnimacion('modal-eliminar', event);
 }
 function cerrarModalEliminar() {
-    document.getElementById('modal-eliminar').style.display = 'none';
+    cerrarModalConAnimacion('modal-eliminar');
 }
 document.getElementById('modal-eliminar').addEventListener('click', function(e) {
     if (e.target === this) cerrarModalEliminar();
 });
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') cerrarModalEliminar();
+    if (e.key === 'Escape') { cerrarModalEliminar(); usrCerrarMenus(); }
+});
+
+// ── Lista de usuarios: expandir fila y menú de acciones ──────────────────────
+function usrCerrarMenus(exceptoWrap) {
+    document.querySelectorAll('.usr-menu-wrap').forEach(function (w) {
+        if (w === exceptoWrap) return;
+        var menu = w.querySelector('.usr-menu');
+        var btn  = w.querySelector('.usr-menu-btn');
+        if (menu) menu.hidden = true;
+        if (btn)  btn.setAttribute('aria-expanded', 'false');
+    });
+}
+
+function usrToggleFila(row) {
+    var item    = row.closest('.usr-item');
+    var detalle = item.querySelector('.usr-detalle');
+    var abrir   = detalle.hidden;          // estaba oculto → se va a abrir
+    detalle.hidden = !abrir;
+    row.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+    usrCerrarMenus();
+}
+
+function usrToggleMenu(btn) {
+    var wrap = btn.closest('.usr-menu-wrap');
+    var menu = wrap.querySelector('.usr-menu');
+    var abrir = menu.hidden;
+    usrCerrarMenus(wrap);
+    menu.hidden = !abrir;
+    btn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+}
+
+document.addEventListener('click', function (e) {
+    if (!e.target.closest('.usr-menu-wrap')) usrCerrarMenus();
 });
 </script>
 
 <style>
-.perm-tag {
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    background: var(--indigo-lt);
-    color: var(--indigo);
+/* ── Gestión de usuarios — lista con resumen expandible ── */
+.usr-card { overflow: visible; }
+
+/* Tarjetas de resumen */
+.usr-kpis {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-bottom: 16px;
 }
-.perm-tag.perm-red {
-    background: var(--red-lt);
-    color: var(--red);
+.usr-kpi {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 6px;
+}
+.usr-kpi-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--text-3);
+}
+.usr-kpi-value { font-size: 24px; font-weight: 700; color: var(--text); }
+.usr-kpi-value--full  { color: var(--green); }
+.usr-kpi-value--scope { color: var(--indigo); }
+@media (max-width: 720px) { .usr-kpis { grid-template-columns: 1fr; } }
+
+/* Restaurar el ocultamiento nativo (nuestras reglas de .usr-menu/.usr-detalle
+   con display:flex/block le ganarían al atributo [hidden]). */
+.usr-menu[hidden], .usr-detalle[hidden] { display: none; }
+
+.usr-filtros {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    flex-wrap: wrap;
+}
+.usr-buscar {
+    flex: 1; min-width: 240px; display: flex; align-items: center; gap: 9px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 13px; color: var(--text);
+}
+.usr-buscar input {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-family: inherit; font-size: 13.5px; color: var(--text);
+}
+.usr-select {
+    height: 38px; min-width: 190px;
+    border: 1px solid var(--border); border-radius: 8px;
+    
+    /* espacio a la derecha para la flecha, que no quede pegada al borde */
+    padding: 0 34px 0 12px; font-family: inherit; font-size: 13.5px;
+    background: var(--white); color: var(--text); cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+}
+[data-theme="dark"] .usr-select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+.usr-thead {
+    display: grid;
+    grid-template-columns: minmax(0,1.3fr) 92px 140px minmax(0,1fr) 190px 44px;
+    align-items: center; gap: 16px; padding: 12px 20px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--text-3);
+}
+
+.usr-item { border-bottom: 1px solid var(--border); }
+.usr-item:last-child { border-bottom: none; }
+.usr-row {
+    display: grid;
+    grid-template-columns: minmax(0,1.3fr) 92px 140px minmax(0,1fr) 190px 44px;
+    align-items: center; gap: 16px; padding: 16px 20px; cursor: pointer;
+    transition: background-color .12s ease;
+}
+.usr-row:hover { background: var(--surface); }
+.usr-row:focus-visible { outline: 2px solid var(--indigo); outline-offset: -2px; }
+
+.usr-identidad { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.usr-caret {
+    font-size: 18px; line-height: 1; color: var(--text);
+    width: 12px; flex: none; text-align: center;
+    display: inline-block; transition: transform .15s ease;
+}
+.usr-row[aria-expanded="true"] .usr-caret { transform: rotate(90deg); }
+.usr-avatar {
+    width: 34px; height: 34px; flex: none; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; letter-spacing: .02em;
+    background: var(--surface); color: var(--text-2); border: 1px solid transparent;
+}
+/* Color determinístico por usuario (u.id % 6, ver login_app/views.py) */
+.usr-avatar--0 { background: #E0E7FF; color: #4338CA; }
+.usr-avatar--1 { background: #FCE7F3; color: #BE185D; }
+.usr-avatar--2 { background: #D1FAE5; color: #047857; }
+.usr-avatar--3 { background: #FEF3C7; color: #B45309; }
+.usr-avatar--4 { background: #E0F2FE; color: #0369A1; }
+.usr-avatar--5 { background: #EDE9FE; color: #6D28D9; }
+[data-theme="dark"] .usr-avatar--0 { background: #312E81; color: #A5B4FC; }
+[data-theme="dark"] .usr-avatar--1 { background: #500724; color: #F9A8D4; }
+[data-theme="dark"] .usr-avatar--2 { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .usr-avatar--3 { background: #451A03; color: #FCD34D; }
+[data-theme="dark"] .usr-avatar--4 { background: #082F49; color: #7DD3FC; }
+[data-theme="dark"] .usr-avatar--5 { background: #2E1065; color: #C4B5FD; }
+.usr-nombre {
+    font-weight: 600; font-size: 14.5px; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.usr-tu { font-size: 11px; font-weight: 400; color: var(--text-3); }
+.usr-nomina { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-3); }
+.usr-fecha { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+
+.usr-rol-pill {
+    justify-self: start; font-size: 12px; font-weight: 500; color: var(--text-2);
+    border: 1px solid var(--border); background: var(--surface);
+    border-radius: 5px; padding: 4px 10px; white-space: nowrap;
+}
+
+/* Un color por rol (específico = neutro, hereda del base) */
+.usr-rol-pill--super {
+    color: #92400E; border-color: #FCD34D; background: var(--amber-lt);
+}
+.usr-rol-pill--admin {
+    color: var(--indigo); border-color: var(--indigo); background: var(--indigo-lt);
+}
+[data-theme="dark"] .usr-rol-pill--super { color: #FCD34D; }
+
+.usr-area {
+    font-size: 13px; color: var(--text-2); min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.usr-cobertura { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.usr-cobertura-txt {
+    font-size: 12px; color: var(--text-2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.usr-cobertura-barra { display: flex; gap: 3px; }
+.cov-seg { flex: 1; height: 5px; border-radius: 3px; background: var(--border); }
+.cov-seg--full  { background: var(--green); }
+.cov-seg--scope { background: var(--indigo); }
+
+.usr-menu-wrap { position: relative; justify-self: end; }
+.usr-menu-btn {
+    display: flex; align-items: center; justify-content: center; gap: 3px;
+    width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--white); cursor: pointer; transition: background-color .12s ease;
+}
+.usr-menu-btn:hover { background: var(--surface); }
+.usr-menu-btn span { width: 3.5px; height: 3.5px; border-radius: 50%; background: var(--text-2); }
+.usr-menu {
+    position: absolute; top: 38px; right: 0; z-index: 20; min-width: 180px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(16,18,28,.14); padding: 5px;
+    display: flex; flex-direction: column;
+}
+.usr-menu-item {
+    display: block; width: 100%; box-sizing: border-box; text-align: left;
+    border: none; background: none; font-family: inherit; font-size: 13px;
+    color: var(--text); padding: 9px 12px; border-radius: 7px; cursor: pointer;
+    text-decoration: none;
+}
+.usr-menu-item:hover { background: var(--surface); }
+.usr-menu-item--danger { color: var(--red); }
+.usr-menu-item--danger:hover { background: var(--red-lt); }
+
+.usr-detalle {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 4px 20px 22px 62px;
+}
+.usr-detalle-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 1px; background: var(--border); border: 1px solid var(--border);
+    border-radius: 9px; overflow: hidden; margin-top: 16px;
+}
+.usr-mod {
+    background: var(--white); padding: 13px 15px;
+    display: flex; flex-direction: column; gap: 5px;
+}
+.usr-mod-nombre {
+    font-size: 11px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--text-3);
+}
+.usr-mod-estado { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; }
+.usr-mod-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--text-3); }
+.mod-state--full  { color: var(--green); }
+.mod-state--full  .usr-mod-dot { background: var(--green); }
+.mod-state--scope { color: var(--indigo); }
+.mod-state--scope .usr-mod-dot { background: var(--indigo); }
+.mod-state--none  { color: var(--text-3); }
+
+.usr-pag {
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border); border-radius: 6px; color: var(--text-2);
+    text-decoration: none; font-size: 13px;
+}
+.usr-pag--current { background: var(--indigo); color: #fff; border-color: var(--indigo); font-weight: 600; }
+
+@media (max-width: 720px) {
+    .usr-thead { display: none; }
+    .usr-row {
+        grid-template-columns: 1fr 44px;
+        grid-template-areas:
+            "id   menu"
+            "fecha menu"
+            "rol  menu"
+            "area menu"
+            "cob  cob";
+        row-gap: 10px;
+    }
+    .usr-identidad { grid-area: id; }
+    .usr-fecha     { grid-area: fecha; }
+    .usr-rol-pill  { grid-area: rol; }
+    .usr-area      { grid-area: area; }
+    .usr-cobertura { grid-area: cob; }
+    .usr-menu-wrap { grid-area: menu; align-self: start; }
+    .usr-detalle { padding-left: 20px; }
+    .usr-detalle-grid { grid-template-columns: 1fr; }
 }
 </style>
 

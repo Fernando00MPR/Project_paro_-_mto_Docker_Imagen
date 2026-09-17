@@ -4,27 +4,13 @@ FROM python:3.12-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# ── Diagnóstico temporal de red (quitar una vez identificada la causa) ─────────
-RUN printf '%s\n' \
-    "import socket, urllib.request, time" \
-    "orig = socket.getaddrinfo" \
-    "def test(family, label):" \
-    "    def filtered(*a, **k):" \
-    "        r = [x for x in orig(*a, **k) if x[0] == family]" \
-    "        if not r: raise Exception('sin direcciones de esta familia')" \
-    "        return r" \
-    "    socket.getaddrinfo = filtered" \
-    "    t0 = time.time()" \
-    "    try:" \
-    "        resp = urllib.request.urlopen('http://deb.debian.org', timeout=8)" \
-    "        print(f'{label}: OK status={resp.status} en {time.time()-t0:.1f}s')" \
-    "    except Exception as e:" \
-    "        print(f'{label}: FALLO -> {e} (tras {time.time()-t0:.1f}s)')" \
-    "    finally:" \
-    "        socket.getaddrinfo = orig" \
-    "test(socket.AF_INET, 'IPv4')" \
-    "test(socket.AF_INET6, 'IPv6')" \
-    > /tmp/diag.py && python3 /tmp/diag.py && rm /tmp/diag.py
+# ── Causa identificada con el diagnóstico anterior: el host de build de Coolify
+#    resuelve IPv6 para deb.debian.org/pypi.org pero esa ruta no funciona ahí,
+#    y el intento cuelga/falla antes de caer a IPv4. Se le dice al resolver del
+#    sistema (glibc) que prefiera siempre IPv4 — arregla apt Y pip de una vez
+#    (Acquire::ForceIPv4 de abajo solo cubre apt). Debe ir antes de cualquier
+#    RUN que toque la red.
+RUN echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
 
 # ── Dependencias del sistema ───────────────────────────────────────────────────
 RUN apt-get update \

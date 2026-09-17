@@ -4,6 +4,7 @@
 {% block title %}{% trans "Indicadores de producción" %}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'paros_app/css/indicadores_produccion.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
 {% endblock %}
 {% block content %}
 
@@ -33,7 +34,6 @@
             <div class="filter-group">
                 <label class="filter-label">{% trans "Período" %}</label>
                 <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value, true)" class="filter-select">
-                    <option value="semana"      {% if periodo == 'semana'      %}selected{% endif %}>{% trans "Esta semana" %}</option>
                     <option value="mes"         {% if periodo == 'mes'         %}selected{% endif %}>{% trans "Este mes" %}</option>
                     <option value="semana_num"  {% if periodo == 'semana_num'  %}selected{% endif %}>{% trans "Por número de semana" %}</option>
                     <option value="mes_elegido" {% if periodo == 'mes_elegido' %}selected{% endif %}>{% trans "Por mes" %}</option>
@@ -82,19 +82,17 @@
 
             <div id="wrap-desde" style="display:none;" class="filter-group">
                 <label class="filter-label">{% trans "Desde" %}</label>
-                <input type="date" name="fecha_desde" value="{{ fecha_desde }}" class="filter-input filter-input-date" onchange="this.form.submit()">
+                {% include 'menu_app/_date_picker.html' with name='fecha_desde' initial=fecha_desde dp_id='dp-fecha-desde' %}
             </div>
 
             <div id="wrap-hasta" style="display:none;" class="filter-group">
                 <label class="filter-label">{% trans "Hasta" %}</label>
-                <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" class="filter-input filter-input-date" onchange="this.form.submit()">
+                {% include 'menu_app/_date_picker.html' with name='fecha_hasta' initial=fecha_hasta dp_id='dp-fecha-hasta' %}
             </div>
 
             <input type="hidden" name="indicador" id="input-indicador" value="{{ indicador }}">
 
-            <select id="sel-filtro-target" onchange="aplicarFiltroTarget()"
-                    style="padding:7px 10px; border:1px solid var(--border); border-radius:6px;
-                        font-size:13px; background:var(--white); color:var(--text); cursor:pointer;">
+            <select id="sel-filtro-target" class="filter-select" onchange="aplicarFiltroTarget()" style="cursor:pointer;">
                 <option value="fuera">{% trans "Fuera de target" %}</option>
                 <option value="dentro">{% trans "Dentro de target" %}</option>
                 <option value="todos">{% trans "Todos" %}</option>
@@ -221,7 +219,7 @@
                 </button>
             </div>
             {% if indicador != 't_muerto_mant' and indicador != 'planeado' %}
-            <button onclick="abrirModalTarget()" class="btn-outline">
+            <button onclick="abrirModalTarget(event)" class="btn-outline">
                 <svg width="12" height="12" viewBox="0 0 16 16"><line x1="1" y1="8" x2="15" y2="8" stroke="#F59E0B" stroke-width="2" stroke-dasharray="3 2"/></svg>
                 {% if target_valor is not None %}Target: {{ target_valor }}{% if indicador == 'downtime' or indicador == 'disponibilidad' %}%{% elif indicador == 'mttr' %} min{% else %} h{% endif %}{% else %}{% trans "Agregar target" %}{% endif %}
             </button>
@@ -362,8 +360,8 @@
                             <input type="hidden" class="cont-status" value="{% if d.accion %}{{ d.accion.cont_estatus }}{% else %}p{% endif %}">
                             <div class="rango-fechas rango-cont rango-vacia" role="button" tabindex="0"
                                  aria-label="{% trans 'Editar fechas de contención' %}"
-                                 onclick="abrirModalFechas(this,'cont')"
-                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalFechas(this,'cont');}">
+                                 onclick="abrirModalFechas(event, this,'cont')"
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalFechas(event, this,'cont');}">
                                 <button type="button" class="rango-dot-btn" aria-haspopup="menu" title="Pendiente" aria-label="{% trans 'Estatus' %}: Pendiente"
                                         onclick="event.stopPropagation(); abrirMenuEstatus(event, this, 'cont');">
                                     <span class="rango-dot rango-dot-n"></span>
@@ -389,8 +387,8 @@
                             <input type="hidden" class="corr-status" value="{% if d.accion %}{{ d.accion.corr_estatus }}{% else %}p{% endif %}">
                             <div class="rango-fechas rango-corr rango-vacia" role="button" tabindex="0"
                                  aria-label="{% trans 'Editar fechas de la acción correctiva' %}"
-                                 onclick="abrirModalFechas(this,'corr')"
-                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalFechas(this,'corr');}">
+                                 onclick="abrirModalFechas(event, this,'corr')"
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalFechas(event, this,'corr');}">
                                 <button type="button" class="rango-dot-btn" aria-haspopup="menu" title="Pendiente" aria-label="{% trans 'Estatus' %}: Pendiente"
                                         onclick="event.stopPropagation(); abrirMenuEstatus(event, this, 'corr');">
                                     <span class="rango-dot rango-dot-n"></span>
@@ -416,8 +414,8 @@
                             <input type="hidden" class="prev-status" value="{% if d.accion %}{{ d.accion.prev_estatus }}{% else %}p{% endif %}">
                             <div class="rango-fechas rango-prev rango-vacia" role="button" tabindex="0"
                                  aria-label="{% trans 'Editar fechas de la acción preventiva' %}"
-                                 onclick="abrirModalFechas(this,'prev')"
-                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalFechas(this,'prev');}">
+                                 onclick="abrirModalFechas(event, this,'prev')"
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalFechas(event, this,'prev');}">
                                 <button type="button" class="rango-dot-btn" aria-haspopup="menu" title="Pendiente" aria-label="{% trans 'Estatus' %}: Pendiente"
                                         onclick="event.stopPropagation(); abrirMenuEstatus(event, this, 'prev');">
                                     <span class="rango-dot rango-dot-n"></span>
@@ -497,25 +495,25 @@
                 <button type="button" class="modal-fechas-cerrar" onclick="cerrarModalFechas()" aria-label="{% trans 'Cerrar' %}">×</button>
             </div>
             <div class="modal-fechas-body">
-                <div class="modal-fechas-campos">
+                <div class="modal-fechas-campos modal-row">
                     <div class="modal-fechas-campo">
-                        <label for="modal-fecha-inicio">{% trans "F. inicio" %}</label>
-                        <input type="date" id="modal-fecha-inicio" class="modal-fechas-input">
+                        <label>{% trans "F. inicio" %}</label>
+                        {% include 'menu_app/_date_picker.html' with name='modal_fecha_inicio_iso' dp_id='dp-modal-inicio' %}
                         <div class="modal-fechas-error" id="modal-fechas-error-inicio"></div>
                     </div>
                     <div class="modal-fechas-campo">
-                        <label for="modal-fecha-cierre">{% trans "F. cierre" %}</label>
-                        <input type="date" id="modal-fecha-cierre" class="modal-fechas-input">
+                        <label>{% trans "F. cierre" %}</label>
+                        {% include 'menu_app/_date_picker.html' with name='modal_fecha_cierre_iso' dp_id='dp-modal-cierre' %}
                         <div class="modal-fechas-error" id="modal-fechas-error-cierre"></div>
                     </div>
                 </div>
-                <div class="modal-fechas-atajos">
+                <div class="modal-fechas-atajos modal-row">
                     <button type="button" class="chip-atajo chip-atajo-color" onclick="modalAtajoInicioHoy()">{% trans "Inicio hoy" %}</button>
                     <button type="button" class="chip-atajo chip-atajo-color" onclick="modalAtajoCierreHoy()">{% trans "Cerrar hoy" %}</button>
                     <button type="button" class="chip-atajo" onclick="modalAtajoMismoDia()">{% trans "Mismo día" %}</button>
                     <button type="button" class="chip-atajo" onclick="modalAtajoSinCierre()">{% trans "Sin cierre" %}</button>
                 </div>
-                <div class="modal-fechas-resumen">
+                <div class="modal-fechas-resumen modal-row">
                     <span class="modal-fechas-resumen-label">{% trans "Duración" %}</span>
                     <span class="modal-fechas-resumen-valor" id="modal-fechas-duracion">—</span>
                 </div>
@@ -526,6 +524,24 @@
                     <button type="button" class="btn-modal-cancelar" onclick="cerrarModalFechas()">{% trans "Cancelar" %}</button>
                     <button type="button" class="btn-modal-guardar" id="modal-fechas-guardar" onclick="guardarModalFechas()">{% trans "Guardar" %}</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmar descartar cambios sin guardar (reemplaza confirm() nativo) -->
+    <div id="modal-descartar-fechas" class="modal-backdrop"
+         style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+                z-index:1100; align-items:center; justify-content:center;">
+        <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px;
+                    min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18); text-align:left;">
+            <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "¿Descartar cambios?" %}</div>
+            <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">{% trans "Cambiaste las fechas de inicio o cierre y no las has guardado. Si cierras ahora, se pierden." %}</div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" onclick="cerrarModalDescartarCambios()" class="btn btn-ghost">{% trans "Seguir editando" %}</button>
+                <button type="button" onclick="confirmarDescartarCambios()" class="btn btn-danger"
+                        style="background:#EF4444; color:#fff; border-color:#EF4444;">
+                    {% trans "Descartar cambios" %}
+                </button>
             </div>
         </div>
     </div>
@@ -551,12 +567,12 @@
 
 {% if indicador != 't_muerto_mant' and indicador != 'planeado' %}
 <!-- Modal target -->
-<div id="modal-target" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:12px; padding:24px; width:320px;">
+<div id="modal-target" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
+    <div class="modal-box" style="background:var(--white); border-radius:12px; padding:24px; width:320px; text-align:left;">
         <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;">{% trans "Configurar target" %}</div>
         <div style="font-size:12px; color:var(--text-3); margin-bottom:16px;">{{ area_sel.nombre }} — {{ indicador_label }}</div>
 
-        <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
+        <div class="modal-row" style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
             <label style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em;">{% trans "Valor objetivo" %}</label>
             <input type="number" id="input-target" value="{{ target_valor_input }}" step="any" min="0"
                    placeholder="Ej. 5"
@@ -583,8 +599,17 @@
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 
 <script>
+
+    document.querySelector('#dp-fecha-desde .dp-value').addEventListener('change', function () {
+        document.getElementById('form-filtros').submit();
+    });
+    document.querySelector('#dp-fecha-hasta .dp-value').addEventListener('change', function () {
+        document.getElementById('form-filtros').submit();
+    });
+
     // Variables de la gráfica
     const LABELS  = {{ labels|safe }};
     const VALORES = {{ valores|safe }};

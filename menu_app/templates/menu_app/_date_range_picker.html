@@ -1,0 +1,73 @@
+{% load i18n %}
+{% comment %}
+   ──────────────────────────────────────────────────────────────────────────
+   Selector de RANGO de fechas (Desde/Hasta), reutilizable en cualquier
+   formulario. Caja con ícono de calendario + atajos + popover propio.
+
+   Uso:
+     {% include 'menu_app/_date_range_picker.html' with name_desde='fecha_desde' name_hasta='fecha_hasta' initial_desde=x initial_hasta=y %}
+
+   Parámetros:
+     name_desde, name_hasta (obligatorios) — name= de los inputs reales.
+     initial_desde, initial_hasta (opcionales) — ISO (YYYY-MM-DD).
+     dp_id      (opcional) — id único si necesitas referenciarlo desde JS
+                              propio de la página.
+     chips      (opcional) — False para ocultar los atajos "Hoy/7 días/Este mes"
+                              (por defecto se muestran).
+
+   La página puede escuchar cambios con un listener normal de "change" sobre
+   los inputs .dpr-desde-value / .dpr-hasta-value (se disparan cada vez que
+   cambia el rango, sea por clic en el calendario, atajo o botón "Hoy").
+
+   Requiere cargar una sola vez por página:
+     {% load static %}
+     <link rel="stylesheet" href="{% static 'menu_app/css/date_range_picker.css' %}">
+     <script src="{% static 'menu_app/js/date_range_picker.js' %}"></script>
+   ──────────────────────────────────────────────────────────────────────────
+{% endcomment %}
+<div class="dpr-wrap"{% if dp_id %} id="{{ dp_id }}"{% endif %}>
+    <input type="hidden" name="{{ name_desde }}" class="dpr-desde-value" value="{{ initial_desde|default:'' }}">
+    <input type="hidden" name="{{ name_hasta }}" class="dpr-hasta-value" value="{{ initial_hasta|default:'' }}">
+
+    <div class="dpr-control" tabindex="0" role="button" aria-haspopup="dialog"
+         aria-label="{% trans 'Elegir rango de fechas' %}">
+        <div class="dpr-slot">
+            <div class="dpr-slot-label">{% trans "Desde" %}</div>
+            <div class="dpr-desde-txt dpr-text">-- / -- / ----</div>
+        </div>
+        <div class="dpr-sep"></div>
+        <div class="dpr-slot">
+            <div class="dpr-slot-label">{% trans "Hasta" %}</div>
+            <div class="dpr-hasta-txt dpr-text">-- / -- / ----</div>
+        </div>
+        <div class="dpr-icon-wrap">
+            <svg class="dpr-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="5" width="18" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 3v4M8 3v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+    </div>
+
+    {% if chips|default:True %}
+    <div class="dpr-chips">
+        <div class="dpr-chip" data-atajo="hoy">{% trans "Hoy" %}</div>
+        <div class="dpr-chip" data-atajo="7dias">{% trans "Últimos 7 días" %}</div>
+        <div class="dpr-chip" data-atajo="mes">{% trans "Este mes" %}</div>
+        <div class="dpr-chip" data-atajo="mes_pasado">{% trans "Mes pasado" %}</div>
+    </div>
+    {% endif %}
+
+    <div class="dpr-popover" role="dialog" aria-label="{% trans 'Calendario' %}">
+        <div class="dpr-cal-head">
+            <button type="button" class="dpr-cal-nav dpr-cal-prev" aria-label="{% trans 'Mes anterior' %}">‹</button>
+            <div class="dpr-cal-title"></div>
+            <button type="button" class="dpr-cal-nav dpr-cal-next" aria-label="{% trans 'Mes siguiente' %}">›</button>
+        </div>
+        <div class="dpr-cal-dow"></div>
+        <div class="dpr-cal-grid"></div>
+        <div class="dpr-cal-footer">
+            <span class="dpr-cal-conteo"></span>
+            <button type="button" class="dpr-cal-listo">{% trans "Listo" %}</button>
+        </div>
+    </div>
+</div>

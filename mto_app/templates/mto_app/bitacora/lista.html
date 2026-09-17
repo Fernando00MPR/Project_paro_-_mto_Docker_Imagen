@@ -7,6 +7,10 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='4' y='3' width='24' height='26' rx='3' fill='%234F46E5'/><rect x='9' y='9' width='14' height='2.5' rx='1' fill='white'/><rect x='9' y='15' width='14' height='2.5' rx='1' fill='white'/><rect x='9' y='21' width='9' height='2.5' rx='1' fill='white'/></svg>">
 {% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+{% endblock %}
+
 {% block content %}
 
 {% if messages %}
@@ -32,11 +36,11 @@
             {% endif %}
         </div>
         <div class="card-subtitle">
-            {{ registros.count }} registro(s)
+            {{ total_registros }} registro(s)
         </div>
     </div>
     {% if puede_editar %}
-    <button onclick="abrirModalBitacora()" class="btn btn-primary btn-sm">
+    <button onclick="abrirModalBitacora(event)" class="btn btn-primary btn-sm">
         + {% trans "Nuevo registro" %}
     </button>
     {% endif %}
@@ -45,17 +49,70 @@
 
 <div class="card">
     <div style="margin-bottom:16px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);">
-        <form method="get" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+        <style>
+          .bit-filtros select,
+          .bit-filtros input,
+          .bit-filtros .btn {
+              height: 40px;
+              box-sizing: border-box;
+              border-radius: 8px;
+              font-size: 14px;
+          }
+          .bit-filtros .btn {
+              display: inline-flex;
+              align-items: center;
+              padding: 0 16px;
+              font-weight: 500;
+              white-space: nowrap;
+              text-decoration: none;
+          }
+          /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+             Mismo tono que el texto (--text): hex literal porque no se puede
+             meter var() dentro del data URI. */
+          .bit-filtros select {
+              padding: 0 34px 0 10px;
+              appearance: none; -webkit-appearance: none;
+              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+              background-repeat: no-repeat;
+              background-position: right 10px center;
+              background-size: 14px;
+          }
+          [data-theme="dark"] .bit-filtros select {
+              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+              background-repeat: no-repeat !important;
+              background-position: right 10px center !important;
+              background-size: 14px !important;
+          }
+          .bit-filtros .filter-divider {
+              width: 1px;
+              height: 40px;
+              background: var(--border);
+              margin: 0 4px;
+          }
+          /* El selector de fecha trae 42px por defecto (compartido con el
+             resto del sitio); se achica a la misma altura que el resto de
+             este filtro (40px / radio 8px). */
+          .bit-filtros .dp-control {
+              height: 40px;
+              border-radius: 8px;
+          }
+          /* Modal "Nuevo/editar registro" — mismo box-model que .form-field
+             input (padding 9px 12px, sin altura fija, radio 7px), que era lo
+             que heredaba bit-fecha sin estilos propios. */
+          #modal-bitacora .dp-control {
+              height: auto;
+              padding: 9px 12px;
+              border-radius: 7px;
+          }
+        </style>
+        <form method="get" class="bit-filtros" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
                 <input type="hidden" name="area" value="{{ filtro_area }}">
 
                 <div>
                     <label style="display:block; font-size:12px; color:var(--text-3); margin-bottom:4px;">
                         {% trans "Fecha" %}
                     </label>
-                    <input type="date" name="fecha" value="{{ filtro_fecha }}"
-                        onchange="this.form.submit()"
-                        style="padding:7px 10px; border-radius:7px; border:1px solid var(--border);
-                                background:var(--white); color:var(--text); font-size:13px; font-family:inherit; ">
+                    {% include 'menu_app/_date_picker.html' with name='fecha' initial=filtro_fecha dp_id='dp-bit-filtro-fecha' %}
                 </div>
 
                 <div>
@@ -64,8 +121,9 @@
                     </label>
                     <input type="text" name="q" value="{{ filtro_q }}"
                         placeholder="{% trans 'Buscar equipo o resposable' %}"
-                        style="padding:7px 10px; border-radius:7px; border:1px solid var(--border);
-                                background:var(--white); color:var(--text); font-size:13px;
+                        oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);"
+                        style="padding:0 12px; border:1px solid var(--border);
+                                background:var(--white); color:var(--text);
                                 font-family:inherit; min-width:250px;">
                 </div>
 
@@ -74,19 +132,16 @@
                         {% trans "Pendiente" %}
                     </label>
                     <select name="pendiente" onchange="this.form.submit()"
-                        style="padding:7px 10px; border-radius:7px; border:1px solid var(--border);
-                               background:var(--white); color:var(--text); font-size:13px; font-family:inherit;">
+                        style="border:1px solid var(--border);
+                               background-color:var(--white); color:var(--text); font-family:inherit;">
                         <option value="" {% if not filtro_pendiente %}selected{% endif %}>{% trans "Todos" %}</option>
                         <option value="1" {% if filtro_pendiente == '1' %}selected{% endif %}>{% trans "Con pendiente" %}</option>
                         <option value="0" {% if filtro_pendiente == '0' %}selected{% endif %}>{% trans "Sin pendiente" %}</option>
                     </select>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
-
-                {% if filtro_fecha or filtro_q or filtro_pendiente %}
-                <a href="?area={{ filtro_area }}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
-                {% endif %}
+                <div class="filter-divider"></div>
+                <a href="?area={{ filtro_area }}" class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
         </form>
     </div>
 </div>
@@ -124,7 +179,7 @@
                     <td style="text-align:center; padding-right:16px; white-space:nowrap;">
                         <div style="display:flex; gap:8px; justify-content:center;">
                             {% if r.imagenes.all %}
-                            <button type="button" onclick="verImagenesBitacora({{ r.pk }})"
+                            <button type="button" onclick="verImagenesBitacora(event, {{ r.pk }})"
                                     title="{% trans 'Ver imágenes' %}"
                                     style="display:inline-flex; align-items:center; justify-content:center;
                                         width:28px; height:28px; border-radius:6px; border:1px solid var(--border);
@@ -139,7 +194,7 @@
                             {% endif %}
                             {% if puede_editar %}
                             <button type="button"
-                                onclick="abrirModalEditar({{ r.pk }}, '{% url 'mto:editar_bitacora' r.pk %}', '{{ r.area_id }}', '{{ r.fecha|date:'Y-m-d' }}', '{{ r.equipo|escapejs }}', '{{ r.actividad_realizada|escapejs }}', '{{ r.pendiente|escapejs }}', '{{ r.responsable|escapejs }}')"
+                                onclick="abrirModalEditar(event, {{ r.pk }}, '{% url 'mto:editar_bitacora' r.pk %}', '{{ r.area_id }}', '{{ r.fecha|date:'Y-m-d' }}', '{{ r.equipo|escapejs }}', '{{ r.actividad_realizada|escapejs }}', '{{ r.pendiente|escapejs }}', '{{ r.responsable|escapejs }}')"
                                 style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                     font-size:12px; border-radius:6px; border:1px solid var(--border);
                                     background:var(--surface); color:var(--text); cursor:pointer; white-space:nowrap;">
@@ -154,7 +209,7 @@
                             <button type="button"
                                 data-url="{% url 'mto:eliminar_bitacora' r.pk %}"
                                 data-texto="{% trans '¿Eliminar el registro del' %} {{ r.fecha|date:'d/m/Y' }}?"
-                                onclick="confirmarEliminarBitacora(this.dataset.url, this.dataset.texto)"
+                                onclick="confirmarEliminarBitacora(event, this.dataset.url, this.dataset.texto)"
                                 style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                     font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
                                     background:#FFF5F5; color:#DC2626; cursor:pointer; white-space:nowrap;">
@@ -179,30 +234,109 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- ── Paginación ── -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; margin-top:4px;">
+        <div class="pagination" style="margin:0;">
+            {% if registros.has_previous %}
+                <a href="?area={{ filtro_area }}&fecha={{ filtro_fecha }}&q={{ filtro_q }}&pendiente={{ filtro_pendiente }}&per_page={{ per_page }}&page={{ registros.previous_page_number }}">‹</a>
+            {% else %}
+                <span class="disabled">‹</span>
+            {% endif %}
+            {% for num in registros.paginator.page_range %}
+                {% if registros.number == num %}
+                    <span class="current">{{ num }}</span>
+                {% elif num > registros.number|add:'-3' and num < registros.number|add:'3' %}
+                    <a href="?area={{ filtro_area }}&fecha={{ filtro_fecha }}&q={{ filtro_q }}&pendiente={{ filtro_pendiente }}&per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if registros.has_next %}
+                <a href="?area={{ filtro_area }}&fecha={{ filtro_fecha }}&q={{ filtro_q }}&pendiente={{ filtro_pendiente }}&per_page={{ per_page }}&page={{ registros.next_page_number }}">›</a>
+            {% else %}
+                <span class="disabled">›</span>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 
-<!-- ── Modal crear / editar ── -->
+<!-- ── Modal nuevo/editar registro — fondo blanco fijo como en los catálogos ── -->
+<style>
+    #modal-bitacora .mf-box { background: #fff; }
+    #modal-bitacora .mf-doc-title { color: #1d1d24; }
+    #modal-bitacora .mf-req { color: #c0356f; }
+    #modal-bitacora .form-field label { color: #33333c; }
+    #modal-bitacora .form-field input,
+    #modal-bitacora .form-field select,
+    #modal-bitacora .form-field textarea {
+        background: #fff; color: #1d1d24; border-color: #d8d8e0;
+    }
+    #modal-bitacora .form-field select {
+        appearance: none; -webkit-appearance: none;
+        padding-right: 34px;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231d1d24' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 14px;
+    }
+    #modal-bitacora .form-field input::placeholder,
+    #modal-bitacora .form-field textarea::placeholder { color: #9b9ba6; }
+    #modal-bitacora .form-field input:focus,
+    #modal-bitacora .form-field select:focus,
+    #modal-bitacora .form-field textarea:focus {
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+    #modal-bitacora .ref-count { color: #9b9ba6; }
+    #modal-bitacora .dp-control { background: #fff; border-color: #d8d8e0; }
+    #modal-bitacora .dp-control:hover { border-color: #9b9ba6; }
+    #modal-bitacora .dp-text, #modal-bitacora .dp-text--vacio, #modal-bitacora .dp-icon { color: #1d1d24; }
+    #modal-bitacora #equipo-dropdown-bit, #modal-bitacora #responsable-dropdown-bit { background: #fff; }
+    #modal-bitacora #bit-zona-imagenes { border-color: #d8d8e0; background: #fafafb; }
+    #modal-bitacora #bit-zona-texto { color: #33333c; }
+    #modal-bitacora .btn-ghost { color: #33333c; border-color: #d8d8e0; }
+    #modal-bitacora .btn-ghost:hover { background: #f2f2f5; color: #1d1d24; }
+    /* Animación (ver .modal-row/keyframes globales en base_menu.html): este
+       modal no usa .modal-backdrop/.modal-box, así que se declara aparte.
+       Sin cascada de filas — son 7 campos sueltos en .form-grid, no 3-5
+       "renglones" naturales (escalonar campo por campo se ve nervioso). */
+    #modal-bitacora {
+        animation: modal-overlay-in 220ms both;
+    }
+    #modal-bitacora .mf-box {
+        transform-origin: 50% 50%;
+        animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+    #modal-bitacora[data-closing],
+    #modal-bitacora[data-closing] .mf-box {
+        animation: none; opacity: 0;
+        transition: opacity 120ms ease-out, transform 120ms ease-out;
+    }
+    #modal-bitacora[data-closing] .mf-box { transform: scale(.97); }
+</style>
 <div id="modal-bitacora"
      style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
             z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+    <div class="mf-box" style="border-radius:14px; padding:28px 32px;
                 width:100%; max-width:580px; max-height:90vh; overflow-y:auto;
                 box-shadow:0 8px 40px rgba(0,0,0,.18);">
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <div id="modal-titulo-bitacora" style="font-size:16px; font-weight:600; color:var(--text);">
+            <div id="modal-titulo-bitacora" class="mf-doc-title" style="font-size:16px; font-weight:600;">
                 {% trans "Nuevo registro" %}
             </div>
             <button onclick="cerrarModalBitacora()"
-                    style="background:none; border:none; cursor:pointer; color:var(--text-3); font-size:20px; line-height:1;">✕</button>
+                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                    style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;">✕</button>
         </div>
 
         <form id="form-bitacora" method="post" enctype="multipart/form-data" action="{% url 'mto:nuevo_bitacora' %}">
             {% csrf_token %}
             <div class="form-grid">
 
-                <div class="form-field">
-                    <label for="bit-area">{% trans "Área" %} <span style="color:var(--red)">*</span></label>
+                <div class="form-field modal-row">
+                    <label for="bit-area">{% trans "Área" %} <span class="mf-req">*</span></label>
                     <select name="area" id="bit-area" required>
                         {% for a in areas %}
                         <option value="{{ a.pk }}"
@@ -213,62 +347,62 @@
                     </select>
                 </div>
 
-                <div class="form-field">
-                    <label for="bit-fecha">{% trans "Fecha" %} <span style="color:var(--red)">*</span></label>
-                    <input type="date" name="fecha" id="bit-fecha" required>
+                <div class="form-field modal-row">
+                    <label>{% trans "Fecha" %} <span class="mf-req">*</span></label>
+                    {% include 'menu_app/_date_picker.html' with name='fecha' dp_id='dp-bit-fecha' required=True %}
                 </div>
 
-                <div class="form-field full" style="position:relative;">
+                <div class="form-field full modal-row" style="position:relative;">
                     <label for="bit-equipo">{% trans "Equipo" %}</label>
                     <input type="text" name="equipo" id="bit-equipo" autocomplete="off" maxlength="100"
                            placeholder="{% trans 'Escribe para buscar…' %}">
                     <div id="equipo-dropdown-bit"
                          style="display:none; position:absolute; left:0; right:0; top:100%; z-index:600;
-                                background:var(--white); border:1px solid var(--indigo); border-top:none;
+                                border:1px solid var(--indigo); border-top:none;
                                 border-radius:0 0 7px 7px; box-shadow:var(--shadow-md);
                                 max-height:180px; overflow-y:auto;"></div>
                 </div>
 
-                <div class="form-field full" style="position:relative;">
+                <div class="form-field full modal-row" style="position:relative;">
                     <label for="bit-responsable">{% trans "Responsable" %}</label>
                     <input type="text" name="responsable" id="bit-responsable" autocomplete="off" maxlength="200"
                            placeholder="{% trans 'Escribe para buscar…' %}">
                     <div id="responsable-dropdown-bit"
                          style="display:none; position:absolute; left:0; right:0; top:100%; z-index:600;
-                                background:var(--white); border:1px solid var(--indigo); border-top:none;
+                                border:1px solid var(--indigo); border-top:none;
                                 border-radius:0 0 7px 7px; box-shadow:var(--shadow-md);
                                 max-height:180px; overflow-y:auto;"></div>
                 </div>
 
-                <div class="form-field full">
+                <div class="form-field full modal-row">
                     <label for="bit-actividad">
-                        {% trans "Actividad realizada" %} <span style="color:var(--red)">*</span>
-                        <span id="cnt-actividad" style="font-size:11px; color:var(--text-3); font-weight:400; margin-left:6px;">0/300</span>
+                        {% trans "Actividad realizada" %} <span class="mf-req">*</span>
+                        <span id="cnt-actividad" class="ref-count" style="font-size:11px; font-weight:400; margin-left:6px;">0/300</span>
                     </label>
                     <textarea name="actividad_realizada" id="bit-actividad"
                               maxlength="300" rows="3" style="resize:vertical;" required></textarea>
                 </div>
 
-                <div class="form-field full">
+                <div class="form-field full modal-row">
                     <label for="bit-pendiente">
                         {% trans "Pendiente" %}
-                        <span id="cnt-pendiente" style="font-size:11px; color:var(--text-3); font-weight:400; margin-left:6px;">0/200</span>
+                        <span id="cnt-pendiente" class="ref-count" style="font-size:11px; font-weight:400; margin-left:6px;">0/200</span>
                     </label>
                     <textarea name="pendiente" id="bit-pendiente"
                               maxlength="200" rows="2" style="resize:vertical;"></textarea>
                 </div>
 
-                <div class="form-field full">
-                    <label>{% trans "Imágenes" %} <span style="font-size:11px; color:var(--text-3);">{% trans "Máximo 2" %}</span></label>
+                <div class="form-field full modal-row">
+                    <label>{% trans "Imágenes" %} <span class="ref-count" style="font-size:11px;">{% trans "Máximo 2" %}</span></label>
 
                     <div id="bit-imagenes-existentes" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;"></div>
 
                     <div id="bit-zona-imagenes" onclick="document.getElementById('bit-input-imagenes').click()"
-                        style="border:2px dashed var(--border); border-radius:10px; padding:16px;
-                                text-align:center; cursor:pointer; transition:all .2s; background:var(--surface);"
-                        onmouseover="this.style.borderColor='var(--indigo)';this.style.background='var(--indigo-lt)'"
-                        onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
-                        <div id="bit-zona-texto" style="font-size:12px; font-weight:500; color:var(--text-2);">{% trans "Haz clic para seleccionar imágenes" %}</div>
+                        style="border:2px dashed #d8d8e0; border-radius:10px; padding:16px;
+                                text-align:center; cursor:pointer; transition:all .2s; background:#fafafb;"
+                        onmouseover="this.style.borderColor='var(--indigo)';this.style.background='color-mix(in oklab, var(--indigo) 12%, transparent)'"
+                        onmouseout="this.style.borderColor='#d8d8e0';this.style.background='#fafafb'">
+                        <div id="bit-zona-texto" style="font-size:12px; font-weight:500;">{% trans "Haz clic para seleccionar imágenes" %}</div>
                     </div>
                     <input type="file" id="bit-input-imagenes" name="imagenes" multiple accept="image/*" style="display:none;"
                         onchange="previsualizarImagenesBitacora(this)">
@@ -286,10 +420,10 @@
 </div>
 
 <!-- ── Modal confirmar eliminar ── -->
-<div id="modal-eliminar-bitacora"
+<div id="modal-eliminar-bitacora" class="modal-backdrop"
      style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
             z-index:2100; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left;
                 min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar registro" %}</div>
         <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;" id="texto-eliminar-bitacora"></div>
@@ -306,28 +440,28 @@
 
 
 <!-- ── Modal imágenes (lightbox) ── -->
-<div id="modal-imagenes-bitacora" style="display:none; position:fixed; inset:0;
+<div id="modal-imagenes-bitacora" class="modal-backdrop" style="display:none; position:fixed; inset:0;
      background:rgba(30,27,75,.45); z-index:2200; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:24px;
+    <div class="modal-box" style="background:#fff; border-radius:14px; padding:24px; text-align:left;
                 max-width:700px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-            <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del registro" %}</div>
+            <div style="font-size:14px; font-weight:600; color:#1d1d24;">{% trans "Imágenes del registro" %}</div>
             <div style="display:flex; gap:10px; align-items:center;">
                 <button onclick="descargarImagenActualBit()" title="{% trans 'Descargar' %}"
-                        style="background:none; border:none; cursor:pointer; color:var(--text-2); display:flex; align-items:center;">
+                        style="background:none; border:none; cursor:pointer; color:#33333c; display:flex; align-items:center;">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-6l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
                 </button>
-            <button onclick="cerrarModalImagenesBitacora()"
-                    onmouseover="this.style.color='var(--red)'"
-                    onmouseout="this.style.color='var(--text-3)'"
-                    style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
-            </div>     
+                <button onclick="cerrarModalImagenesBitacora()"
+                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                    style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;">✕</button>
+            </div>
         </div>
 
-        <div style="position:relative; background:var(--surface); border-radius:10px;
+        <div style="position:relative; background:#fafafb; border-radius:10px;
                     height:380px; display:flex; align-items:center; justify-content:center;
                     overflow:hidden; margin-bottom:12px;">
             <div id="lightbox-bit-skeleton" class="img-skeleton" style="display:none; inset:0; border-radius:10px;">
@@ -369,5 +503,13 @@ window.BITACORA_CFG = {
 };
 </script>
 {% load static %}
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
+<script>
+    // "Fecha" del filtro es el selector de fecha único; no soporta
+    // onchange="" inline como el <input type="date"> nativo que reemplazó.
+    document.querySelector('#dp-bit-filtro-fecha .dp-value').addEventListener('change', function () {
+        this.closest('form').submit();
+    });
+</script>
 <script src="{% static 'mto_app/js/bitacora.js' %}"></script>
 {% endblock %}

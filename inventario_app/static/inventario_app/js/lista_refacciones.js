@@ -51,31 +51,122 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+
+// ── Modal categorías ──────────────────────────────────────────────────────────
+const CAT_POR_PAGINA = 5;
+let catPaginaActual = 1;
+
+function initPaginadorCategorias() {
+    const lista      = document.getElementById('cat-lista');
+    const paginacion = document.getElementById('cat-paginacion');
+    if (!lista || !paginacion) return;
+
+    const filas = Array.from(lista.querySelectorAll('.cat-edit-row'));
+    const totalPaginas = Math.ceil(filas.length / CAT_POR_PAGINA);
+
+    if (filas.length <= CAT_POR_PAGINA) {
+        filas.forEach(fila => fila.style.display = 'flex');
+        paginacion.style.display = 'none';
+        return;
+    }
+
+    catPaginaActual = 1;
+
+    function render() {
+        const desde = (catPaginaActual - 1) * CAT_POR_PAGINA;
+        const hasta = desde + CAT_POR_PAGINA;
+        filas.forEach((fila, i) => {
+            fila.style.display = (i >= desde && i < hasta) ? 'flex' : 'none';
+        });
+
+        const btnBase = 'width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px; cursor:pointer;';
+        let html = '';
+        html += `<button type="button" ${catPaginaActual === 1 ? 'disabled' : ''} onclick="catIrAPagina(${catPaginaActual - 1})"
+                    style="${btnBase} border:1px solid #d8d8e0; background:#fff; color:#33333c;
+                           ${catPaginaActual === 1 ? 'opacity:.4; cursor:default;' : ''}">‹</button>`;
+        for (let p = 1; p <= totalPaginas; p++) {
+            const activa = p === catPaginaActual;
+            html += `<button type="button" onclick="catIrAPagina(${p})"
+                        style="${btnBase} font-weight:600;
+                               ${activa ? 'background:var(--indigo); color:#fff; border:none;' : 'border:1px solid #d8d8e0; background:#fff; color:#33333c;'}">${p}</button>`;
+        }
+        html += `<button type="button" ${catPaginaActual === totalPaginas ? 'disabled' : ''} onclick="catIrAPagina(${catPaginaActual + 1})"
+                    style="${btnBase} border:1px solid #d8d8e0; background:#fff; color:#33333c;
+                           ${catPaginaActual === totalPaginas ? 'opacity:.4; cursor:default;' : ''}">›</button>`;
+        paginacion.innerHTML = html;
+    }
+
+    window.catIrAPagina = function(p) {
+        if (p < 1 || p > totalPaginas) return;
+        catPaginaActual = p;
+        render();
+    };
+
+    paginacion.style.display = 'flex';
+    render();
+}
+
+function abrirModalCategorias(event) {
+    document.getElementById('cat-volver').value = window.location.search;
+    document.querySelectorAll('.cat-edit-volver').forEach(function(input) {
+        input.value = window.location.search;
+    });
+    abrirModalConAnimacion('modal-categorias', event);
+    initPaginadorCategorias();
+}
+
+function cerrarModalCategorias() {
+    cerrarModalConAnimacion('modal-categorias');
+}
+
 // ── Modal eliminar ────────────────────────────────────────────────────────────
-function confirmarEliminarRefaccion(url) {
+function confirmarEliminarRefaccion(event, url) {
     document.getElementById('form-eliminar-refaccion').action = url;
-    document.getElementById('modal-eliminar-refaccion').style.display = 'flex';
+    document.getElementById('elim-ref-volver').value = window.location.search;
+    abrirModalConAnimacion('modal-eliminar-refaccion', event);
 }
 
 function cerrarModalEliminarRefaccion() {
-    document.getElementById('modal-eliminar-refaccion').style.display = 'none';
+    cerrarModalConAnimacion('modal-eliminar-refaccion');
 }
 
 document.getElementById('modal-eliminar-refaccion').addEventListener('click', function(e) {
     if (e.target === this) cerrarModalEliminarRefaccion();
 });
 
+
+// ── Modal eliminar TODAS las refacciones del área ─────────────────────────────
+function confirmarEliminarTodasRefacciones(event, areaId, total){
+    document.getElementById('input-area-eliminar-todas-refacciones').value = areaId;
+    document.getElementById('texto-eliminar-todas-refacciones').textContent = `Esta acción no se puede deshacer. Se eliminarán las ${total} refacciones de esta área (las que tengan seguimientos de compra asociados no se podrán borrar). ¿Confirmas?`;
+    abrirModalConAnimacion('modal-eliminar-todas-refacciones', event);
+}
+
+
+function cerrarModalEliminarTodasRefacciones(){
+    cerrarModalConAnimacion('modal-eliminar-todas-refacciones');
+}
+
+
+document.getElementById('modal-eliminar-todas-refacciones').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalEliminarTodasRefacciones();
+})
+
+
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
+        cerrarModalCategorias();
         cerrarModalEliminarRefaccion();
+        cerrarModalEliminarTodasRefacciones();
         cerrarModalRefaccion();
     }
 });
 
 // ── Modal nuevo/editar refacción ──────────────────────────────────────────────
-function abrirModalRefaccion() {
+function abrirModalRefaccion(event) {
     document.getElementById('modal-refaccion-titulo').textContent = 'Nueva refacción';
     document.getElementById('form-refaccion').action = '/inventario/nueva/';
+    document.getElementById('ref-volver').value = window.location.search;
     document.getElementById('ref-no_item').value        = '';
     document.getElementById('ref-nombre').value         = '';
     document.getElementById('ref-area').value            = new URLSearchParams(window.location.search).get('area') || '';
@@ -89,8 +180,9 @@ function abrirModalRefaccion() {
     document.getElementById('ref-proveedor').value       = '';
     document.getElementById('ref-costo_unitario').value  = '';
     document.getElementById('ref-descripcion').value     = '';
+    document.getElementById('ref-descripcion-contador').textContent = '0/300';
     document.getElementById('ref-activo').checked        = true;
-    document.getElementById('modal-refaccion').style.display = 'flex';
+    abrirModalConAnimacion('modal-refaccion', event);
 
     refArchivosSeleccionados = [];
     document.getElementById('ref-input-imagenes').value = '';
@@ -98,9 +190,10 @@ function abrirModalRefaccion() {
     document.getElementById('ref-imagenes-existentes').innerHTML = '';
 }
 
-function editarRefaccion(id, noItem, nombre, areaId, categoriaId, unidad, criticidad, stockActual, stockMinimo, stockMaximo, ubicacion, proveedor, costoUnitario, descripcion, activo) {
+function editarRefaccion(event, id, noItem, nombre, areaId, categoriaId, unidad, criticidad, stockActual, stockMinimo, stockMaximo, ubicacion, proveedor, costoUnitario, descripcion, activo) {
     document.getElementById('modal-refaccion-titulo').textContent = 'Editar refacción';
     document.getElementById('form-refaccion').action = `/inventario/editar/${id}/`;
+    document.getElementById('ref-volver').value = window.location.search;
     document.getElementById('ref-no_item').value         = noItem;
     document.getElementById('ref-nombre').value          = nombre;
     document.getElementById('ref-area').value            = areaId;
@@ -114,8 +207,9 @@ function editarRefaccion(id, noItem, nombre, areaId, categoriaId, unidad, critic
     document.getElementById('ref-proveedor').value       = proveedor;
     document.getElementById('ref-costo_unitario').value  = costoUnitario;
     document.getElementById('ref-descripcion').value     = descripcion;
+    document.getElementById('ref-descripcion-contador').textContent = (descripcion || '').length + '/300';
     document.getElementById('ref-activo').checked        = activo;
-    document.getElementById('modal-refaccion').style.display = 'flex';
+    abrirModalConAnimacion('modal-refaccion', event);
 
     refArchivosSeleccionados = [];
     document.getElementById('ref-input-imagenes').value = '';
@@ -124,12 +218,8 @@ function editarRefaccion(id, noItem, nombre, areaId, categoriaId, unidad, critic
 }
 
 function cerrarModalRefaccion() {
-    document.getElementById('modal-refaccion').style.display = 'none';
+    cerrarModalConAnimacion('modal-refaccion');
 }
-
-document.getElementById('modal-refaccion').addEventListener('click', function(e) {
-    if (e.target === this) cerrarModalRefaccion();
-});
 
 // ── Imágenes en modal crear/editar (solo preview local, se suben con el form) ─
 let refArchivosSeleccionados = [];
@@ -147,10 +237,10 @@ function refInicializarDropzone() {
     };
 
     zona.ondragover  = (e) => { e.preventDefault(); zona.style.borderColor = 'var(--indigo)'; };
-    zona.ondragleave = () => { zona.style.borderColor = 'var(--border)'; };
+    zona.ondragleave = () => { zona.style.borderColor = '#d8d8e0'; };
     zona.ondrop = (e) => {
         e.preventDefault();
-        zona.style.borderColor = 'var(--border)';
+        zona.style.borderColor = '#d8d8e0';
         const archivos = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
         // Sincroniza con el input real para que viaje en el submit del form
         const dt = new DataTransfer();
@@ -218,21 +308,34 @@ let lightboxRefImagenes = [];
 let lightboxRefIndice   = 0;
 let lightboxRefMeta = {};
 
-function verImagenesRefaccion(refId, area, descripcion) {
+function verImagenesRefaccion(event, refId, area, descripcion) {
     lightboxRefMeta = { area: area || '', nombre: descripcion || '' };
+    const trigger = event ? { currentTarget: event.currentTarget } : null;
     fetch(`/inventario/${refId}/imagenes/`)
         .then(r => r.json())
         .then(data => {
             lightboxRefImagenes = data.imagenes;
             lightboxRefIndice   = 0;
             renderLightboxRef();
-            document.getElementById('modal-imagenes-ref').style.display = 'flex';
+            abrirModalConAnimacion('modal-imagenes-ref', trigger);
         });
 }
 
 function renderLightboxRef() {
     if (!lightboxRefImagenes.length) return;
-    document.getElementById('lightbox-ref-img-principal').src = lightboxRefImagenes[lightboxRefIndice].url;
+
+    // Imagen principal: skeleton + spinner mientras carga, fade-in al terminar
+    // (mismo tratamiento que el lightbox de paros_app/lista_paros.js).
+    const imgPrincipal = document.getElementById('lightbox-ref-img-principal');
+    const skeleton      = document.getElementById('lightbox-ref-skeleton');
+    imgPrincipal.style.opacity = '0';
+    skeleton.style.display = 'block';
+    imgPrincipal.onload = () => {
+        imgPrincipal.style.transition = 'opacity .2s ease';
+        imgPrincipal.style.opacity = '1';
+        skeleton.style.display = 'none';
+    };
+    imgPrincipal.src = lightboxRefImagenes[lightboxRefIndice].url;
 
     document.getElementById('lightbox-ref-contador').textContent =
         CONTADOR_REF_TPL.replace('{n}', lightboxRefIndice + 1).replace('{total}', lightboxRefImagenes.length);
@@ -243,14 +346,29 @@ function renderLightboxRef() {
     const cont = document.getElementById('lightbox-ref-miniaturas');
     cont.innerHTML = '';
     lightboxRefImagenes.forEach((img, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'img-loading-wrap';
+        wrap.style.cssText = 'width:52px; height:52px;';
+
+        const thumbSkeleton = document.createElement('div');
+        thumbSkeleton.className = 'img-skeleton';
+        const thumbSpinner = document.createElement('div');
+        thumbSpinner.className = 'img-spinner img-spinner-sm';
+        thumbSkeleton.appendChild(thumbSpinner);
+        wrap.appendChild(thumbSkeleton);
+
         const thumb = document.createElement('img');
+        thumb.loading = 'lazy';
         thumb.src = img.url;
         thumb.onclick = () => { lightboxRefIndice = i; renderLightboxRef(); };
+        thumb.onload = () => { thumb.style.opacity = '1'; thumbSkeleton.style.display = 'none'; };
         thumb.style.cssText = `
             width:52px; height:52px; object-fit:cover; border-radius:8px; cursor:pointer;
             border:2px solid ${i === lightboxRefIndice ? 'var(--indigo)' : 'transparent'};
+            position:relative; opacity:0; transition:opacity .2s ease;
         `;
-        cont.appendChild(thumb);
+        wrap.appendChild(thumb);
+        cont.appendChild(wrap);
     });
 }
 
@@ -275,7 +393,7 @@ function descargarImagenRefActual() {
 }
 
 function cerrarModalImagenesRef() {
-    document.getElementById('modal-imagenes-ref').style.display = 'none';
+    cerrarModalConAnimacion('modal-imagenes-ref');
 }
 
 document.getElementById('modal-imagenes-ref')?.addEventListener('click', function(e) {

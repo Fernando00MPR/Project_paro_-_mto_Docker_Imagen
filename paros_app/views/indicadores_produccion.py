@@ -115,7 +115,7 @@ def indicadores_produccion(request):
         areas = perfil.areas_produccion.all() if perfil else Area.objects.none()
 
     area_id      = request.GET.get('area', '')
-    periodo      = request.GET.get('periodo', 'semana')
+    periodo      = request.GET.get('periodo', 'mes')
     semana_num   = request.GET.get('semana_num', '')
     fecha_desde  = request.GET.get('fecha_desde', '')
     fecha_hasta  = request.GET.get('fecha_hasta', '')
@@ -161,8 +161,8 @@ def indicadores_produccion(request):
             d_desde = hoy - timedelta(days=7)
             d_hasta = hoy
     else:
-        d_desde = hoy - timedelta(days=hoy.weekday())
-        d_hasta = d_desde + timedelta(days=6)
+        d_desde = hoy.replace(day=1)
+        d_hasta = hoy
 
     area_sel = None
     if area_id:

@@ -86,26 +86,32 @@ function _renderPreviews() {
 // El <input type="date"> nativo devuelve yyyy-mm-dd, así que se convierte
 // antes de enviarlo al campo hidden que lee Django.
 // Se usa IIFE para no contaminar el scope global con las variables de los pickers.
+// ── Fecha / Hora ───────────────────────────────────────────────────────────────
+// El backend espera fecha en formato dd/mm/yyyy y hora HH:MM.
+// La fecha usa el widget reutilizable de menu_app/_date_picker.html, cuyo campo
+// interno (.dp-value) guarda yyyy-mm-dd; se convierte antes de enviarlo al
+// campo hidden real que lee Django.
+// Se usa IIFE para no contaminar el scope global con las variables de los pickers.
 (function () {
-    const pickerFecha = document.getElementById('id_fecha_picker');
-    const hiddenFecha = document.getElementById('id_fecha');
-    const pickerHora  = document.getElementById('id_hora_picker');
-    const hiddenHora  = document.getElementById('id_hora');
+    const dpFechaValue = document.querySelector('#dp-fecha .dp-value');
+    const hiddenFecha  = document.getElementById('id_fecha');
+    const pickerHora   = document.getElementById('id_hora_picker');
+    const hiddenHora   = document.getElementById('id_hora');
 
     // Si Django devuelve el formulario con error, el hidden ya tiene el valor previo;
-    // se inicializa el picker visual para que no aparezca vacío.
+    // se inicializa el widget de fecha para que no aparezca vacío.
     if (hiddenFecha.value) {
         const partes = hiddenFecha.value.split('/');
         if (partes.length === 3) {
-            pickerFecha.value = partes[2] + '-' + partes[1] + '-' + partes[0];
+            dpFechaValue.value = partes[2] + '-' + partes[1] + '-' + partes[0];
         }
     }
     if (hiddenHora.value) {
         pickerHora.value = hiddenHora.value;
     }
 
-    // Convertir yyyy-mm-dd → dd/mm/yyyy cada vez que el usuario cambia la fecha
-    pickerFecha.addEventListener('change', function () {
+    // Convertir yyyy-mm-dd → dd/mm/yyyy cada vez que se elige una fecha en el calendario
+    dpFechaValue.addEventListener('change', function () {
         const iso = this.value;
         if (iso) {
             const [y, m, d] = iso.split('-');
@@ -118,15 +124,15 @@ function _renderPreviews() {
         hiddenHora.value = this.value;
     });
 
-    // Bloquear el submit si alguno de los pickers está vacío
-    pickerFecha.closest('form').addEventListener('submit', function (e) {
-        if (!pickerFecha.value) {
-            pickerFecha.setCustomValidity('Selecciona una fecha.');
-            pickerFecha.reportValidity();
+    // Bloquear el submit si falta fecha u hora. El campo de fecha es un input
+    // oculto (el widget de calendario no participa de la validación nativa del
+    // navegador), así que se revisa directo el valor que se va a enviar.
+    hiddenFecha.closest('form').addEventListener('submit', function (e) {
+        if (!hiddenFecha.value) {
+            alert('Selecciona una fecha.');
             e.preventDefault();
             return;
         }
-        pickerFecha.setCustomValidity('');
         if (!pickerHora.value) {
             pickerHora.setCustomValidity('Selecciona una hora.');
             pickerHora.reportValidity();

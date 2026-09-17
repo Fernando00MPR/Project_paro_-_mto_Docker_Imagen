@@ -24,7 +24,7 @@
         <div class="card-subtitle">{% trans "Documentación de mantenimiento" %}</div>
     </div>
     {% if puede_editar %}
-    <button onclick="abrirModalCategoria()" class="btn btn-primary btn-sm">
+    <button onclick="abrirModalCategoria(event)" class="btn btn-primary btn-sm">
         + {% trans "Nueva categoría" %}
     </button>
     {% endif %}
@@ -65,12 +65,12 @@
                     <td style="padding:10px 14px; text-align:center;" onclick="event.stopPropagation();">
                         <div style="display:flex; gap:8px; justify-content:center;">
                             {% if puede_editar %}
-                            <button onclick="abrirModalSubir({{ cat.pk }}, '{{ cat.nombre|escapejs }}')" class="btn btn-ghost btn-sm">
+                            <button onclick="abrirModalSubir(event, {{ cat.pk }}, '{{ cat.nombre|escapejs }}')" class="btn btn-ghost btn-sm">
                                 {% trans "Subir" %}
                             </button>
                             {% endif %}
                             {% if puede_eliminar %}
-                            <button onclick="confirmarEliminarCategoria({{ cat.pk }}, '{{ cat.nombre|escapejs }}', {{ cat.total_documentos }})"
+                            <button onclick="confirmarEliminarCategoria(event, {{ cat.pk }}, '{{ cat.nombre|escapejs }}', {{ cat.total_documentos }})"
                                     class="btn btn-ghost btn-sm" style="color:#DC2626;">
                                 {% trans "Eliminar" %}
                             </button>
@@ -90,21 +90,61 @@
     </div>
 </div>
 
-<!-- ── Modal nueva categoría ── -->
+<!-- ── Modal nueva categoría / subir documento — fondo blanco fijo como en los catálogos ── -->
+<style>
+    #modal-categoria .mf-box, #modal-subir .mf-box { background: #fff; }
+    #modal-categoria .mf-doc-title, #modal-subir .mf-doc-title { color: #1d1d24; }
+    #modal-categoria .mf-doc-subtitle, #modal-subir .mf-doc-subtitle { color: #7c7c88; }
+    #modal-categoria .form-field label, #modal-subir .form-field label { color: #33333c; }
+    #modal-categoria .form-field input, #modal-subir .form-field input,
+    #modal-subir .form-field textarea {
+        background: #fff; color: #1d1d24; border-color: #d8d8e0;
+    }
+    #modal-categoria .form-field input::placeholder, #modal-subir .form-field input::placeholder,
+    #modal-subir .form-field textarea::placeholder { color: #9b9ba6; }
+    #modal-categoria .form-field input:focus, #modal-subir .form-field input:focus,
+    #modal-subir .form-field textarea:focus {
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+    #modal-categoria .mf-req, #modal-subir .mf-req { color: #c0356f; }
+    #modal-subir #doc-zona-archivo { color: #33333c; }
+    #modal-subir #doc-zona-texto { color: #33333c; }
+    #modal-subir .mf-doc-help { color: #9b9ba6; }
+    #modal-categoria .form-actions, #modal-subir .form-actions { border-top-color: #ececf0; }
+    #modal-categoria .btn-ghost, #modal-subir .btn-ghost { color: #33333c; border-color: #d8d8e0; }
+    #modal-categoria .btn-ghost:hover, #modal-subir .btn-ghost:hover { background: #f2f2f5; color: #1d1d24; }
+    /* Animación (ver keyframes globales en base_menu.html): estos modales no
+       usan .modal-backdrop/.modal-box, así que se declara aparte. */
+    #modal-categoria, #modal-subir { animation: modal-overlay-in 220ms both; }
+    #modal-categoria .mf-box, #modal-subir .mf-box {
+        transform-origin: 50% 50%;
+        animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+    #modal-categoria[data-closing], #modal-categoria[data-closing] .mf-box,
+    #modal-subir[data-closing], #modal-subir[data-closing] .mf-box {
+        animation: none; opacity: 0;
+        transition: opacity 120ms ease-out, transform 120ms ease-out;
+    }
+    #modal-categoria[data-closing] .mf-box, #modal-subir[data-closing] .mf-box { transform: scale(.97); }
+</style>
 <div id="modal-categoria" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px; width:100%; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div class="mf-box" style="border-radius:14px; padding:28px 32px; width:100%; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <div style="font-size:16px; font-weight:600; color:var(--text);">{% trans "Nueva categoría" %}</div>
-            <button onclick="cerrarModalCategoria()" style="background:none; border:none; cursor:pointer; color:var(--text-3); font-size:20px; line-height:1;">✕</button>
+            <div class="mf-doc-title" style="font-size:16px; font-weight:600;">{% trans "Nueva categoría" %}</div>
+            <button onclick="cerrarModalCategoria()"
+                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                    style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;">✕</button>
         </div>
         <form method="post" action="{% url 'mto:crear_categoria_documento' %}">
             {% csrf_token %}
             <div class="form-field">
-                <label>{% trans "Código" %} <span style="color:var(--red)">*</span></label>
+                <label>{% trans "Código" %} <span class="mf-req">*</span></label>
                 <input type="text" name="codigo" maxlength="30" required autofocus>
             </div>
             <div class="form-field">
-                <label>{% trans "Nombre" %} <span style="color:var(--red)">*</span></label>
+                <label>{% trans "Nombre" %} <span class="mf-req">*</span></label>
                 <input type="text" name="nombre" maxlength="100" required>
             </div>
             <div class="form-actions" style="margin-top:20px;">
@@ -117,18 +157,21 @@
 
 <!-- ── Modal subir documento ── -->
 <div id="modal-subir" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px; width:100%; max-width:480px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div class="mf-box" style="border-radius:14px; padding:28px 32px; width:100%; max-width:480px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <div>
-                <div style="font-size:16px; font-weight:600; color:var(--text);">{% trans "Subir documento" %}</div>
-                <div id="modal-subir-categoria" style="font-size:12px; color:var(--text-3); margin-top:2px;"></div>
+                <div class="mf-doc-title" style="font-size:16px; font-weight:600;">{% trans "Subir documento" %}</div>
+                <div id="modal-subir-categoria" class="mf-doc-subtitle" style="font-size:12px; margin-top:2px;"></div>
             </div>
-            <button onclick="cerrarModalSubir()" style="background:none; border:none; cursor:pointer; color:var(--text-3); font-size:20px; line-height:1;">✕</button>
+            <button onclick="cerrarModalSubir()"
+                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                    style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;">✕</button>
         </div>
         <form id="form-subir" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-field">
-                <label>{% trans "Nombre" %} <span style="color:var(--red)">*</span></label>
+                <label>{% trans "Nombre" %} <span class="mf-req">*</span></label>
                 <input type="text" name="nombre" maxlength="200" required>
             </div>
             <div class="form-field">
@@ -136,20 +179,20 @@
                 <textarea name="descripcion" rows="2" maxlength="300"></textarea>
             </div>
             <div class="form-field">
-                <label>{% trans "Archivo" %} <span style="color:var(--red)">*</span></label>
+                <label>{% trans "Archivo" %} <span class="mf-req">*</span></label>
 
                 <div id="doc-zona-archivo" onclick="document.getElementById('doc-input-archivo').click()"
-                    style="border:2px dashed var(--border); border-radius:10px; padding:20px;
+                    style="border:2px dashed #d8d8e0; border-radius:10px; padding:20px;
                             text-align:center; cursor:pointer; transition:all .2s;
-                            background:var(--surface);"
-                    onmouseover="this.style.borderColor='var(--indigo)';this.style.background='var(--indigo-lt)'"
-                    onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
-                    <svg width="26" height="26" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" style="margin-bottom:6px;">
+                            background:#fafafb;"
+                    onmouseover="this.style.borderColor='var(--indigo)';this.style.background='color-mix(in oklab, var(--indigo) 12%, transparent)'"
+                    onmouseout="this.style.borderColor='#d8d8e0';this.style.background='#fafafb'">
+                    <svg width="26" height="26" fill="none" stroke="#9b9ba6" viewBox="0 0 24 24" style="margin-bottom:6px;">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
                     </svg>
-                    <div id="doc-zona-texto" style="font-size:13px; font-weight:500; color:var(--text-2);">{% trans "Haz clic para seleccionar un archivo" %}</div>
-                    <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "PDF, Excel, Word o PowerPoint — máx. 25 MB" %}</div>
+                    <div id="doc-zona-texto" style="font-size:13px; font-weight:500;">{% trans "Haz clic para seleccionar un archivo" %}</div>
+                    <div class="mf-doc-help" style="font-size:11px; margin-top:4px;">{% trans "PDF, Excel, Word o PowerPoint — máx. 25 MB" %}</div>
                 </div>
 
                 <input type="file" id="doc-input-archivo" name="archivo" accept=".pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt" required
@@ -164,15 +207,15 @@
 </div>
 
 <!-- ── Modal confirmar eliminar categoría ── -->
-<div id="modal-eliminar-doc" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45); z-index:2100; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px; min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+<div id="modal-eliminar-doc" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45); z-index:2100; align-items:center; justify-content:center;">
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left; min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;" id="titulo-eliminar-doc"></div>
         <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;" id="texto-eliminar-doc"></div>
         <div style="display:flex; gap:10px; justify-content:flex-end;">
             <button onclick="cerrarModalEliminarDoc()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
             <form id="form-eliminar-doc" method="post" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
+                <button type="submit" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
             </form>
         </div>
     </div>

@@ -4,55 +4,55 @@ const docCfg = window.DOC_CFG || {};
 
 // ── Modal nueva categoría ─────────────────────────────────────────────────────
 
-function abrirModalCategoria() {
-    document.getElementById('modal-categoria').style.display = 'flex';
+function abrirModalCategoria(event) {
+    abrirModalConAnimacion('modal-categoria', event);
 }
 
 function cerrarModalCategoria() {
-    document.getElementById('modal-categoria').style.display = 'none';
+    cerrarModalConAnimacion('modal-categoria');
 }
 
 // ── Modal subir documento ─────────────────────────────────────────────────────
 
-function abrirModalSubir(categoriaId, categoriaNombre) {
+function abrirModalSubir(event, categoriaId, categoriaNombre) {
     document.getElementById('form-subir').action = `${docCfg.urlSubirBase}${categoriaId}/subir/`;
     document.getElementById('modal-subir-categoria').textContent = categoriaNombre;
     document.getElementById('form-subir').reset();
     document.getElementById('doc-zona-texto').textContent = 'Haz clic para seleccionar un archivo';
-    document.getElementById('modal-subir').style.display = 'flex';
+    abrirModalConAnimacion('modal-subir', event);
 }
 
 function cerrarModalSubir() {
-    document.getElementById('modal-subir').style.display = 'none';
+    cerrarModalConAnimacion('modal-subir');
 }
 
 // ── Modal confirmar eliminar (categoría o documento) ──────────────────────────
 
-function confirmarEliminarCategoria(catId, nombre, totalDocs) {
+function confirmarEliminarCategoria(event, catId, nombre, totalDocs) {
     document.getElementById('titulo-eliminar-doc').textContent = 'Eliminar categoría';
     document.getElementById('texto-eliminar-doc').textContent = totalDocs > 0
         ? `¿Eliminar la categoría "${nombre}" y sus ${totalDocs} documento(s)? Esta acción no se puede deshacer.`
         : `¿Eliminar la categoría "${nombre}"?`;
     document.getElementById('form-eliminar-doc').action = `${docCfg.urlEliminarCatBase}${catId}/eliminar/`;
-    document.getElementById('modal-eliminar-doc').style.display = 'flex';
+    abrirModalConAnimacion('modal-eliminar-doc', event);
 }
 
-function confirmarEliminarDocumento(docId, nombre) {
+function confirmarEliminarDocumento(event, docId, nombre) {
     document.getElementById('titulo-eliminar-doc').textContent = 'Eliminar documento';
     document.getElementById('texto-eliminar-doc').textContent = `¿Eliminar el documento "${nombre}"?`;
     document.getElementById('form-eliminar-doc').action = `${docCfg.urlEliminarDocBase}${docId}/eliminar/`;
-    document.getElementById('modal-eliminar-doc').style.display = 'flex';
+    abrirModalConAnimacion('modal-eliminar-doc', event);
 }
 
 function cerrarModalEliminarDoc() {
-    document.getElementById('modal-eliminar-doc').style.display = 'none';
+    cerrarModalConAnimacion('modal-eliminar-doc');
 }
 
 // ── Modal ver PDF ──────────────────────────────────────────────────────────────
 
-function verPdf(url, nombre) {
+function verPdf(event, url, nombre) {
     document.getElementById('titulo-pdf').textContent = nombre;
-    
+
     const iframe   = document.getElementById('iframe-pdf');
     const skeleton = document.getElementById('pdf-skeleton');
     iframe.style.opacity   = '0';
@@ -63,21 +63,21 @@ function verPdf(url, nombre) {
         skeleton.style.display  = 'none';
     };
     iframe.src = url;
-    
-    document.getElementById('modal-pdf').style.display = 'flex';
+
+    abrirModalConAnimacion('modal-pdf', event);
 }
 
 function cerrarModalPdf() {
-    document.getElementById('modal-pdf').style.display = 'none';
+    cerrarModalConAnimacion('modal-pdf');
     document.getElementById('iframe-pdf').src = 'about:blank';
 }
 
 // ── Modal ver imagen ─────────────────────────────────────────────────────────
 
-function verImagen(url, nombre, subidoEn) {
+function verImagen(event, url, nombre, subidoEn) {
     document.getElementById('titulo-imagen').textContent = nombre;
     document.getElementById('fecha-imagen').textContent = subidoEn ? `Subido el ${subidoEn}` : '';
-    
+
 
     document.getElementById('descargar-imagen').href = url;
 
@@ -90,12 +90,13 @@ function verImagen(url, nombre, subidoEn) {
         img.style.opacity    = '1';
         skeleton.style.display = 'none';
     };
-    
-    document.getElementById('modal-imagen').style.display = 'flex';
+    img.src = url;
+
+    abrirModalConAnimacion('modal-imagen', event);
 }
 
 function cerrarModalImagen() {
-    document.getElementById('modal-imagen').style.display = 'none';
+    cerrarModalConAnimacion('modal-imagen');
     document.getElementById('img-visor').src = '';
 }
 
@@ -111,11 +112,16 @@ function previsualizarArchivoDoc(input) {
 // ── Cerrar con backdrop y ESC ──────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
-    ['modal-categoria', 'modal-subir', 'modal-eliminar-doc', 'modal-pdf', 'modal-imagen'].forEach(id => {
+    const cerrarPorId = {
+        'modal-eliminar-doc': cerrarModalEliminarDoc,
+        'modal-pdf':          cerrarModalPdf,
+        'modal-imagen':       cerrarModalImagen,
+    };
+    Object.entries(cerrarPorId).forEach(([id, cerrar]) => {
         const modal = document.getElementById(id);
         if (modal) {
             modal.addEventListener('click', e => {
-                if (e.target === modal) modal.style.display = 'none';
+                if (e.target === modal) cerrar();
             });
         }
     });

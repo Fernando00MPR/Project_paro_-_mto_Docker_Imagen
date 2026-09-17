@@ -2,6 +2,9 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Seguimiento de servicios" %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+{% endblock %}
 {% block content %}
 
 <!-- ── Encabezado ── -->
@@ -24,7 +27,7 @@
 
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             {% if puede_editar_seg_servicio %}
-            <button type="button" onclick="abrirModalServ()" class="btn btn-primary">+ {% trans "Nuevo seguimiento" %}</button>
+            <button type="button" onclick="abrirModalServ(event)" class="btn btn-primary">+ {% trans "Nuevo seguimiento" %}</button>
             {% endif %}
                 <a href="{% url 'inventario:exportar_seguimientos_servicio' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn btn-ghost">↓ {% trans "Exportar" %}</a>
             {% include 'menu_app/_language_selector.html' %}
@@ -32,7 +35,70 @@
     </div>
 
     <!-- ── Filtros ── -->
-    <form method="get" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;
+    <style>
+      .filter-bar select,
+      .filter-bar input[type="text"],
+      .filter-bar .btn {
+          height: 40px;
+          box-sizing: border-box;
+          border-radius: 8px;
+          font-size: 14px;
+      }
+      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+         Mismo tono que el texto (--text): hex literal porque no se puede
+         meter var() dentro del data URI. */
+      .filter-bar select {
+          padding: 0 34px 0 10px;
+          appearance: none; -webkit-appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          background-size: 14px;
+      }
+      /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
+         select { background: var(--white) !important; }, que borra el chevron de
+         arriba por especificidad + !important. Se repite aquí con el mismo peso
+         para ganar por ir declarada después en el documento. */
+      [data-theme="dark"] .filter-bar select {
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 10px center !important;
+          background-size: 14px !important;
+      }
+      .filter-bar .btn {
+          display: inline-flex;
+          align-items: center;
+          padding: 0 16px;
+          font-weight: 500;
+          white-space: nowrap;
+          text-decoration: none;
+      }
+      .filter-bar .filter-divider {
+          width: 1px;
+          height: 40px;
+          background: var(--border);
+          margin: 0 4px;
+          align-self: flex-end;
+      }
+      /* Selector de rango de fecha del PR (form aparte, sin clase .filter-bar):
+         el widget trae 42px por defecto; se achica al mismo box-model que el
+         resto de .filter-group (padding 7px 10px, sin altura fija, radio 6px). */
+      #dp-fecha-pr-desde .dp-control, #dp-fecha-pr-hasta .dp-control {
+          height: auto;
+          padding: 7px 10px;
+          border-radius: 6px;
+          width: 150px;
+      }
+      /* Modal "Nuevo/editar seguimiento" — mismo box-model que .form-field
+         input (padding 9px 12px, sin altura fija, radio 7px). */
+      #modal-serv .dp-control {
+          height: auto;
+          padding: 9px 12px;
+          border-radius: 7px;
+      }
+    </style>
+    <form method="get" class="filter-bar"
+          style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px;
                               padding:14px; background:var(--surface); border:1px solid var(--border);
                               border-radius:var(--radius); align-items:flex-end;">
         {% if filtro_area %}
@@ -89,11 +155,10 @@
             </select>
         </div>
 
-        <div class="filter-group">
-            <label>&nbsp;</label>
-            <a href="{% url 'inventario:lista_seguimientos_servicio' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
-               class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
-        </div>
+        <div class="filter-divider"></div>
+
+        <a href="{% url 'inventario:lista_seguimientos_servicio' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
+           class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
 
     </form>
 
@@ -130,10 +195,10 @@
         <form method="get" style="display:flex; gap:8px; justify-content:flex-end; margin-bottom:8px;">
             {% if filtro_area %}<input type="hidden" name="area" value="{{ filtro_area }}">{% endif %}
             <div class="filter-group">
-                <input type="date" name="fecha_pr_desde" value="{{ fecha_pr_desde }}" onchange="this.form.submit()" style="width:150px;">
+                {% include 'menu_app/_date_picker.html' with name='fecha_pr_desde' initial=fecha_pr_desde dp_id='dp-fecha-pr-desde' %}
             </div>
             <div class="filter-group">
-                <input type="date" name="fecha_pr_hasta" value="{{ fecha_pr_hasta }}" onchange="this.form.submit()" style="width:150px;">
+                {% include 'menu_app/_date_picker.html' with name='fecha_pr_hasta' initial=fecha_pr_hasta dp_id='dp-fecha-pr-hasta' %}
             </div>
         </form>
 
@@ -216,7 +281,7 @@
                         <div style="display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:nowrap;">
                             {% if puede_editar_seg_servicio %}
                             <button type="button"
-                                    onclick="editarServ({{ s.id }}, '{{ s.no_item|escapejs }}', '{{ s.nombre|escapejs }}', {{ s.cantidad }}, '{{ s.motivo_servicio|escapejs }}', {{ s.tipo_servicio_id }}, '{{ s.numero_pr|escapejs }}', '{{ s.fecha_pr|date:'Y-m-d'|default:'' }}', '{{ s.numero_po|escapejs }}', '{{ s.fecha_po|date:'Y-m-d'|default:'' }}', '{{ s.numero_sr|escapejs }}', '{{ s.fecha_sr|date:'Y-m-d'|default:'' }}', '{{ s.comentarios|escapejs }}')"
+                                    onclick="editarServ(event, {{ s.id }}, '{{ s.no_item|escapejs }}', '{{ s.nombre|escapejs }}', {{ s.cantidad }}, '{{ s.motivo_servicio|escapejs }}', {{ s.tipo_servicio_id }}, '{{ s.numero_pr|escapejs }}', '{{ s.fecha_pr|date:'Y-m-d'|default:'' }}', '{{ s.numero_po|escapejs }}', '{{ s.fecha_po|date:'Y-m-d'|default:'' }}', '{{ s.numero_sr|escapejs }}', '{{ s.fecha_sr|date:'Y-m-d'|default:'' }}', '{{ s.comentarios|escapejs }}')"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid var(--border);
                                         background:var(--surface); color:var(--text); cursor:pointer;
@@ -230,7 +295,7 @@
                             {% endif %}
                             {% if puede_eliminar_seg_servicio %}
                             <button type="button"
-                                    onclick="confirmarEliminarServ('{% url 'inventario:eliminar_seguimiento_servicio' s.id %}')"
+                                    onclick="confirmarEliminarServ(event, '{% url 'inventario:eliminar_seguimiento_servicio' s.id %}')"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
                                         background:#FFF5F5; color:#DC2626; cursor:pointer;
@@ -257,7 +322,7 @@
     </div>
 
     <!-- ── Paginación ── -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; margin-top:4px;">
         <div class="pagination" style="margin:0;">
             {% if seguimientos.has_previous %}
                 <a href="?area={{ filtro_area }}&per_page={{ per_page }}&page={{ seguimientos.previous_page_number }}">‹</a>
@@ -282,10 +347,10 @@
 </div>
 
 <!-- ── Modal confirmar eliminar ── -->
-<div id="modal-eliminar-serv"
+<div id="modal-eliminar-serv" class="modal-backdrop"
      style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
             z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left;
                 min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar seguimiento" %}</div>
         <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">{% trans "Esta acción no se puede deshacer." %}</div>
@@ -293,90 +358,144 @@
             <button onclick="cerrarModalEliminarServ()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
             <form id="form-eliminar-serv" method="post" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
+                <input type="hidden" name="volver" id="elim-serv-volver" value="">
+                <button type="submit" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
             </form>
         </div>
     </div>
 </div>
 
-<!-- ── Modal nuevo/editar seguimiento ── -->
+<!-- ── Modal nuevo/editar seguimiento — fondo blanco fijo como en los catálogos ── -->
+<style>
+    #modal-serv .mf-box { background: #fff; }
+    #modal-serv .mf-doc-title { color: #1d1d24; }
+    #modal-serv .form-field label { color: #33333c; }
+    #modal-serv .form-field input,
+    #modal-serv .form-field select,
+    #modal-serv .form-field textarea {
+        background: #fff; color: #1d1d24; border-color: #d8d8e0;
+    }
+    #modal-serv .form-field select {
+        appearance: none; -webkit-appearance: none;
+        padding-right: 34px;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231d1d24' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 14px;
+    }
+    #modal-serv .form-field input::placeholder,
+    #modal-serv .form-field textarea::placeholder { color: #9b9ba6; }
+    #modal-serv .form-field input:focus,
+    #modal-serv .form-field select:focus,
+    #modal-serv .form-field textarea:focus {
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+    #modal-serv .btn-ghost { color: #33333c; border-color: #d8d8e0; }
+    #modal-serv .btn-ghost:hover { background: #f2f2f5; color: #1d1d24; }
+    #modal-serv .dp-control { background: #fff; border-color: #d8d8e0; }
+    #modal-serv .dp-control:hover { border-color: #9b9ba6; }
+    #modal-serv .dp-text, #modal-serv .dp-text--vacio, #modal-serv .dp-icon { color: #1d1d24; }
+    /* Animación (ver keyframes globales en base_menu.html): este modal no usa
+       .modal-backdrop/.modal-box, así que se declara aparte. */
+    #modal-serv { animation: modal-overlay-in 220ms both; }
+    #modal-serv .mf-box {
+        transform-origin: 50% 50%;
+        animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+    #modal-serv[data-closing],
+    #modal-serv[data-closing] .mf-box {
+        animation: none; opacity: 0;
+        transition: opacity 120ms ease-out, transform 120ms ease-out;
+    }
+    #modal-serv[data-closing] .mf-box { transform: scale(.97); }
+</style>
 <div id="modal-serv"
      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
             z-index:3000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:12px; padding:24px 28px;
+    <div class="mf-box" style="border-radius:12px; padding:24px 28px;
                 min-width:360px; max-width:560px; width:90%; max-height:90vh; overflow-y:auto;
                 box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:16px;" id="modal-serv-titulo">
-            {% trans "Nuevo seguimiento" %}
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div class="mf-doc-title" style="font-size:14px; font-weight:600;" id="modal-serv-titulo">
+                {% trans "Nuevo seguimiento" %}
+            </div>
+            <button type="button" onclick="cerrarModalServ()"
+                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                    style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s; flex-shrink:0;">✕</button>
         </div>
 
         <form method="post" action="{% url 'inventario:nuevo_seguimiento_servicio' %}" id="form-serv">
             {% csrf_token %}
+            <input type="hidden" name="volver" id="serv-volver" value="">
             <input type="hidden" name="area" id="serv-area-id" value="{{ filtro_area }}">
 
             <div class="form-grid">
 
-                <div class="form-field">
+                <div class="form-field modal-row">
                     <label>{% trans "No. Item" %} *</label>
                     <input type="text" name="no_item" id="serv-no-item" required>
                 </div>
 
-                <div class="form-field full">
+                <div class="form-field full modal-row">
                     <label>{% trans "Nombre" %} *</label>
                     <input type="text" name="nombre" id="serv-nombre" required>
                 </div>
 
-                <div class="form-field">
-                    <label>{% trans "Cantidad" %} *</label>
-                    <input type="number" name="cantidad" id="serv-cantidad" min="1" required>
+                <div class="form-field full modal-row" style="display:grid; grid-template-columns:110px 1fr; gap:18px 24px;">
+                    <div class="form-field" style="margin:0;">
+                        <label>{% trans "Cantidad" %} *</label>
+                        <input type="number" name="cantidad" id="serv-cantidad" min="1" required>
+                    </div>
+
+                    <div class="form-field" style="margin:0;">
+                        <label>{% trans "Tipo de servicio" %} *</label>
+                        <select name="tipo_servicio" id="serv-tipo" required>
+                            <option value="">{% trans "Selecciona..." %}</option>
+                            {% for t in tipos_servicio %}
+                            <option value="{{ t.pk }}">{{ t.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-field">
-                    <label>{% trans "Tipo de servicio" %} *</label>
-                    <select name="tipo_servicio" id="serv-tipo" required>
-                        <option value="">{% trans "Selecciona..." %}</option>
-                        {% for t in tipos_servicio %}
-                        <option value="{{ t.pk }}">{{ t.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-field full">
+                <div class="form-field full modal-row">
                     <label>{% trans "Motivo del servicio" %} * <span style="color:var(--text-3); font-weight:400;">({% trans "máx. 200 caracteres" %})</span></label>
                     <textarea name="motivo_servicio" id="serv-motivo" maxlength="200" rows="3" required></textarea>
                 </div>
 
-                <div class="form-field">
+                <div class="form-field modal-row">
                     <label>{% trans "No. PR" %} *</label>
                     <input type="text" name="numero_pr" id="serv-numero-pr" required>
                 </div>
 
-                <div class="form-field">
+                <div class="form-field modal-row">
                     <label>{% trans "Fecha PR" %}</label>
-                    <input type="date" name="fecha_pr" id="serv-fecha-pr">
+                    {% include 'menu_app/_date_picker.html' with name='fecha_pr' dp_id='dp-serv-fecha-pr' %}
                 </div>
 
-                <div class="form-field">
+                <div class="form-field modal-row">
                     <label>{% trans "No. PO" %}</label>
                     <input type="text" name="numero_po" id="serv-numero-po">
                 </div>
 
-                <div class="form-field">
+                <div class="form-field modal-row">
                     <label>{% trans "Fecha PO" %}</label>
-                    <input type="date" name="fecha_po" id="serv-fecha-po">
+                    {% include 'menu_app/_date_picker.html' with name='fecha_po' dp_id='dp-serv-fecha-po' %}
                 </div>
 
-                <div class="form-field">
+                <div class="form-field modal-row">
                     <label>{% trans "No. SR" %}</label>
                     <input type="text" name="numero_sr" id="serv-numero-sr">
                 </div>
 
-                <div class="form-field">
+                <div class="form-field modal-row">
                     <label>{% trans "Fecha SR" %}</label>
-                    <input type="date" name="fecha_sr" id="serv-fecha-sr">
+                    {% include 'menu_app/_date_picker.html' with name='fecha_sr' dp_id='dp-serv-fecha-sr' %}
                 </div>
 
-                <div class="form-field full">
+                <div class="form-field full modal-row">
                     <label>{% trans "Comentarios" %}</label>
                     <textarea name="comentarios" id="serv-comentarios" rows="2"></textarea>
                 </div>
@@ -395,5 +514,16 @@
 
 {% block extra_js %}
 {% load static %}
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
+<script>
+    // Rango de fecha PR es el selector de fecha único; no soporta onchange=""
+    // inline como el <input type="date"> nativo que reemplazó.
+    document.querySelector('#dp-fecha-pr-desde .dp-value').addEventListener('change', function () {
+        this.closest('form').submit();
+    });
+    document.querySelector('#dp-fecha-pr-hasta .dp-value').addEventListener('change', function () {
+        this.closest('form').submit();
+    });
+</script>
 <script src="{% static 'inventario_app/js/lista_seguimientos_servicio.js' %}"></script>
 {% endblock %}

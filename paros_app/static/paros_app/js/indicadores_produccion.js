@@ -41,7 +41,7 @@ function togglePeriodo(v, autoSubmit) {
     document.getElementById('wrap-desde').style.display            = v === 'custom'      ? 'flex' : 'none';
     document.getElementById('wrap-hasta').style.display            = v === 'custom'      ? 'flex' : 'none';
 
-    if (autoSubmit && (v === 'semana' || v === 'mes')) {
+    if (autoSubmit && v === 'mes') {
         document.getElementById('form-filtros').submit();
     }
 }
@@ -253,7 +253,12 @@ function crearGrafica() {
                     }
                 }
             },
-            layout: { padding: { top: 36, bottom: 4 } },
+            // 'planeado' dibuja las etiquetas en diagonal (45°, suben a la
+            // derecha) para que no se encimen con muchos días — necesitan más
+            // espacio arriba y a la derecha para no cortarse.
+            layout: window.INDICADOR_ACTUAL === 'planeado'
+                ? { padding: { top: 64, right: 44, bottom: 4 } }
+                : { padding: { top: 36, bottom: 4 } },
             scales: {
                 x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#888780', maxRotation: 60, autoSkip: true, autoSkipPadding: 8 } },
                 y: {
@@ -283,9 +288,26 @@ function crearGrafica() {
                     const barWidth = meta.data.length > 0 ? meta.data[0].width : 0;
                     if (barWidth < 18) return;
                     const ctx2 = chart.ctx;
+                    const diagonal = window.INDICADOR_ACTUAL === 'planeado';
                     ctx2.save();
                     ctx2.font = 'bold 11px sans-serif';
                     ctx2.textAlign = 'center';
+                    // Dibuja la etiqueta recta o, en 'planeado', rotada 45°
+                    // (sube hacia la derecha) para que no se encimen con muchos días.
+                    function dibujarEtiqueta(texto, x, y, color) {
+                        ctx2.fillStyle = color;
+                        if (diagonal) {
+                            ctx2.save();
+                            ctx2.translate(x, y);
+                            ctx2.rotate(-Math.PI / 4);
+                            ctx2.textAlign = 'left';
+                            ctx2.textBaseline = 'middle';
+                            ctx2.fillText(texto, 4, 0);
+                            ctx2.restore();
+                        } else {
+                            ctx2.fillText(texto, x, y);
+                        }
+                    }
                     chart.data.datasets[0].data.forEach((val, i) => {
                         if (!val) return;
                         const bar = meta.data[i];
@@ -294,6 +316,7 @@ function crearGrafica() {
                         const esRecortada = !ejesFijos && hayOutlier && axisMax !== undefined && val > axisMax;
                         const label = val === 0.01 ? '0' + unidad : val + unidad;
                         const rojo = esRojo(val, hayOutlier, axisMax);
+                        const esDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
                         if (esRecortada) {
                             const yArea = chart.chartArea.top + 16;
@@ -305,8 +328,9 @@ function crearGrafica() {
                         } else if (rojo) {
                             // Siempre arriba de la barra en rojo, sin importar qué tan cerca esté del techo
                             const yPos = Math.max(bar.y - 6, chart.chartArea.top + 12);
-                            ctx2.fillStyle = '#DC2626';
-                            ctx2.fillText(label, bar.x, yPos);
+                            dibujarEtiqueta(label, bar.x, yPos, '#DC2626');
+                        } else if (diagonal) {
+                            dibujarEtiqueta(label, bar.x, bar.y - 6, esDark ? '#FFFFFF' : indigoSolid);
                         } else {
                             const yPos = bar.y - 6;
                             const dentroDeBar = yPos < 14;
@@ -314,7 +338,6 @@ function crearGrafica() {
                                 ctx2.fillStyle = '#ffffff';
                                 ctx2.fillText(label, bar.x, bar.y + 16);
                             } else {
-                                const esDark = document.documentElement.getAttribute('data-theme') === 'dark';
                                 ctx2.fillStyle = esDark ? '#FFFFFF' : indigoSolid;
                                 ctx2.fillText(label, bar.x, yPos);
                             }
@@ -801,7 +824,22 @@ function toggleLeyendaEstatus() {
 // ── Modal de edición de fechas ─────────────────────────────────
 let modalFechasState = null;
 
-function abrirModalFechas(celdaEl, fase) {
+// F. inicio / F. cierre son el selector de fecha único (_date_picker.html);
+// su valor real vive en el <input hidden class="dp-value"> dentro de cada
+// #dp-modal-inicio / #dp-modal-cierre. Para fijarlo desde fuera (atajos) hay
+// que disparar 'change' para que el widget se resincronice y repinte.
+function getModalFecha(dpId) {
+    const hidden = document.querySelector('#' + dpId + ' .dp-value');
+    return hidden ? hidden.value : '';
+}
+function setModalFecha(dpId, iso) {
+    const hidden = document.querySelector('#' + dpId + ' .dp-value');
+    if (!hidden) return;
+    hidden.value = iso;
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function abrirModalFechas(event, celdaEl, fase) {
     const tr = celdaEl.closest('tr');
     if (!tr) return;
     const fi = tr.querySelector('.' + fase + '-fi');
@@ -824,21 +862,19 @@ function abrirModalFechas(celdaEl, fase) {
     const subt = tr.dataset.fecha + (problema && problema.value ? ' · ' + problema.value : '');
     document.getElementById('modal-fechas-subtitulo').textContent = subt;
 
-    document.getElementById('modal-fecha-inicio').value = fi.value;
-    document.getElementById('modal-fecha-cierre').value = ff.value;
+    setModalFecha('dp-modal-inicio', fi.value);
+    setModalFecha('dp-modal-cierre', ff.value);
 
     actualizarResumenModalFechas();
 
-    const overlay = document.getElementById('modal-fechas');
-    overlay.style.display = 'flex';
-    const inputInicio = document.getElementById('modal-fecha-inicio');
-    inputInicio.focus();
-    if (inputInicio.select) inputInicio.select();
+    abrirModalConAnimacion('modal-fechas', event);
+    const controlInicio = document.querySelector('#dp-modal-inicio .dp-control');
+    if (controlInicio) controlInicio.focus();
 }
 
 function validarModalFechas() {
-    const inicio = document.getElementById('modal-fecha-inicio').value;
-    const cierre = document.getElementById('modal-fecha-cierre').value;
+    const inicio = getModalFecha('dp-modal-inicio');
+    const cierre = getModalFecha('dp-modal-cierre');
     const errInicio = document.getElementById('modal-fechas-error-inicio');
     const errCierre = document.getElementById('modal-fechas-error-cierre');
     errInicio.textContent = '';
@@ -865,8 +901,8 @@ function validarModalFechas() {
 }
 
 function actualizarResumenModalFechas() {
-    const inicio = document.getElementById('modal-fecha-inicio').value;
-    const cierre = document.getElementById('modal-fecha-cierre').value;
+    const inicio = getModalFecha('dp-modal-inicio');
+    const cierre = getModalFecha('dp-modal-cierre');
     const el = document.getElementById('modal-fechas-duracion');
     const ok = validarModalFechas();
     if (!ok || !inicio) { el.textContent = '—'; return; }
@@ -875,24 +911,24 @@ function actualizarResumenModalFechas() {
 }
 
 function modalAtajoInicioHoy() {
-    document.getElementById('modal-fecha-inicio').value = hoyISO();
+    setModalFecha('dp-modal-inicio', hoyISO());
     actualizarResumenModalFechas();
 }
 
 function modalAtajoCierreHoy() {
-    document.getElementById('modal-fecha-cierre').value = hoyISO();
+    setModalFecha('dp-modal-cierre', hoyISO());
     actualizarResumenModalFechas();
 }
 
 function modalAtajoMismoDia() {
-    const inicio = document.getElementById('modal-fecha-inicio').value;
+    const inicio = getModalFecha('dp-modal-inicio');
     if (!inicio) return;
-    document.getElementById('modal-fecha-cierre').value = inicio;
+    setModalFecha('dp-modal-cierre', inicio);
     actualizarResumenModalFechas();
 }
 
 function modalAtajoSinCierre() {
-    document.getElementById('modal-fecha-cierre').value = '';
+    setModalFecha('dp-modal-cierre', '');
     actualizarResumenModalFechas();
 }
 
@@ -906,8 +942,8 @@ function guardarModalFechas() {
     // Un estatus fijado a mano no se sobrescribe al guardar fechas
     const fijadoAntes = stEl && stEl.value && stEl.value !== deriveStatus(fi.value, ff.value);
 
-    fi.value = document.getElementById('modal-fecha-inicio').value;
-    ff.value = document.getElementById('modal-fecha-cierre').value;
+    fi.value = getModalFecha('dp-modal-inicio');
+    ff.value = getModalFecha('dp-modal-cierre');
 
     if (stEl && !fijadoAntes) {
         stEl.value = deriveStatus(fi.value, ff.value);
@@ -920,22 +956,34 @@ function guardarModalFechas() {
 
 function cerrarModalFechas(skipConfirm) {
     if (!skipConfirm && modalFechasState) {
-        const inicio = document.getElementById('modal-fecha-inicio').value;
-        const cierre = document.getElementById('modal-fecha-cierre').value;
+        const inicio = getModalFecha('dp-modal-inicio');
+        const cierre = getModalFecha('dp-modal-cierre');
         const cambio = inicio !== modalFechasState.inicioInicial || cierre !== modalFechasState.cierreInicial;
-        if (cambio && !confirm('¿Descartar cambios?')) return;
+        if (cambio) { abrirModalDescartarCambios(); return; }
     }
-    document.getElementById('modal-fechas').style.display = 'none';
+    cerrarModalConAnimacion('modal-fechas');
     const celda = modalFechasState ? modalFechasState.celda : null;
     modalFechasState = null;
     if (celda) celda.focus();
 }
 
+// ── Confirmar descartar cambios (reemplaza el confirm() nativo) ────────
+function abrirModalDescartarCambios() {
+    abrirModalConAnimacion('modal-descartar-fechas', null);
+}
+function cerrarModalDescartarCambios() {
+    cerrarModalConAnimacion('modal-descartar-fechas');
+}
+function confirmarDescartarCambios() {
+    cerrarModalDescartarCambios();
+    cerrarModalFechas(true); // ya se confirmó: cierra sin volver a preguntar
+}
+
 // ── Modal Target ──────────────────────────────────────────────
-function abrirModalTarget() {
+function abrirModalTarget(event) {
     const modal = document.getElementById('modal-target');
     if (modal) {
-        modal.style.display = 'flex';
+        abrirModalConAnimacion(modal, event);
         const input = document.getElementById('input-target');
         if (input) input.focus();
         const err = document.getElementById('target-error');
@@ -944,8 +992,7 @@ function abrirModalTarget() {
 }
 
 function cerrarModalTarget() {
-    const modal = document.getElementById('modal-target');
-    if (modal) modal.style.display = 'none';
+    cerrarModalConAnimacion('modal-target');
 }
 
 function guardarTarget() {
@@ -1223,7 +1270,11 @@ function renderChartTendencia(labels, valores) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            layout: { padding: { top: 24 } },
+            // 'planeado' rota las etiquetas 45° (suben a la derecha) — necesitan
+            // más espacio arriba y a la derecha para no cortarse.
+            layout: window.INDICADOR_ACTUAL === 'planeado'
+                ? { padding: { top: 64, right: 44 } }
+                : { padding: { top: 24 } },
             plugins: {
                 legend: { display: false },
                 tooltip: { callbacks: { label: ctx => ' ' + (ctx.parsed.y ?? '—') + unidad } }
@@ -1240,6 +1291,7 @@ function renderChartTendencia(labels, valores) {
                     if (barWidth < 14) return;
                     const ctx2 = chart.ctx;
                     const esDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    const diagonal = window.INDICADOR_ACTUAL === 'planeado';
                     ctx2.save();
                     ctx2.font = 'bold 11px sans-serif';
                     ctx2.textAlign = 'center';
@@ -1249,7 +1301,16 @@ function renderChartTendencia(labels, valores) {
                         const bar = meta.data[i];
                         const yPos = bar.y - 6;
                         const label = val + unidad;
-                        if (yPos < 12) {
+                        if (diagonal) {
+                            ctx2.save();
+                            ctx2.translate(bar.x, yPos);
+                            ctx2.rotate(-Math.PI / 4);
+                            ctx2.textAlign = 'left';
+                            ctx2.textBaseline = 'middle';
+                            ctx2.fillStyle = esDark ? '#FFFFFF' : indigoSolid;
+                            ctx2.fillText(label, 4, 0);
+                            ctx2.restore();
+                        } else if (yPos < 12) {
                             ctx2.fillStyle = '#ffffff';
                             ctx2.fillText(label, bar.x, bar.y + 16);
                             ctx2.fillStyle = esDark ? '#FFFFFF' : indigoSolid;
@@ -1385,7 +1446,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
                 guardarModalFechas();
             } else if (e.key === 'Tab') {
-                const focusables = overlayFechas.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])');
+                // input:not([type="hidden"]) — F. inicio/F. cierre ahora guardan
+                // su valor real en un <input type="hidden">, que "input" solo
+                // matchearía sin ser realmente enfocable (rompería el ciclo).
+                const focusables = overlayFechas.querySelectorAll('button, input:not([type="hidden"]), [tabindex]:not([tabindex="-1"])');
                 if (!focusables.length) return;
                 const first = focusables[0];
                 const last  = focusables[focusables.length - 1];
@@ -1399,16 +1463,27 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-    const inputFechaInicio = document.getElementById('modal-fecha-inicio');
-    const inputFechaCierre = document.getElementById('modal-fecha-cierre');
-    if (inputFechaInicio) inputFechaInicio.addEventListener('input', actualizarResumenModalFechas);
-    if (inputFechaCierre) inputFechaCierre.addEventListener('input', actualizarResumenModalFechas);
-    if (inputFechaInicio) inputFechaInicio.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') { e.preventDefault(); guardarModalFechas(); }
-    });
-    if (inputFechaCierre) inputFechaCierre.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') { e.preventDefault(); guardarModalFechas(); }
-    });
+
+    // Confirmar descartar cambios (reemplaza el confirm() nativo)
+    const overlayDescartar = document.getElementById('modal-descartar-fechas');
+    if (overlayDescartar) {
+        overlayDescartar.addEventListener('click', function (e) {
+            if (e.target === this) cerrarModalDescartarCambios();
+        });
+        overlayDescartar.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { e.preventDefault(); cerrarModalDescartarCambios(); }
+        });
+    }
+    
+    // F. inicio / F. cierre son el selector de fecha único: su valor real
+    // vive en el hidden .dp-value y avisa con 'change' (no 'input'). El Enter
+    // ya no guarda desde aquí porque en el widget Enter abre/cierra el
+    // calendario (ver date_picker.js); para guardar sigue disponible Ctrl/⌘+Enter
+    // sobre el modal (listener de overlayFechas más arriba).
+    const inputFechaInicio = document.querySelector('#dp-modal-inicio .dp-value');
+    const inputFechaCierre = document.querySelector('#dp-modal-cierre .dp-value');
+    if (inputFechaInicio) inputFechaInicio.addEventListener('change', actualizarResumenModalFechas);
+    if (inputFechaCierre) inputFechaCierre.addEventListener('change', actualizarResumenModalFechas);
 
 });
 

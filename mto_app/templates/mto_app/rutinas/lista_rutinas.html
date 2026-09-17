@@ -29,14 +29,59 @@
 <!-- Filtro por plan -->
 <div class="card">
     <div style="margin-bottom:16px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);">
-        <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-            
+        <style>
+          .rut-filtros select,
+          .rut-filtros input,
+          .rut-filtros .btn {
+              height: 40px;
+              box-sizing: border-box;
+              border-radius: 8px;
+              font-size: 14px;
+          }
+          .rut-filtros .btn {
+              display: inline-flex;
+              align-items: center;
+              padding: 0 16px;
+              font-weight: 500;
+              white-space: nowrap;
+              text-decoration: none;
+          }
+          /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+             Mismo tono que el texto (--text): hex literal porque no se puede
+             meter var() dentro del data URI. */
+          .rut-filtros select {
+              padding: 0 34px 0 10px;
+              appearance: none; -webkit-appearance: none;
+              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+              background-repeat: no-repeat;
+              background-position: right 10px center;
+              background-size: 14px;
+          }
+          /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
+             select { background: var(--white) !important; }, que borra el chevron de
+             arriba por especificidad + !important. Se repite aquí con el mismo peso
+             para ganar por ir declarada después en el documento. */
+          [data-theme="dark"] .rut-filtros select {
+              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+              background-repeat: no-repeat !important;
+              background-position: right 10px center !important;
+              background-size: 14px !important;
+          }
+          .rut-filtros .filter-divider {
+              width: 1px;
+              height: 40px;
+              background: var(--border);
+              margin: 0 4px;
+              align-self: flex-end;
+          }
+        </style>
+        <form method="get" class="rut-filtros" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+
             <input type="hidden" name="area" value="{{ filtro_area }}">
             <div class="filter-group">
                 <label>{% trans "N° Plan de trabajo" %}</label>
-                <select name="pt" style="width:160px; appearance:none; -webkit-appearance:none;
-                    background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");
-                    background-repeat:no-repeat; background-position:right 10px center; background-color:var(--white);">
+                <select name="pt" onchange="this.form.submit()"
+                        style="width:180px; border:1px solid var(--border); background-color:var(--white); color:var(--text); font-family:inherit;">
                     <option value="">{% trans "Seleccione un plan" %}</option>
                     {% for pt in planes_con_pasos %}
                     <option value="{{ pt.plan_trabajo }}" {% if filtro_pt == pt.plan_trabajo %}selected{% endif %}>
@@ -49,22 +94,24 @@
             {% if not filtro_pt %}
             <div class="filter-group">
                 <label>{% trans "Código del Plan" %}</label>
-                <input type="text" name="codigo" value="{{ filtro_codigo|default:'' }}" 
+                <input type="text" name="codigo" value="{{ filtro_codigo|default:'' }}"
                     placeholder="Buscar código…"
-                    style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+                    oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);"
+                    style="border:1px solid var(--border); padding:0 12px; background:var(--white); color:var(--text); font-family:inherit;">
             </div>
 
             <div class="filter-group">
                 <label>{% trans "Nombre del Plan" %}</label>
                 <input type="text" name="nombre" value="{{ filtro_nombre|default:'' }}"
                     placeholder="Buscar nombre…"
-                    style="height:33px; width:500px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+                    oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);"
+                    style="width:500px; border:1px solid var(--border); padding:0 12px; background:var(--white); color:var(--text); font-family:inherit;">
             </div>
             {% endif %}
-            
-            <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
-            <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
 
+            <div class="filter-divider"></div>
+            <a href="{% url 'mto:lista_pasos' %}?area={{ filtro_area }}" class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
+            
             <!-- Nombre y Codigo del plan -->
             {% if filtro_pt and primer_paso %}
             {% if primer_paso.codigo_plan or primer_paso.nombre_plan %}
@@ -82,7 +129,7 @@
                     {% if puede_eliminar_rutinas %}
                     <button type="button" class="btn btn-ghost btn-sm"
                         style="color:var(--danger, #DC2626); border-color:var(--danger, #DC2626);"
-                        onclick="document.getElementById('modal-eliminar-pasos').style.display='flex';">
+                        onclick="abrirModalConAnimacion('modal-eliminar-pasos', event)">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:4px;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -214,18 +261,18 @@
 </div>
 
 <!-- Modal eliminar pasos -->
-<div id="modal-eliminar-pasos"
+<div id="modal-eliminar-pasos" class="modal-backdrop"
      style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
             z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
-                min-width:360px; max-width:460px; width:100%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px;
+                min-width:360px; max-width:460px; width:100%; box-shadow:0 8px 40px rgba(0,0,0,.18); text-align:left;">
     <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">
         {% trans "¿Eliminar este plan?" %}
     </div>
     <div style="font-size:13px; color:var(--text-2); margin-bottom:16px;">
         {% trans "Esta acción no se puede deshacer." %}
     </div>
-    <div style="margin-bottom:16px;">
+    <div class="modal-row" style="margin-bottom:16px;">
         <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:6px;">
             {% trans "Motivo de eliminación" %} <span style="color:#EF4444;">*</span>
         </label>
@@ -239,7 +286,7 @@
                 style="background:#EF4444; color:#fff; border-color:#EF4444;">
             {% trans "Sí, eliminar" %}
         </button>
-        <button onclick="document.getElementById('modal-eliminar-pasos').style.display='none';"
+        <button onclick="cerrarModalConAnimacion('modal-eliminar-pasos')"
                 class="btn btn-ghost">
             {% trans "Cancelar" %}
         </button>

@@ -4,6 +4,7 @@
 {% block title %}{% trans "Bitácora de AGVs" %}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
 <style>
     /* Franja indicadora de comentario — esquina inferior derecha de la celda */
     .celda-agv .flag-comentario {
@@ -97,6 +98,39 @@
 {% else %}
 
 <!-- Filtros -->
+<style>
+  /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+     Mismo tono que el texto (--text): hex literal porque no se puede meter
+     var() dentro del data URI. */
+  .filter-group select,
+  #ef-interna {
+      padding-right: 34px !important;
+      appearance: none !important; -webkit-appearance: none !important;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 10px center !important;
+      background-size: 14px !important;
+  }
+  /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
+     select { background: var(--white) !important; }, que borra el chevron de
+     arriba por especificidad. Se repite aquí con el mismo peso para ganar por
+     ir declarada después en el documento. */
+  [data-theme="dark"] .filter-group select,
+  [data-theme="dark"] #ef-interna {
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 10px center !important;
+      background-size: 14px !important;
+  }
+  /* El selector de fecha trae 42px por defecto (compartido con el resto del
+     sitio); se achica al mismo box-model que .filter-group input (padding
+     7px 10px, sin altura fija, radio 6px). */
+  .filter-group .dp-control {
+      height: auto;
+      padding: 7px 10px;
+      border-radius: 6px;
+  }
+</style>
 <div style="padding:14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:20px;">
     <form method="get" id="form-filtros" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
         <div class="filter-group">
@@ -147,7 +181,7 @@
             </span>
             {% if puede_editar %}
             <button type="button"
-                    onclick="abrirModalTarget('{{ clave }}', '{{ nombre_interna }}')"
+                    onclick="abrirModalTarget(event, '{{ clave }}', '{{ nombre_interna }}')"
                     style="display:flex; align-items:center; gap:5px; padding:5px 12px;
                         border:1px solid var(--border); border-radius:7px; font-size:12px;
                         background:var(--white); color:var(--text-2); cursor:pointer;
@@ -338,15 +372,13 @@
 
         <div id="ef-rango" style="display:flex; gap:10px; align-items:flex-end; margin-top:12px; flex-wrap:wrap;">
             <div id="ef-rango-dia" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                <div class="filter-group">
+                 <div class="filter-group">
                     <label>{% trans "Desde" %}</label>
-                    <input type="date" id="ef-desde" value="{{ anio }}-{{ mes|stringformat:'02d' }}-01"
-                           onchange="cargarCumplimiento()">
+                    {% include 'menu_app/_date_picker.html' with name='ef_desde_iso' dp_id='dp-ef-desde' %}
                 </div>
                 <div class="filter-group">
                     <label>{% trans "Hasta" %}</label>
-                    <input type="date" id="ef-hasta" value="{{ anio }}-{{ mes|stringformat:'02d' }}-{{ dias_mes }}"
-                           onchange="cargarCumplimiento()">
+                    {% include 'menu_app/_date_picker.html' with name='ef_hasta_iso' dp_id='dp-ef-hasta' %}
                 </div>
             </div>
             <div id="ef-rango-mes" style="display:none; gap:10px; align-items:flex-end; flex-wrap:wrap;">
@@ -412,16 +444,16 @@
 </div>
 
 <!-- Modal target -->
-<div id="modal-target-agv" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+<div id="modal-target-agv" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
      z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:24px 28px;
-                min-width:320px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:24px 28px;
+                min-width:320px; box-shadow:0 8px 40px rgba(0,0,0,.18); text-align:left;">
         <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;">
             {% trans "Configurar target" %}
         </div>
         <div style="font-size:12px; color:var(--text-2); margin-bottom:16px;" id="modal-target-agv-subtitulo"></div>
 
-        <div class="filter-group" style="margin-bottom:16px;">
+        <div class="filter-group modal-row" style="margin-bottom:16px;">
             <label>{% trans "Target mensual de AGVs" %}</label>
             <input type="number" id="modal-target-agv-mensual" min="0" max="999" placeholder="Ej. 5"
                    style="width:100%;">
@@ -439,6 +471,14 @@
 
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
+<script>
+    // El widget no acepta value="" con texto interpolado (Desde/Hasta se
+    // arman con anio+mes+día en el propio template); se fija en el hidden
+    // antes de que el picker se inicialice (ver date_picker.js).
+    document.querySelector('#dp-ef-desde .dp-value').value = "{{ anio }}-{{ mes|stringformat:'02d' }}-01";
+    document.querySelector('#dp-ef-hasta .dp-value').value = "{{ anio }}-{{ mes|stringformat:'02d' }}-{{ dias_mes }}";
+</script>
 <script>
 window.AGV_CFG = {
     urlGuardar:            "{% url 'paros:guardar_agv' %}",
@@ -451,10 +491,11 @@ window.AGV_CFG = {
     mes:                   {{ mes }},
     mesNombre:             "{% for num, nombre in meses %}{% if mes == num %}{{ nombre }}{% endif %}{% endfor %}",
     i18n: {
-        dia:        "{% trans 'Día' %}",
-        turno:      "{% trans 'Turno' %}",
-        turnoDia:   "{% trans 'día' %}",
-        turnoNoche: "{% trans 'noche' %}",
+        dia:          "{% trans 'Día' %}",
+        turno:        "{% trans 'Turno' %}",
+        turnoDia:     "{% trans 'día' %}",
+        turnoNoche:   "{% trans 'noche' %}",
+        rangoMaxDias: "{% trans 'El rango máximo es de {dias} días; se ajustó automáticamente.' %}",
     },
 };
 </script>

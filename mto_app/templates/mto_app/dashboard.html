@@ -34,13 +34,60 @@
         {% trans "Filtros" %} · S{{ filtro_semana }}
     </button>
 
+    <style>
+      .dsh-filters select,
+      .dsh-filters input,
+      .dsh-filters .btn {
+          height: 40px;
+          box-sizing: border-box;
+          border-radius: 8px;
+          font-size: 14px;
+      }
+      .dsh-filters .btn {
+          display: inline-flex;
+          align-items: center;
+          padding: 0 16px;
+          font-weight: 500;
+          white-space: nowrap;
+          text-decoration: none;
+      }
+      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+         Mismo tono que el texto (--text): hex literal porque no se puede
+         meter var() dentro del data URI. */
+      .dsh-filters select {
+          padding: 0 34px 0 10px;
+          appearance: none; -webkit-appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          background-size: 14px;
+          background-color: var(--white);
+      }
+      /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
+         select { background: var(--white) !important; }, que borra el chevron de
+         arriba por especificidad + !important. Se repite aquí con el mismo peso
+         para ganar por ir declarada después en el documento. */
+      [data-theme="dark"] .dsh-filters select {
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 10px center !important;
+          background-size: 14px !important;
+      }
+      .dsh-filters .filter-divider {
+          width: 1px;
+          height: 40px;
+          background: var(--border);
+          margin: 0 4px;
+          align-self: flex-end;
+      }
+    </style>
     <form method="get" id="dsh-filters" class="dsh-filters"
                             style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;
                             padding:14px; background:var(--white); border:1px solid var(--border);
                             border-radius:var(--radius); align-items:flex-end;">
         <div class="filter-group">
             <label>{% trans "Área" %}</label>
-            <select name="area">
+             <select name="area" onchange="this.form.submit()" style="width:260px;">
                 <option value="">{% trans "Todas las áreas" %}</option>
                 {% for a in areas %}
                 <option value="{{ a.pk }}" {% if filtro_area == a.pk|stringformat:"s" %}selected{% endif %}>
@@ -52,16 +99,18 @@
         <div class="filter-group">
             <label>{% trans "Semana" %}</label>
             <input type="number" name="semana" min="1" max="52"
-                    value="{{ filtro_semana }}">
+                    value="{{ filtro_semana }}" onchange="this.form.submit()"
+                    style="border:1px solid var(--border); padding:0 10px; background:var(--white); color:var(--text); font-family:inherit;">
         </div>
         <div class="filter-group">
             <label>{% trans "Año" %}</label>
             <input type="number" name="anio" min="2020" max="2099"
-                value="{{ anio }}">
+                value="{{ anio }}" onchange="this.form.submit()"
+                style="border:1px solid var(--border); padding:0 10px; background:var(--white); color:var(--text); font-family:inherit;">
         </div>
+        <div class="filter-divider"></div>
         <div class="filter-actions">
-            <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
-            <a href="{% url 'mto:dashboard' %}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
+            <a href="{% url 'mto:dashboard' %}" class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
         </div>
     </form>
 </div>

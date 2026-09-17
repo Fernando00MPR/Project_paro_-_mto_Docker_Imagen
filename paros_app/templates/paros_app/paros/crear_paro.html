@@ -3,6 +3,16 @@
 {% block extra_css %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'paros_app/css/paros.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<style>
+  /* "Hora" queda a la altura del selector de fecha (.dp-control = 42px,
+     compartido con el resto del sitio) en vez de encoger la fecha. */
+  #id_hora_picker {
+      height: 42px;
+      box-sizing: border-box;
+      border-radius: 10px;
+  }
+</style>
 {% endblock %}
 
 {% block title %}{% trans "Nuevo paro — Gestión de Paros" %}{% endblock %}
@@ -64,8 +74,8 @@
 
                 <!-- Fecha -->
                 <div class="form-field">
-                    <label for="id_fecha_picker">{% trans "Fecha" %}  <span style="color:var(--red)">*</span></label>
-                    <input type="date" id="id_fecha_picker" required>
+                    <label>{% trans "Fecha" %}  <span style="color:var(--red)">*</span></label>
+                    {% include 'menu_app/_date_picker.html' with name='fecha_iso' dp_id='dp-fecha' %}
                     <input type="hidden" name="fecha" id="id_fecha" value="{{ form.fecha.value|default:'' }}">
                     {% if form.fecha.errors %}
                     <ul class="errorlist">{% for e in form.fecha.errors %}<li>{{ e }}</li>{% endfor %}</ul>
@@ -221,5 +231,6 @@ window.CREAR_PARO_I18N = {
 };
 </script>
 <script src="{% static 'paros_app/js/autocomplete.js' %}" defer></script>
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 <script src="{% static 'paros_app/js/crear_paro.js' %}"></script>
 {% endblock %}

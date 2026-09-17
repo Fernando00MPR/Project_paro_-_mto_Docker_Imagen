@@ -62,18 +62,142 @@ def _build_permisos(campos, perfil, post):
             marcado = False
         result.append((campo, label, desc, marcado))
     return result
- 
+
+def _resumen_permisos(usuario):
+    """Para la lista de usuarios (vista 1b). Devuelve (modulos, cobertura):
+      - modulos: 6 dicts {nombre, estado, etiqueta} en orden fijo.
+        estado ∈ {'full', 'scope', 'none'}.
+      - cobertura: {texto, full, scope} calculado a partir de los estados.
+    Refleja la misma lógica de permisos que mostraba la tabla anterior.
+    """
+    perfil = get_perfil(usuario)
+    es_total = usuario.is_superuser or (perfil.es_admin if perfil else False)
+
+    def m(nombre, estado, etiqueta):
+        return {'nombre': nombre, 'estado': estado, 'etiqueta': etiqueta}
+
+    modulos = []
+
+    # 1. Dashboard y análisis
+    if es_total:
+        modulos.append(m(_('Dashboard y análisis'), 'full', _('Acceso total')))
+    elif perfil and (perfil.ver_dashboard or perfil.ver_analisis):
+        partes = []
+        if perfil.ver_dashboard:
+            partes.append(_('Dashboard'))
+        if perfil.ver_analisis:
+            partes.append(_('Análisis'))
+        modulos.append(m(_('Dashboard y análisis'), 'scope', ' · '.join(partes)))
+    else:
+        modulos.append(m(_('Dashboard y análisis'), 'none', _('Sin acceso')))
+
+    # 2. Áreas de paros
+    if es_total:
+        modulos.append(m(_('Áreas de paros'), 'full', _('Acceso total')))
+    elif perfil and perfil.areas_permitidas.exists():
+        nombres = ', '.join(a.nombre for a in perfil.areas_permitidas.all())
+        modulos.append(m(_('Áreas de paros'), 'scope', nombres))
+    else:
+        modulos.append(m(_('Áreas de paros'), 'none', _('Sin acceso')))
+
+    # 3. Permisos de paros
+    if es_total:
+        modulos.append(m(_('Permisos de paros'), 'full', _('Acceso total')))
+    elif perfil and (perfil.ver_todos_paros or perfil.crear_paro or perfil.editar_paro or perfil.editar_eliminar_paro):
+        partes = []
+        if perfil.ver_todos_paros:
+            partes.append(_('Ver'))
+        if perfil.crear_paro:
+            partes.append(_('Crear'))
+        if perfil.editar_paro:
+            partes.append(_('Editar'))
+        if perfil.editar_eliminar_paro:
+            partes.append(_('Eliminar'))
+        modulos.append(m(_('Permisos de paros'), 'scope', ' · '.join(partes)))
+    else:
+        modulos.append(m(_('Permisos de paros'), 'none', _('Sin permisos')))
+
+    # 4. Catálogos
+    if es_total:
+        modulos.append(m(_('Catálogos'), 'full', _('Acceso total')))
+    elif perfil and (perfil.ver_catalogos or perfil.gestionar_catalogos):
+        partes = []
+        if perfil.ver_catalogos:
+            partes.append(_('Ver catálogos'))
+        if perfil.gestionar_catalogos:
+            partes.append(_('Importar y exportar'))
+        modulos.append(m(_('Catálogos'), 'scope', ' · '.join(partes)))
+    else:
+        modulos.append(m(_('Catálogos'), 'none', _('Sin acceso')))
+
+    # 5. Producción
+    if es_total:
+        modulos.append(m(_('Producción'), 'full', _('Acceso total')))
+    elif perfil and perfil.areas_produccion.exists():
+        modulos.append(m(_('Producción'), 'scope', _('Indicadores')))
+    else:
+        modulos.append(m(_('Producción'), 'none', _('Sin acceso')))
+
+    # 6. Gestión de MTO
+    if es_total:
+        modulos.append(m(_('Gestión de MTO'), 'full', _('Acceso total')))
+    else:
+        try:
+            am = usuario.acceso_mto
+            if am.pk and am.activo:
+                nombres = ', '.join(a.nombre for a in am.areas.all())
+                modulos.append(m(_('Gestión de MTO'), 'scope', nombres or _('Acceso a MTO')))
+            else:
+                modulos.append(m(_('Gestión de MTO'), 'none', _('Sin acceso')))
+        except AccesoMto.DoesNotExist:
+            modulos.append(m(_('Gestión de MTO'), 'none', _('Sin acceso')))
+
+    full  = sum(1 for x in modulos if x['estado'] == 'full')
+    scope = sum(1 for x in modulos if x['estado'] == 'scope')
+    total = len(modulos)
+    if full == total:
+        texto = _('Acceso total')
+    elif full == 0 and scope == 0:
+        texto = _('Sin accesos')
+    elif full == 0:
+        texto = _('{n} de {t} · alcance específico').format(n=scope, t=total)
+    else:
+        texto = _('{f} total · {s} específico').format(f=full, s=scope)
+
+    return modulos, {'texto': texto, 'full': full, 'scope': scope}
+
+
+def _iniciales(usuario):
+    nombre = (usuario.get_full_name() or usuario.username or '').strip()
+    partes = [p for p in nombre.split() if p]
+    if len(partes) >= 2:
+        return (partes[0][0] + partes[1][0]).upper()
+    return (nombre[:2] or '?').upper()
+
+
+def _area_asignada(usuario):
+    perfil = get_perfil(usuario)
+    if usuario.is_superuser or (perfil and perfil.es_admin):
+        return _('Todas las áreas')
+    if perfil and perfil.areas_permitidas.exists():
+        return ', '.join(a.nombre for a in perfil.areas_permitidas.all())
+    return _('Sin área asignada')
+
+
 @login_required
 @solo_admin
 def lista_usuarios(request):
 
     q       = request.GET.get('q', '').strip()
     area_id = request.GET.get('filtro_area', '').strip()
+    rol_sel = request.GET.get('filtro_rol', '').strip()
 
     usuarios = (
         User.objects
         .select_related('perfil')
-        .prefetch_related('perfil__areas_permitidas', 'acceso_mto__areas')
+        .prefetch_related(
+            'perfil__areas_permitidas', 'perfil__areas_produccion', 'acceso_mto__areas',
+        )
         .order_by('username')
     )
 
@@ -94,15 +218,37 @@ def lista_usuarios(request):
             Q(is_superuser=True)
         )
 
+    if rol_sel == 'super':
+        usuarios = usuarios.filter(is_superuser=True)
+    elif rol_sel == 'admin':
+        usuarios = usuarios.filter(is_superuser=False, perfil__es_admin=True)
+    elif rol_sel == 'especifico':
+        usuarios = usuarios.filter(is_superuser=False).exclude(perfil__es_admin=True)
+
     areas     = Area.objects.order_by('nombre')
     paginator = Paginator(usuarios, 15)
     page_obj  = paginator.get_page(request.GET.get('page', 1))
+
+    for u in page_obj:
+        u.modulos, u.cobertura = _resumen_permisos(u)
+        u.iniciales     = _iniciales(u)
+        u.area_asignada = _area_asignada(u)
+        u.avatar_color  = u.id % 6
+
+    # KPIs — sobre TODOS los usuarios, sin importar los filtros activos.
+    kpi_total   = User.objects.count()
+    kpi_acceso  = User.objects.filter(Q(is_superuser=True) | Q(perfil__es_admin=True)).distinct().count()
+
     return render(request, 'login_app/lista_usuarios.html', {
         'usuarios': page_obj,
         'page_obj': page_obj,
         'busqueda': q,
         'areas':    areas,
         'area_sel': area_id,
+        'rol_sel':  rol_sel,
+        'kpi_total':      kpi_total,
+        'kpi_acceso':     kpi_acceso,
+        'kpi_especifico': kpi_total - kpi_acceso,
     })
  
 

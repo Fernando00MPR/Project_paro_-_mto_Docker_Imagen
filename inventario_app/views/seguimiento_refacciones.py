@@ -10,6 +10,18 @@ import openpyxl
 from paros_app.views.utils import _excel_response, _estilo_cabecera
 
 
+def _redirect_lista_seguimientos_refaccion(request, area_fallback=''):
+    """Vuelve a la lista de seguimientos de refacciones conservando filtros y página.
+    Usa el querystring capturado en el input oculto 'volver' (se llena en JS
+    con window.location.search al abrir el modal); si no viene, cae al
+    comportamiento previo de solo filtrar por área."""
+    base = reverse('inventario:lista_seguimientos_refaccion')
+    volver = request.POST.get('volver', '').strip()
+    if volver.startswith('?'):
+        return redirect(f"{base}{volver}")
+    return redirect(f"{base}?area={area_fallback}")
+
+
 @login_required
 def lista_seguimientos_refaccion(request):
     acceso = getattr(request.user, 'acceso_mto', None)
@@ -133,7 +145,7 @@ def guardar_seguimiento_refaccion(request, pk=None):
                 SeguimientoRefaccion.objects.create(**datos)
                 messages.success(request, "Seguimiento creado.")
 
-            return redirect(f"{reverse('inventario:lista_seguimientos_refaccion')}?area={refaccion.area_id}")
+            return _redirect_lista_seguimientos_refaccion(request, refaccion.area_id)
 
         except ValueError as e:
             messages.error(request, str(e))
@@ -141,7 +153,7 @@ def guardar_seguimiento_refaccion(request, pk=None):
             messages.error(request, f"Error al guardar: {e}")
 
     area_id = request.POST.get('area', '') or request.GET.get('area', '')
-    return redirect(f"{reverse('inventario:lista_seguimientos_refaccion')}?area={area_id}")
+    return _redirect_lista_seguimientos_refaccion(request, area_id)
 
 
 @login_required
@@ -161,7 +173,7 @@ def eliminar_seguimiento_refaccion(request, pk):
     if request.method == 'POST':
         seguimiento.delete()
         messages.success(request, "Seguimiento eliminado.")
-    return redirect(f"{reverse('inventario:lista_seguimientos_refaccion')}?area={area_id}")
+    return _redirect_lista_seguimientos_refaccion(request, area_id)
 
 
 @login_required

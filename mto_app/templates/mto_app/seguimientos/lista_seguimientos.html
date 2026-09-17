@@ -2,7 +2,9 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Seguimientos de OTs" %}{% endblock %}
-
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+{% endblock %}
 {% block content %}
 
 <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
@@ -14,14 +16,52 @@
             {% trans "Acciones correctivas registradas por orden de trabajo" %}
         </div>
     </div>
-    <button type="button" onclick="abrirModalManual()" class="btn btn-primary">
+    <button type="button" onclick="abrirModalManual(event)" class="btn btn-primary">
         + {% trans "Nuevo seguimiento" %}
     </button>
 </div>
 
 <!-- Filtros -->
 <div style="padding:10px 14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px;">
-    <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+    <style>
+      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+         Mismo tono que el texto (--text): hex literal porque no se puede
+         meter var() dentro del data URI. */
+      .seg-filtros select {
+          padding: 7px 34px 7px 10px;
+          box-sizing: border-box;
+          appearance: none; -webkit-appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          background-size: 14px;
+      }
+      /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
+         select { background: var(--white) !important; }, que borra el chevron de
+         arriba por especificidad + !important. Se repite aquí con el mismo peso
+         para ganar por ir declarada después en el documento. */
+      [data-theme="dark"] .seg-filtros select {
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 10px center !important;
+          background-size: 14px !important;
+      }
+      /* El selector de fecha trae 42px por defecto (compartido con el resto
+         del sitio); se achica a la misma altura que el resto de este filtro
+         (33px / radio 7px). */
+      .seg-filtros .dp-control {
+          height: 33px;
+          border-radius: 7px;
+      }
+      /* Modal "Nuevo/Editar seguimiento" — mismo box-model que sm-fecha tenía
+         antes (padding 8px 10px, sin altura fija, radio 7px). */
+      #modal-manual .dp-control {
+          height: auto;
+          padding: 8px 10px;
+          border-radius: 7px;
+      }
+    </style>
+    <form method="get" class="seg-filtros" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
         {% if area_filtro %}<input type="hidden" name="area" value="{{ area_filtro }}">{% endif %}
         <div class="filter-group">
             <label>{% trans "Estatus" %}</label>
@@ -70,15 +110,11 @@
         </div>
         <div class="filter-group">
             <label>{% trans "Creado desde" %}</label>
-            <input type="date" name="fecha_desde" value="{{ filtro_fecha_desde }}"
-                onchange="this.form.submit()"
-                style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            {% include 'menu_app/_date_picker.html' with name='fecha_desde' initial=filtro_fecha_desde dp_id='dp-fecha-desde' %}
         </div>
         <div class="filter-group">
             <label>{% trans "Creado hasta" %}</label>
-            <input type="date" name="fecha_hasta" value="{{ filtro_fecha_hasta }}"
-                onchange="this.form.submit()"
-                style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+            {% include 'menu_app/_date_picker.html' with name='fecha_hasta' initial=filtro_fecha_hasta dp_id='dp-fecha-hasta' %}
         </div>
     </form>
 </div>
@@ -212,7 +248,7 @@
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
 
                             {% if seg.imagenes.exists %}
-                                <button onclick="verImagenesSeg('ot', {{ seg.id }}, '{{ seg.fecha_creacion|date:"d/m/Y" }}', '{{ seg.registro.plan.area.nombre|escapejs }}', '{{ seg.estatus }}', '{{ seg.get_estatus_display|escapejs }}')"
+                                <button onclick="verImagenesSeg(event, 'ot', {{ seg.id }}, '{{ seg.fecha_creacion|date:"d/m/Y" }}', '{{ seg.registro.plan.area.nombre|escapejs }}', '{{ seg.estatus }}', '{{ seg.get_estatus_display|escapejs }}')"
                                         title="{% trans 'Ver imágenes' %}"
                                         style="display:inline-flex; align-items:center; justify-content:center;
                                             width:32px; height:30px; border-radius:6px; border:1px solid var(--border);
@@ -227,7 +263,7 @@
                             {% endif %}
                             
                             {% if puede_editar_seguimiento %}
-                            <button onclick="editarOT({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
+                            <button onclick="editarOT(event, {{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid var(--border);
                                         background:var(--surface); color:var(--text); cursor:pointer;
@@ -242,7 +278,7 @@
                             
 
                             {% if puede_eliminar_seguimiento %}
-                            <button onclick="confirmarEliminarOT({{ seg.id }})"
+                            <button onclick="confirmarEliminarOT(event, {{ seg.id }})"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
                                         background:#FFF5F5; color:#DC2626; cursor:pointer;
@@ -303,7 +339,7 @@
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
 
                             {% if seg.imagenes.exists %}
-                                <button onclick="verImagenesSeg('manual', {{ seg.id }}, '{{ seg.fecha_creacion|date:"d/m/Y" }}', '{{ seg.area.nombre|escapejs }}', '{{ seg.estatus }}', '{{ seg.get_estatus_display|escapejs }}')"
+                                <button onclick="verImagenesSeg(event, 'manual', {{ seg.id }}, '{{ seg.fecha_creacion|date:"d/m/Y" }}', '{{ seg.area.nombre|escapejs }}', '{{ seg.estatus }}', '{{ seg.get_estatus_display|escapejs }}')"
                                         title="{% trans 'Ver imágenes' %}"
                                         style="display:inline-flex; align-items:center; justify-content:center;
                                             width:32px; height:30px; border-radius:6px; border:1px solid var(--border);
@@ -318,7 +354,7 @@
                             {% endif %}
 
                             {% if puede_editar_seguimiento %}
-                            <button onclick="editarManual({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
+                            <button onclick="editarManual(event, {{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid var(--border);
                                         background:var(--surface); color:var(--text); cursor:pointer;
@@ -332,7 +368,7 @@
                             {% endif %}
 
                             {% if puede_eliminar_seguimiento %}
-                            <button onclick="confirmarEliminarManual({{ seg.id }})"
+                            <button onclick="confirmarEliminarManual(event, {{ seg.id }})"
                                     style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
                                         font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
                                         background:#FFF5F5; color:#DC2626; cursor:pointer;
@@ -387,73 +423,121 @@
     </div>
 </div>
 
-<!-- Modal seguimiento -->
+<!-- ── Modal nuevo/editar seguimiento — fondo blanco fijo como en los catálogos ── -->
+<style>
+    #modal-manual .mf-box { background: #fff; }
+    #modal-manual .mf-doc-title { color: #1d1d24; }
+    #modal-manual .mf-doc-subtitle { color: #9b9ba6; }
+    #modal-manual .form-field label { color: #33333c; }
+    #modal-manual .form-field input,
+    #modal-manual .form-field textarea {
+        background: #fff; color: #1d1d24; border-color: #d8d8e0;
+    }
+    #modal-manual .form-field input::placeholder,
+    #modal-manual .form-field textarea::placeholder { color: #9b9ba6; }
+    #modal-manual .form-field input:focus,
+    #modal-manual .form-field textarea:focus {
+        outline: none; border-color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+    #modal-manual .dp-control { background: #fff; border-color: #d8d8e0; }
+    #modal-manual .dp-control:hover { border-color: #9b9ba6; }
+    #modal-manual .dp-text, #modal-manual .dp-text--vacio, #modal-manual .dp-icon { color: #1d1d24; }
+    #modal-manual .ref-count { color: #9b9ba6; }
+    #modal-manual #sm-resp-dropdown { background: #fff; }
+    #modal-manual #sm-dropzone { border-color: #d8d8e0; background: #fafafb; }
+    #modal-manual #sm-dropzone svg { color: #9b9ba6; }
+    #modal-manual #sm-dropzone > div { color: #33333c; }
+    #modal-manual .btn-ghost { color: #33333c; border-color: #d8d8e0; }
+    #modal-manual .btn-ghost:hover { background: #f2f2f5; color: #1d1d24; }
+    /* Animación (ver keyframes globales en base_menu.html): este modal no usa
+       .modal-backdrop/.modal-box, así que se declara aparte. */
+    #modal-manual { animation: modal-overlay-in 220ms both; }
+    #modal-manual .mf-box {
+        transform-origin: 50% 50%;
+        animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+    #modal-manual[data-closing],
+    #modal-manual[data-closing] .mf-box {
+        animation: none; opacity: 0;
+        transition: opacity 120ms ease-out, transform 120ms ease-out;
+    }
+    #modal-manual[data-closing] .mf-box { transform: scale(.97); }
+</style>
 <div id="modal-manual"
      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
             z-index:3000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:12px; padding:24px 28px;
-                min-width:360px; max-width:480px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;" id="modal-manual-titulo">
-            {% trans "Nuevo seguimiento" %}
+    <div class="mf-box" style="border-radius:12px; padding:24px 28px;
+                min-width:360px; max-width:480px; width:90%; max-height:90vh; overflow-y:auto;
+                box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+            <div>
+                <div class="mf-doc-title" style="font-size:14px; font-weight:600;" id="modal-manual-titulo">
+                    {% trans "Nuevo seguimiento" %}
+                </div>
+                <div class="mf-doc-subtitle" style="font-size:11px;">{% trans "Seguimiento independiente de OTs" %}</div>
+            </div>
+            <button type="button" onclick="cerrarModalManual()"
+                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                    style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s; flex-shrink:0;">✕</button>
         </div>
-        <div style="font-size:11px; color:var(--text-3); margin-bottom:16px;">{% trans "Seguimiento independiente de OTs" %}</div>
 
-        <div class="form-field" style="margin-bottom:12px;">
+        <div class="form-field modal-row" style="margin-bottom:12px;">
             <label>{% trans "Problema encontrado" %}</label>
             <textarea id="sm-problema" rows="3" placeholder="Describe el problema..."
-                      style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; background:var(--white); color:var(--text);"></textarea>
+                      style="padding:8px 10px; border:1px solid; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; width:100%;"></textarea>
         </div>
-        <div class="form-field" style="margin-bottom:12px;">
+        <div class="form-field modal-row" style="margin-bottom:12px;">
             <label>{% trans "Acción realizada" %}</label>
             <textarea id="sm-accion" rows="2" placeholder="Describe la acción tomada..."
-                      style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; background:var(--white); color:var(--text);"></textarea>
+                      style="padding:8px 10px; border:1px solid; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; width:100%;"></textarea>
         </div>
-        <div class="form-field" style="margin-bottom:12px; position:relative;">
+        <div class="form-field modal-row" style="margin-bottom:12px; position:relative;">
             <label>{% trans "Responsable" %}</label>
             <input type="text" id="sm-responsable" placeholder="Buscar responsable..." autocomplete="off"
-                style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; background:var(--white); color:var(--text); width:100%;">
+                style="padding:8px 10px; border:1px solid; border-radius:7px; font-family:inherit; font-size:14px; width:100%;">
             <div id="sm-resp-dropdown" style="display:none; position:absolute; left:0; right:0; top:100%;
-                background:var(--white); border:1px solid var(--indigo); border-top:none;
+                border:1px solid var(--indigo); border-top:none;
                 border-radius:0 0 7px 7px; z-index:5000; max-height:180px; overflow-y:auto;
                 box-shadow:0 4px 16px rgba(0,0,0,.15);"></div>
         </div>
-        <div class="form-field" style="margin-bottom:12px;">
+        <div class="form-field modal-row" style="margin-bottom:12px;">
             <label>{% trans "Fecha compromiso" %}</label>
-            <input type="date" id="sm-fecha"
-                style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; background:var(--white); color:var(--text);">
+            {% include 'menu_app/_date_picker.html' with name='sm_fecha_iso' dp_id='dp-sm-fecha' %}
         </div>
-        <div style="margin-bottom:12px;">
-            <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:6px;">{% trans "Estatus" %}</label>
+        <div class="modal-row" style="margin-bottom:12px;">
+            <label style="font-size:12px; font-weight:600; color:#33333c; display:block; margin-bottom:6px;">{% trans "Estatus" %}</label>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button type="button" class="sm-pill" data-val="pendiente" onclick="smEstatus('pendiente')"
                         style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid #854F0B; background:#FAEEDA; color:#854F0B;">{% trans "Pendiente" %}</button>
                 <button type="button" class="sm-pill" data-val="en_proceso" onclick="smEstatus('en_proceso')"
-                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--white); color:var(--text-2);">{% trans "En proceso" %}</button>
+                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #d8d8e0; background:#fff; color:#33333c;">{% trans "En proceso" %}</button>
                 <button type="button" class="sm-pill" data-val="completado" onclick="smEstatus('completado')"
-                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--white); color:var(--text-2);">{% trans "Completado" %}</button>
+                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #d8d8e0; background:#fff; color:#33333c;">{% trans "Completado" %}</button>
             </div>
             <input type="hidden" id="sm-estatus" value="pendiente">
             <input type="hidden" id="sm-id" value="">
             <input type="hidden" id="sm-ot-id" value="">
         </div>
-        <div class="form-field" style="margin-bottom:16px;">
+        <div class="form-field modal-row" style="margin-bottom:16px;">
             <label>{% trans "Notas adicionales" %}</label>
             <textarea id="sm-notas" rows="2" placeholder="Notas opcionales..."
-                      style="padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; background:var(--white); color:var(--text);"></textarea>
+                      style="padding:8px 10px; border:1px solid; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; width:100%;"></textarea>
         </div>
 
         <!-- ── Imágenes ── -->
-        <div class="form-field" style="margin-bottom:16px;">
-            <label>{% trans "Imágenes" %} <span style="color:var(--text-3); font-weight:400;">({% trans "máximo 4" %})</span></label>
+        <div class="form-field modal-row" style="margin-bottom:16px;">
+            <label>{% trans "Imágenes" %} <span class="ref-count" style="font-weight:400;">({% trans "máximo 4" %})</span></label>
             <div id="sm-dropzone"
-                style="border:2px dashed var(--border); border-radius:8px; padding:18px;
-                        text-align:center; cursor:pointer; background:var(--surface);
+                style="border:2px dashed; border-radius:8px; padding:18px;
+                        text-align:center; cursor:pointer;
                         transition:border-color .15s;">
-                <svg width="26" height="26" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" style="margin-bottom:6px;">
+                <svg width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-bottom:6px;">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-                <div style="font-size:12px; color:var(--text-2);">
+                <div style="font-size:12px;">
                     {% trans "Arrastra imágenes aquí o haz clic para seleccionar" %}
                 </div>
                 <input type="file" id="sm-input-imagenes" accept="image/*" multiple style="display:none;">
@@ -469,10 +553,10 @@
 </div>
 
 <!-- Modal eliminar -->
-<div id="modal-confirm-del"
+<div id="modal-confirm-del" class="modal-backdrop"
      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
             z-index:4000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:12px; padding:24px 28px;
+    <div class="modal-box" style="background:var(--white); border-radius:12px; padding:24px 28px; text-align:left;
                 min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
         <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:8px;">
             {% trans "Eliminar seguimiento" %}
@@ -491,37 +575,41 @@
 </div>
 
 <!-- Modal imágenes (lightbox + miniaturas) -->
-<div id="modal-imagenes-seg" style="display:none; position:fixed; inset:0;
+<div id="modal-imagenes-seg" class="modal-backdrop" style="display:none; position:fixed; inset:0;
      background:rgba(30,27,75,.45); z-index:5000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:24px;
+    <div class="modal-box" style="background:#fff; border-radius:14px; padding:24px; text-align:left;
                 max-width:700px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        
+
         <div style="margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
-                    <div style="font-size:14px; font-weight:600; color:var(--text);">{% trans "Imágenes del seguimiento" %}</div>
-                    <div id="lightbox-seg-meta" style="display:flex; gap:10px; margin-top:5px; font-size:12px; color:var(--text-2); flex-wrap:wrap; align-items:center;"></div>
+                    <div style="font-size:14px; font-weight:600; color:#1d1d24;">{% trans "Imágenes del seguimiento" %}</div>
+                    <div id="lightbox-seg-meta" style="display:flex; gap:10px; margin-top:5px; font-size:12px; color:#33333c; flex-wrap:wrap; align-items:center;"></div>
                 </div>
                 <div style="display:flex; gap:10px; align-items:center; flex-shrink:0; margin-left:12px;">
-                   
+
                     <button onclick="descargarImagenSegActual()" title="{% trans 'Descargar' %}"
-                            style="background:none; border:none; cursor:pointer; color:var(--text-2); display:flex; align-items:center;">
+                            style="background:none; border:none; cursor:pointer; color:#33333c; display:flex; align-items:center;">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-6l-4 4m0 0l-4-4m4 4V4"/>
                         </svg>
                     </button>
                     <button onclick="cerrarModalImagenesSeg()"
-                            onmouseover="this.style.color='#EF4444'"
-                            onmouseout="this.style.color='var(--text-3)'"
-                            style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-3);">✕</button>
+                            onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                            onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                            style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;">✕</button>
                 </div>
             </div>
         </div>
 
-        <div style="position:relative; background:var(--surface); border-radius:10px;
+        <div style="position:relative; background:#fafafb; border-radius:10px;
                     height:300px; display:flex; align-items:center; justify-content:center;
                     overflow:hidden; margin-bottom:12px;">
+            <div id="lightbox-seg-skeleton" class="img-skeleton" style="display:none; inset:0; border-radius:10px;">
+                <div class="img-spinner"></div>
+                <div class="img-spinner-label">{% trans "Cargando…" %}</div>
+            </div>
             <img id="lightbox-seg-img-principal" src="" alt=""
                  style="max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-in;"
                  onclick="window.open(this.src, '_blank')">
@@ -540,7 +628,7 @@
 
         <!-- Contador -->
         <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
-            <span id="lightbox-seg-contador" style="font-size:11px; color:var(--text-3);"></span>
+            <span id="lightbox-seg-contador" style="font-size:11px; color:#9b9ba6;"></span>
         </div>
 
         <div id="lightbox-seg-miniaturas" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"></div>
@@ -561,6 +649,17 @@
     const URL_OT_EDIT = "/mto/seguimiento/editar/";
     const URL_OT_DEL  = "/mto/seguimiento/eliminar/";
     const CONTADOR_SEG_TPL = "{% trans 'Imagen {n} de {total}' %}";
+</script>
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
+<script>
+    // Creado desde/hasta son el selector de fecha único; no soporta
+    // onchange="" inline como el <input type="date"> nativo que reemplazó.
+    document.querySelector('#dp-fecha-desde .dp-value').addEventListener('change', function () {
+        this.closest('form').submit();
+    });
+    document.querySelector('#dp-fecha-hasta .dp-value').addEventListener('change', function () {
+        this.closest('form').submit();
+    });
 </script>
 <script src="{% static 'mto_app/js/lista_seguimientos.js' %}"></script>
 {% endblock %}

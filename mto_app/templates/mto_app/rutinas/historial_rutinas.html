@@ -13,33 +13,58 @@
 <!-- Filtros del historial -->
 <div class="card">
     <div style="margin-bottom:16px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);">
-        <form method="get" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+        <style>
+          .hist-filtros input,
+          .hist-filtros .btn {
+              height: 40px;
+              box-sizing: border-box;
+              border-radius: 8px;
+              font-size: 14px;
+          }
+          .hist-filtros .btn {
+              display: inline-flex;
+              align-items: center;
+              padding: 0 16px;
+              font-weight: 500;
+              white-space: nowrap;
+              text-decoration: none;
+          }
+          .hist-filtros .filter-divider {
+              width: 1px;
+              height: 40px;
+              background: var(--border);
+              margin: 0 4px;
+              align-self: flex-end;
+          }
+        </style>
+        <form method="get" class="hist-filtros" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
 
             <div class="filter-group">
                 <label>{% trans "N° Plan" %}</label>
                 <input type="text" name="h_plan" value="{{ h_plan }}"
                     placeholder="Buscar N° plan…"
-                    style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+                    oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);"
+                    style="border:1px solid var(--border); padding:0 12px; background:var(--white); color:var(--text); font-family:inherit;">
             </div>
 
             <div class="filter-group">
                 <label>{% trans "Código" %}</label>
                 <input type="text" name="h_codigo" value="{{ h_codigo }}"
                     placeholder="Buscar código…"
-                    style="height:33px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+                    oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);"
+                    style="border:1px solid var(--border); padding:0 12px; background:var(--white); color:var(--text); font-family:inherit;">
             </div>
 
             <div class="filter-group">
                 <label>{% trans "Nombre del plan" %}</label>
                 <input type="text" name="h_nombre" value="{{ h_nombre }}"
                     placeholder="Buscar nombre de la rutina…"
-                    style="height:33px; width:400px; border:1px solid var(--border); border-radius:7px; padding:0 10px; font-size:13px; background:var(--white); color:var(--text);">
+                    oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);"
+                    style="width:400px; border:1px solid var(--border); padding:0 12px; background:var(--white); color:var(--text); font-family:inherit;">
             </div>
 
-            <div class="filter-actions">
-                <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrar" %}</button>
-                <a href="{% url 'mto:historial_rutinas' %}" class="btn btn-ghost btn-sm">{% trans "Limpiar" %}</a>
-            </div>
+            <div class="filter-divider"></div>
+            <a href="{% url 'mto:historial_rutinas' %}" class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
         </form>
     </div>
 </div>
