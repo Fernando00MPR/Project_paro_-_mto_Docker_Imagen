@@ -65,7 +65,9 @@
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
         {% if puede_eliminar %}
-        <button onclick="confirmarEliminarCarpeta(event, {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}', {{ total_documentos_carpeta }})" class="btn btn-ghost" style="color:#DC2626; height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+        <button onclick="confirmarEliminarCarpeta(event, {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}', {{ total_documentos_carpeta }})" class="btn btn-ghost" style="color:var(--red); height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;"
+                onmouseover="this.style.background='var(--red-lt)';"
+                onmouseout="this.style.background='';">
             {% trans "Eliminar esta carpeta" %}
         </button>
         {% endif %}
