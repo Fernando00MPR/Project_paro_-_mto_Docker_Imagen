@@ -14,9 +14,9 @@ from django.shortcuts import redirect
 from datetime import timedelta
 
 
-HORAS_DIA   = list(range(6, 18))   # 6 a 17
-HORAS_NOCHE = list(range(18, 24)) + list(range(0, 6))  # 18 a 23 + 0 a 5
-
+HORAS_DIA      = list(range(6, 18))   # 6 a 17
+HORAS_NOCHE    = list(range(18, 24)) + list(range(0, 6))  # 18 a 23 + 0 a 5
+SKIDS_POR_HORA = 63  # skids planeados por cada hora con registro capturado
 
 def _area_hora_hora():
     config = ConfiguracionHoraHora.objects.select_related('area').first()
@@ -212,7 +212,7 @@ def eficiencia_data(request):
         d = f_desde
         while d <= f_hasta:
             corridos  = dia_sum[d] + noche_sum[d]
-            planeados = (dia_hrs[d] + noche_hrs[d]) * 65
+            planeados = (dia_hrs[d] + noche_hrs[d]) * SKIDS_POR_HORA
             eficiencia = round(corridos / planeados * 100, 1) if planeados > 0 else None
             
             resultado.append({
@@ -255,7 +255,7 @@ def eficiencia_data(request):
         meses_nombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
         for mes in range(mes_desde, mes_hasta + 1):
             corridos  = mes_sum[mes]
-            planeados = mes_hrs[mes] * 65
+            planeados = mes_hrs[mes] * SKIDS_POR_HORA
             eficiencia = round(corridos / planeados * 100, 1) if planeados > 0 else None
             resultado.append({
                 'label':      meses_nombres[mes - 1],
@@ -296,7 +296,7 @@ def eficiencia_data(request):
         for anio in range(anio_desde, anio_hasta + 1):
             
             corridos  = anio_sum[anio]
-            planeados = anio_hrs[anio] * 65
+            planeados = anio_hrs[anio] * SKIDS_POR_HORA
             eficiencia = round(corridos / planeados * 100, 1) if planeados > 0 else None
             
             resultado.append({

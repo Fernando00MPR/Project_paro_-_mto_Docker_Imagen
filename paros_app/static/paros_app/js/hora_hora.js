@@ -22,8 +22,8 @@ function esModoOscuro() {
 }
 
 // Estado global — DATOS es mutable (se actualiza al guardar celdas)
-let DATOS        = cfg.datos    || {};
-const AREAS_IDS  = cfg.areasIds || [];
+let DATOS            = cfg.datos    || {};
+const SKIDS_POR_HORA = 63; // skids planeados por cada hora con registro capturado — debe coincidir con SKIDS_POR_HORA en views/hora_hora.py
 
 let celdaActual  = null;
 let targetAreaId = null;
@@ -171,7 +171,7 @@ function recalcularArea(aid) {
                           Object.values(dataNoche).reduce((s,v) => s+v, 0);
         const hrsDia    = Object.values(dataDia).filter(v => v > 0).length;
         const hrsNoche  = Object.values(dataNoche).filter(v => v > 0).length;
-        const planeados = (hrsDia + hrsNoche) * 65;
+        const planeados = (hrsDia + hrsNoche) * SKIDS_POR_HORA;
         const eficiencia = planeados > 0 ? ((corridos / planeados) * 100).toFixed(1) : null;
 
         const elC = document.getElementById(`skid-corridos-${aid}-${d}`);
