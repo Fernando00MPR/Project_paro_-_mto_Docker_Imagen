@@ -1,0 +1,27 @@
+{% load i18n %}
+{% comment %}
+    Menú "⋯" compartido (una sola instancia por página) para las acciones
+    Mover/Eliminar de cualquier fila de carpeta o documento. Se abre y se
+    reposiciona con JS cerca del botón que lo disparó — ver toggleMenuAcciones
+    en documentacion.js. Evita el problema de que un menú por fila se recorte
+    por el overflow-x:auto del contenedor de la tabla.
+{% endcomment %}
+<style>
+    .doc-menu-item {
+        display:block; width:100%; text-align:left; padding:8px 10px; border-radius:7px;
+        font-size:12.5px; font-weight:500; color:var(--text-2); background:transparent;
+        border:0; cursor:pointer; font-family:inherit;
+    }
+    .doc-menu-item:hover { background:var(--surface); }
+    .doc-menu-item-danger {
+        color:var(--red); margin-top:4px; border-top:1px solid var(--border); padding-top:10px;
+    }
+</style>
+<div id="doc-menu-acciones" style="display:none; position:fixed; min-width:206px; padding:5px; background:var(--white); border:1px solid var(--border); border-radius:10px; box-shadow:0 14px 32px rgba(20,24,40,.14); z-index:2050;">
+    {% if puede_editar %}
+    <button type="button" class="doc-menu-item" onclick="menuAccionesMover(event)">{% trans "Mover a…" %}</button>
+    {% endif %}
+    {% if puede_eliminar %}
+    <button type="button" id="doc-menu-item-eliminar" class="doc-menu-item doc-menu-item-danger" onclick="menuAccionesEliminar(event)"></button>
+    {% endif %}
+</div>

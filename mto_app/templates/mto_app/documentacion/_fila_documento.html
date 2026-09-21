@@ -1,0 +1,104 @@
+{% load i18n humanize %}
+{% comment %}
+    Fila de UN documento, para la tabla-árbol de carpetas. La usan
+    _fila_carpeta.html (documentos propios de una carpeta anidada, ocultos
+    hasta que se expande su carpeta) y carpeta_detalle.html (documentos
+    propios de la carpeta que se está viendo, siempre visibles). Parámetros:
+    doc, carpeta_id (dueño, para data-parent-carpeta), padding (px de
+    sangría), visible (si nace mostrada o oculta).
+{% endcomment %}
+<tr class="doc-row-file" data-parent-carpeta="{{ carpeta_id }}" data-nombre="{{ doc.nombre }}" data-codigo=""
+    data-actualizado="{{ doc.subido_en|date:'c' }}" data-size="{{ doc.archivo.size|default:0 }}" {% if not padding %}data-vista-raiz="1"{% endif %}
+    style="border-bottom:1px solid var(--border); background:var(--surface); {% if not visible %}display:none;{% endif %}">
+    <td style="padding:10px 14px;"></td>
+    <td style="padding:10px 14px; color:var(--text);">
+        <div style="display:flex; align-items:center; gap:12px; min-width:0; padding-left:{{ padding }}px;">
+            {% if padding %}
+            <div style="width:1px; height:32px; align-self:center; background:#e6e8f0; margin-right:-4px; flex-shrink:0;"></div>
+            {% endif %}
+            <div style="width:34px; height:34px; border-radius:9px; background:{{ doc.color_extension.bg }}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                {% if doc.tipo_icono == 'excel' %}
+                <svg width="16" height="16" fill="none" stroke="{{ doc.color_extension.color }}" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9h18M3 15h18M9 3v18"/>
+                </svg>
+                {% elif doc.tipo_icono == 'word' %}
+                <svg width="16" height="16" fill="none" stroke="{{ doc.color_extension.color }}" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="8" y1="13" x2="16" y2="13" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="8" y1="17" x2="16" y2="17" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                {% elif doc.tipo_icono == 'powerpoint' %}
+                <svg width="16" height="16" fill="none" stroke="{{ doc.color_extension.color }}" viewBox="0 0 24 24">
+                    <rect x="2" y="4" width="20" height="14" rx="2" stroke-width="1.5"/>
+                    <line x1="8" y1="21" x2="16" y2="21" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="12" y1="18" x2="12" y2="21" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                {% elif doc.tipo_icono == 'imagen' %}
+                <svg width="16" height="16" fill="none" stroke="{{ doc.color_extension.color }}" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5"/>
+                    <circle cx="8.5" cy="8.5" r="1.5" stroke-width="1.5"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 15l-5-5L5 21"/>
+                </svg>
+                {% else %}
+                <svg width="16" height="16" fill="none" stroke="{{ doc.color_extension.color }}" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                {% endif %}
+            </div>
+            <div style="min-width:0;">
+                <div style="font-size:13.5px; font-weight:500; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ doc.nombre }}</div>
+                <div style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-3); letter-spacing:.02em; white-space:nowrap;">{{ doc.extension|upper }} · {{ doc.tamano_legible }}</div>
+            </div>
+        </div>
+    </td>
+    <td style="padding:10px 14px; font-size:12.5px; color:var(--text-2); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ doc.descripcion }}">{{ doc.descripcion|default:"—" }}</td>
+    <td style="padding:10px 14px; text-align:center; font-size:13.5px; color:var(--text-3);">—</td>
+    <td style="padding:10px 14px; text-align:center; font-size:13.5px; color:var(--text-3);">—</td>
+    <td style="padding:10px 14px;">
+        <div style="font-size:13px; color:var(--text-2); font-variant-numeric:tabular-nums;">{{ doc.subido_en|date:"d/m/Y H:i" }}</div>
+        <div style="font-size:11.5px; color:var(--text-3); margin-top:1px;">{{ doc.subido_en|naturaltime }}</div>
+    </td>
+    <td style="padding:10px 14px; text-align:right;">
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            {% if doc.es_pdf %}
+            <button onclick="verPdf(event, '{{ doc.archivo.url }}', '{{ doc.nombre|escapejs }}')" title="{% trans 'Ver' %}"
+                    style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:8px; background:var(--white); color:var(--text-2); cursor:pointer;"
+                    onmouseover="this.style.borderColor='var(--indigo)'; this.style.color='var(--indigo)'; this.style.background='var(--indigo-lt)';"
+                    onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)'; this.style.background='var(--white)';">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+            </button>
+            {% elif doc.tipo_icono == 'imagen' %}
+            <button onclick="verImagen(event,'{{ doc.archivo.url }}', '{{ doc.nombre|escapejs }}', '{{ doc.subido_en|date:"d/m/Y H:i" }}')" title="{% trans 'Ver' %}"
+                    style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:8px; background:var(--white); color:var(--text-2); cursor:pointer;"
+                    onmouseover="this.style.borderColor='var(--indigo)'; this.style.color='var(--indigo)'; this.style.background='var(--indigo-lt)';"
+                    onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)'; this.style.background='var(--white)';">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+            </button>
+            {% endif %}
+            <a href="{{ doc.archivo.url }}" download title="{% trans 'Descargar' %}"
+               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:8px; background:var(--white); color:var(--text-2); text-decoration:none;"
+               onmouseover="this.style.borderColor='var(--indigo)'; this.style.color='var(--indigo)'; this.style.background='var(--indigo-lt)';"
+               onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)'; this.style.background='var(--white)';">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>
+                </svg>
+            </a>
+            {% if puede_editar or puede_eliminar %}
+            <button onclick="toggleMenuAcciones(event, this, 'documento', {{ doc.id }}, '{{ doc.nombre|escapejs }}', 0)" title="{% trans 'Más acciones' %}"
+                    style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:0; border-radius:7px; background:transparent; color:var(--text-3); cursor:pointer;"
+                    onmouseover="this.style.background='var(--surface)';" onmouseout="this.style.background='transparent';">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>
+                </svg>
+            </button>
+            {% endif %}
+        </div>
+    </td>
+</tr>

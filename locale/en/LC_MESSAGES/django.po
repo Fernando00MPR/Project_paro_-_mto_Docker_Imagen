@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 21:57-0600\n"
+"POT-Creation-Date: 2026-09-20 21:01-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,7 +24,6 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:196
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:220
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:615
-#: .\mto_app\models.py:386
 msgid "Categoría"
 msgstr "Category"
 
@@ -107,11 +106,15 @@ msgstr "No. Item"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:248
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:442
 #: .\login_app\templates\login_app\form_usuario.html:45 .\mto_app\models.py:141
-#: .\mto_app\models.py:372 .\mto_app\models.py:387
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:165
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:40
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:147
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:174
+#: .\mto_app\models.py:377 .\mto_app\models.py:410
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:159
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:232
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:311
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:366
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:123
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:204
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:258
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:286
 #: .\mto_app\templates\mto_app\responsables\form.html:25
 #: .\paros_app\models.py:65
 #: .\paros_app\templates\paros_app\moldes\catalogo_moldes.html:258
@@ -124,9 +127,11 @@ msgstr "Name"
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:207
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:231
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:699
-#: .\mto_app\models.py:388
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:169
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:178
+#: .\mto_app\models.py:411
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:160
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:236
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:124
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:290
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:166
 msgid "Descripción"
 msgstr "Description"
@@ -143,7 +148,7 @@ msgstr "Criticality"
 #: .\inventario_app\templates\inventario_app\importar_completo.html:33
 #: .\inventario_app\templates\inventario_app\importar_stock.html:32
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:605
-#: .\mto_app\models.py:231 .\mto_app\models.py:291 .\mto_app\models.py:481
+#: .\mto_app\models.py:231 .\mto_app\models.py:291 .\mto_app\models.py:504
 #: .\mto_app\templates\mto_app\bitacora\lista.html:339
 #: .\mto_app\templates\mto_app\dashboard.html:89
 #: .\mto_app\templates\mto_app\plan\form.html:43
@@ -236,7 +241,7 @@ msgstr "Active"
 #: .\inventario_app\models.py:175
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:205
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:229
-#: .\mto_app\models.py:374
+#: .\mto_app\models.py:379
 msgid "Creado en"
 msgstr "Created on"
 
@@ -257,12 +262,12 @@ msgstr "Spare part"
 msgid "Refacciones"
 msgstr "Spare parts"
 
-#: .\inventario_app\models.py:79 .\mto_app\models.py:505
+#: .\inventario_app\models.py:79 .\mto_app\models.py:528
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:250
 msgid "Imagen"
 msgstr "Image"
 
-#: .\inventario_app\models.py:80 .\mto_app\models.py:506
+#: .\inventario_app\models.py:80 .\mto_app\models.py:529
 msgid "Fecha de subida"
 msgstr "Upload date"
 
@@ -417,6 +422,7 @@ msgstr "Updates or creates spare parts with all their columns"
 #: .\inventario_app\templates\inventario_app\importar_stock.html:11
 #: .\login_app\templates\login_app\form_usuario.html:12
 #: .\menu_app\templates\menu_app\base_menu.html:1369
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:35
 #: .\mto_app\templates\mto_app\plan\detalle.html:8
 #: .\mto_app\templates\mto_app\plan\importar.html:11
 #: .\mto_app\templates\mto_app\responsables\form.html:6
@@ -860,7 +866,8 @@ msgstr "Unit cost."
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:209
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:259
 #: .\login_app\templates\login_app\lista_usuarios.html:106
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:43
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:164
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:128
 #: .\mto_app\templates\mto_app\plan\lista.html:292
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:204
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:310
@@ -903,8 +910,6 @@ msgstr "Edit"
 #: .\login_app\templates\login_app\form_usuario.html:465
 #: .\login_app\views.py:115 .\mto_app\models.py:226
 #: .\mto_app\templates\mto_app\bitacora\lista.html:220
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:99
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:75
 #: .\mto_app\templates\mto_app\plan\lista.html:398
 #: .\mto_app\templates\mto_app\plan\registro_form.html:277
 #: .\mto_app\templates\mto_app\plan\registro_form.html:367
@@ -958,7 +963,7 @@ msgid "Existentes"
 msgstr "Existing"
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:424
-#: .\paros_project\settings.py:139
+#: .\paros_project\settings.py:140
 msgid "English"
 msgstr "English"
 
@@ -967,6 +972,8 @@ msgstr "English"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:507
 #: .\menu_app\templates\menu_app\base_menu.html:1445
 #: .\mto_app\templates\mto_app\bitacora\lista.html:416
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:371
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:263
 #: .\mto_app\templates\mto_app\plan\form.html:145
 #: .\mto_app\templates\mto_app\plan\lista.html:577
 #: .\mto_app\templates\mto_app\plan\registro_form.html:284
@@ -999,11 +1006,15 @@ msgstr "Delete all spare parts in this area"
 #: .\menu_app\templates\menu_app\base_menu.html:1444
 #: .\mto_app\templates\mto_app\bitacora\lista.html:415
 #: .\mto_app\templates\mto_app\bitacora\lista.html:431
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:193
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:206
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:151
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:202
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:215
+#: .\mto_app\templates\mto_app\documentacion\_modal_mover.html:41
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:260
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:315
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:370
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:384
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:208
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:262
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:314
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:327
 #: .\mto_app\templates\mto_app\plan\form.html:146
 #: .\mto_app\templates\mto_app\plan\lista.html:468
 #: .\mto_app\templates\mto_app\plan\lista.html:486
@@ -1066,8 +1077,8 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:362
 #: .\login_app\templates\login_app\lista_usuarios.html:196
 #: .\mto_app\templates\mto_app\bitacora\lista.html:435
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:209
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:218
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:387
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:330
 #: .\mto_app\templates\mto_app\plan\registro_form.html:411
 #: .\mto_app\templates\mto_app\responsables\lista.html:128
 #: .\mto_app\templates\mto_app\rutinas\lista_rutinas.html:287
@@ -1135,8 +1146,9 @@ msgstr "Spare Part Images"
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:746
 #: .\mto_app\templates\mto_app\bitacora\lista.html:450
 #: .\mto_app\templates\mto_app\dashboard.html:191
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:96
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:248
+#: .\mto_app\templates\mto_app\documentacion\_fila_documento.html:85
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:429
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:372
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:591
 #: .\paros_app\templates\paros_app\analisis_paros.html:207
 #: .\paros_app\templates\paros_app\analisis_paros.html:240
@@ -1151,8 +1163,10 @@ msgstr "Download"
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:766
 #: .\mto_app\templates\mto_app\bitacora\lista.html:469
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:228
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:264
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:409
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:445
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:352
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:388
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:611
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:389
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:433
@@ -1616,9 +1630,11 @@ msgstr "Serial number"
 
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:432
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:464
-#: .\mto_app\models.py:371
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:39
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:143
+#: .\mto_app\models.py:376
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:307
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:362
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:200
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:254
 #: .\mto_app\templates\mto_app\plan\form.html:34
 #: .\mto_app\templates\mto_app\plan\importar.html:72
 #: .\mto_app\templates\mto_app\plan\importar.html:104
@@ -1745,7 +1761,8 @@ msgstr "Number of tasks"
 msgid "Mediana"
 msgstr "Median"
 
-#: .\inventario_app\views\inventario.py:40
+#: .\inventario_app\views\inventario.py:40 .\mto_app\views\documentacion.py:98
+#: .\mto_app\views\documentacion.py:118
 msgid "No tienes permiso para ver esta sección."
 msgstr "You do not have permission to view this section."
 
@@ -1768,7 +1785,9 @@ msgstr "Part created."
 
 #: .\inventario_app\views\inventario.py:152
 msgid "Ya se alcanzó el máximo de 2 imágenes; no se agregaron las nuevas."
-msgstr "The maximum of 2 images has already been reached; the new ones were not added."
+msgstr ""
+"The maximum of 2 images has already been reached; the new ones were not "
+"added."
 
 #: .\inventario_app\views\inventario.py:157
 #, python-brace-format
@@ -2015,7 +2034,9 @@ msgstr "Downtime Permissions"
 
 #: .\login_app\templates\login_app\form_usuario.html:170
 msgid "Si el usuario es Admin estos permisos se ignoran y tiene acceso total."
-msgstr "If the user is Admin, these permissions are ignored and full access is granted."
+msgstr ""
+"If the user is Admin, these permissions are ignored and full access is "
+"granted."
 
 #: .\login_app\templates\login_app\form_usuario.html:189
 msgid "Permisos — Catálogos"
@@ -2062,7 +2083,7 @@ msgid "Falla"
 msgstr "Fault"
 
 #: .\login_app\templates\login_app\form_usuario.html:236 .\mto_app\models.py:67
-#: .\mto_app\models.py:483 .\mto_app\templates\mto_app\bitacora\lista.html:356
+#: .\mto_app\models.py:506 .\mto_app\templates\mto_app\bitacora\lista.html:356
 #: .\mto_app\templates\mto_app\plan\form.html:81
 #: .\mto_app\templates\mto_app\plan\importar.html:74
 #: .\mto_app\templates\mto_app\plan\importar.html:110
@@ -2086,7 +2107,7 @@ msgstr "Equipment"
 
 #: .\login_app\templates\login_app\form_usuario.html:251
 #: .\mto_app\models.py:105 .\mto_app\models.py:155 .\mto_app\models.py:264
-#: .\mto_app\models.py:295 .\mto_app\models.py:486
+#: .\mto_app\models.py:295 .\mto_app\models.py:509
 #: .\mto_app\templates\mto_app\bitacora\lista.html:367
 #: .\mto_app\templates\mto_app\plan\lista.html:285
 #: .\mto_app\templates\mto_app\plan\lista.html:542
@@ -2263,8 +2284,8 @@ msgstr "Section"
 
 #: .\login_app\templates\login_app\form_usuario.html:463
 #: .\login_app\views.py:109
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:89
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:93
+#: .\mto_app\templates\mto_app\documentacion\_fila_documento.html:67
+#: .\mto_app\templates\mto_app\documentacion\_fila_documento.html:76
 #: .\mto_app\templates\mto_app\plan\lista.html:390
 msgid "Ver"
 msgstr "View"
@@ -2296,8 +2317,8 @@ msgstr "Responsible parties"
 
 #: .\login_app\templates\login_app\form_usuario.html:535
 #: .\menu_app\templates\menu_app\base_menu.html:969
-#: .\menu_app\templates\menu_app\base_menu.html:975 .\mto_app\models.py:494
-#: .\mto_app\models.py:504 .\mto_app\templates\mto_app\bitacora\lista.html:4
+#: .\menu_app\templates\menu_app\base_menu.html:975 .\mto_app\models.py:517
+#: .\mto_app\models.py:527 .\mto_app\templates\mto_app\bitacora\lista.html:4
 #: .\mto_app\templates\mto_app\bitacora\lista.html:33
 msgid "Bitácora"
 msgstr "Logbook"
@@ -2607,7 +2628,8 @@ msgid "Permisos de paros"
 msgstr "Downtime permissions"
 
 #: .\login_app\views.py:111 .\login_app\views.py:336 .\login_app\views.py:348
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:152
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:316
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:209
 msgid "Crear"
 msgstr "Create"
 
@@ -2720,7 +2742,7 @@ msgstr "Last month"
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:365
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:256
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:308
-#: .\paros_project\settings.py:138
+#: .\paros_project\settings.py:139
 msgid "Español"
 msgstr "Spanish"
 
@@ -2760,10 +2782,13 @@ msgid "Backlog"
 msgstr "Backlog"
 
 #: .\menu_app\templates\menu_app\base_menu.html:891
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:4
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:23
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:4
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:23
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:474
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:4
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:23
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:47
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:415
+#: .\mto_app\views\documentacion.py:335
 msgid "Documentos Generales"
 msgstr "General Documents"
 
@@ -3102,7 +3127,7 @@ msgid "Completada"
 msgstr "Completed"
 
 #: .\mto_app\models.py:92 .\mto_app\models.py:252 .\mto_app\models.py:285
-#: .\mto_app\models.py:485 .\mto_app\templates\mto_app\bitacora\lista.html:132
+#: .\mto_app\models.py:508 .\mto_app\templates\mto_app\bitacora\lista.html:132
 #: .\mto_app\templates\mto_app\bitacora\lista.html:388
 #: .\mto_app\templates\mto_app\dashboard.html:277
 #: .\mto_app\templates\mto_app\plan\lista.html:300
@@ -3437,7 +3462,7 @@ msgstr "Due Date"
 msgid "Notas adicionales"
 msgstr "Additional Notes"
 
-#: .\mto_app\models.py:268 .\mto_app\models.py:373
+#: .\mto_app\models.py:268 .\mto_app\models.py:378
 msgid "Creado por"
 msgstr "Created by"
 
@@ -3474,38 +3499,45 @@ msgstr "Manual follow-ups"
 msgid "El archivo no puede superar 25 MB."
 msgstr "The file cannot exceed 25 MB."
 
-#: .\mto_app\models.py:377
-msgid "Categoría de documento"
-msgstr "Document category"
+#: .\mto_app\models.py:375
+msgid "Carpeta padre"
+msgstr "Parent folder"
 
-#: .\mto_app\models.py:378
-msgid "Categorías de documentos"
-msgstr "Document Categories"
+#: .\mto_app\models.py:382
+msgid "Carpeta de documentos"
+msgstr "Document folder"
 
-#: .\mto_app\models.py:395
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:173
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:182
+#: .\mto_app\models.py:383
+msgid "Carpetas de documentos"
+msgstr "Document folders"
+
+#: .\mto_app\models.py:409
+msgid "Carpeta"
+msgstr "Folder"
+
+#: .\mto_app\models.py:418
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:240
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:294
 msgid "Archivo"
 msgstr "File"
 
-#: .\mto_app\models.py:397
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:82
+#: .\mto_app\models.py:420
 msgid "Subido por"
 msgstr "Uploaded by"
 
-#: .\mto_app\models.py:398
+#: .\mto_app\models.py:421
 msgid "Subido en"
 msgstr "Uploaded on"
 
-#: .\mto_app\models.py:401
+#: .\mto_app\models.py:424
 msgid "Documento"
 msgstr "Document"
 
-#: .\mto_app\models.py:402
+#: .\mto_app\models.py:425
 msgid "Documentos"
 msgstr "Documents"
 
-#: .\mto_app\models.py:482 .\mto_app\templates\mto_app\bitacora\lista.html:113
+#: .\mto_app\models.py:505 .\mto_app\templates\mto_app\bitacora\lista.html:113
 #: .\mto_app\templates\mto_app\bitacora\lista.html:351
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:290
 #: .\paros_app\templates\paros_app\paros\crear_paro.html:77
@@ -3517,19 +3549,19 @@ msgstr "Documents"
 msgid "Fecha"
 msgstr "Date"
 
-#: .\mto_app\models.py:484 .\mto_app\templates\mto_app\bitacora\lista.html:379
+#: .\mto_app\models.py:507 .\mto_app\templates\mto_app\bitacora\lista.html:379
 msgid "Actividad realizada"
 msgstr "Activity performed"
 
-#: .\mto_app\models.py:495
+#: .\mto_app\models.py:518
 msgid "Bitácoras"
 msgstr "Logbooks"
 
-#: .\mto_app\models.py:509
+#: .\mto_app\models.py:532
 msgid "Imagen de bitácora"
 msgstr "Logbook image"
 
-#: .\mto_app\models.py:510
+#: .\mto_app\models.py:533
 msgid "Imágenes de bitácora"
 msgstr "Logbook images"
 
@@ -3690,6 +3722,8 @@ msgstr "Weekly compliance"
 
 #: .\mto_app\templates\mto_app\dashboard.html:152
 #: .\mto_app\templates\mto_app\dashboard.html:162
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:145
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:524
 msgid "de"
 msgstr "of"
 
@@ -3755,57 +3789,263 @@ msgstr "No record"
 msgid "Ningún plan toca en semana "
 msgstr "No plans due in week "
 
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:25
-msgid "documento(s)"
-msgstr "document(s)"
+#: .\mto_app\templates\mto_app\documentacion\_fila_carpeta.html:24
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:461
+msgid "Mostrar contenido"
+msgstr "Show content"
 
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:29
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:154
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:163
+#: .\mto_app\templates\mto_app\documentacion\_fila_carpeta.html:61
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:47
+msgid "Editar nombre y código"
+msgstr "Edit name and code"
+
+#: .\mto_app\templates\mto_app\documentacion\_fila_carpeta.html:69
+msgid "Subir archivo"
+msgstr "Upload file"
+
+#: .\mto_app\templates\mto_app\documentacion\_fila_carpeta.html:79
+#: .\mto_app\templates\mto_app\documentacion\_fila_documento.html:94
+msgid "Más acciones"
+msgstr "More actions"
+
+#: .\mto_app\templates\mto_app\documentacion\_menu_acciones_fila.html:22
+msgid "Mover a…"
+msgstr "Move to…"
+
+#: .\mto_app\templates\mto_app\documentacion\_modal_mover.html:27
+msgid "Elige la carpeta de destino."
+msgstr "Choose the destination folder."
+
+#: .\mto_app\templates\mto_app\documentacion\_modal_mover.html:32
+msgid "Buscar destino"
+msgstr "Search destination"
+
+#: .\mto_app\templates\mto_app\documentacion\_modal_mover.html:42
+msgid "Mover aquí"
+msgstr "Move here"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:60
+msgid "subcarpetas"
+msgstr "subfolders"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:60
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:146
+msgid "archivos en total"
+msgstr "files in total"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:61
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:49
+msgid "archivos"
+msgstr "files"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:69
+msgid "Eliminar esta carpeta"
+msgstr "Delete this folder"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:75
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:298
+msgid "Nueva subcarpeta"
+msgstr "New subfolder"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:79
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:221
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:275
 msgid "Subir documento"
 msgstr "Upload document"
 
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:108
-msgid "Sin documentos en esta categoría."
-msgstr "No documents in this category."
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:92
+msgid "Esta carpeta está vacía"
+msgstr "This folder is empty"
 
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:185
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:194
-msgid "Haz clic para seleccionar un archivo"
-msgstr "Click to select a file"
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:93
+msgid "Crea una subcarpeta o sube el primer archivo."
+msgstr "Create a subfolder or upload the first file."
 
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:186
-msgid "PDF, Excel, Word, PowerPoint o imagen — máx. 25 MB (imágenes 10 MB)"
-msgstr "PDF, Excel, Word, PowerPoint, or image — max. 25 MB (images 10 MB)"
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:118
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:80
+msgid "Todo"
+msgstr "All"
 
-#: .\mto_app\templates\mto_app\documentacion\categoria_detalle.html:194
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:69
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:203
-msgid "Subir"
-msgstr "Upload"
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:119
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:81
+msgid "Carpetas"
+msgstr "Folders"
 
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:24
-msgid "Documentación de mantenimiento"
-msgstr "Maintenance Documentation"
-
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:28
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:134
-msgid "Nueva categoría"
-msgstr "New category"
-
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:41
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:120
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:162
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:82
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:126
 msgid "Archivos"
 msgstr "Files"
 
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:42
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:126
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:88
+msgid "Ordenar"
+msgstr "Sort by"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:127
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:132
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:465
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:89
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:94
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:406
+msgid "Más recientes primero"
+msgstr "Newest first"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:135
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:466
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:97
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:407
+msgid "Más antiguos primero"
+msgstr "Oldest first"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:138
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:467
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:100
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:408
+msgid "Nombre A–Z"
+msgstr "Name A–Z"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:141
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:468
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:103
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:409
+msgid "Nombre Z–A"
+msgstr "Name Z–A"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:144
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:469
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:106
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:410
+msgid "Más pesados primero"
+msgstr "Largest first"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:150
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:463
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:113
+msgid "Expandir todo"
+msgstr "Expand all"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:161
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:125
+msgid "Subcarpetas"
+msgstr "Subfolders"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:163
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:127
 msgid "Última actualización"
 msgstr "Last updated"
 
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:84
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:252
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:306
+msgid "Haz clic para seleccionar un archivo"
+msgstr "Click to select a file"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:253
+msgid "PDF, Excel, Word, PowerPoint o imagen — máx. 25 MB (imágenes 10 MB)"
+msgstr "PDF, Excel, Word, PowerPoint, or image — max. 25 MB (images 10 MB)"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:261
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:315
+msgid "Subir"
+msgstr "Upload"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:353
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:245
+msgid "Editar carpeta"
+msgstr "Edit folder"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:456
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:471
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:401
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:412
+msgid "Eliminar carpeta"
+msgstr "Delete folder"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:457
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:402
+msgid "Eliminar documento"
+msgstr "Delete document"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:458
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:403
+#, python-brace-format
+msgid ""
+"¿Eliminar la carpeta \"{nombre}\" y sus {n} documento(s)? Esta acción no se "
+"puede deshacer."
+msgstr ""
+"Delete folder \"{nombre}\" and its {n} document(s)? This action cannot be "
+"undone."
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:459
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:404
+#, python-brace-format
+msgid "¿Eliminar la carpeta \"{nombre}\"?"
+msgstr "Delete folder \"{nombre}\"?"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:460
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:405
+#, python-brace-format
+msgid "¿Eliminar el documento \"{nombre}\"?"
+msgstr "Delete document \"{nombre}\"?"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:462
+msgid "Ocultar contenido"
+msgstr "Hide content"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:464
+msgid "Contraer todo"
+msgstr "Collapse all"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:470
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:411
+msgid "Personalizado"
+msgstr "Custom"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:472
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:413
+msgid "Eliminar archivo"
+msgstr "Delete file"
+
+#: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:473
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:414
+#, python-brace-format
+msgid "Mover \"{nombre}\""
+msgstr "Move \"{nombre}\""
+
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:49
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:145
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:524
+msgid "categorías"
+msgstr "categories"
+
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:52
+msgid "Documentación de mantenimiento"
+msgstr "Maintenance Documentation"
+
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:59
+msgid "Buscar categoría o archivo"
+msgstr "Search category or file"
+
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:61
+msgid "Limpiar búsqueda"
+msgstr "Clear search"
+
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:73
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:191
+msgid "Nueva categoría"
+msgstr "New category"
+
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:137
 msgid "Aún no hay categorías de documentos."
 msgstr "There are no document categories yet."
 
-#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:195
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:145
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:524
+msgid "Mostrando"
+msgstr "Showing"
+
+#: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:307
 msgid "PDF, Excel, Word o PowerPoint — máx. 25 MB"
 msgstr "PDF, Excel, Word, or PowerPoint — max. 25 MB"
 
@@ -4412,6 +4652,114 @@ msgstr "maximum 4"
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:586
 msgid "Imágenes del seguimiento"
 msgstr "Tracking images"
+
+#: .\mto_app\views\documentacion.py:145
+msgid "No tienes permiso para crear carpetas."
+msgstr "You do not have permission to create folders."
+
+#: .\mto_app\views\documentacion.py:152
+#, python-brace-format
+msgid "Se alcanzó el máximo de {n} niveles de carpetas."
+msgstr "The maximum of {n} folder levels has been reached."
+
+#: .\mto_app\views\documentacion.py:164 .\mto_app\views\documentacion.py:200
+msgid "El código y el nombre son obligatorios."
+msgstr "The code and name are required."
+
+#: .\mto_app\views\documentacion.py:167 .\mto_app\views\documentacion.py:203
+msgid "El nombre es obligatorio."
+msgstr "The name is required."
+
+#: .\mto_app\views\documentacion.py:171 .\mto_app\views\documentacion.py:207
+#, python-brace-format
+msgid "Ya existe una carpeta llamada '{nombre}' en este nivel."
+msgstr "A folder named '{nombre}' already exists at this level."
+
+#: .\mto_app\views\documentacion.py:175 .\mto_app\views\documentacion.py:211
+#, python-brace-format
+msgid "Ya existe una carpeta con el código '{codigo}' en este nivel."
+msgstr "A folder with the code '{codigo}' already exists at this level."
+
+#: .\mto_app\views\documentacion.py:179
+msgid "Carpeta creada."
+msgstr "Folder created."
+
+#: .\mto_app\views\documentacion.py:188
+msgid "No tienes permiso para editar carpetas."
+msgstr "You do not have permission to edit folders."
+
+#: .\mto_app\views\documentacion.py:217
+msgid "Carpeta actualizada."
+msgstr "Folder updated."
+
+#: .\mto_app\views\documentacion.py:226
+msgid "No tienes permiso para eliminar carpetas."
+msgstr "You do not have permission to delete folders."
+
+#: .\mto_app\views\documentacion.py:233
+#, python-brace-format
+msgid "Carpeta '{nombre}' y su contenido eliminados."
+msgstr "Folder '{nombre}' and its content deleted."
+
+#: .\mto_app\views\documentacion.py:244
+msgid "No tienes permiso para subir documentos."
+msgstr "You do not have permission to upload documents."
+
+#: .\mto_app\views\documentacion.py:257
+msgid "Debes indicar un nombre y seleccionar un archivo."
+msgstr "You must provide a name and select a file."
+
+#: .\mto_app\views\documentacion.py:270
+msgid "Documento subido correctamente."
+msgstr "Document uploaded successfully."
+
+#: .\mto_app\views\documentacion.py:282
+msgid "No tienes permiso para eliminar documentos."
+msgstr "You do not have permission to delete documents."
+
+#: .\mto_app\views\documentacion.py:288
+msgid "Documento eliminado."
+msgstr "Document deleted."
+
+#: .\mto_app\views\documentacion.py:302
+msgid "No tienes permiso para mover carpetas."
+msgstr "You do not have permission to move folders."
+
+#: .\mto_app\views\documentacion.py:316
+msgid "No puedes mover una carpeta dentro de sí misma."
+msgstr "You cannot move a folder into itself."
+
+#: .\mto_app\views\documentacion.py:320
+msgid "No puedes mover una carpeta dentro de una de sus propias subcarpetas."
+msgstr "You cannot move a folder into one of its own subfolders."
+
+#: .\mto_app\views\documentacion.py:327
+#, python-brace-format
+msgid "Mover la carpeta ahí superaría el máximo de {n} niveles."
+msgstr "Moving the folder there would exceed the maximum of {n} levels."
+
+#: .\mto_app\views\documentacion.py:331
+#, python-brace-format
+msgid "Ya existe una carpeta llamada '{nombre}' en el destino."
+msgstr "A folder named '{nombre}' already exists at the destination."
+
+#: .\mto_app\views\documentacion.py:338
+#, python-brace-format
+msgid "Carpeta '{nombre}' movida a '{destino}'."
+msgstr "Folder '{nombre}' moved to '{destino}'."
+
+#: .\mto_app\views\documentacion.py:350
+msgid "No tienes permiso para mover documentos."
+msgstr "You do not have permission to move documents."
+
+#: .\mto_app\views\documentacion.py:361
+msgid "Debes elegir una carpeta de destino."
+msgstr "You must choose a destination folder."
+
+#: .\mto_app\views\documentacion.py:368
+#, python-brace-format
+msgid "Documento '{nombre}' movido a '{destino}'."
+msgstr "Document '{nombre}' moved to '{destino}'."
 
 #: .\paros_app\models.py:17
 msgid "Nombre del área"

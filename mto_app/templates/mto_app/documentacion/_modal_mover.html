@@ -1,0 +1,46 @@
+{% load i18n %}
+{% comment %}
+    Modal compartido "Mover a…" (una sola instancia por página), poblado por
+    JS (documentacion.js: abrirModalMover) con la lista de carpetas destino
+    válidas según lo que se esté moviendo. Usa window.DOC_CARPETAS (todo el
+    árbol de carpetas del sitio, ver json_script "doc-carpetas-data" en la
+    plantilla que incluye este parcial) para poder ofrecer cualquier carpeta
+    como destino, no solo las visibles en la página actual.
+{% endcomment %}
+<style>
+    .doc-mover-item {
+        display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+        padding:9px 10px; border-radius:8px; border:0; background:transparent; cursor:pointer;
+        font-size:13.5px; color:var(--text); font-family:inherit;
+    }
+    .doc-mover-item:hover { background:var(--surface); }
+    .doc-mover-item.doc-mover-item-activo { background:color-mix(in oklab, var(--green) 14%, var(--surface)); color:var(--green); font-weight:600; }
+    .doc-mover-radio {
+        width:16px; height:16px; border-radius:50%; border:1.5px solid var(--border); flex-shrink:0; box-sizing:border-box;
+    }
+    .doc-mover-item.doc-mover-item-activo .doc-mover-radio { border:5px solid var(--green); }
+    #modal-mover-confirmar:disabled { opacity:.5; cursor:not-allowed; }
+</style>
+<div id="modal-mover-doc" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(22,26,40,.32); z-index:2150; align-items:center; justify-content:center;">
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:22px; width:100%; max-width:520px; box-shadow:0 8px 40px rgba(0,0,0,.18); text-align:left;">
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:4px;" id="modal-mover-titulo"></div>
+        <div style="font-size:12.5px; color:var(--text-2); margin-bottom:14px;">{% trans "Elige la carpeta de destino." %}</div>
+        <div style="display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:0 12px; height:38px; margin-bottom:10px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;">
+                <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/>
+            </svg>
+            <input type="text" id="modal-mover-buscar" oninput="filtrarDestinosMover()" placeholder="{% trans 'Buscar destino' %}" autocomplete="off"
+                   style="border:0; outline:0; background:transparent; font-size:13px; font-family:inherit; color:var(--text); width:100%;">
+        </div>
+        <div id="modal-mover-lista" style="max-height:220px; overflow:auto; display:flex; flex-direction:column; gap:1px; margin-bottom:16px;"></div>
+        <form id="form-mover-doc" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="destino_id" id="modal-mover-destino-id" value="">
+            <input type="hidden" name="volver" id="modal-mover-volver" value="">
+            <div class="form-actions" style="margin-top:0; justify-content:flex-end;">
+                <button type="submit" id="modal-mover-confirmar" class="btn btn-primary" disabled style="background:var(--green); border-color:var(--green);">{% trans "Mover aquí" %}</button>
+                <button type="button" onclick="cerrarModalMover()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            </div>
+        </form>
+    </div>
+</div>

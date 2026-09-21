@@ -79,9 +79,12 @@ from .bitacora import (
 
 from .documentacion import (
     documentos_generales,
-    categoria_detalle,
-    crear_categoria_documento,
-    eliminar_categoria_documento,
+    carpeta_detalle,
+    crear_carpeta,
+    editar_carpeta,
+    eliminar_carpeta,
     subir_documento,
     eliminar_documento,
+    mover_carpeta,
+    mover_documento,
 )

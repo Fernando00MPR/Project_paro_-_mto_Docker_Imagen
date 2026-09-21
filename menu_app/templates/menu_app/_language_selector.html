@@ -11,7 +11,7 @@
                        {% if request.LANGUAGE_CODE == 'es' %}
                            border-color:var(--indigo); color:var(--indigo); background:var(--indigo-lt);
                        {% endif %}">
-            🇲🇽 <span>{% trans "Español" %}</span>
+            <span>{% trans "Español" %}</span>
         </button>
         <button type="submit" name="language" value="en"
                 style="display:flex; align-items:center; gap:5px; padding:5px 10px;
@@ -21,7 +21,7 @@
                        {% if request.LANGUAGE_CODE == 'en' %}
                            border-color:var(--indigo); color:var(--indigo); background:var(--indigo-lt);
                        {% endif %}">
-            🇺🇸 <span>{% trans "Inglés" %}</span>
+            <span>{% trans "Inglés" %}</span>
         </button>
     </form>
 </div>

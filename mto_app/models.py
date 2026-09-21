@@ -364,26 +364,49 @@ def validar_tamano_documento(archivo):
 
 
 def documento_upload_path(instance, filename):
-    return f'documentacion/{instance.categoria_id}/{filename}'
+    return f'documentacion/{instance.carpeta_id}/{filename}'
 
 
-class CategoriaDocumento(models.Model):
-    codigo     = models.CharField(max_length=30, unique=True, verbose_name=_("Código"))
-    nombre     = models.CharField(max_length=100, unique=True, verbose_name=_("Nombre"))
+MAX_PROFUNDIDAD_CARPETAS = 4  # niveles 0..3 (raíz=0). Cambiar solo esta constante para permitir más/menos.
+
+
+class Carpeta(models.Model):
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE,
+                                related_name='subcarpetas', verbose_name=_("Carpeta padre"))
+    codigo = models.CharField(max_length=30, blank=True, default='', verbose_name=_("Código"))
+    nombre = models.CharField(max_length=100, verbose_name=_("Nombre"))
     creado_por = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, verbose_name=_("Creado por"))
-    creado_en  = models.DateTimeField(auto_now_add=True, verbose_name=_("Creado en"))
+    creado_en = models.DateTimeField(auto_now_add=True, verbose_name=_("Creado en"))
 
     class Meta:
-        verbose_name = _("Categoría de documento")
-        verbose_name_plural = _("Categorías de documentos")
+        verbose_name = _("Carpeta de documentos")
+        verbose_name_plural = _("Carpetas de documentos")
         ordering = ['nombre']
+        unique_together = [('parent', 'nombre')]
 
     def __str__(self):
-        return f'{self.codigo} — {self.nombre}'
+        return self.nombre
+
+    def ruta_ancestros(self):
+        """Ancestros desde la raíz hasta el padre directo (sin incluirse a sí misma)."""
+        ancestros = []
+        p = self.parent
+        while p:
+            ancestros.append(p)
+            p = p.parent
+        ancestros.reverse()
+        return ancestros
+
+    @property
+    def nivel(self):
+        return len(self.ruta_ancestros())
 
 
 class Documento(models.Model):
-    categoria   = models.ForeignKey(CategoriaDocumento, on_delete=models.CASCADE, related_name='documentos', verbose_name=_("Categoría"))
+    carpeta     = models.ForeignKey(Carpeta,
+                                    on_delete=models.CASCADE,
+                                    related_name='documentos',
+                                    verbose_name=_("Carpeta"))
     nombre      = models.CharField(max_length=200, verbose_name=_("Nombre"))
     descripcion = models.CharField(max_length=300, blank=True, verbose_name=_("Descripción"))
     archivo     = models.FileField(
@@ -403,7 +426,7 @@ class Documento(models.Model):
         ordering = ['-subido_en']
 
     def __str__(self):
-        return f'{self.nombre} ({self.categoria.nombre})'
+        return f'{self.nombre} ({self.carpeta.nombre})'
 
     def save(self, *args, **kwargs):
         if self.archivo and not self.archivo._committed:
