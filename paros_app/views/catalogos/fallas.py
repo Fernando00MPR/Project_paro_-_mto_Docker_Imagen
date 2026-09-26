@@ -10,9 +10,10 @@ from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext as _
 
 from ...models import Area, CatalogoFalla
-from ...views.utils import _excel_response, _estilo_cabecera
+from ...views.utils import _excel_response, _estilo_cabecera, _nombre_bilingue
 from login_app.permisos import permiso_requerido, get_perfil
 from openpyxl.styles import Alignment
 
@@ -43,7 +44,7 @@ def catalogo_fallas(request, area_id):
     if not (request.user.is_superuser or (perfil and perfil.es_admin)):
         if perfil and perfil.areas_permitidas.exists():
             if not perfil.areas_permitidas.filter(id=area_id).exists():
-                messages.error(request, "No tienes acceso al catálogo de esta área.")
+                messages.error(request, _("No tienes acceso al catálogo de esta área."))
                 return redirect('paros:catalogo_fallas_general')
     area = get_object_or_404(Area, id=area_id)
     qs   = CatalogoFalla.objects.filter(area=area).order_by('codigo')
@@ -81,7 +82,7 @@ def eliminar_falla(request, falla_id):
 def limpiar_fallas_area(request, area_id):
     area = get_object_or_404(Area, id=area_id)
     CatalogoFalla.objects.filter(area=area).delete()
-    messages.success(request, f"Catálogo de fallas de '{area.nombre}' eliminado.")
+    messages.success(request, _("Catálogo de fallas de '{area}' eliminado.").format(area=area.nombre))
     return redirect('paros:catalogo_fallas_general')
 
 
@@ -134,9 +135,9 @@ def importar_fallas_v2(request):
                             continue
                         filas.append((codigo, nombre_area, falla_es, falla_en, tipo_falla, tipo_falla_en, area_origen))
                 else:
-                    errores.append("Solo se aceptan archivos .xlsx, .xls o .csv")
+                    errores.append(_("Solo se aceptan archivos .xlsx, .xls o .csv"))
             except Exception as e:
-                errores.append(f"Error al leer el archivo: {e}")
+                errores.append(_("Error al leer el archivo: {error}").format(error=e))
 
             if filas and not errores:
                 creados = actualizados = omitidos = 0
@@ -165,7 +166,7 @@ def importar_fallas_v2(request):
                             if created: creados += 1
                             else: actualizados += 1
                         if errores_guardado:
-                            raise Exception("Errores en importación")
+                            raise Exception(_("Errores en importación"))
                 except Exception:
                     errores.extend(errores_guardado)
                     creados = actualizados = 0
@@ -195,7 +196,7 @@ def importar_fallas_por_area(request, area_id):
         archivo = request.FILES.get('archivo')
         modo    = request.POST.get('modo', 'agregar')
         if not archivo:
-            errores.append("Selecciona un archivo.")
+            errores.append(_("Selecciona un archivo."))
         else:
             filas = []
             try:
@@ -205,7 +206,7 @@ def importar_fallas_por_area(request, area_id):
                     ws   = wb.active
                     rows = list(ws.iter_rows(values_only=True))
                     if not rows:
-                        errores.append("El archivo está vacío.")
+                        errores.append(_("El archivo está vacío."))
                     else:
                         headers = [str(c).strip().lower() if c else '' for c in rows[0]]
                         def col(names):
@@ -235,7 +236,7 @@ def importar_fallas_por_area(request, area_id):
                                 tipo_falla_en = str(row[idx_tipo_en] or '').strip() if idx_tipo_en is not None and idx_tipo_en < len(row) else ''
                                 area_origen = str(row[idx_orig]    or '').strip() if idx_orig     is not None and idx_orig     < len(row) else ''
                                 if not codigo or not falla_es:
-                                    errores.append(f"Fila {i}: código y falla (ES) son obligatorios.")
+                                    errores.append(_("Fila {fila}: código y falla (ES) son obligatorios.").format(fila=i))
                                     continue
                                 filas.append((codigo, falla_es, falla_en, tipo_falla, tipo_falla_en, area_origen))
                 elif nombre.endswith('.csv'):
@@ -339,9 +340,9 @@ def agregar_falla(request, area_id):
         area_origen   = request.POST.get('area_origen', '').strip()
 
         if not codigo or not nombre_es:
-            messages.error(request, "Código y nombre en español son obligatorios.")
+            messages.error(request, _("Código y nombre en español son obligatorios."))
         elif CatalogoFalla.objects.filter(area=area, codigo=codigo).exists():
-            messages.error(request, f"Ya existe una falla con el código '{codigo}' en esta área.")
+            messages.error(request, _("Ya existe una falla con el código '{codigo}' en esta área.").format(codigo=codigo))
         else:
             CatalogoFalla.objects.create(
                 area=area,
@@ -354,7 +355,7 @@ def agregar_falla(request, area_id):
                 tipo_falla_en=tipo_falla_en,
                 area_origen=area_origen,
             )
-            messages.success(request, f"Falla '{nombre_es}' agregada correctamente.")
+            messages.success(request, _("Falla '{nombre}' agregada correctamente.").format(nombre=_nombre_bilingue(nombre_es, nombre_en)))
 
     return redirect('paros:catalogo_fallas_general')
 
@@ -370,9 +371,9 @@ def editar_falla(request, falla_id):
         tipo_falla_en = request.POST.get('tipo_falla_en', '').strip()
         area_origen   = request.POST.get('area_origen', '').strip()
         if not codigo or not nombre_es:
-            messages.error(request, "Código y nombre en español son obligatorios.")
+            messages.error(request, _("Código y nombre en español son obligatorios."))
         elif CatalogoFalla.objects.filter(area=falla.area, codigo=codigo).exclude(id=falla.id).exists():
-            messages.error(request, f"Ya existe una falla con el código '{codigo}'.")
+            messages.error(request, _("Ya existe una falla con el código '{codigo}'.").format(codigo=codigo))
         else:
             falla.codigo        = codigo
             falla.nombre        = nombre_es
@@ -383,5 +384,5 @@ def editar_falla(request, falla_id):
             falla.tipo_falla_en = tipo_falla_en
             falla.area_origen   = area_origen
             falla.save()
-            messages.success(request, f"Falla '{nombre_es}' actualizada correctamente.")
+            messages.success(request, _("Falla '{nombre}' actualizada correctamente.").format(nombre=_nombre_bilingue(nombre_es, nombre_en)))
     return redirect('paros:catalogo_fallas_general')

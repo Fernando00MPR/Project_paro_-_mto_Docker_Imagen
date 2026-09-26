@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.db.models import Q
+from django.utils.translation import gettext as _
 from mto_app.models import Area
 from ..models import Refaccion, SeguimientoRefaccion
 from datetime import date
@@ -32,7 +33,7 @@ def lista_seguimientos_refaccion(request):
         (acceso and acceso.ver_seguimiento_refaccion)
     )
     if not puede_ver:
-        messages.error(request, "No tienes permiso para ver esta sección.")
+        messages.error(request, _("No tienes permiso para ver esta sección."))
         return redirect('mto:dashboard')
 
     area_id        = request.GET.get('area', '')
@@ -114,7 +115,7 @@ def guardar_seguimiento_refaccion(request, pk=None):
         (acceso and acceso.editar_seguimiento_refaccion)
     )
     if not puede_editar:
-        messages.error(request, "No tienes permiso para editar seguimientos de refacciones.")
+        messages.error(request, _("No tienes permiso para editar seguimientos de refacciones."))
         return redirect('inventario:lista_seguimientos_refaccion')
 
     seguimiento = get_object_or_404(SeguimientoRefaccion, pk=pk) if pk else None
@@ -126,7 +127,7 @@ def guardar_seguimiento_refaccion(request, pk=None):
             cantidad  = request.POST.get('cantidad', '').strip()
 
             if not numero_pr or not cantidad:
-                raise ValueError("No. PR y cantidad son obligatorios.")
+                raise ValueError(_("No. PR y cantidad son obligatorios."))
 
             datos = {
                 'refaccion':   refaccion,
@@ -144,17 +145,17 @@ def guardar_seguimiento_refaccion(request, pk=None):
                 for k, v in datos.items():
                     setattr(seguimiento, k, v)
                 seguimiento.save()
-                messages.success(request, "Seguimiento actualizado.")
+                messages.success(request, _("Seguimiento actualizado."))
             else:
                 SeguimientoRefaccion.objects.create(**datos)
-                messages.success(request, "Seguimiento creado.")
+                messages.success(request, _("Seguimiento creado."))
 
             return _redirect_lista_seguimientos_refaccion(request, refaccion.area_id)
 
         except ValueError as e:
             messages.error(request, str(e))
         except Exception as e:
-            messages.error(request, f"Error al guardar: {e}")
+            messages.error(request, _("Error al guardar: {error}").format(error=e))
 
     area_id = request.POST.get('area', '') or request.GET.get('area', '')
     return _redirect_lista_seguimientos_refaccion(request, area_id)
@@ -169,14 +170,14 @@ def eliminar_seguimiento_refaccion(request, pk):
         (acceso and acceso.eliminar_seguimiento_refaccion)
     )
     if not puede_eliminar:
-        messages.error(request, "No tienes permiso para eliminar seguimientos de refacciones.")
+        messages.error(request, _("No tienes permiso para eliminar seguimientos de refacciones."))
         return redirect('inventario:lista_seguimientos_refaccion')
 
     seguimiento = get_object_or_404(SeguimientoRefaccion, pk=pk)
     area_id = seguimiento.refaccion.area_id
     if request.method == 'POST':
         seguimiento.delete()
-        messages.success(request, "Seguimiento eliminado.")
+        messages.success(request, _("Seguimiento eliminado."))
     return _redirect_lista_seguimientos_refaccion(request, area_id)
 
 
@@ -189,7 +190,7 @@ def exportar_seguimientos_refaccion(request):
         (acceso and acceso.ver_seguimiento_refaccion)
     )
     if not puede_ver:
-        messages.error(request, "No tienes permiso para exportar.")
+        messages.error(request, _("No tienes permiso para exportar."))
         return redirect('inventario:lista_seguimientos_refaccion')
 
     area_id        = request.GET.get('area', '')

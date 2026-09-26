@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.utils.translation import gettext as _
 from .utils import requiere_acceso_mto
 from ..models import Area, Responsable
 from .utils import areas_permitidas_mto
@@ -15,7 +16,7 @@ def lista_responsables(request):
         (acceso and acceso.ver_responsables)
     )
     if not puede_ver:
-        messages.error(request, "No tienes permiso para ver esta sección.")
+        messages.error(request, _("No tienes permiso para ver esta sección."))
         return redirect('mto:dashboard')
     
     area_id      = request.GET.get('area', '').strip()
@@ -41,7 +42,7 @@ def form_responsable(request, pk=None):
         (acceso and acceso.editar_responsables)
     )
     if not puede_editar:
-        messages.error(request, "No tienes permiso para editar responsables.")
+        messages.error(request, _("No tienes permiso para editar responsables."))
         return redirect('mto:lista_responsables')
     
     responsable = get_object_or_404(Responsable, pk=pk) if pk else None
@@ -59,23 +60,23 @@ def form_responsable(request, pk=None):
                 'activo':        'activo' in request.POST,
             }
             if not all([datos['numero_nomina'], datos['nombre'], datos['apellidos']]):
-                raise ValueError("Numero de nomina, nombre y apellidos son obligatorios.")
+                raise ValueError(_("Numero de nomina, nombre y apellidos son obligatorios."))
 
             if responsable:
                 for k, v in datos.items():
                     setattr(responsable, k, v)
                 responsable.save()
-                messages.success(request, f"Responsable '{responsable.nombre_completo()}' actualizado.")
+                messages.success(request, _("Responsable '{nombre}' actualizado.").format(nombre=responsable.nombre_completo()))
             else:
                 Responsable.objects.create(**datos)
-                messages.success(request, "Responsable creado.")
+                messages.success(request, _("Responsable creado."))
 
             return redirect(f"/mto/responsables/?area={datos['area'].pk}")
 
         except ValueError as e:
             messages.error(request, str(e))
         except Exception as e:
-            messages.error(request, f"Error al guardar: {e}")
+            messages.error(request, _("Error al guardar: {error}").format(error=e))
 
     ctx = {
         'responsable': responsable,
@@ -94,14 +95,14 @@ def eliminar_responsable(request, pk):
         (acceso and acceso.eliminar_responsables)
     )
     if not puede_eliminar:
-        messages.error(request, "No tienes permiso para eliminar responsables.")
+        messages.error(request, _("No tienes permiso para eliminar responsables."))
         return redirect('mto:lista_responsables')
 
     responsable = get_object_or_404(Responsable, pk=pk)
     area_pk     = responsable.area_id
     if request.method == 'POST':
         responsable.delete()
-        messages.success(request, f"Responsable '{responsable.nombre_completo()}' eliminado.")
+        messages.success(request, _("Responsable '{nombre}' eliminado.").format(nombre=responsable.nombre_completo()))
     return redirect(f"/mto/responsables/?area={area_pk}")
 
 @login_required

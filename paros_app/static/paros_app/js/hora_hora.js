@@ -40,7 +40,7 @@ function cargarDatos() {
         const dia   = parseInt(td.dataset.dia);
         const hora  = parseInt(td.dataset.hora);
         const val   = DATOS[aid]?.[turno]?.[dia]?.[hora];
-        if (val !== undefined && val > 0) {
+        if (val !== undefined) {
             td.querySelector('.valor-celda').textContent = val;
             td.style.background = turno === 'dia' ? '#E6F1FB' : '#EEEDFE';
             td.style.color      = turno === 'dia' ? '#185FA5' : '#3C3489';
@@ -156,7 +156,7 @@ function recalcularArea(aid) {
             const totalDia  = Object.values(diasData).reduce((s,v) => s+v, 0);
             const el        = document.getElementById(`total-${turno}-dia-${aid}-${d}`);
             if (el) el.textContent = totalDia > 0 ? totalDia : '—';
-            const hrsConReg = Object.values(diasData).filter(v => v > 0).length;
+            const hrsConReg = Object.values(diasData).length;
             const elHrs     = document.getElementById(`hrs-${turno}-${aid}-${d}`);
             if (elHrs) elHrs.textContent = hrsConReg > 0 ? hrsConReg * 60 : '—';
         }
@@ -169,8 +169,8 @@ function recalcularArea(aid) {
         const dataNoche = DATOS[aid]?.['noche']?.[d] || {};
         const corridos  = Object.values(dataDia).reduce((s,v) => s+v, 0) +
                           Object.values(dataNoche).reduce((s,v) => s+v, 0);
-        const hrsDia    = Object.values(dataDia).filter(v => v > 0).length;
-        const hrsNoche  = Object.values(dataNoche).filter(v => v > 0).length;
+        const hrsDia    = Object.values(dataDia).length;
+        const hrsNoche  = Object.values(dataNoche).length;
         const planeados = (hrsDia + hrsNoche) * SKIDS_POR_HORA;
         const eficiencia = planeados > 0 ? ((corridos / planeados) * 100).toFixed(1) : null;
 
@@ -499,7 +499,7 @@ function aplicarColoresSkid(aid) {
 }
 
 function cargarTargets() {
-    const promesas = AREAS_IDS.map(aid =>
+    const promesas = cfg.areasIds.map(aid =>
         fetch(`${cfg.urlTargetGet}?area_id=${aid}&anio=${cfg.anio}&mes=${cfg.mes}`)
         .then(r => r.json())
         .then(data => {
@@ -562,7 +562,7 @@ document.getElementById('modal-target-hxh').addEventListener('click', function(e
 document.addEventListener('DOMContentLoaded', () => {
     cargarDatos();
     cargarTargets().then(() => {
-        AREAS_IDS.forEach(aid => aplicarColoresSkid(aid));
+        cfg.areasIds.forEach(aid => aplicarColoresSkid(aid));
         if (document.getElementById('chartEficiencia')) cargarEficiencia();
     });
 

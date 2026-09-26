@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
+from django.utils.translation import gettext as _
 from openpyxl import load_workbook
 from openpyxl.styles import Border, Side, Alignment, Font
 from openpyxl.worksheet.properties import WorksheetProperties, PageSetupProperties
@@ -374,7 +375,7 @@ def exportar_semana_status(request, token):
 def exportar_semana_download(request, token):
     job = _jobs.pop(token, None)
     if not job or job['status'] != 'ready':
-        messages.error(request, 'Archivo no disponible o aún generándose.')
+        messages.error(request, _('Archivo no disponible o aún generándose.'))
         return redirect('mto:lista_plan')
 
     path     = job['path']

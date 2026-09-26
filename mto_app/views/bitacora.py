@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.utils.translation import gettext as _
 
 from .utils import areas_permitidas_mto
 from ..models import Area, Bitacora, Responsable, ImagenBitacora
@@ -22,7 +23,7 @@ def lista_bitacora(request):
         (acceso and acceso.ver_bitacora)
     )
     if not puede_ver:
-        messages.error(request, "No tienes permiso para ver esta sección.")
+        messages.error(request, _("No tienes permiso para ver esta sección."))
         return redirect('mto:dashboard')
 
     area_id   = request.GET.get('area', '').strip()
@@ -77,7 +78,7 @@ def form_bitacora(request, pk=None):
         (acceso and acceso.editar_bitacora)
     )
     if not puede_editar:
-        messages.error(request, "No tienes permiso para editar la bitácora.")
+        messages.error(request, _("No tienes permiso para editar la bitácora."))
         return redirect('mto:lista_bitacora')
 
     registro = get_object_or_404(Bitacora, pk=pk) if pk else None
@@ -94,27 +95,27 @@ def form_bitacora(request, pk=None):
             'responsable':         request.POST.get('responsable', '').strip()[:200],
         }
         if not datos['fecha']:
-            raise ValueError("La fecha es obligatoria.")
+            raise ValueError(_("La fecha es obligatoria."))
         if not datos['actividad_realizada']:
-            raise ValueError("La actividad realizada es obligatoria.")
+            raise ValueError(_("La actividad realizada es obligatoria."))
 
         if registro:
             for k, v in datos.items():
                 setattr(registro, k, v)
             registro.save()
-            messages.success(request, "Registro actualizado.")
+            messages.success(request, _("Registro actualizado."))
         else:
             registro = Bitacora.objects.create(**datos)
-            messages.success(request, "Registro agregado.")
+            messages.success(request, _("Registro agregado."))
 
         imagenes = request.FILES.getlist('imagenes')
         if imagenes:
             disponibles = MAX_IMAGENES_BITACORA - registro.imagenes.count()
             if disponibles <= 0:
-                messages.warning(request, f"Este registro ya tiene {MAX_IMAGENES_BITACORA} imágenes — no se pueden agregar más.")
+                messages.warning(request, _("Este registro ya tiene {n} imágenes — no se pueden agregar más.").format(n=MAX_IMAGENES_BITACORA))
             else:
                 if len(imagenes) > disponibles:
-                    messages.warning(request, f"Solo se guardaron {disponibles} imagen(es) — se alcanzó el límite de {MAX_IMAGENES_BITACORA}.")
+                    messages.warning(request, _("Solo se guardaron {disponibles} imagen(es) — se alcanzó el límite de {n}.").format(disponibles=disponibles, n=MAX_IMAGENES_BITACORA))
                 for imagen in imagenes[:disponibles]:
                     ImagenBitacora.objects.create(bitacora=registro, imagen=imagen)
 
@@ -123,7 +124,7 @@ def form_bitacora(request, pk=None):
     except ValueError as e:
         messages.error(request, str(e))
     except Exception as e:
-        messages.error(request, f"Error al guardar: {e}")
+        messages.error(request, _("Error al guardar: {error}").format(error=e))
 
     return redirect(f"/mto/bitacora/?area={area_id}")
 
@@ -137,14 +138,14 @@ def eliminar_bitacora(request, pk):
         (acceso and acceso.eliminar_bitacora)
     )
     if not puede_eliminar:
-        messages.error(request, "No tienes permiso para eliminar registros.")
+        messages.error(request, _("No tienes permiso para eliminar registros."))
         return redirect('mto:lista_bitacora')
 
     registro = get_object_or_404(Bitacora, pk=pk)
     area_pk  = registro.area_id
     if request.method == 'POST':
         registro.delete()
-        messages.success(request, "Registro eliminado.")
+        messages.success(request, _("Registro eliminado."))
     return redirect(f"/mto/bitacora/?area={area_pk}")
 
 

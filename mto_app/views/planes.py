@@ -9,6 +9,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
+from django.utils.translation import gettext as _
 
 from collections import defaultdict
 from .utils import areas_permitidas_mto
@@ -26,7 +27,7 @@ def lista_plan(request):
         (acceso and acceso.ver_plan_mantenimiento)
     )
     if not puede_ver:
-        messages.error(request, "No tienes permiso para ver esta sección.")
+        messages.error(request, _("No tienes permiso para ver esta sección."))
         return redirect('mto:dashboard')
     
     area_id       = request.GET.get('area')
@@ -231,22 +232,22 @@ def form_plan(request, pk=None):
             }
 
             if not all([datos['codigo'], datos['actividad'], datos['rutina'], datos['frecuencia']]):
-                raise ValueError("Todos los campos marcados son obligatorios.")
+                raise ValueError(_("Todos los campos marcados son obligatorios."))
 
             if plan:
                 for k, v in datos.items():
                     setattr(plan, k, v)
                 plan.save()
-                messages.success(request, f"Plan '{plan.codigo}' actualizado.")
+                messages.success(request, _("Plan '{codigo}' actualizado.").format(codigo=plan.codigo))
             else:
                 PlanMantenimiento.objects.create(**datos)
-                messages.success(request, "Plan de mantenimiento creado.")
+                messages.success(request, _("Plan de mantenimiento creado."))
             return redirect('mto:lista_plan')
 
         except ValueError as e:
             messages.error(request, str(e))
         except Exception as e:
-            messages.error(request, f"Error al guardar: {e}")
+            messages.error(request, _("Error al guardar: {error}").format(error=e))
 
     ctx = {
         'plan':        plan,
@@ -265,10 +266,10 @@ def eliminar_plan(request, pk):
     if request.method == 'POST':
         try:
             plan.delete()
-            messages.success(request, f"Plan '{plan.codigo}' eliminado.")
+            messages.success(request, _("Plan '{codigo}' eliminado.").format(codigo=plan.codigo))
         except Exception:
             messages.error(request,
-                f"No se puede eliminar '{plan.codigo}' porque tiene registros asociados.")
+                _("No se puede eliminar '{codigo}' porque tiene registros asociados.").format(codigo=plan.codigo))
     return redirect('mto:lista_plan')
 
 
@@ -279,7 +280,7 @@ def eliminar_todos_planes_area(request):
         (hasattr(request.user, 'perfil') and request.user.perfil.es_admin)
     )
     if not es_admin_total:
-        messages.error(request, "No tienes permiso para eliminar todos los planes del área.")
+        messages.error(request, _("No tienes permiso para eliminar todos los planes del área."))
         return redirect('mto:lista_plan')
 
     area_id = request.POST.get('area')
@@ -289,7 +290,7 @@ def eliminar_todos_planes_area(request):
         PlanMantenimiento.objects.filter(area=area).delete()
         messages.success(
             request,
-            f"Se eliminaron los {cantidad} planes de mantenimiento del área '{area.nombre}' y su historial de ejecuciones."
+            _("Se eliminaron los {cantidad} planes de mantenimiento del área '{area}' y su historial de ejecuciones.").format(cantidad=cantidad, area=area.nombre)
         )
     return redirect(f"{reverse('mto:lista_plan')}?area={area_id}")
 
@@ -303,7 +304,7 @@ def exportar_plan(request):
         (acceso and acceso.ver_plan_mantenimiento)
     )
     if not puede_ver:
-        messages.error(request, "No tienes permiso para exportar planes de mantenimiento.")
+        messages.error(request, _("No tienes permiso para exportar planes de mantenimiento."))
         return redirect('mto:lista_plan')
 
     area_id = request.GET.get('area') or request.session.get('lista_plan_area_id', '')
@@ -458,7 +459,7 @@ def importar_plan(request):
         area_id = request.POST.get('area')
 
         if not archivo or not area_id:
-            messages.error(request, "Debes seleccionar un archivo y un area.")
+            messages.error(request, _("Debes seleccionar un archivo y un area."))
             return render(request, 'mto_app/plan/importar.html', {'areas': areas})
 
         try:
@@ -553,7 +554,7 @@ def importar_plan(request):
                     ya_pendiente    = nuevos_por_codigo.get(codigo)
 
                     if plan_existente:
-                        avisos.append(f"Código '{codigo}' ya existía en esta área — se actualizó.")
+                        avisos.append(_("Código '{codigo}' ya existía en esta área — se actualizó.").format(codigo=codigo))
                         for campo, valor in defaults.items():
                             setattr(plan_existente, campo, valor)
                         a_actualizar_por_pk[plan_existente.pk] = plan_existente
@@ -567,29 +568,29 @@ def importar_plan(request):
                         creados += 1
 
                 except Exception as e:
-                    errores.append(f"Fila con codigo '{row[1]}': {e}")
+                    errores.append(_("Fila con codigo '{codigo}': {error}").format(codigo=row[1], error=e))
 
             if nuevos_por_codigo:
                 PlanMantenimiento.objects.bulk_create(nuevos_por_codigo.values())
             if a_actualizar_por_pk:
                 PlanMantenimiento.objects.bulk_update(a_actualizar_por_pk.values(), campos_actualizables)
 
-            resumen = f"{creados} creado(s), {actualizados} actualizado(s), {omitidos} omitido(s)."
+            resumen = _("{creados} creado(s), {actualizados} actualizado(s), {omitidos} omitido(s).").format(creados=creados, actualizados=actualizados, omitidos=omitidos)
             if errores:
-                messages.warning(request, f"Importacion con advertencias — {resumen}")
+                messages.warning(request, _("Importacion con advertencias — {resumen}").format(resumen=resumen))
                 for err in errores[:5]:
                     messages.error(request, err)
             elif avisos:
-                messages.warning(request, f"Importacion con avisos — {resumen}")
+                messages.warning(request, _("Importacion con avisos — {resumen}").format(resumen=resumen))
                 for aviso in avisos[:5]:
                     messages.warning(request, aviso)
             else:
-                messages.success(request, f"Importacion exitosa — {resumen}")
+                messages.success(request, _("Importacion exitosa — {resumen}").format(resumen=resumen))
 
             return redirect('mto:dashboard')
 
         except Exception as e:
-            messages.error(request, f"Error al leer el archivo: {e}")
+            messages.error(request, _("Error al leer el archivo: {error}").format(error=e))
 
     return render(request, 'mto_app/plan/importar.html', {'areas': areas})
 

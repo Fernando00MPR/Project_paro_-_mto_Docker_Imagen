@@ -317,17 +317,17 @@ def crear_usuario(request):
  
         errores = []
         if not username:
-            errores.append("El nombre de usuario es obligatorio.")
+            errores.append(_("El nombre de usuario es obligatorio."))
         if User.objects.filter(username=username).exists():
-            errores.append(f"El usuario '{username}' ya existe.")
+            errores.append(_("El usuario '{username}' ya existe.").format(username=username))
         if not first_name:
-            errores.append("El nombre es obligatorio.")
+            errores.append(_("El nombre es obligatorio."))
         if not last_name:
-            errores.append("El apellido es obligatorio.")
+            errores.append(_("El apellido es obligatorio."))
         if not password:
-            errores.append("La contraseña es obligatoria.")
+            errores.append(_("La contraseña es obligatoria."))
         if password != password2:
-            errores.append("Las contraseñas no coinciden.")
+            errores.append(_("Las contraseñas no coinciden."))
  
         if errores:
             for e in errores:
@@ -341,7 +341,7 @@ def crear_usuario(request):
             first_name=first_name, last_name=last_name, email=email
         )
         _guardar_perfil(request, user, areas)
-        messages.success(request, f"Usuario '{username}' creado correctamente.")
+        messages.success(request, _("Usuario '{username}' creado correctamente.").format(username=username))
         return redirect('lista_usuarios')
  
     ctx = _ctx_form(None, None, areas)
@@ -364,14 +364,14 @@ def editar_usuario(request, user_id):
         password2 = request.POST.get('password2', '').strip()
         if password:
             if password != password2:
-                messages.error(request, "Las contraseñas no coinciden.")
+                messages.error(request, _("Las contraseñas no coinciden."))
                 ctx = _ctx_form(perfil, request.POST, areas, usuario)
                 ctx.update({'accion': _('Editar'), 'usuario': usuario, 'perfil': perfil, 'post': request.POST})
                 return render(request, 'login_app/form_usuario.html', ctx)
             usuario.set_password(password)
         usuario.save()
         _guardar_perfil(request, usuario, areas)
-        messages.success(request, f"Usuario '{usuario.username}' actualizado.")
+        messages.success(request, _("Usuario '{username}' actualizado.").format(username=usuario.username))
         return redirect('lista_usuarios')
  
     ctx = _ctx_form(perfil, None, areas, usuario)
@@ -384,12 +384,12 @@ def editar_usuario(request, user_id):
 def eliminar_usuario(request, user_id):
     usuario = get_object_or_404(User, id=user_id)
     if usuario == request.user:
-        messages.error(request, "No puedes eliminar tu propio usuario.")
+        messages.error(request, _("No puedes eliminar tu propio usuario."))
         return redirect('lista_usuarios')
     if request.method == 'POST':
         nombre = usuario.username
         usuario.delete()
-        messages.success(request, f"Usuario '{nombre}' eliminado.")
+        messages.success(request, _("Usuario '{nombre}' eliminado.").format(nombre=nombre))
     return redirect('lista_usuarios')
  
  

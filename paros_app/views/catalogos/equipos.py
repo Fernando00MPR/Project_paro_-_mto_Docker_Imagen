@@ -10,9 +10,10 @@ from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext as _
 
 from ...models import Area, CatalogoEquipo
-from ...views.utils import _excel_response, _estilo_cabecera
+from ...views.utils import _excel_response, _estilo_cabecera, _nombre_bilingue
 from login_app.permisos import permiso_requerido, get_perfil
 from openpyxl.styles import Alignment
 
@@ -55,7 +56,7 @@ def catalogo_equipos_general(request):
 def limpiar_equipos_area(request, area_id):
     area = get_object_or_404(Area, id=area_id)
     CatalogoEquipo.objects.filter(area=area).delete()
-    messages.success(request, f"Catálogo de equipos de '{area.nombre}' eliminado.")
+    messages.success(request, _("Catálogo de equipos de '{area}' eliminado.").format(area=area.nombre))
     return redirect('paros:catalogo_equipos')
 
 
@@ -101,13 +102,13 @@ def importar_equipos(request):
                         sub_area_es = (row.get('sub_area_es') or row.get('sub_area') or '').strip()
                         sub_area_en = (row.get('sub_area_en') or '').strip()
                         if not codigo or not nombre_area or not equipo_es:
-                            errores.append(f"Fila {i}: datos incompletos.")
+                            errores.append(_("Fila {fila}: datos incompletos.").format(fila=i))
                             continue
                         filas.append((codigo, nombre_area, equipo_es, equipo_en, sub_area_es, sub_area_en))
                 else:
                     errores.append("Solo se aceptan .xlsx, .xls o .csv")
             except Exception as e:
-                errores.append(f"Error al leer el archivo: {e}")
+                errores.append(_("Error al leer el archivo: {error}").format(error=e))
 
             if filas and not errores:
                 creados = actualizados = omitidos = 0
@@ -309,16 +310,16 @@ def agregar_equipos(request, area_id):
         sub_area_es = request.POST.get('sub_area_es', '').strip()
         sub_area_en = request.POST.get('sub_area_en', '').strip()
         if not codigo or not equipo_es:
-            messages.error(request, "Código y equipo en español son obligatorios.")
+            messages.error(request, _("Código y equipo en español son obligatorios."))
         elif CatalogoEquipo.objects.filter(area=area, codigo=codigo).exists():
-            messages.error(request, f"Ya existe un equipo con el código '{codigo}' en esta área.")
+            messages.error(request, _("Ya existe un equipo con el código '{codigo}' en esta área.").format(codigo=codigo))
         else:
             CatalogoEquipo.objects.create(
                 area=area, codigo=codigo,
                 equipo=equipo_es, equipo_es=equipo_es, equipo_en=equipo_en,
                 sub_area=sub_area_es, sub_area_es=sub_area_es, sub_area_en=sub_area_en,
             )
-            messages.success(request, f"Equipo '{equipo_es}' agregado correctamente.")
+            messages.success(request, _("Equipo '{equipo}' agregado correctamente.").format(equipo=_nombre_bilingue(equipo_es, equipo_en)))
     return redirect('paros:catalogo_equipos')
 
 @login_required
@@ -332,9 +333,9 @@ def editar_equipo(request, equipo_id):
         sub_area_es = request.POST.get('sub_area_es', '').strip()
         sub_area_en = request.POST.get('sub_area_en', '').strip()
         if not codigo or not equipo_es:
-            messages.error(request, "Código y equipo en español son obligatorios.")
+            messages.error(request, _("Código y equipo en español son obligatorios."))
         elif CatalogoEquipo.objects.filter(area=equipo.area, codigo=codigo).exclude(id=equipo.id).exists():
-            messages.error(request, f"Ya existe un equipo con el código '{codigo}'.")
+            messages.error(request, _("Ya existe un equipo con el código '{codigo}'.").format(codigo=codigo))
         else:
             equipo.codigo      = codigo
             equipo.equipo      = equipo_es
@@ -344,5 +345,5 @@ def editar_equipo(request, equipo_id):
             equipo.sub_area_es = sub_area_es
             equipo.sub_area_en = sub_area_en
             equipo.save()
-            messages.success(request, f"Equipo '{equipo_es}' actualizado correctamente.")
+            messages.success(request, _("Equipo '{equipo}' actualizado correctamente.").format(equipo=_nombre_bilingue(equipo_es, equipo_en)))
     return redirect('paros:catalogo_equipos')

@@ -4,11 +4,11 @@ import openpyxl
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext as _
 
 from ...models import Area, CatalogoMolde, ConfiguracionMoldes
 from ...views.utils import _excel_response, _estilo_cabecera
@@ -50,7 +50,7 @@ def catalogo_moldes_general(request):
 def limpiar_moldes_area(request, area_id):
     area = get_object_or_404(Area, id=area_id)
     CatalogoMolde.objects.filter(area=area).delete()
-    messages.success(request, f"Catálogo de moldes de '{area.nombre}' eliminado.")
+    messages.success(request, _("Catálogo de moldes de '{area}' eliminado.").format(area=area.nombre))
     return redirect('paros:catalogo_moldes')
 
 
@@ -62,7 +62,7 @@ def importar_moldes(request):
     resumen = None
 
     if area is None:
-        errores.append("No se ha configurado el área de moldes. Contacta a un administrador en el panel de administración.")
+        errores.append(_("No se ha configurado el área de moldes. Contacta a un administrador en el panel de administración."))
         return render(request, 'paros_app/moldes/importar_moldes.html', {
             'area': None, 'errores': errores, 'resumen': resumen,
         })
@@ -172,12 +172,12 @@ def agregar_moldes(request, area_id):
         numero       = request.POST.get('numero_molde', '').strip()
         nombre_molde = request.POST.get('nombre_molde', '').strip()
         if not numero or not nombre_molde:
-            messages.error(request, "Número y nombre de molde son obligatorios.")
+            messages.error(request, _("Número y nombre de molde son obligatorios."))
         elif CatalogoMolde.objects.filter(area=area, numero_molde=numero).exists():
-            messages.error(request, f"Ya existe un molde con el número '{numero}' en esta área.")
+            messages.error(request, _("Ya existe un molde con el número '{numero}' en esta área.").format(numero=numero))
         else:
             CatalogoMolde.objects.create(area=area, numero_molde=numero, nombre_molde=nombre_molde)
-            messages.success(request, f"Molde '{nombre_molde}' agregado correctamente.")
+            messages.success(request, _("Molde '{nombre}' agregado correctamente.").format(nombre=nombre_molde))
     return redirect('paros:catalogo_moldes')
 
 
@@ -189,12 +189,12 @@ def editar_molde(request, molde_id):
         numero       = request.POST.get('numero_molde', '').strip()
         nombre_molde = request.POST.get('nombre_molde', '').strip()
         if not numero or not nombre_molde:
-            messages.error(request, "Número y nombre de molde son obligatorios.")
+            messages.error(request, _("Número y nombre de molde son obligatorios."))
         elif CatalogoMolde.objects.filter(area=molde.area, numero_molde=numero).exclude(id=molde.id).exists():
-            messages.error(request, f"Ya existe un molde con el número '{numero}'.")
+            messages.error(request, _("Ya existe un molde con el número '{numero}'.").format(numero=numero))
         else:
             molde.numero_molde = numero
             molde.nombre_molde = nombre_molde
             molde.save()
-            messages.success(request, f"Molde '{nombre_molde}' actualizado correctamente.")
+            messages.success(request, _("Molde '{nombre}' actualizado correctamente.").format(nombre=nombre_molde))
     return redirect('paros:catalogo_moldes')

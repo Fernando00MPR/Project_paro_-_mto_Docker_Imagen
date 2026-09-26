@@ -1,4 +1,12 @@
 from datetime import datetime, date as _date
+from django.utils.translation import get_language
+
+
+def _nombre_bilingue(es, en):
+    """Nombre a mostrar según el idioma activo (usa el otro como respaldo si falta)."""
+    if get_language() == 'en':
+        return en or es
+    return es or en
 
 
 def _aplicar_filtros(qs, get_params):

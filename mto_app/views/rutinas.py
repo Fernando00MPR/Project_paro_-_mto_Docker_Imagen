@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
 from openpyxl import load_workbook
+from django.utils.translation import gettext as _
 from .utils import areas_permitidas_mto
 from ..models import Area, PlanMantenimiento, PasoRutina, HistorialRutina
 
@@ -15,7 +16,7 @@ def lista_pasos(request):
         (acceso and acceso.ver_rutinas)
     )
     if not puede_ver:
-        messages.error(request, "No tienes permiso para ver esta sección.")
+        messages.error(request, _("No tienes permiso para ver esta sección."))
         return redirect('mto:dashboard')
 
     plan_trabajo  = request.GET.get('pt', '').strip()
@@ -91,7 +92,7 @@ def importar_pasos(request):
         (acceso and acceso.editar_rutinas)
     )
     if not puede_editar:
-        messages.error(request, "No tienes permiso para importar rutinas.")
+        messages.error(request, _("No tienes permiso para importar rutinas."))
         return redirect('mto:lista_pasos')
 
     def limpiar(valor):
@@ -108,7 +109,7 @@ def importar_pasos(request):
         reemplazar   = 'reemplazar' in request.POST
 
         if not archivo or not plan_trabajo or not area_id or not motivo:
-            messages.error(request, "Debes indicar el area, N° plan, el motivo y subir un archivo.")
+            messages.error(request, _("Debes indicar el area, N° plan, el motivo y subir un archivo."))
             return redirect('mto:importar_pasos')
 
         try:
@@ -171,7 +172,7 @@ def importar_pasos(request):
                 )
 
             messages.success(request,
-                f"{creados} paso(s) importados para el plan {plan_trabajo} - {area.nombre}.")
+                _("{creados} paso(s) importados para el plan {plan_trabajo} - {area}.").format(creados=creados, plan_trabajo=plan_trabajo, area=area.nombre))
 
             HistorialRutina.objects.create(
                 usuario=request.user,
@@ -187,7 +188,7 @@ def importar_pasos(request):
             return redirect('mto:lista_pasos')
 
         except Exception as e:
-            messages.error(request, f"Error al leer el archivo: {e}")
+            messages.error(request, _("Error al leer el archivo: {error}").format(error=e))
 
     area_id = request.GET.get('area', '').strip()
     if area_id:
@@ -220,7 +221,7 @@ def eliminar_pasos_plan(request):
         (acceso and acceso.eliminar_rutinas)
     )
     if not puede_eliminar:
-        messages.error(request, "No tienes permiso para eliminar rutinas.")
+        messages.error(request, _("No tienes permiso para eliminar rutinas."))
         return redirect('mto:lista_pasos')
 
     if request.method == 'POST':
@@ -253,7 +254,7 @@ def eliminar_pasos_plan(request):
                 motivo=motivo,
             )
 
-            messages.success(request, f"{cantidad} paso(s) eliminados.")
+            messages.success(request, _("{n} paso(s) eliminados.").format(n=cantidad))
     return redirect('mto:lista_pasos')
 
 

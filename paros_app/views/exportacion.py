@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.utils.translation import gettext as _
 
 from ..models import Area, Paro
 from login_app.permisos import get_perfil
@@ -180,7 +181,7 @@ def importar_paros(request):
     es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
 
     if not (es_admin or (perfil and perfil.importar_paros)):
-        messages.error(request, "No tienes permiso para importar paros.")
+        messages.error(request, _("No tienes permiso para importar paros."))
         return redirect('paros:lista_paros')
 
     COLUMNAS = ['Área', 'Fecha', 'Sem.', 'Turno', 'Falla', 'Responsable', 'Equipo', 'Hora', 'Tiempo (min)', 'Estatus', 'Comentarios']
@@ -299,9 +300,9 @@ def importar_paros(request):
             importados, fallidos, detalles = _crear_paros(filas)
             if fallidos:
                 detalle_txt = ' '.join(detalles[:5]) + (f' (+{len(detalles) - 5} más)' if len(detalles) > 5 else '')
-                messages.warning(request, f"{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar. {detalle_txt}")
+                messages.warning(request, _("{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar. {detalle}").format(importados=importados, fallidos=fallidos, detalle=detalle_txt))
             else:
-                messages.success(request, f"{importados} paro(s) importados correctamente.")
+                messages.success(request, _("{importados} paro(s) importados correctamente.").format(importados=importados))
             if area_id_param:
                 return redirect('paros:lista_paros_por_area', area_id=area_id_param)
             return redirect('paros:lista_paros')
@@ -402,9 +403,9 @@ def importar_paros(request):
                         importados, fallidos, detalles = _crear_paros(filas_permitidas)
                         if fallidos:
                             detalle_txt = ' '.join(detalles[:5]) + (f' (+{len(detalles) - 5} más)' if len(detalles) > 5 else '')
-                            messages.warning(request, f"{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar. {detalle_txt}")
+                            messages.warning(request, _("{importados} paro(s) importados. {fallidos} fila(s) no se pudieron importar. {detalle}").format(importados=importados, fallidos=fallidos, detalle=detalle_txt))
                         else:
-                            messages.success(request, f"{importados} paro(s) importados correctamente.")
+                            messages.success(request, _("{importados} paro(s) importados correctamente.").format(importados=importados))
                         if area_id_param:
                             return redirect('paros:lista_paros_por_area', area_id=area_id_param)
                         return redirect('paros:lista_paros')

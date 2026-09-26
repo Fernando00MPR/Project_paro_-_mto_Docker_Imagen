@@ -187,11 +187,11 @@ def eficiencia_data(request):
         for r in regs_vals:
             v = r['valor'] or 0
             if r['turno'] == 'dia':
-                dia_sum[r['fecha']]   += v
-                if v > 0: dia_hrs[r['fecha']] += 1
+                dia_sum[r['fecha']] += v
+                dia_hrs[r['fecha']] += 1
             else:
                 noche_sum[r['fecha']] += v
-                if v > 0: noche_hrs[r['fecha']] += 1
+                noche_hrs[r['fecha']] += 1
 
         # 1 query: todos los targets de los meses en el rango
         anios_meses = set()
@@ -240,8 +240,7 @@ def eficiencia_data(request):
         for r in regs_vals:
             v = r['valor'] or 0
             mes_sum[r['fecha'].month] += v
-            if v > 0:
-                mes_hrs[r['fecha'].month] += 1
+            mes_hrs[r['fecha'].month] += 1
 
         # 1 query: todos los targets del año/meses
         targets_map = {
@@ -282,8 +281,7 @@ def eficiencia_data(request):
         for r in regs_vals:
             v = r['valor'] or 0
             anio_sum[r['fecha'].year] += v
-            if v > 0:
-                anio_hrs[r['fecha'].year] += 1
+            anio_hrs[r['fecha'].year] += 1
 
         # 1 query: todos los targets del rango de años
         targets_map = {

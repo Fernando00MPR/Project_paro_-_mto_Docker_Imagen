@@ -9,6 +9,7 @@ from django.db.models import Sum, Q, Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext as _
 
 from ..forms import ParoForm
 from login_app.permisos import permiso_requerido, get_perfil
@@ -132,7 +133,7 @@ def lista_paros_por_area(request, area_id):
     perfil = get_perfil(request.user)
     if not (request.user.is_superuser or (perfil and perfil.es_admin)):
         if perfil and not perfil.puede_ver_area(area_id):
-            messages.error(request, "No tienes acceso a los paros de esta área.")
+            messages.error(request, _("No tienes acceso a los paros de esta área."))
             return redirect('paros:lista_paros')
 
     area     = get_object_or_404(Area, id=area_id)
@@ -277,7 +278,7 @@ def crear_paro(request):
             if len(imagenes) > 4:
                 for imagen in imagenes[:4]:
                     ImagenParo.objects.create(paro=paro, imagen=imagen)
-                messages.warning(request, "Solo se guardaron 4 imágenes — ese es el límite por paro.")
+                messages.warning(request, _("Solo se guardaron 4 imágenes — ese es el límite por paro."))
             else:
                 for imagen in imagenes:
                     ImagenParo.objects.create(paro=paro, imagen=imagen)
@@ -286,7 +287,7 @@ def crear_paro(request):
                 paro=paro, usuario=request.user,
                 campo='creado', valor_anterior='', valor_nuevo=''
             )
-            messages.success(request, f"Paro registrado correctamente en {paro.area.nombre}.")
+            messages.success(request, _("Paro registrado correctamente en {area}.").format(area=paro.area.nombre))
             if next_url and next_url.startswith('/'):
                 return redirect(next_url)
             return redirect('paros:lista_paros_por_area', area_id=paro.area.id)
@@ -371,11 +372,11 @@ def editar_paro(request, paro_id):
             existentes = paro.imagenes.count()
             disponibles = 4 - existentes
             if disponibles <= 0:
-                messages.warning(request, "Este paro ya tiene 4 imágenes — no se pueden agregar más.")
+                messages.warning(request, _("Este paro ya tiene 4 imágenes — no se pueden agregar más."))
             elif len(imagenes) > disponibles:
                 for imagen in imagenes[:disponibles]:
                     ImagenParo.objects.create(paro=paro, imagen=imagen)
-                messages.warning(request, f"Solo se guardaron {disponibles} imagen(es) — se alcanzó el límite de 4.")
+                messages.warning(request, _("Solo se guardaron {disponibles} imagen(es) — se alcanzó el límite de 4.").format(disponibles=disponibles))
             else:
                 for imagen in imagenes:
                     ImagenParo.objects.create(paro=paro, imagen=imagen)
@@ -396,7 +397,7 @@ def editar_paro(request, paro_id):
                 nue = snapshot_despues.get(campo, '')
                 _registrar_bitacora(paro, request.user, campo, ant, nue)
 
-            messages.success(request, "Paro actualizado correctamente.")
+            messages.success(request, _("Paro actualizado correctamente."))
             if next_url and next_url.startswith('/'):
                 return redirect(next_url)
             return redirect('paros:lista_paros_por_area', area_id=paro.area.id)

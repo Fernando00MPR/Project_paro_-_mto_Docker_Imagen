@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, render
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.utils.translation import gettext as _
 
 from ..models import SeguimientoOT, SeguimientoManual, Area, ImagenSeguimiento
 
@@ -17,7 +18,7 @@ def lista_seguimientos(request):
     acceso = getattr(request.user, 'acceso_mto', None)
     puede_ver = es_admin or (acceso and acceso.ver_seguimiento)
     if not puede_ver:
-        messages.error(request, "No tienes permiso para ver esta sección.")
+        messages.error(request, _("No tienes permiso para ver esta sección."))
         from django.shortcuts import redirect
         return redirect('mto:dashboard')
 

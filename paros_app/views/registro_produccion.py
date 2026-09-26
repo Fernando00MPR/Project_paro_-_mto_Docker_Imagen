@@ -9,7 +9,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 import json
 
-from ..models import Area, Paro, RegistroProduccion, CatalogoEquipo, CatalogoMolde, ConfiguracionMoldes
+from ..models import Area, Paro, RegistroProduccion, CatalogoEquipo, CatalogoMolde, ConfiguracionMoldes, ConfiguracionHoraHora
 from login_app.permisos import get_perfil
 
 RESPONSABLES_MANT = {'Mantenimiento', 'Maintenance', 'Robótica', 'Robotic', 'Robotics'}
@@ -18,6 +18,13 @@ def _area_moldes_id():
     config = ConfiguracionMoldes.objects.only('area_id').first()
     return config.area_id if config else None
 
+
+def _area_hora_hora_id():
+    """Área configurada para el seguimiento hora x hora — se excluye de
+    Registro de producción porque su tiempo se captura ahí, no aquí."""
+     
+    config = ConfiguracionHoraHora.objects.only('area_id').first()
+    return config.area_id if config else None
 
 def _normalizar_equipo(area, texto_equipo):
     """Busca el equipo en el catálogo (bilingüe) para guardar ambas
@@ -151,6 +158,10 @@ def registro_produccion(request):
         areas = list(Area.objects.all())
     else:
         areas = list(perfil.areas_produccion.all()) if perfil else []
+
+    area_hh_id = _area_hora_hora_id()
+    if area_hh_id:
+        areas = [a for a in areas if a.id != area_hh_id]
 
     fecha_str = request.GET.get('fecha', date.today().strftime('%Y-%m-%d'))
     turno     = request.GET.get('turno', '')
@@ -378,6 +389,10 @@ def _resolver_filtros_export(request):
         areas = list(Area.objects.all())
     else:
         areas = list(perfil.areas_produccion.all()) if perfil else []
+
+    area_hh_id = _area_hora_hora_id()
+    if area_hh_id:
+        areas = [a for a in areas if a.id != area_hh_id]
 
     if not areas:
         return None

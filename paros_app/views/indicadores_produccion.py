@@ -11,9 +11,9 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 import json
 
-from ..models import Area, Paro, RegistroProduccion, TargetIndicador, CatalogoEquipo
+from ..models import Area, Paro, RegistroProduccion, TargetIndicador, CatalogoEquipo, RegistroHoraHora
 from login_app.permisos import get_perfil
-from .registro_produccion import RESPONSABLES_MANT
+from .registro_produccion import RESPONSABLES_MANT, _area_hora_hora_id
 
 INDICADORES = [
     ('downtime',       gettext_lazy('Downtime %')),
@@ -50,6 +50,79 @@ def _muerto_y_kpis_mant(paros, equipo_nombre, hora_inicio, hora_fin):
             n_paros_mant += 1
             t_muerto_mant += tiempo
     return muerto, n_paros_mant, t_muerto_mant
+
+
+def _planeado_y_muerto_hora_hora(area_id, fecha_ini, fecha_fin):
+    """
+    Para el área configurada en Hora x Hora (sin RegistroProduccion propio):
+    'planeado' (minutos) sale de las horas con registro capturado en
+    RegistroHoraHora (día+noche) × 60; 'muerto' (minutos) es la suma directa
+    de Paro.tiempo_minutos de esa área/día — sin ventana de equipo/hora, ya
+    que hora x hora no maneja ese concepto. 't_muerto_mant'/'n_paros_mant'
+    aplican el mismo criterio de RESPONSABLES_MANT que _muerto_y_kpis_mant,
+    también sin ventana de equipo. Devuelve {fecha: (planeado, muerto, t_muerto_mant, n_paros_mant)}.
+    """
+    horas_por_fecha = defaultdict(int)
+    for r in RegistroHoraHora.objects.filter(
+        area_id=area_id, fecha__gte=fecha_ini, fecha__lte=fecha_fin
+        ).values('fecha'):
+        horas_por_fecha[r['fecha']] += 1
+
+    muerto_por_fecha        = defaultdict(int)
+    t_muerto_mant_por_fecha = defaultdict(int)
+    n_paros_mant_por_fecha  = defaultdict(int)
+    for p in Paro.objects.filter(
+        area_id=area_id, fecha__gte=fecha_ini, fecha__lte=fecha_fin, estatus='verde'
+    ).values('fecha', 'tiempo_minutos', 'responsable'):
+        tiempo = p['tiempo_minutos'] or 0
+        muerto_por_fecha[p['fecha']] += tiempo
+        if p['responsable'] in RESPONSABLES_MANT:
+            t_muerto_mant_por_fecha[p['fecha']] += tiempo
+            n_paros_mant_por_fecha[p['fecha']]  += 1
+    
+    resultado = {}
+    d = fecha_ini
+    while d <= fecha_fin:
+        resultado[d] = (
+            horas_por_fecha.get(d, 0)* 60, 
+            muerto_por_fecha.get(d, 0),
+            t_muerto_mant_por_fecha.get(d, 0),
+            n_paros_mant_por_fecha.get(d, 0)
+            )
+        d += timedelta(days=1)
+
+    return resultado
+
+
+def _kpis_hora_hora_para_rango(area_id, fecha_ini, fecha_fin):
+    """
+    Mismo shape de salida que _kpis_para_rango, pero para el área de Hora
+    x Hora: planeado/muerto/t_muerto_mant/n_paros_mant salen de
+    _planeado_y_muerto_hora_hora. MTBF no divide por equipos_unicos (hora x
+    hora no distingue equipos), equivalente a tratarla como 1 sola línea.
+    """
+
+    por_fecha      = _planeado_y_muerto_hora_hora(area_id, fecha_ini, fecha_fin)
+    total_planeado = sum(p for p, _, _, _ in por_fecha.values())
+    total_muerto   = sum(m for _, m, _, _ in por_fecha.values())
+    t_muerto_mant  = sum(tm for _, _, tm, _ in por_fecha.values())
+    n_paros_mant   = sum(n for _, _, _, n in por_fecha.values())
+
+    downtime = round(total_muerto / total_planeado * 100, 1) if total_planeado else None
+    disp     = round(100 - downtime, 1) if downtime is not None else None
+
+    mttr = round(t_muerto_mant / n_paros_mant, 1) if n_paros_mant else (0 if total_planeado else None)
+    mtbf = round((total_planeado - t_muerto_mant) / n_paros_mant / 60 , 1) if n_paros_mant else round(total_planeado / 60, 1) if total_planeado else None
+
+    return { 
+        'downtime':        downtime,
+        'disponibilidad':  disp,
+        'mttr':            mttr,
+        'mtbf':            mtbf,
+        't_muerto_mant':   t_muerto_mant if total_planeado else None,
+        'planeado':        total_planeado if total_planeado else None,
+    }
+
 
 def _kpis_para_rango(equipo_sel, fecha_ini, fecha_fin, registros_qs, paros_qs, equipos_permitidos=None):
     """Agrega downtime/disponibilidad/MTTR/MTBF para un rango de fechas,
@@ -188,8 +261,11 @@ def indicadores_produccion(request):
         )
 
     equipos_periodo = []
+    area_hh_id = _area_hora_hora_id()
 
     if area_sel:
+        es_area_hh = area_hh_id is not None and area_sel.id == area_hh_id
+
         registros_list = list(RegistroProduccion.objects.filter(
             area=area_sel, fecha__gte=d_desde, fecha__lte=d_hasta
         ).order_by('fecha'))
@@ -207,6 +283,8 @@ def indicadores_produccion(request):
         for p in paros_rango:
             paros_por_fecha[p.fecha].append(p)
 
+        hh_por_fecha = _planeado_y_muerto_hora_hora(area_sel.id, d_desde, d_hasta) if es_area_hh else {}
+
         fechas_rango = []
         d = d_desde
         while d <= d_hasta:
@@ -214,33 +292,51 @@ def indicadores_produccion(request):
             d += timedelta(days=1)
 
         for fecha in fechas_rango:
-            regs_dia = regs_por_fecha[fecha]
-            if equipos_en_subarea is not None:
-                regs_dia = [r for r in regs_dia if r.equipo in equipos_en_subarea]
-            if equipo_sel:
-                regs_dia = [r for r in regs_dia if r.equipo == equipo_sel]
-            paros_dia = paros_por_fecha[fecha]
 
-            total_planeado = 0
-            total_muerto   = 0
-            t_muerto_mant  = 0
-            n_paros_mant   = 0
+            if es_area_hh:
+                # Área de Hora x Hora: no tiene RegistroProduccion propio, así
+                # que "planeado" sale de las horas capturadas y "muerto"/
+                # "t_muerto_mant" de los Paros del día directamente (ver
+                # _planeado_y_muerto_hora_hora). equipos_unicos=0 hace que
+                # max(equipos_unicos, 1) equivalga a tratarla como 1 sola línea.
 
-            for reg in regs_dia:
-                equipo_nombre = reg.equipo or ''
-                planeado      = reg.tiempo_planeado
-                total_planeado += planeado
+                regs_dia = []
+                equipos_unicos = 0
+                total_planeado, total_muerto, t_muerto_mant, n_paros_mant = hh_por_fecha.get(fecha, (0, 0, 0 ,0))
+                mttr = round(t_muerto_mant / n_paros_mant, 1) if n_paros_mant else (0 if total_planeado else None)
+                mtbf = round((total_planeado - t_muerto_mant) / n_paros_mant / 60 / max(equipos_unicos, 1), 1) if n_paros_mant else round(total_planeado / 60 / max(equipos_unicos, 1), 1) if total_planeado else None
+                
+            else:
 
-                muerto, n_mant, t_mant = _muerto_y_kpis_mant(paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin)
-                total_muerto   += muerto
-                t_muerto_mant  += t_mant
-                n_paros_mant   += n_mant
+                regs_dia = regs_por_fecha[fecha]
+                if equipos_en_subarea is not None:
+                    regs_dia = [r for r in regs_dia if r.equipo in equipos_en_subarea]
+                if equipo_sel:
+                    regs_dia = [r for r in regs_dia if r.equipo == equipo_sel]
+                paros_dia = paros_por_fecha[fecha]
 
-            equipos_unicos = len(set(reg.equipo for reg in regs_dia))
+                total_planeado = 0
+                total_muerto   = 0
+                t_muerto_mant  = 0
+                n_paros_mant   = 0
+
+                for reg in regs_dia:
+                    equipo_nombre = reg.equipo or ''
+                    planeado      = reg.tiempo_planeado
+                    total_planeado += planeado
+
+                    muerto, n_mant, t_mant = _muerto_y_kpis_mant(paros_dia, equipo_nombre, reg.hora_inicio, reg.hora_fin)
+                    total_muerto   += muerto
+                    t_muerto_mant  += t_mant
+                    n_paros_mant   += n_mant
+
+                equipos_unicos = len(set(reg.equipo for reg in regs_dia))
+
+                mttr     = round(t_muerto_mant / n_paros_mant, 1) if n_paros_mant else (0 if total_planeado else None)
+                mtbf     = round((total_planeado - t_muerto_mant) / n_paros_mant / 60 / max(equipos_unicos, 1), 1) if n_paros_mant else round(total_planeado / 60 / max(equipos_unicos, 1), 1) if total_planeado else None
+                
             downtime = round(total_muerto / total_planeado * 100, 1) if total_planeado else (0 if regs_dia else None)
             disp     = round(100 - downtime, 1) if downtime is not None else None
-            mttr     = round(t_muerto_mant / n_paros_mant, 1) if n_paros_mant else (0 if total_planeado else None)
-            mtbf     = round((total_planeado - t_muerto_mant) / n_paros_mant / 60 / max(equipos_unicos, 1), 1) if n_paros_mant else round(total_planeado / 60 / max(equipos_unicos, 1), 1) if total_planeado else None
 
             datos_dias.append({
                 'fecha':           fecha.strftime('%d/%m/%y'),
@@ -595,13 +691,22 @@ def tendencia_indicadores(request):
     else:
         periodo_label = f"{buckets[0][0]} — {buckets[-1][0]}"
 
-    registros_qs = list(RegistroProduccion.objects.filter(area=area, fecha__gte=rango_ini, fecha__lte=rango_fin))
-    paros_qs     = list(Paro.objects.filter(area=area, fecha__gte=rango_ini, fecha__lte=rango_fin))
+
+    area_hh_id = _area_hora_hora_id()
+    es_area_hh = area_hh_id is not None and area.id == area_hh_id
+
+    if not es_area_hh:
+
+        registros_qs = list(RegistroProduccion.objects.filter(area=area, fecha__gte=rango_ini, fecha__lte=rango_fin))
+        paros_qs     = list(Paro.objects.filter(area=area, fecha__gte=rango_ini, fecha__lte=rango_fin))
 
     labels  = []
     valores = []
     for label, ini, fin in buckets:
-        kpis = _kpis_para_rango(equipo_sel, ini, fin, registros_qs, paros_qs, equipos_en_subarea)
+        if es_area_hh:
+            kpis = _kpis_hora_hora_para_rango(area.id, ini, fin)
+        else:
+            kpis = _kpis_para_rango(equipo_sel, ini, fin, registros_qs, paros_qs, equipos_en_subarea)
         labels.append(label)
         valores.append(kpis.get(indicador))
 

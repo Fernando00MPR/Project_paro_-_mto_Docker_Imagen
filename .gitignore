@@ -28,3 +28,6 @@ Thumbs.db
 
 # Traducciones compiladas
 *.mo
+
+# Guía local para Claude Code
+CLAUDE.md
