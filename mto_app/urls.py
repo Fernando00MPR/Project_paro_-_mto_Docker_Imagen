@@ -65,9 +65,11 @@ urlpatterns = [
     path('documentos/carpeta/<int:parent_id>/nueva/',   views.crear_carpeta,         name='crear_carpeta'),
     path('documentos/carpeta/<int:pk>/',                views.carpeta_detalle,       name='carpeta_detalle'),
     path('documentos/carpeta/<int:pk>/editar/',         views.editar_carpeta,        name='editar_carpeta'),
+    path('documentos/carpeta/<int:pk>/renombrar/',      views.renombrar_carpeta,     name='renombrar_carpeta'),
     path('documentos/carpeta/<int:pk>/eliminar/',       views.eliminar_carpeta,      name='eliminar_carpeta'),
     path('documentos/carpeta/<int:carpeta_id>/subir/',  views.subir_documento,       name='subir_documento'),
     path('documentos/carpeta/<int:pk>/mover/',          views.mover_carpeta,         name='mover_carpeta'),
+    path('documentos/<int:pk>/renombrar/',              views.renombrar_documento,   name='renombrar_documento'),
     path('documentos/<int:pk>/eliminar/',               views.eliminar_documento,    name='eliminar_documento'),
     path('documentos/<int:pk>/mover/',                  views.mover_documento,       name='mover_documento'),
 ]

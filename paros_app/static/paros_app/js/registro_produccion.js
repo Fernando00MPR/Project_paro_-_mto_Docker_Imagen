@@ -104,9 +104,9 @@ function editarEquipo(td) {
         const data = await res.json();
         if (data.ok) {
             renderDt(regId, data.planeado, data.muerto, data.downtime);
-            showToast('Registro actualizado correctamente.', 'success');
+            showToast(TXT_REGISTRO_ACTUALIZADO, 'success');
         } else {
-            showToast(data.error || 'No se pudo actualizar el turno.', 'error');
+            showToast(data.error || TXT_ERROR_TURNO, 'error');
             td.textContent    = actual;
             tr.dataset.equipo = actual;
         }
@@ -145,9 +145,9 @@ function editarTurno(td) {
             const data = await res.json();
             if (data.ok) { 
                 renderDt(regId, data.planeado, data.muerto, data.downtime); 
-                showToast('Registro actualizado correctamente.', 'success'); 
+                showToast(TXT_REGISTRO_ACTUALIZADO, 'success'); 
             } else { 
-                showToast(data.error || 'No se pudo actualizar el turno.', 'error');
+                showToast(data.error || TXT_ERROR_TURNO, 'error');
                 tr.dataset.turno = actual;
                 td.innerHTML = `<span class="badge ${actual===1?'badge-t1':'badge-t2'}">Turno ${actual}</span>`;
             }
@@ -177,7 +177,7 @@ function editarHora(td, tipo) {
         const val    = input.value.trim();
         const valido = /^([01]\d|2[0-3]):([0-5]\d)$/.test(val);
         if (!valido) {
-            showToast('Formato inválido. Usa HH:MM (ej. 14:30)', 'error');
+            showToast(TXT_FORMATO_HORA_INVALIDO, 'error');
             td.textContent = actual;
             return;
         }
@@ -196,11 +196,12 @@ function editarHora(td, tipo) {
             const data = await res.json();
             if (data.ok) { 
                 renderDt(regId, data.planeado, data.muerto, data.downtime); 
-                showToast('Registro actualizado correctamente.', 'success'); 
+                showToast(TXT_REGISTRO_ACTUALIZADO, 'success'); 
             } else { 
                 showToast(data.error, 'error');
-                td.innerHTML = `<span class="badge ${actual===1?'badge-t1':'badge-t2'}">Turno ${actual}</span>`;
-                tr.dataset.turno = actual;
+                td.textContent = actual;
+                if (tipo === 'inicio') tr.dataset.inicio = actual;
+                else tr.dataset.fin = actual;
             }
         }
     };
@@ -262,7 +263,7 @@ function editarMolde(td) {
         const molde = MOLDES_DATA.find(m => m.nombre_molde === nombre);
         if (!molde) {
             td.textContent = actualNombre || '—';
-            if (nombre) showToast('Selecciona un molde válido del catálogo.', 'error');
+            if (nombre) showToast(TXT_MOLDE_INVALIDO, 'error');
             return;
         }
 
@@ -278,9 +279,9 @@ function editarMolde(td) {
         const data = await res.json();
         if (data.ok) {
             renderDt(regId, data.planeado, data.muerto, data.downtime);
-            showToast('Registro actualizado correctamente.', 'success');
+            showToast(TXT_REGISTRO_ACTUALIZADO, 'success');
         } else {
-            showToast(data.error || 'No se pudo actualizar el molde.', 'error');
+            showToast(data.error || TXT_ERROR_MOLDE, 'error');
             td.textContent       = actualNombre || '—';
             numeroTd.textContent = actualNumero || '—';
         }
@@ -308,8 +309,8 @@ async function agregarRegistro(areaId) {
     const numero_molde = moldeSel ? moldeSel.value : '';
     const nombre_molde = moldeNombre ? moldeNombre.value : '';
 
-    if (!horaIni || !horaFin) { showToast('Ingresa la hora de inicio y fin.', 'error'); return; }
-    if (moldeNombre && !numero_molde) { showToast('Selecciona un molde válido del catálogo.', 'error'); return; }
+    if (!horaIni || !horaFin) { showToast(TXT_HORA_REQUERIDA, 'error'); return; }
+    if (moldeNombre && !numero_molde) { showToast(TXT_MOLDE_INVALIDO, 'error'); return; }
     
     const res = await fetch(URL_AGR, {
         method: 'POST',
@@ -318,10 +319,10 @@ async function agregarRegistro(areaId) {
     });
     const data = await res.json();
     if (data.ok) {
-        showToast('Registro guardado correctamente.', 'success');
+        showToast(TXT_REGISTRO_GUARDADO, 'success');
         setTimeout(() => window.location.reload(), 300);
     } else {
-        showToast('Error: ' + data.error, 'error');
+        showToast(TXT_ERROR_TPL.replace('{error}', data.error), 'error');
     }
 }
 
@@ -354,10 +355,10 @@ document.getElementById('btn-confirmar-eliminar').onclick = async () => {
     });
     const data = await res.json();
     if (data.ok) {
-        showToast('Registro eliminado.', 'success');
+        showToast(TXT_REGISTRO_ELIMINADO, 'success');
         document.getElementById('row-' + idBorrado).remove();
     } else {
-        showToast('Error al eliminar el registro.', 'error');
+        showToast(TXT_ERROR_ELIMINAR, 'error');
         if (trigger) trigger.focus();
     }
 };
@@ -564,7 +565,7 @@ async function persistirOrden(tbody, ordenPrevio) {
     } catch (err) { /* data.ok se queda en false */ }
     if (!data.ok) {
         aplicarOrden(tbody, ordenPrevio);
-        showToast('No se pudo guardar el nuevo orden.', 'error');
+        showToast(TXT_ERROR_ORDEN, 'error');
     }
 }
 

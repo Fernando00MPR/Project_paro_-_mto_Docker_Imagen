@@ -14,7 +14,10 @@ function previsualizarImagenes(input) {
     const disponibles = MAX_IMGS - _archivosSeleccionados.length;
 
     if (nuevos.length > disponibles) {
-        showToast(`Máximo ${MAX_IMGS} imágenes. Solo puedes agregar ${disponibles} más.`, 'warning');
+        const i18n = window.CREAR_PARO_I18N || {};
+        const msg = i18n.maxImagenes || 'Máximo {max} imágenes. Solo puedes agregar {disponibles} más.';
+
+        showToast(msg.replace('{max}', MAX_IMGS).replace('{disponibles}', disponibles), 'warning');
         input.value = '';
         return;
     }
@@ -81,11 +84,6 @@ function _renderPreviews() {
             : `${count} ${i18n.imagenesSeleccionadas || 'imágenes seleccionadas'}`;
 }
 
-// ── Fecha / Hora ───────────────────────────────────────────────────────────────
-// El backend espera fecha en formato dd/mm/yyyy y hora HH:MM.
-// El <input type="date"> nativo devuelve yyyy-mm-dd, así que se convierte
-// antes de enviarlo al campo hidden que lee Django.
-// Se usa IIFE para no contaminar el scope global con las variables de los pickers.
 // ── Fecha / Hora ───────────────────────────────────────────────────────────────
 // El backend espera fecha en formato dd/mm/yyyy y hora HH:MM.
 // La fecha usa el widget reutilizable de menu_app/_date_picker.html, cuyo campo

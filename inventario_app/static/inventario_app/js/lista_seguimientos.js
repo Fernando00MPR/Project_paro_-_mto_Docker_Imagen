@@ -132,12 +132,14 @@ function cerrarModalSeg() {
 // ── Validar que se haya seleccionado una refacción antes de enviar ───────────
 document.getElementById('form-seg').addEventListener('submit', function(e) {
     const refaccionId = document.getElementById('seg-refaccion-id').value;
+    const msg = (window.SEG_REFACCION_I18N && SEG_REFACCION_I18N.seleccionaRefaccion) || 'Selecciona una refacción de la lista';
+    
     if (!refaccionId) {
         e.preventDefault();
         if (typeof showToast === 'function') {
-            showToast('Selecciona una refacción de la lista', 'warning');
+            showToast(msg, 'warning');
         } else {
-            alert('Selecciona una refacción de la lista');
+            alert(msg);
         }
     }
 });

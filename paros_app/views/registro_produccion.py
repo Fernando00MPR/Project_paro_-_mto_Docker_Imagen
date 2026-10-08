@@ -266,14 +266,11 @@ def agregar_registro(request):
         hf = _time.fromisoformat(hora_fin)
 
         existentes = RegistroProduccion.objects.filter(area=area, equipo=equipo, fecha=fecha, turno=turno)
-        if area.id == _area_moldes_id():
-            for existente in existentes:
-                if _se_traslapan(hi, hf, existente.hora_inicio, existente.hora_fin):
-                    return JsonResponse({'ok': False, 'error': f'El horario se traslapa con un registro existente ({existente.hora_inicio.strftime("%H:%M")}–{existente.hora_fin.strftime("%H:%M")}).'}, status=400)
-        else:
-            if existentes.exists():
-                return JsonResponse({'ok': False, 'error': 'Ya existe un registro para este equipo y turno en esta fecha.'}, status=400)
 
+        for existente in existentes:
+            if _se_traslapan(hi, hf, existente.hora_inicio, existente.hora_fin):
+                return JsonResponse({'ok': False, 'error': f'El horario se traslapa con un registro existente ({existente.hora_inicio.strftime("%H:%M")}–{existente.hora_fin.strftime("%H:%M")}).'}, status=400)
+        
         equipo_es, equipo_en = _normalizar_equipo(area, equipo)
         reg = RegistroProduccion.objects.create(
             area=area, equipo_es=equipo_es, equipo_en=equipo_en, fecha=fecha, turno=turno,
@@ -327,14 +324,11 @@ def actualizar_registro(request, registro_id):
         existentes = RegistroProduccion.objects.filter(
             area=reg.area, equipo=equipo_final, fecha=reg.fecha, turno=turno_final
         ).exclude(id=reg.id)
-        if reg.area_id == _area_moldes_id():
-            for existente in existentes:
-                if _se_traslapan(hi_final, hf_final, existente.hora_inicio, existente.hora_fin):
-                    return JsonResponse({'ok': False, 'error': f'El horario se traslapa con un registro existente ({existente.hora_inicio.strftime("%H:%M")}–{existente.hora_fin.strftime("%H:%M")}).'}, status=400)
-        else:
-            if existentes.exists():
-                return JsonResponse({'ok': False, 'error': 'Ya existe un registro para ese equipo y turno en esta fecha.'}, status=400)
 
+        for existente in existentes:
+            if _se_traslapan(hi_final, hf_final, existente.hora_inicio, existente.hora_fin):
+                return JsonResponse({'ok': False, 'error': f'El horario se traslapa con un registro existente ({existente.hora_inicio.strftime("%H:%M")}–{existente.hora_fin.strftime("%H:%M")}).'}, status=400)
+ 
         if equipo is not None:
             equipo_es, equipo_en = _normalizar_equipo(reg.area, equipo_final)
             reg.equipo_es = equipo_es

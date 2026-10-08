@@ -19,7 +19,8 @@
             {{ responsables.count }} responsable(s) registrado(s)
         </div>
     </div>
-    <a href="{% url 'mto:nuevo_responsable' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm">
+    <a href="{% url 'mto:nuevo_responsable' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm" 
+        style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
         + {% trans "Agregar responsable" %}
     </a>
 </div>

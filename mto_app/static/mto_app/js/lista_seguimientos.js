@@ -152,7 +152,7 @@ function smEstatus(val) {
 // ── Guardar (nuevo OT / editar OT / nuevo manual / editar manual) ─────────────
 function guardarManual() {
     const problema = document.getElementById('sm-problema').value.trim();
-    if (!problema) { showToast('El problema es obligatorio.', 'warning'); return; }
+    if (!problema) { showToast(SM_PROBLEMA_OBLIGATORIO, 'warning'); return; }
 
     const id   = document.getElementById('sm-id').value;
     const otId = document.getElementById('sm-ot-id').value;
@@ -175,7 +175,7 @@ function guardarManual() {
     })
     .then(r => r.json())
     .then(async data => {
-        if (!data.ok) { showToast('Error: ' + data.error, 'error'); return; }
+        if (!data.ok) { showToast(SM_ERROR_TPL.replace('{error}', data.error), 'error'); return; }
 
         const tipo   = otId ? 'ot' : 'manual';
         const segId  = otId || data.id;
@@ -192,7 +192,7 @@ function guardarManual() {
         else if (id)   actualizarFilaManual(data);
         else           agregarFilaManual(data);
     })
-    .catch(() => showToast('Error de conexión', 'error'));
+    .catch(() => showToast(SM_ERROR_CONEXION, 'error'));
 }
 
 // ── Agregar fila manual en tabla ──────────────────────────────────────────────
@@ -373,11 +373,11 @@ function smAgregarArchivos(nuevos) {
     const disponibles  = 4 - totalActual;
 
     if (disponibles <= 0) {
-        showToast('Máximo 4 imágenes por seguimiento', 'warning');
+        showToast(SM_MAX_IMAGENES, 'warning');
         return;
     }
     if (nuevos.length > disponibles) {
-        showToast(`Solo se agregaron ${disponibles} imagen(es), límite de 4 alcanzado`, 'warning');
+        showToast(SM_LIMITE_IMAGENES_TPL.replace('{n}', disponibles), 'warning');
     }
     smArchivosNuevos = smArchivosNuevos.concat(nuevos.slice(0, disponibles));
     smRenderPreview();

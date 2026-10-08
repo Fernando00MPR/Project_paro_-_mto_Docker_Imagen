@@ -27,9 +27,15 @@
 
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             {% if puede_editar_seg_servicio %}
-            <button type="button" onclick="abrirModalServ(event)" class="btn btn-primary">+ {% trans "Nuevo seguimiento" %}</button>
+            <button type="button" onclick="abrirModalServ(event)" class="btn btn-primary" 
+                style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                + {% trans "Nuevo seguimiento" %}
+            </button>
             {% endif %}
-                <a href="{% url 'inventario:exportar_seguimientos_servicio' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn btn-ghost">↓ {% trans "Exportar" %}</a>
+            <a href="{% url 'inventario:exportar_seguimientos_servicio' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn btn-ghost" 
+                style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                ↓ {% trans "Exportar" %}
+            </a>
             {% include 'menu_app/_language_selector.html' %}
         </div>
     </div>

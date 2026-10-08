@@ -16,7 +16,8 @@
             {% trans "Acciones correctivas registradas por orden de trabajo" %}
         </div>
     </div>
-    <button type="button" onclick="abrirModalManual(event)" class="btn btn-primary">
+    <button type="button" onclick="abrirModalManual(event)" class="btn btn-primary" 
+    style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
         + {% trans "Nuevo seguimiento" %}
     </button>
 </div>
@@ -648,7 +649,12 @@
     const URL_SM_DEL  = "/mto/seguimiento-manual/eliminar/";
     const URL_OT_EDIT = "/mto/seguimiento/editar/";
     const URL_OT_DEL  = "/mto/seguimiento/eliminar/";
-    const CONTADOR_SEG_TPL = "{% trans 'Imagen {n} de {total}' %}";
+    const CONTADOR_SEG_TPL        = "{% trans 'Imagen {n} de {total}' %}";
+    const SM_PROBLEMA_OBLIGATORIO = "{% trans 'El problema es obligatorio.' %}";
+    const SM_ERROR_TPL            = "{% trans 'Error: {error}' %}";
+    const SM_ERROR_CONEXION       = "{% trans 'Error de conexión' %}";
+    const SM_MAX_IMAGENES         = "{% trans 'Máximo 4 imágenes por seguimiento' %}";
+    const SM_LIMITE_IMAGENES_TPL  = "{% trans 'Solo se agregaron {n} imagen(es), límite de 4 alcanzado' %}";
 </script>
 <script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 <script>

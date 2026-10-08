@@ -42,8 +42,8 @@
                 </svg>
             </div>
             {% endif %}
-            <div style="min-width:0;">
-                <div style="font-size:{% if es_raiz %}14.5px; font-weight:600{% else %}13.5px; font-weight:500{% endif %}; color:{% if es_raiz %}var(--text){% else %}var(--text-2){% endif %}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ carpeta.nombre }}</div>
+            <div class="doc-carpeta-nombre-wrap" data-carpeta-nombre="{{ carpeta.pk }}" style="min-width:0;">
+                <div class="doc-carpeta-nombre-texto" style="font-size:{% if es_raiz %}14.5px; font-weight:600{% else %}13.5px; font-weight:500{% endif %}; color:{% if es_raiz %}var(--text){% else %}var(--text-2){% endif %}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ carpeta.nombre }}</div>
                 <div style="font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--text-3); letter-spacing:.02em; white-space:nowrap;">{{ carpeta.codigo|default:"—" }}</div>
             </div>
         </div>
@@ -76,11 +76,10 @@
             </button>
             {% endif %}
             {% if puede_editar or puede_eliminar %}
-            <button onclick="toggleMenuAcciones(event, this, 'carpeta', {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}', {{ carpeta.total_documentos_recursivo }})" title="{% trans 'Más acciones' %}"
-                    style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:0; border-radius:7px; background:transparent; color:var(--text-3); cursor:pointer;"
-                    onmouseover="this.style.background='var(--surface)';" onmouseout="this.style.background='transparent';">
+            <button type="button" class="doc-btn-more" onclick="toggleMenuAcciones(event, this, 'carpeta', {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}', {{ carpeta.total_documentos_recursivo }})"
+                    title="{% trans 'Más acciones' %}" aria-label="{% trans 'Más opciones' %}" aria-haspopup="menu" aria-expanded="false">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>
+                    <circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>
                 </svg>
             </button>
             {% endif %}

@@ -82,6 +82,8 @@ from .documentacion import (
     carpeta_detalle,
     crear_carpeta,
     editar_carpeta,
+    renombrar_carpeta,
+    renombrar_documento,
     eliminar_carpeta,
     subir_documento,
     eliminar_documento,

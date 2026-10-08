@@ -7,7 +7,7 @@
     doc, carpeta_id (dueño, para data-parent-carpeta), padding (px de
     sangría), visible (si nace mostrada o oculta).
 {% endcomment %}
-<tr class="doc-row-file" data-parent-carpeta="{{ carpeta_id }}" data-nombre="{{ doc.nombre }}" data-codigo=""
+<tr class="doc-row-file" data-documento="{{ doc.pk }}" data-parent-carpeta="{{ carpeta_id }}" data-nombre="{{ doc.nombre }}" data-codigo=""
     data-actualizado="{{ doc.subido_en|date:'c' }}" data-size="{{ doc.archivo.size|default:0 }}" {% if not padding %}data-vista-raiz="1"{% endif %}
     style="border-bottom:1px solid var(--border); background:var(--surface); {% if not visible %}display:none;{% endif %}">
     <td style="padding:10px 14px;"></td>
@@ -48,8 +48,8 @@
                 </svg>
                 {% endif %}
             </div>
-            <div style="min-width:0;">
-                <div style="font-size:13.5px; font-weight:500; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ doc.nombre }}</div>
+            <div class="doc-documento-nombre-wrap" data-documento-nombre="{{ doc.pk }}" style="min-width:0;">
+                <div class="doc-carpeta-nombre-texto" style="font-size:13.5px; font-weight:500; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ doc.nombre }}</div>
                 <div style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-3); letter-spacing:.02em; white-space:nowrap;">{{ doc.extension|upper }} · {{ doc.tamano_legible }}</div>
             </div>
         </div>
@@ -91,11 +91,10 @@
                 </svg>
             </a>
             {% if puede_editar or puede_eliminar %}
-            <button onclick="toggleMenuAcciones(event, this, 'documento', {{ doc.id }}, '{{ doc.nombre|escapejs }}', 0)" title="{% trans 'Más acciones' %}"
-                    style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:0; border-radius:7px; background:transparent; color:var(--text-3); cursor:pointer;"
-                    onmouseover="this.style.background='var(--surface)';" onmouseout="this.style.background='transparent';">
+            <button type="button" class="doc-btn-more" onclick="toggleMenuAcciones(event, this, 'documento', {{ doc.id }}, '{{ doc.nombre|escapejs }}', 0)"
+                    title="{% trans 'Más acciones' %}" aria-label="{% trans 'Más opciones' %}" aria-haspopup="menu" aria-expanded="false">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>
+                    <circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>
                 </svg>
             </button>
             {% endif %}

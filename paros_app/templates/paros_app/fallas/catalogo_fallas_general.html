@@ -14,8 +14,14 @@
         <div class="card-subtitle">{% trans "Fallas registradas por área" %}</div>
     </div>
     <div style="display:flex; gap:8px; align-items:center;">
-        <a href="{% url 'paros:exportar_fallas' %}" class="btn btn-ghost">↓ {% trans "Exportar todo" %}</a>
-        <a href="{% url 'paros:importar_fallas' %}" class="btn btn-primary">↑ {% trans "Importar multi-área" %}</a>
+        <a href="{% url 'paros:exportar_fallas' %}" class="btn btn-ghost" 
+            style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                ↓ {% trans "Exportar todo" %}
+        </a>
+        <a href="{% url 'paros:importar_fallas' %}" class="btn btn-primary" 
+            style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                ↑ {% trans "Importar multi-área" %}
+        </a>
         {% include 'menu_app/_language_selector.html' %}
     </div>
 </div>
@@ -426,13 +432,15 @@
 {% load static %}
 <script>
     const i18n = {
-        eliminar: "{% trans '¿Eliminar' %}",
-        pregunta: "{% trans '¿Eliminar este registro?' %}",
-        sinResponsables: "{% trans 'Sin responsables registrados' %}",
-        errorCargar: "{% trans 'Error al cargar' %}",
-        cargando: "{% trans 'Cargando…' %}",
+        eliminar:              "{% trans '¿Eliminar' %}",
+        pregunta:              "{% trans '¿Eliminar este registro?' %}",
+        sinResponsables:       "{% trans 'Sin responsables registrados' %}",
+        errorCargar:           "{% trans 'Error al cargar' %}",
+        cargando:              "{% trans 'Cargando…' %}",
         seleccionaResponsable: "{% trans 'Selecciona un área' %}",
-        agregar: "{% trans 'Agregar' %}",
+        agregar:               "{% trans 'Agregar' %}",
+        eliminarTodos:         "{% trans 'Eliminar todos los' %}",
+        delArea:               "{% trans 'del área' %}",
     };
 </script>
 <script src="{% static 'paros_app/js/catalogos.js' %}"></script>

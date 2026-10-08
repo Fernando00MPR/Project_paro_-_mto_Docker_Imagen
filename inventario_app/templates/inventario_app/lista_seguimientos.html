@@ -27,9 +27,15 @@
 
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             {% if puede_editar_seg_refaccion %}
-                <button type="button" onclick="abrirModalSeg(event)" class="btn btn-primary">+ {% trans "Nuevo seguimiento" %}</button>
+                <button type="button" onclick="abrirModalSeg(event)" class="btn btn-primary" 
+                    style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                    + {% trans "Nuevo seguimiento" %}
+                </button>
             {% endif %}
-                <a href="{% url 'inventario:exportar_seguimientos_refaccion' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn btn-ghost">↓ {% trans "Exportar" %}</a>
+                <a href="{% url 'inventario:exportar_seguimientos_refaccion' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn btn-ghost" 
+                    style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                    ↓ {% trans "Exportar" %}
+                </a>
             {% include 'menu_app/_language_selector.html' %}
         </div>
     </div>
@@ -452,6 +458,10 @@
 {% load static %}
 <script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 <script>
+    window.SEG_REFACCION_I18N = {
+        seleccionaRefaccion: "{% trans 'Selecciona una refacción de la lista' %}",
+    };
+    
     // Rango de fecha PR es el selector de fecha único; no soporta onchange=""
     // inline como el <input type="date"> nativo que reemplazó.
     document.querySelector('#dp-fecha-pr-desde .dp-value').addEventListener('change', function () {

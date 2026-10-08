@@ -44,10 +44,11 @@
     height: 30px; border: none; background: transparent; border-radius: 8px;
     font-size: 12.5px; color: var(--text); cursor: pointer; font-family: inherit;
 }
-.dp-day:hover:not(:disabled) { background: var(--surface); }
+.dp-day:hover:not(:disabled):not(.dp-day--sel) { background: var(--surface); }
 .dp-day--fuera { color: var(--text-3); opacity: .4; cursor: default; }
 .dp-day--hoy { font-weight: 700; box-shadow: inset 0 0 0 1px var(--indigo); }
 .dp-day--sel { background: var(--indigo); color: #fff; }
+.dp-day--sel:hover { background: var(--indigo-lt); color: var(--indigo); }
 .dp-day--sel.dp-day--hoy { box-shadow: none; }
 .dp-cal-footer {
     display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px;

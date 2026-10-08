@@ -274,6 +274,19 @@ document.getElementById('modal-eliminar-todos').addEventListener('click', functi
     if (e.target === this) cerrarModalEliminarTodos();
 });
 
+// ── Modal tiempo por responsable (semana seleccionada) ─────────────────────────
+function abrirModalTiempoResponsables() {
+    document.getElementById('modal-tiempo-responsables').style.display = 'flex';
+}
+
+function cerrarModalTiempoResponsables() {
+    document.getElementById('modal-tiempo-responsables').style.display = 'none';
+}
+
+document.getElementById('modal-tiempo-responsables').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalTiempoResponsables();
+});
+
 // ── Asignar responsable ───────────────────────────────────────────────────────
 function asignarResponsable(planPk, semana, selectEl) {
     const anio          = window.MTO_CONFIG.anio_actual;

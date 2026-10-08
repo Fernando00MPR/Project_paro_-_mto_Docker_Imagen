@@ -330,6 +330,7 @@ function renderizarEficiencia(datos) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: { padding: { top: 20 } },
             plugins: {
                 legend: { display: false },
                 tooltip: {

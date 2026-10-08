@@ -15,7 +15,10 @@
         </div>
     </div>
     <div style="display:flex; gap:8px; align-items:center;">
-        <a href="{% url 'crear_usuario' %}" class="btn btn-primary">+ {% trans "Nuevo usuario" %}</a>
+        <a href="{% url 'crear_usuario' %}" class="btn btn-primary" 
+            style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+            + {% trans "Nuevo usuario" %}
+        </a>
         {% include 'menu_app/_language_selector.html' %}
     </div>
 </div>

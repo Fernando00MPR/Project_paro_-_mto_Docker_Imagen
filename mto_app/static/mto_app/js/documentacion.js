@@ -3,6 +3,9 @@
 const docCfg = window.DOC_CFG || {};
 const docI18n = docCfg.i18n || {};
 
+// CSRF desde cookie — usado por el renombrado en línea (única llamada AJAX de este archivo).
+const DOC_CSRF = document.cookie.split(';').find(s => s.trim().startsWith('csrftoken='))?.trim().split('=')[1] || '';
+
 function formatearMensajeDoc(plantilla, valores) {
     if (!plantilla) return '';
     return plantilla.replace(/\{(\w+)\}/g, function (_, clave) {
@@ -87,6 +90,7 @@ function cerrarModalEliminarDoc() {
 // quedaría recortado por ese overflow).
 
 let docMenuContexto = null;
+let docMenuBotonActivo = null;
 
 function toggleMenuAcciones(event, boton, tipo, id, nombre, totalDocs) {
     event.stopPropagation();
@@ -98,6 +102,8 @@ function toggleMenuAcciones(event, boton, tipo, id, nombre, totalDocs) {
     if (yaAbiertoParaEste) return;
 
     docMenuContexto = { tipo: tipo, id: id, nombre: nombre, totalDocs: totalDocs };
+    docMenuBotonActivo = boton;
+    boton.setAttribute('aria-expanded', 'true');
 
     const etiquetaEliminar = document.getElementById('doc-menu-item-eliminar');
     if (etiquetaEliminar) {
@@ -127,6 +133,10 @@ function cerrarMenuAcciones() {
         menu.style.display = 'none';
         menu.dataset.abiertoPara = '';
     }
+    if (docMenuBotonActivo) {
+        docMenuBotonActivo.setAttribute('aria-expanded', 'false');
+        docMenuBotonActivo = null;
+    }
 }
 
 function menuAccionesMover(event) {
@@ -147,10 +157,158 @@ function menuAccionesEliminar(event) {
     }
 }
 
+function menuAccionesRenombrar(event) {
+    event.stopPropagation();
+    if (!docMenuContexto) return;
+    const ctx = docMenuContexto;
+    cerrarMenuAcciones();
+    iniciarRenombrarElemento(ctx.tipo, ctx.id);
+}
+
 document.addEventListener('click', function (e) {
     const menu = document.getElementById('doc-menu-acciones');
     if (!menu || menu.style.display === 'none') return;
     if (!menu.contains(e.target)) cerrarMenuAcciones();
+});
+
+// ── Renombrar en línea (carpetas y documentos) ──────────────────────────────────
+// Un solo renombrado activo a la vez: abrir otro cancela el anterior sin
+// guardar. La edición ocurre en la propia celda de nombre, sin modal.
+
+let docRenombreActivo = null; // { tipo, id, wrap, fila, original }
+
+function _renombreWrap(tipo, id) {
+    return (tipo === 'carpeta')
+        ? document.querySelector('.doc-carpeta-nombre-wrap[data-carpeta-nombre="' + id + '"]')
+        : document.querySelector('.doc-documento-nombre-wrap[data-documento-nombre="' + id + '"]');
+}
+
+function _renombreFila(tipo, id) {
+    return (tipo === 'carpeta')
+        ? document.querySelector('.doc-row-carpeta[data-carpeta="' + id + '"]')
+        : document.querySelector('.doc-row-file[data-documento="' + id + '"]');
+}
+
+function iniciarRenombrarElemento(tipo, id) {
+    if (docRenombreActivo && (docRenombreActivo.tipo !== tipo || docRenombreActivo.id !== id)) {
+        cancelarRenombreElemento(docRenombreActivo.tipo, docRenombreActivo.id);
+    }
+    if (docRenombreActivo) return;
+
+    const wrap = _renombreWrap(tipo, id);
+    const fila = _renombreFila(tipo, id);
+    if (!wrap || !fila) return;
+
+    const textoEl = wrap.querySelector('.doc-carpeta-nombre-texto');
+    const nombreActual = textoEl ? textoEl.textContent : '';
+
+    docRenombreActivo = { tipo: tipo, id: id, wrap: wrap, fila: fila, original: wrap.innerHTML };
+
+    wrap.innerHTML =
+        '<div style="display:flex; align-items:center; gap:8px;">' +
+            '<div>' +
+                '<input type="text" class="doc-rename-input" maxlength="120" ' +
+                       'style="width:300px; height:30px; padding:0 10px; font-size:14px; font-weight:600; color:var(--text); ' +
+                       'border:1.5px solid var(--green); border-radius:8px; outline:none; ' +
+                       'box-shadow:0 0 0 3px color-mix(in oklab, var(--green) 20%, transparent); background:var(--white); font-family:inherit;">' +
+                '<div class="doc-rename-error" style="display:none; font-size:11px; color:var(--red); margin-top:4px;"></div>' +
+            '</div>' +
+            '<button type="button" class="doc-rename-guardar" style="height:30px; padding:0 12px; background:var(--green); ' +
+                    'color:#fff; font-size:12px; font-weight:600; border:0; border-radius:7px; cursor:pointer; font-family:inherit;">' +
+                (docI18n.renombrarGuardar || 'Guardar') +
+            '</button>' +
+            '<button type="button" class="doc-rename-cancelar" style="height:30px; padding:0 12px; border:1px solid var(--border); ' +
+                    'color:var(--text-2); font-size:12px; font-weight:600; background:var(--white); border-radius:7px; cursor:pointer; font-family:inherit;">' +
+                (docI18n.renombrarCancelar || 'Cancelar') +
+            '</button>' +
+        '</div>';
+
+    const input = wrap.querySelector('.doc-rename-input');
+    input.value = nombreActual;
+
+    input.addEventListener('click', function (e) { e.stopPropagation(); });
+    input.addEventListener('dblclick', function (e) { e.stopPropagation(); });
+    input.addEventListener('keydown', function (e) {
+        e.stopPropagation();
+        if (e.key === 'Enter') { e.preventDefault(); guardarRenombreElemento(tipo, id); }
+        else if (e.key === 'Escape') { e.preventDefault(); cancelarRenombreElemento(tipo, id); }
+    });
+    input.addEventListener('input', function () {
+        const err = wrap.querySelector('.doc-rename-error');
+        if (err) err.style.display = 'none';
+        input.style.borderColor = 'var(--green)';
+        input.style.boxShadow = '0 0 0 3px color-mix(in oklab, var(--green) 20%, transparent)';
+    });
+
+    wrap.querySelector('.doc-rename-guardar').addEventListener('click', function (e) {
+        e.stopPropagation();
+        guardarRenombreElemento(tipo, id);
+    });
+    wrap.querySelector('.doc-rename-cancelar').addEventListener('click', function (e) {
+        e.stopPropagation();
+        cancelarRenombreElemento(tipo, id);
+    });
+
+    input.focus();
+    input.select();
+}
+
+function cancelarRenombreElemento(tipo, id) {
+    if (!docRenombreActivo || docRenombreActivo.tipo !== tipo || docRenombreActivo.id !== id) return;
+    docRenombreActivo.wrap.innerHTML = docRenombreActivo.original;
+    docRenombreActivo = null;
+}
+
+function guardarRenombreElemento(tipo, id) {
+    if (!docRenombreActivo || docRenombreActivo.tipo !== tipo || docRenombreActivo.id !== id) return;
+    const wrap = docRenombreActivo.wrap;
+    const fila = docRenombreActivo.fila;
+    const input = wrap.querySelector('.doc-rename-input');
+    const nombre = input.value.trim();
+
+    if (!nombre) { cancelarRenombreElemento(tipo, id); return; }
+
+    const urlBase = (tipo === 'carpeta') ? docCfg.urlRenombrarCarpetaBase : docCfg.urlRenombrarDocBase;
+
+    fetch(`${urlBase}${id}/renombrar/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': DOC_CSRF },
+        body: 'nombre=' + encodeURIComponent(nombre),
+    })
+    .then(r => r.json())
+    .then(function (data) {
+        if (!docRenombreActivo || docRenombreActivo.tipo !== tipo || docRenombreActivo.id !== id) return;
+        if (data.ok) {
+            wrap.innerHTML = docRenombreActivo.original;
+            const textoEl = wrap.querySelector('.doc-carpeta-nombre-texto');
+            if (textoEl) textoEl.textContent = data.nombre;
+            fila.dataset.nombre = data.nombre;
+            docRenombreActivo = null;
+
+            fila.style.transition = 'background-color .6s ease';
+            fila.style.backgroundColor = 'color-mix(in oklab, var(--green) 12%, transparent)';
+            setTimeout(function () { fila.style.backgroundColor = ''; }, 700);
+
+            if (typeof ordenActual !== 'undefined' && ordenActual.key === 'name') {
+                aplicarOrdenActual();
+            }
+            if (typeof showToast === 'function') {
+                showToast(docI18n.renombrarExito || 'Renombrado correctamente')
+            }
+        } else {
+            const err = wrap.querySelector('.doc-rename-error');
+            if (err) { err.textContent = data.error || ''; err.style.display = 'block'; }
+            input.style.borderColor = 'var(--red)';
+            input.style.boxShadow = '0 0 0 3px color-mix(in oklab, var(--red) 20%, transparent)';
+            input.focus();
+        }
+    })
+    .catch(function () { cancelarRenombreElemento(tipo, id); });
+}
+
+document.addEventListener('click', function (e) {
+    if (!docRenombreActivo) return;
+    if (!docRenombreActivo.fila.contains(e.target)) cancelarRenombreElemento(docRenombreActivo.tipo, docRenombreActivo.id);
 });
 
 document.addEventListener('keydown', function (e) {

@@ -25,9 +25,18 @@ function ajustarLayout() {
     } else {
         document.getElementById('charts-grid').style.gridTemplateColumns = 'minmax(0,1fr) minmax(0,1fr)';
     }
-    const minW = Math.max(320, maxBars * 45);
-    document.querySelectorAll('#chartPareto, #chartBarras').forEach(c => {
-        c.style.minWidth = minW + 'px';
+    const minW = Math.max(1000, maxBars * 10);
+    [
+        { canvasId: 'chartPareto', n: LABELS_P.length },
+        { canvasId: 'chartBarras', n: LABELS_B.length },
+    ].forEach(({ canvasId, n }) => {
+        const canvas = document.getElementById(canvasId);
+        const wrap   = canvas.parentElement;
+        const aviso  = document.getElementById('aviso-' + canvasId);
+        const excede = n > 40;
+        if (wrap)  wrap.style.display  = excede ? 'none' : 'block';
+        if (aviso) aviso.style.display = excede ? 'flex' : 'none';
+        canvas.style.minWidth = minW + 'px';
     });
 }
 
@@ -54,7 +63,7 @@ function crearGraficaPareto(canvasId) {
             scales:{
                 y:  { beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#9CA3AF'} },
                 y1: { beginAtZero:true, max:100, position:'right', grid:{display:false}, ticks:{font:{size:11},color:red,callback:v=>v+'%'} },
-                x:  { grid:{display:false}, ticks:{font:{size:10},color:'#9CA3AF',maxRotation:45} }
+                x:  { grid:{display:false}, ticks:{font:{size:10}, color:'#9CA3AF', maxRotation:45, minRotation:45, autoSkip:false} }
             }
         },
         plugins:[{ id:'paretoLabels', afterDatasetsDraw(chart) {
@@ -91,7 +100,7 @@ function crearGraficaBarrasAnalisis(canvasId) {
             plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} min (${NPAROS_B[ctx.dataIndex]} paros)` }}},
             scales:{
                 y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#9CA3AF'} },
-                x:{ grid:{display:false}, ticks:{font:{size:10},color:'#9CA3AF',maxRotation:45} }
+                x:{ grid:{display:false}, ticks:{font:{size:10}, color:'#9CA3AF' ,maxRotation:45, minRotation:45, autoSkip:false} }
             }
         },
         plugins:[{ id:'topLabels', afterDatasetsDraw(chart) {

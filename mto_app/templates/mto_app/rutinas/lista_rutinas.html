@@ -19,7 +19,8 @@
         <div class="card-subtitle">{% trans "Pasos de rutina por plan de trabajo" %}</div>
     </div>
     {% if puede_editar_rutinas %}
-        <a href="{% url 'mto:importar_pasos' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm" style="flex-shrink:0; white-space:nowrap;">
+        <a href="{% url 'mto:importar_pasos' %}?area={{ filtro_area }}" class="btn btn-primary btn-sm" 
+            style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px; flex-shrink:0; white-space:nowrap;">
             + {% trans "Agregar Rutina de mantenimiento" %}
         </a>
     {% endif %}

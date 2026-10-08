@@ -66,7 +66,7 @@ function cerrarModalBitacora() {
 // mano antes de dejar que el <form> se envíe de verdad.
 document.getElementById('form-bitacora').addEventListener('submit', function (e) {
     if (!getBitFecha()) {
-        showToast('Selecciona una fecha.', 'warning');
+        showToast(cfg.i18n?.selecFecha || 'Selecciona una fecha.', 'warning');
         e.preventDefault();
     }
 });

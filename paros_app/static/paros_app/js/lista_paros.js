@@ -103,13 +103,13 @@ function enviarCampo(paroId, campo, valor, cell, original, onSuccess) {
         if (data.success) {
             if (onSuccess) onSuccess(data.valor);
             else cell.innerHTML = data.valor;
-            showToast('Campo actualizado');
+            showToast(i18n.campoActualizado);
         } else {
             cell.innerHTML = original;
-            showToast(data.error || 'Error al guardar', 'error');
+            showToast(data.error || i18n.errorGuardar, 'error');
         }
     })
-    .catch(() => { cell.innerHTML = original; showToast('Error de red','error'); });
+    .catch(() => { cell.innerHTML = original; showToast(i18n.errorRed,'error'); });
 }
 
 // ── Edición inline — texto (tiempo_minutos y comentarios) ─────────────────────
@@ -134,7 +134,7 @@ document.querySelectorAll('.editable').forEach(cell => {
                 const val = input.value.trim();
                 const valido = /^\d+$/.test(val) && parseInt(val) >= 0;
                 if (!valido) {
-                    showToast('Ingresa un número válido de minutos.', 'error');
+                    showToast(i18n.minutosInvalidos, 'error');
                     this.innerHTML = original;
                     return;
                 }
@@ -195,7 +195,7 @@ document.querySelectorAll('.editable-fecha').forEach(cell => {
             if (!val) { this.innerHTML = displayOriginal; return; }
             const match = val.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
             if (!match) {
-                showToast('Formato inválido. Usa dd/mm/yy (ej. 18/04/26)', 'error');
+                showToast(i18n.fechaInvalida, 'error');
                 this.innerHTML = displayOriginal;
                 return;
             }
@@ -242,7 +242,7 @@ document.querySelectorAll('.editable-hora').forEach(cell => {
             const val = input.value.trim();
             const valido = /^([01]\d|2[0-3]):([0-5]\d)$/.test(val);
             if (!valido) {
-                showToast('Formato inválido. Usa HH:MM (ej. 14:30)', 'error');
+                showToast(i18n.horaInvalida, 'error');
                 this.innerHTML = original;
                 return;
             }
@@ -289,8 +289,8 @@ document.querySelectorAll('[data-campo="turno"]').forEach(cell => {
             })
             .then(r => r.json())
             .then(data => {
-                if (data.success) showToast('Turno actualizado');
-                else showToast(data.error || 'Error', 'error');
+                if (data.success) showToast(i18n.turnoActualizado);
+                else showToast(data.error || i18n.errorGenerico, 'error');
             });
         };
         sel.addEventListener('blur', save);

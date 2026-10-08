@@ -208,6 +208,15 @@
             </button>
         </div>
         <div style="overflow-x:auto;"><canvas id="chartPareto" style="min-width:600px;height:280px;"></canvas></div>
+        <div id="aviso-chartPareto" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:280px;text-align:center;color:var(--text-3);font-size:12.5px;">
+            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.5;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M8 17V10M13 17V6M18 17v-4"/>
+            </svg>
+            {% trans "Demasiadas barras para mostrar aquí." %}
+            <button type="button" onclick="abrirModalGrafico('pareto')" class="btn btn-ghost" style="font-size:12px;">
+                {% trans "Abrir en pantalla completa" %}
+            </button>
+        </div>
     </div>
 
     <!-- Barras -->
@@ -241,6 +250,15 @@
             </button>
         </div>
         <div style="overflow-x:auto;"><canvas id="chartBarras" style="min-width:600px;height:280px;"></canvas></div>
+        <div id="aviso-chartBarras" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:280px;text-align:center;color:var(--text-3);font-size:12.5px;">
+            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.5;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M8 17V10M13 17V6M18 17v-4"/>
+            </svg>
+            {% trans "Demasiadas barras para mostrar aquí." %}
+            <button type="button" onclick="abrirModalGrafico('barras')" class="btn btn-ghost" style="font-size:12px;">
+                {% trans "Abrir en pantalla completa" %}
+            </button>
+        </div>
     </div>
 
 </div>
@@ -440,7 +458,10 @@
                     <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     {% trans "Descargar" %}
                 </button>
-                <button type="button" onclick="cerrarModalGrafico()" aria-label="{% trans 'Cerrar' %}" style="width:32px;height:32px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--white);color:var(--text-2);display:flex;align-items:center;justify-content:center;">
+                <button type="button" onclick="cerrarModalGrafico()" aria-label="{% trans 'Cerrar' %}"
+                        style="width:28px;height:28px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:#8a8a96;display:flex;align-items:center;justify-content:center;transition:background .15s, color .15s;"
+                        onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                        onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>

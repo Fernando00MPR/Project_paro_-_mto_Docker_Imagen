@@ -4,9 +4,9 @@
         {% csrf_token %}
         <input name="next" type="hidden" value="{{ request.get_full_path }}">
         <button type="submit" name="language" value="es"
-                style="display:flex; align-items:center; gap:5px; padding:5px 10px;
-                       border-radius:7px; border:0.5px solid var(--border); background:transparent;
-                       cursor:pointer; font-family:inherit; font-size:12px; font-weight:500;
+                 style="display:flex; align-items:center; gap:5px; height:38px; padding:0 16px;
+                       border-radius:10px; border:0.5px solid var(--border); background:transparent;
+                       cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:500;
                        color:var(--text);
                        {% if request.LANGUAGE_CODE == 'es' %}
                            border-color:var(--indigo); color:var(--indigo); background:var(--indigo-lt);
@@ -14,9 +14,9 @@
             <span>{% trans "Español" %}</span>
         </button>
         <button type="submit" name="language" value="en"
-                style="display:flex; align-items:center; gap:5px; padding:5px 10px;
-                       border-radius:7px; border:0.5px solid var(--border); background:transparent;
-                       cursor:pointer; font-family:inherit; font-size:12px; font-weight:500;
+                style="display:flex; align-items:center; gap:5px; height:38px; padding:0 16px;
+                       border-radius:10px; border:0.5px solid var(--border); background:transparent;
+                       cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:500;
                        color:var(--text);
                        {% if request.LANGUAGE_CODE == 'en' %}
                            border-color:var(--indigo); color:var(--indigo); background:var(--indigo-lt);

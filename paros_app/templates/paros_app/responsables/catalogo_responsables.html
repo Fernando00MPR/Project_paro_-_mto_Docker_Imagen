@@ -14,8 +14,14 @@
         <div class="card-subtitle">{% trans "Responsables registrados por área" %}</div>
     </div>
     <div style="display:flex; gap:8px; align-items:center;">
-        <a href="{% url 'paros:exportar_responsables' %}" class="btn btn-ghost">↓ {% trans "Exportar todo" %}</a>
-        <a href="{% url 'paros:importar_responsables' %}" class="btn btn-primary">↑ {% trans "Importar multi-área" %}</a>
+        <a href="{% url 'paros:exportar_responsables' %}" class="btn btn-ghost" 
+            style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                ↓ {% trans "Exportar todo" %}
+        </a>
+        <a href="{% url 'paros:importar_responsables' %}" class="btn btn-primary" 
+            style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                ↑ {% trans "Importar multi-área" %}
+        </a>
         {% include 'menu_app/_language_selector.html' %}
     </div>
 </div>

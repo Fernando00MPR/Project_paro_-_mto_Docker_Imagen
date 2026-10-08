@@ -218,7 +218,10 @@
     </div>
     <div style="padding-top:20px; margin-left:auto; display:flex; align-items:center; gap:8px;">
             {% if datos_areas %}
-                <button type="button" class="btn btn-ghost" onclick="abrirModalExportar(event)">⬇ {% trans "Exportar" %}</button>
+                <button type="button" class="btn btn-ghost" onclick="abrirModalExportar(event)" 
+                    style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                        ⬇ {% trans "Exportar" %}
+                </button>
             {% endif %}
             {% include 'menu_app/_language_selector.html' %}
     </div>
@@ -596,16 +599,27 @@
 {{ moldes_area|json_script:"moldes-data" }}
 {{ equipos_por_area_json|json_script:"equipos-data" }}
 <script>
-const CSRF     = '{{ csrf_token }}';
-const URL_AGR  = "{% url 'paros:agregar_registro' %}";
-const URL_ELIM = "{% url 'paros:eliminar_registro' 0 %}".replace('/0/', '/');
-const URL_UPD  = "{% url 'paros:actualizar_registro' 0 %}".replace('/0/', '/');
-const URL_ORD  = "{% url 'paros:actualizar_orden' %}";
-const MOLDES_DATA  = JSON.parse(document.getElementById('moldes-data').textContent);
-const EQUIPOS_DATA = JSON.parse(document.getElementById('equipos-data').textContent);
-const TXT_ELIMINAR = "{% trans 'Eliminar' %}";
-const TXT_TURNO    = "{% trans 'Turno' %}";
-const URL_CONTAR   = "{% url 'paros:contar_registros_produccion' %}";
+const CSRF                      = '{{ csrf_token }}';
+const URL_AGR                   = "{% url 'paros:agregar_registro' %}";
+const URL_ELIM                  = "{% url 'paros:eliminar_registro' 0 %}".replace('/0/', '/');
+const URL_UPD                   = "{% url 'paros:actualizar_registro' 0 %}".replace('/0/', '/');
+const URL_ORD                   = "{% url 'paros:actualizar_orden' %}";
+const MOLDES_DATA               = JSON.parse(document.getElementById('moldes-data').textContent);
+const EQUIPOS_DATA              = JSON.parse(document.getElementById('equipos-data').textContent);
+const TXT_ELIMINAR              = "{% trans 'Eliminar' %}";
+const TXT_TURNO                 = "{% trans 'Turno' %}";
+const URL_CONTAR                = "{% url 'paros:contar_registros_produccion' %}";
+const TXT_REGISTRO_ACTUALIZADO  = "{% trans 'Registro actualizado correctamente.' %}";
+const TXT_ERROR_TURNO           = "{% trans 'No se pudo actualizar el turno.' %}";
+const TXT_FORMATO_HORA_INVALIDO = "{% trans 'Formato inválido. Usa HH:MM (ej. 14:30)' %}";
+const TXT_MOLDE_INVALIDO        = "{% trans 'Selecciona un molde válido del catálogo.' %}";
+const TXT_ERROR_MOLDE           = "{% trans 'No se pudo actualizar el molde.' %}";
+const TXT_HORA_REQUERIDA        = "{% trans 'Ingresa la hora de inicio y fin.' %}";
+const TXT_REGISTRO_GUARDADO     = "{% trans 'Registro guardado correctamente.' %}";
+const TXT_ERROR_TPL             = "{% trans 'Error: {error}' %}";
+const TXT_REGISTRO_ELIMINADO    = "{% trans 'Registro eliminado.' %}";
+const TXT_ERROR_ELIMINAR        = "{% trans 'Error al eliminar el registro.' %}";
+const TXT_ERROR_ORDEN           = "{% trans 'No se pudo guardar el nuevo orden.' %}";
 
 function getMoldeDropdown() {
     let dropdown = document.getElementById('molde-dropdown-global');

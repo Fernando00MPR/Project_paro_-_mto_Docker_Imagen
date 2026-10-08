@@ -115,6 +115,23 @@
     .doc-orden-item.doc-orden-activo { background: var(--surface); color: var(--text); font-weight:600; }
     .doc-orden-item .doc-orden-check { color: var(--green); opacity:0; }
     .doc-orden-item.doc-orden-activo .doc-orden-check { opacity:1; }
+    .doc-btn-more {
+        width: 34px; height: 34px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        border: 1px solid var(--border); border-radius: 9px;
+        background: var(--white); color: var(--text-2); cursor: pointer;
+        transition: border-color .12s, background .12s, color .12s, box-shadow .12s;
+    }
+    .doc-btn-more:hover,
+    .doc-btn-more:focus-visible { border-color: var(--indigo); color: var(--indigo); outline: none; }
+    .doc-btn-more:focus-visible { box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 14%, transparent); }
+    .doc-btn-more[aria-expanded="true"] {
+        border-color: var(--indigo);
+        background: color-mix(in oklab, var(--indigo) 12%, transparent);
+        color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 14%, transparent);
+    }
+    .doc-btn-more svg { fill: currentColor; }
 </style>
 <div class="card" style="padding:0;">
     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:12px 24px; border-bottom:1px solid var(--border); background:var(--surface);">
@@ -477,15 +494,24 @@
 {% trans "Eliminar archivo" as i18n_eliminar_archivo_menu %}
 {% trans 'Mover "{nombre}"' as i18n_titulo_mover %}
 {% trans "Documentos Generales" as i18n_raiz_documentos %}
+{% trans "Guardar" as i18n_renombrar_guardar %}
+{% trans "Cancelar" as i18n_renombrar_cancelar %}
+{% trans "Renombrado correctamente" as i18n_renombrar_exito %}
+
 
 window.DOC_CFG = {
-    urlSubirBase:          "/mto/documentos/carpeta/",  // + <carpeta_id> + "/subir/"
-    urlEditarCarpetaBase:  "/mto/documentos/carpeta/",  // + <carpeta_id> + "/editar/"
-    urlEliminarCarpetaBase:"/mto/documentos/carpeta/",  // + <carpeta_id> + "/eliminar/"
-    urlEliminarDocBase:    "/mto/documentos/",          // + <doc_id> + "/eliminar/"
-    urlMoverCarpetaBase:   "/mto/documentos/carpeta/",  // + <carpeta_id> + "/mover/"
-    urlMoverDocBase:       "/mto/documentos/",          // + <doc_id> + "/mover/"
+    urlSubirBase:           "/mto/documentos/carpeta/",  // + <carpeta_id> + "/subir/"
+    urlEditarCarpetaBase:   "/mto/documentos/carpeta/",  // + <carpeta_id> + "/editar/"
+    urlRenombrarCarpetaBase:"/mto/documentos/carpeta/",  // + <carpeta_id> + "/renombrar/"
+    urlEliminarCarpetaBase: "/mto/documentos/carpeta/",  // + <carpeta_id> + "/eliminar/"
+    urlRenombrarDocBase:    "/mto/documentos/",          // + <doc_id> + "/renombrar/"
+    urlEliminarDocBase:     "/mto/documentos/",          // + <doc_id> + "/eliminar/"
+    urlMoverCarpetaBase:    "/mto/documentos/carpeta/",  // + <carpeta_id> + "/mover/"
+    urlMoverDocBase:        "/mto/documentos/",          // + <doc_id> + "/mover/"
     i18n: {
+        renombrarGuardar:        "{{ i18n_renombrar_guardar|escapejs }}",
+        renombrarCancelar:       "{{ i18n_renombrar_cancelar|escapejs }}",
+        renombrarExito:          "{{ i18n_renombrar_exito|escapejs }}",
         tituloCarpeta:           "{{ i18n_titulo_carpeta|escapejs }}",
         tituloDocumento:         "{{ i18n_titulo_doc|escapejs }}",
         confirmarCarpetaConDocs: "{{ i18n_carpeta_con_docs|escapejs }}",

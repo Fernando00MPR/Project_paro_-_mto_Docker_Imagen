@@ -20,6 +20,7 @@
 </style>
 <div id="doc-menu-acciones" style="display:none; position:fixed; min-width:206px; padding:5px; background:var(--white); border:1px solid var(--border); border-radius:10px; box-shadow:0 14px 32px rgba(20,24,40,.14); z-index:2050;">
     {% if puede_editar %}
+    <button type="button" id="doc-menu-item-renombrar" class="doc-menu-item" onclick="menuAccionesRenombrar(event)">{% trans "Renombrar" %}</button>
     <button type="button" class="doc-menu-item" onclick="menuAccionesMover(event)">{% trans "Mover a…" %}</button>
     {% endif %}
     {% if puede_eliminar %}

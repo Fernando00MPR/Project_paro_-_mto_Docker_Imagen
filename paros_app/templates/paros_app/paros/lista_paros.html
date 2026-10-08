@@ -31,33 +31,36 @@
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         {% if puede_importar %}
-        <a href="{% url 'paros:importar_paros' %}{% if area_actual %}?area_id={{ area_actual.id }}{% endif %}" class="btn btn-ghost btn-sm">↑ {% trans "Importar" %}</a>
+            <a href="{% url 'paros:importar_paros' %}{% if area_actual %}?area_id={{ area_actual.id }}{% endif %}" class="btn btn-ghost" 
+                style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+                    ↑ {% trans "Importar" %}
+            </a>
         {% endif %}
         {% if puede_exportar %}
-        <div style="position:relative; display:inline-block;" id="export-wrap">
-            <button onclick="toggleExportMenu()" class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:5px;">
-                ↓ {% trans "Exportar" %}
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div id="export-menu" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:200;
-                                          background:var(--white);border:1px solid var(--border);border-radius:8px;
-                                          box-shadow:0 4px 16px rgba(0,0,0,.10);min-width:130px;overflow:hidden;">
-                <a href="{% url 'paros:exportar_excel' %}?{% if area_actual %}area_id={{ area_actual.id }}&{% endif %}{% if request.GET %}{{ request.GET.urlencode }}{% endif %}"
-                   style="display:block;padding:9px 14px;font-size:13px;color:var(--text);text-decoration:none;white-space:nowrap;"
-                   onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
-                    📊 Excel (.xlsx)
-                </a>
-                <a href="{% url 'paros:exportar_csv' %}?{% if area_actual %}area_id={{ area_actual.id }}&{% endif %}{% if request.GET %}{{ request.GET.urlencode }}{% endif %}"
-                   style="display:block;padding:9px 14px;font-size:13px;color:var(--text);text-decoration:none;white-space:nowrap;border-top:1px solid var(--border);"
-                   onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
-                    📄 CSV (.csv)
-                </a>
+            <div style="position:relative; display:inline-block;" id="export-wrap">
+                <button onclick="toggleExportMenu()" class="btn btn-ghost" style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px; display:flex;align-items:center;gap:5px;">
+                    ↓ {% trans "Exportar" %}
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div id="export-menu" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:200;
+                                            background:var(--white);border:1px solid var(--border);border-radius:8px;
+                                            box-shadow:0 4px 16px rgba(0,0,0,.10);min-width:130px;overflow:hidden;">
+                    <a href="{% url 'paros:exportar_excel' %}?{% if area_actual %}area_id={{ area_actual.id }}&{% endif %}{% if request.GET %}{{ request.GET.urlencode }}{% endif %}"
+                    style="display:block;padding:9px 14px;font-size:13px;color:var(--text);text-decoration:none;white-space:nowrap;"
+                    onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                        📊 Excel (.xlsx)
+                    </a>
+                    <a href="{% url 'paros:exportar_csv' %}?{% if area_actual %}area_id={{ area_actual.id }}&{% endif %}{% if request.GET %}{{ request.GET.urlencode }}{% endif %}"
+                    style="display:block;padding:9px 14px;font-size:13px;color:var(--text);text-decoration:none;white-space:nowrap;border-top:1px solid var(--border);"
+                    onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                        📄 CSV (.csv)
+                    </a>
+                </div>
             </div>
-        </div>
         {% endif %}
        
         {% if puede_crear %}
-            <a href="{% url 'paros:crear_paro' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">+ {% trans "Nuevo paro" %}</a>
+            <a href="{% url 'paros:crear_paro' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary" style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">+ {% trans "Nuevo paro" %}</a>
         {% endif %}
 
         {% include 'menu_app/_language_selector.html' %}
@@ -528,17 +531,25 @@
     });
 
     const i18n = {
-        turno1: "{% trans 'Turno 1' %}",
-        turno2: "{% trans 'Turno 2' %}",
-        Rechazado: "{% trans 'Rechazado' %}",
-        Pendiente: "{% trans 'Pendiente' %}",
-        Aceptado:  "{% trans 'Aceptado' %}",
-        RechazadoTitulo: "{% trans 'Rechazado → Pendiente' %}",
-        PendienteTitulo: "{% trans 'Pendiente → Aceptado' %}",
-        AceptadoTitulo:  "{% trans 'Aceptado → Rechazado' %}",
-        estatusActualizado: "{% trans 'Estatus actualizado' %}",
-        errorEstatus: "{% trans 'Error al cambiar estatus' %}",
-        imagenDe: "{% trans 'Imagen {n} de {total}' %}",
+        turno1:              "{% trans 'Turno 1' %}",
+        turno2:              "{% trans 'Turno 2' %}",
+        Rechazado:           "{% trans 'Rechazado' %}",
+        Pendiente:           "{% trans 'Pendiente' %}",
+        Aceptado:            "{% trans 'Aceptado' %}",
+        RechazadoTitulo:     "{% trans 'Rechazado → Pendiente' %}",
+        PendienteTitulo:     "{% trans 'Pendiente → Aceptado' %}",
+        AceptadoTitulo:      "{% trans 'Aceptado → Rechazado' %}",
+        estatusActualizado:  "{% trans 'Estatus actualizado' %}",
+        errorEstatus:        "{% trans 'Error al cambiar estatus' %}",
+        imagenDe:            "{% trans 'Imagen {n} de {total}' %}",
+        campoActualizado:    "{% trans 'Campo actualizado' %}",
+        errorGuardar:        "{% trans 'Error al guardar' %}",
+        errorRed:            "{% trans 'Error de red' %}",
+        minutosInvalidos:    "{% trans 'Ingresa un número válido de minutos.' %}",
+        fechaInvalida:       "{% trans 'Formato inválido. Usa dd/mm/yy (ej. 18/04/26)' %}",
+        horaInvalida:        "{% trans 'Formato inválido. Usa HH:MM (ej. 14:30)' %}",
+        turnoActualizado:    "{% trans 'Turno actualizado' %}",
+        errorGenerico:       "{% trans 'Error' %}",
     };
 </script>
 <script src="{% static 'paros_app/js/lista_paros.js' %}" defer></script>

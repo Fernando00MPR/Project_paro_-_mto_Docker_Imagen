@@ -5,7 +5,7 @@ from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
 
 from ..models import Carpeta, Documento, MAX_PROFUNDIDAD_CARPETAS
@@ -217,6 +217,63 @@ def editar_carpeta(request, pk):
     messages.success(request, _("Carpeta actualizada."))
     return _volver()
 
+
+@login_required
+@require_POST
+def renombrar_carpeta(request, pk):
+    """
+    Renombrado en lineas (AJAX) desde el menú ⋯ - solo cambia el nombre, 
+    a diferencia de editar_carpeta (modal, código + nombre, POST bnormal).
+    """
+    permisos = _permisos_documentacion(request)
+    if not permisos['puede_editar']:
+        return JsonResponse({'ok': False, 'error': _("No tienes permiso para editar carpetas.")}, status=403)
+    
+    carpeta = get_object_or_404(Carpeta, pk=pk)
+    nombre = request.POST.get('nombre', '').strip()
+
+    if not nombre:
+        return JsonResponse({'ok': False, 'error': _("El nombre es obligatorio.")}, status=400)
+    
+    existe_carpeta = Carpeta.objects.filter(parent=carpeta.parent, nombre__iexact=nombre).exclude(pk=pk).exists()
+    existe_doc = Documento.objects.filter(carpeta_id=carpeta.parent_id, nombre__iexact=nombre).exists()
+    
+    if existe_carpeta or existe_doc:
+        return JsonResponse({'ok': False, 'error': _("Ya existe un elemento con ese nombre en esta carpeta.")}, status=400)
+
+    carpeta.nombre = nombre
+    carpeta.save()
+    
+    return JsonResponse({'ok': True, 'nombre': carpeta.nombre})
+
+
+@login_required
+@require_POST
+def renombrar_documento(request, pk):
+    """
+    Renombrado en lineas (AJAX) desde el menu ⋯ - igual que renombrar_carpetas pero para documentos,
+    la exten extension no se toca pór quer doc. nombre ya la excluye (viene de archivo.name, no de este campo).
+    """
+    permisos = _permisos_documentacion(request)
+    if not permisos['puede_editar']:
+        return JsonResponse({'ok': False, 'error': _("No tienes permiso para editar documentos.")}, status=403)
+    
+    documento = get_object_or_404(Documento, pk=pk)
+    nombre = request.POST.get('nombre', '').strip()
+
+    if not nombre:
+        return JsonResponse({'ok': False, 'error': _("El nombre es obligatorio.")}, status=400)
+
+    existe_carpeta = Carpeta.objects.filter(parent_id=documento.carpeta_id, nombre__iexact=nombre).exists()
+    existe_doc = Documento.objects.filter(carpeta_id=documento.carpeta_id, nombre__iexact=nombre).exclude(pk=pk).exists()
+
+    if existe_carpeta or existe_doc:
+        return JsonResponse({'ok': False, 'error': _("Ya existe un elemento con ese nombre en esta carpeta.")}, status=400)
+
+    documento.nombre = nombre
+    documento.save()
+    
+    return JsonResponse({'ok': True, 'nombre': documento.nombre})
 
 @login_required
 @require_POST

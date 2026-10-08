@@ -147,19 +147,40 @@ def lista_plan(request):
                                 if registros_semana_pre.get(p.pk) and registros_semana_pre[p.pk].estado == 'completada')
             pendientes_s  = total - completadas_s
             minutos_total = sum(p.duracion_minutos or 0 for p in planes_con_datos)
+            
+            minutos_por_resp = defaultdict(int)
+            for p in planes_con_datos:
+                reg    = registros_semana_pre.get(p.pk)
+                nombre = reg.responsable.nombre_completo() if reg and reg.responsable_id else _("Sin asignar aún")
+                minutos_por_resp[nombre] += p.duracion_minutos or 0
+
+            por_responsable = sorted(
+                (
+                    {
+                    'nombre':        nombre, 
+                    'minutos':       m,
+                    'horas':         m // 60,
+                    'minutos_resto': m % 60
+                    }
+                    for nombre, m in minutos_por_resp.items()
+                ),
+                key=lambda x:x['minutos'], reverse=True,
+            )
+            
             stats_semana  = {
-                'total':         total,
-                'completadas':   completadas_s,
-                'pendientes':    pendientes_s,
-                'minutos_total': minutos_total,
-                'horas':         minutos_total // 60,
-                'minutos_resto': minutos_total % 60,
+                'total':           total,
+                'completadas':     completadas_s,
+                'pendientes':      pendientes_s,
+                'minutos_total':   minutos_total,
+                'horas':           minutos_total // 60,
+                'minutos_resto':   minutos_total % 60,
+                'por_responsable': por_responsable,
             }
 
     planes_con_datos = _orden_por_plan_trabajo(planes_con_datos, orden)
 
-    per_page_raw = request.GET.get('per_page', '8')
-    per_page     = per_page_raw if per_page_raw in ('8', '10', '15', '20') else '8'
+    per_page_raw = request.GET.get('per_page', '10')
+    per_page     = per_page_raw if per_page_raw in ('10', '20', '30', '40') else '10'
     paginator    = Paginator(planes_con_datos, int(per_page))
     page_num     = request.GET.get('page', 1)
     planes_page  = paginator.get_page(page_num)
@@ -178,7 +199,7 @@ def lista_plan(request):
         'filtro_anio':   anio_filtro,
         'stats_semana':  stats_semana,
         'per_page':      per_page,
-        'perpage_opts':  ['8', '10', '15', '20'],
+        'perpage_opts':  ['10', '20', '30', '40'],
         'usuarios':      User.objects.filter(is_active=True).order_by('first_name'),
         'responsables_por_area': {
             str(a.pk): responsables_por_area_dict[a.id]

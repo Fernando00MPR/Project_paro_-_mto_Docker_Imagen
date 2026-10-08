@@ -217,7 +217,8 @@
                     const preview = document.getElementById('preview-imagenes');
 
                     if (input.files.length > disponibles) {
-                        showToast(`Este paro ya tiene ${existentes} imagen(es). Solo puedes agregar ${disponibles} más (máximo 4 en total).`, 'warning');
+                        const msgMax = "{% trans 'Este paro ya tiene {existentes} imagen(es). Solo puedes agregar {disponibles} más (máximo 4 en total).' %}";
+                        showToast(msgMax.replace('{existentes}', existentes).replace('{disponibles}', disponibles), 'warning');
                         input.value = '';
                         preview.innerHTML = '';
                         document.getElementById('zona-texto').textContent = '{% trans "Haz clic para seleccionar imágenes" %}';
