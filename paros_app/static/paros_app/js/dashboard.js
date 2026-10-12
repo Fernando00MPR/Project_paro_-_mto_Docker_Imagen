@@ -39,8 +39,11 @@ function toggleCustom(val) {
     if (btnCustom)  btnCustom.style.display  = val === 'custom'     ? 'flex' : 'none';
     if (btnMes)     btnMes.style.display     = val === 'mes'        ? 'flex' : 'none';
     if (btnMeses)   btnMeses.style.display   = val === 'meses'      ? 'flex' : 'none';
-    // Opciones simples (hoy, semana, mes…) no necesitan botón "Aplicar": submit inmediato
-    if (val !== 'semana_num' && val !== 'custom' && val !== 'mes' && val !== 'meses') {
+    // Opciones simples (hoy, semana, mes…) no necesitan botón "Aplicar": submit inmediato.
+    // "semana_num" entra aquí también porque su campo ya trae la semana actual
+    // por defecto — no hace falta esperar a que el usuario cambie algo primero
+    // (a diferencia de "custom", que si no tendrían un valor usable aún).
+    if (val !== 'custom') {
         document.getElementById('rango-select').closest('form').submit();
     }
 }
@@ -153,8 +156,10 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
     // `nombreFallback` se usa cuando r.nombre es nulo (sin asignar, sin falla, etc.).
     function _buildRanking(items, maxVal, nombreFallback, color) {
         if (!items.length) return '<p style="color:var(--text-3);font-size:13px;">' + (cfg.sinDatos || 'Sin datos') + '</p>';
+        const ordenTop = new URLSearchParams(window.location.search).get('orden_top') || 'minutos';
         return items.map(function(r) {
-            const pct = Math.round(r.total / maxVal * 100);
+            const valor = ordenTop === 'minutos' ? r.minutos : r.total;
+            const pct = Math.round(valor / maxVal * 100);
             return '<div style="margin-bottom:10px;">'
                 + '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
                 + '<span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%;">' + (r.nombre || nombreFallback) + '</span>'
@@ -235,9 +240,27 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
                        + n.getMinutes().toString().padStart(2,'0') + ':'
                        + n.getSeconds().toString().padStart(2,'0');
     }
+    // Cambia el orden de los 3 rankings (minutos/cantidad): guarda el modo en la
+    // URL (para que sobreviva al auto-refresh de cada 60s, que reusa
+    // window.location.search), marca el botón activo y vuelve a pedir los datos.
+    function cambiarOrdenTop(modo){
+        const url = new URL(window.location.href);
+        url.searchParams.set('orden_top', modo);
+        window.history.replaceState({}, '', url);
+
+        const activo   = { background: 'var(--indigo)', color: '#fff'};
+        const inactivo = { background: 'var(--white)',  color:  'var(--text-2)'};
+        const btnMin   = document.getElementById('ordtop-minutos');
+        const btnCant  = document.getElementById('ordtop-cantidad');
+        Object.assign(btnMin.style, modo === 'minutos' ? activo :inactivo);
+        Object.assign(btnCant.style, modo === 'cantidad' ? activo :inactivo);
+
+        actualizarDashboard();
+    }
 
     // Exponer para el botón "Actualizar ahora" del HTML y programar refresh cada 60 s
     window.actualizarDashboard = actualizarDashboard;
+    window.cambiarOrdenTop     = cambiarOrdenTop;
     setInterval(actualizarDashboard, 60000);
 
     // Redibujar la gráfica al cambiar el color de acento o el tema. Se destruye y

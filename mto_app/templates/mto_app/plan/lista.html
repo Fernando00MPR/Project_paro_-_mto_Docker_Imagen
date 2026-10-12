@@ -94,6 +94,23 @@
           background-position: right 10px center !important;
           background-size: 14px !important;
       }
+      /* Select de responsable en cada fila (asignación semanal) — mismo
+         arreglo de flecha que .plan-filtros select arriba. */
+      .plan-resp-select {
+          appearance: none; -webkit-appearance: none;
+          padding: 5px 34px 5px 8px;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          background-size: 14px;
+          background-color: var(--white);
+      }
+      [data-theme="dark"] .plan-resp-select {
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 10px center !important;
+          background-size: 14px !important;
+      }
       .plan-filtros .filter-divider {
           width: 1px;
           height: 40px;
@@ -332,7 +349,7 @@
                 {% for p in planes %}
                 <tr style="cursor:pointer;" ondblclick="filaClickVer(event, {{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')">
                     <td style="width:6px; padding:0;
-                       background:{% if filtro_semana %}{% if p.registro_semana.estado == 'completada' %}#1D9E75{% elif p.registro_semana.estado == 'reagendada' %}var(--indigo){% elif p.registro_semana.estado == 'cancelada' %}#9CA3AF{% else %}#F59E0B{% endif %}{% else %}transparent{% endif %};"
+                       background:{% if filtro_semana %}{% if p.registro_semana.estado == 'completada' %}#1D9E75{% elif p.registro_semana.estado == 'reagendada' %}#7E92CF{% elif p.registro_semana.estado == 'cancelada' %}#E01919{% else %}#F59E0B{% endif %}{% else %}transparent{% endif %};"
                         {% if filtro_semana %}title="{% if p.registro_semana.estado == 'completada' %}{% trans 'Completada' %}{% elif p.registro_semana.estado == 'reagendada' %}{% trans 'Reagendada' %}{% elif p.registro_semana.estado == 'cancelada' %}{% trans 'Cancelada' %}{% else %}{% trans 'Pendiente' %}{% endif %} — S{{ filtro_semana }}"{% endif %}></td>
                     <td class="col-area"   style="white-space:nowrap;">{{ p.area }}</td>
                     <td class="col-codigo" style="text-align:center; white-space:nowrap;"><strong style="font-family:ui-monospace,SFMono-Regular,'Roboto Mono',Menlo,Consolas,monospace;">{{ p.codigo }}</strong></td>
@@ -361,11 +378,19 @@
                     {% if filtro_semana %}
                     <td style="text-align:center; min-width:180px;">
                         {% if p.semana_actual %}
-                        <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
-                            <span style="font-size:12px; font-weight:600; color:#065F46;">S{{ p.semana_actual.semana }}/{{ p.semana_actual.lunes|date:"Y" }}</span>
-                            <span style="font-size:11px; color:var(--text-3);">{{ p.semana_actual.lunes|date:"d M" }} – {{ p.semana_actual.domingo|date:"d M" }}</span>
-                        </div>
-                        {% else %}<span style="color:var(--text-3);">--</span>{% endif %}
+                            <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
+                                <span style="font-size:12px; font-weight:600; color:#065F46;">S{{ p.semana_actual.semana }}/{{ p.semana_actual.lunes|date:"Y" }}</span>
+                                <span style="font-size:11px; color:var(--text-3);">{{ p.semana_actual.lunes|date:"d M" }} – {{ p.semana_actual.domingo|date:"d M" }}</span>
+                                {% if p.fuera_de_frecuencia %}
+                                    <span title="{% trans 'Esta semana ya no calza con la frecuencia actual del plan — se muestra porque tiene un registro guardado.' %}"
+                                        style="font-size:10px; font-weight:600; color:#B45309; background:#FEF3C7; border:1px solid #FDE68A; border-radius:4px; padding:1px 6px; margin-top:1px;">
+                                        {% trans "Fuera de frecuencia" %}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span style="color:var(--text-3);">--</span>
+                        {% endif %}
                     </td>
                     {% endif %}
 
@@ -381,8 +406,9 @@
                     {% if filtro_semana %}
                     <td style="text-align:center;">
                         <select onchange="asignarResponsable({{ p.pk }}, {{ filtro_semana }}, this)"
-                                style="padding:5px 8px; border:1px solid var(--border); border-radius:6px;
-                                       font-family:inherit; font-size:12px; background:var(--white);
+                                class="plan-resp-select" 
+                                style="border:1px solid var(--border); border-radius:6px;
+                                       font-family:inherit; font-size:12px;
                                        color:var(--text); outline:none; min-width:150px; cursor:pointer;">
                             <option value="">-- Sin asignar --</option>
                             {% for r in p.responsables_area %}
@@ -394,13 +420,13 @@
                         {% if p.registro_semana and p.registro_semana.estado %}
                         <div style="margin-top:4px;">
                             {% if p.registro_semana.estado == 'completada' %}
-                            <span style="font-size:10px; font-weight:600; color:#065F46; background:#D1FAE5; padding:2px 8px; border-radius:20px;">{% trans "Completada" %}</span>
+                                <span style="font-size:10px; font-weight:600; color:#065F46; background:#D1FAE5; padding:2px 8px; border-radius:20px;">{% trans "Completada" %}</span>
                             {% elif p.registro_semana.estado == 'pendiente' %}
-                            <span style="font-size:10px; font-weight:600; color:#92400E; background:#FEF3C7; padding:2px 8px; border-radius:20px;">{% trans "Pendiente" %}</span>
+                                <span style="font-size:10px; font-weight:600; color:#92400E; background:#FEF3C7; padding:2px 8px; border-radius:20px;">{% trans "Pendiente" %}</span>
                             {% elif p.registro_semana.estado == 'reagendada' %}
-                            <span style="font-size:10px; font-weight:600; color:var(--indigo-dk); background:var(--indigo-lt); padding:2px 8px; border-radius:20px;">{% trans "Reagendada" %}</span>
+                                <span style="font-size:10px; font-weight:600; color:#33499b; background:#e9eefc; padding:2px 8px; border-radius:20px;">{% trans "Reagendada" %}</span>
                             {% elif p.registro_semana.estado == 'cancelada' %}
-                            <span style="font-size:10px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px;">{% trans "Cancelada" %}</span>
+                                <span style="font-size:10px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px;">{% trans "Cancelada" %}</span>
                             {% endif %}
                         </div>
                         {% endif %}

@@ -93,6 +93,7 @@ def lista_plan(request):
         plan.semana_inicio_domingo = None
         plan.registro_semana       = None
         plan.semana_actual         = None
+        plan.fuera_de_frecuencia   = False
         plan.responsables_area     = responsables_por_area_map[plan.area_id]
 
         if plan.semana_inicio and plan.anio_inicio:
@@ -116,19 +117,28 @@ def lista_plan(request):
                 if filtro_semana:
                     if lunes_busq_pre is None:
                         continue
-                    lunes_busq = lunes_busq_pre
-                    delta   = (lunes_busq - ref_lunes).days
-                    semanas = delta // 7
-                    if delta < 0 or semanas % intervalo != 0:
+
+                    lunes_busq  = lunes_busq_pre
+                    delta       = (lunes_busq - ref_lunes).days
+                    semanas     = delta // 7
+                    en_cadencia = delta >= 0 and semanas % intervalo == 0
+                    registro    = registros_semana_pre.get(plan.id)
+
+                    # Si la semana ya no calza con la frecuencia actual pero
+                    # tiene un registro guardado (se completó/registró bajo
+                    # una frecuencia anterior), se sigue mostrando — solo se
+                    # salta cuando ni calza ni hay nada que mostrar.
+                    if not en_cadencia and not registro:
                         continue
 
+                    plan.fuera_de_frecuencia = not en_cadencia
                     plan.semana_actual = {
                         'semana':  int(filtro_semana),
                         'lunes':   lunes_busq,
                         'domingo': lunes_busq + timedelta(days=6),
                     }
 
-                    plan.registro_semana = registros_semana_pre.get(plan.id)
+                    plan.registro_semana = registro
 
             except Exception:
                 if filtro_semana:
@@ -271,12 +281,13 @@ def form_plan(request, pk=None):
             messages.error(request, _("Error al guardar: {error}").format(error=e))
 
     ctx = {
-        'plan':        plan,
-        'areas':       areas,
-        'frecuencias': PlanMantenimiento.FRECUENCIA_CHOICES,
-        'tipos_mto':   PlanMantenimiento.TIPO_MTO_CHOICES,
-        'prioridades': PlanMantenimiento.PRIORIDAD_CHOICES,
-        'status_opts': PlanMantenimiento.STATUS_CHOICES,
+        'plan':             plan,
+        'areas':            areas,
+        'frecuencias':      PlanMantenimiento.FRECUENCIA_CHOICES,
+        'tipos_mto':        PlanMantenimiento.TIPO_MTO_CHOICES,
+        'prioridades':      PlanMantenimiento.PRIORIDAD_CHOICES,
+        'status_opts':      PlanMantenimiento.STATUS_CHOICES,
+        'tiene_registros':  plan.registros.exists() if plan else False,
     }
     return render(request, 'mto_app/plan/form.html', ctx)
 
@@ -426,21 +437,40 @@ def modal_plan(request, pk):
                     cursores.append(cursor)
                 cursor += timedelta(weeks=intervalo)
 
-            registros_map = {
-                r.semana_inicio: r
-                for r in RegistroEjecucion.objects.filter(plan=plan, semana_inicio__in=cursores)
-            }
+            # Todos los registros de este año, calcen o no con la frecuencia
+            # actual — así uno guardado bajo una frecuencia anterior (que ya
+            # no cae en `cursores`) nunca desaparece del calendario, solo se
+            # marca aparte (`fuera_de_frecuencia`).
+            registros_anio = list(RegistroEjecucion.objects.filter(plan=plan, anio=anio))
+            registros_map  = {r.semana_inicio: r for r in registros_anio}
+            cursores_set   = set(cursores)
 
             for cursor in cursores:
                     fechas.append({
-                        'fecha':    cursor,
-                        'domingo':  cursor + timedelta(days=6),
-                        'semana':   cursor.isocalendar()[1],
-                        'registro': registros_map.get(cursor),
-                        'pasada':   cursor < hoy,
-                        'actual':   (cursor.isocalendar()[1] == hoy.isocalendar()[1]
-                                     and cursor.year == hoy.year),
+                        'fecha':               cursor,
+                        'domingo':             cursor + timedelta(days=6),
+                        'semana':              cursor.isocalendar()[1],
+                        'registro':            registros_map.get(cursor),
+                        'pasada':              cursor < hoy,
+                        'actual':              (cursor.isocalendar()[1] == hoy.isocalendar()[1]
+                                                 and cursor.year == hoy.year),
+                        'fuera_de_frecuencia': False,
                     })
+
+            for r in registros_anio:
+                if r.semana_inicio not in cursores_set:
+                    fechas.append({
+                        'fecha':               r.semana_inicio,
+                        'domingo':             r.semana_inicio + timedelta(days=6),
+                        'semana':              r.semana_num,
+                        'registro':            r,
+                        'pasada':              r.semana_inicio < hoy,
+                        'actual':              (r.semana_inicio.isocalendar()[1] == hoy.isocalendar()[1]
+                                                 and r.semana_inicio.year == hoy.year),
+                        'fuera_de_frecuencia': True,
+                    })
+
+            fechas.sort(key=lambda f: f['fecha'])
         except Exception:
             pass
 

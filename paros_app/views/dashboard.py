@@ -104,25 +104,30 @@ def dashboard(request):
     Pendiente     = _agg['pendiente']
     Aceptados     = _agg['aceptados']
 
+    # ── Orden en los rankings: por minutos (defailt) o por cantidad de  paros ─
+    orden_top = request.GET.get('orden_top', 'minutos')
+    orden_top = orden_top if orden_top in ('minutos', 'cantidad') else 'minutos'
+    campo_orden = '-minutos' if orden_top == 'minutos' else '-total'
+
     # ── Top responsables ──────────────────────────────────────────────────────
     top_responsables = (
         qs.values('responsable')
         .annotate(total=Count('id'), minutos=Sum('tiempo_minutos'))
-        .order_by('-total')[:8]
+        .order_by(campo_orden)[:8]
     )
 
     # ── Top fallas ────────────────────────────────────────────────────────────
     top_fallas = (
         qs.values('falla')
         .annotate(total=Count('id'), minutos=Sum('tiempo_minutos'))
-        .order_by('-total')[:8]
+        .order_by(campo_orden)[:8]
     )
 
     # ── Top equipos ───────────────────────────────────────────────────────────
     top_equipos = (
         qs.values('equipo')
         .annotate(total=Count('id'), minutos=Sum('tiempo_minutos'))
-        .order_by('-total')[:8]
+        .order_by(campo_orden)[:8]
     )
 
     # ── Paros por turno ───────────────────────────────────────────────────────
@@ -196,9 +201,13 @@ def dashboard(request):
     ]
 
     # ── Máximos para escalar barras ───────────────────────────────────────────
-    max_resp   = max((r['total'] for r in top_responsables), default=1)
-    max_falla  = max((f['total'] for f in top_fallas),       default=1)
-    max_equipo = max((e['total'] for e in top_equipos),      default=1)
+
+    # Debe ser el mismo campo por el que se ordenó (orden_top), si no la barra
+    # más ancha no coincidiría con el primer lugar de la lista.
+    campo_valor = 'minutos' if orden_top == 'minutos' else 'total' 
+    max_resp   = max((r[campo_valor] for r in top_responsables), default=1)
+    max_falla  = max((f[campo_valor] for f in top_fallas),       default=1)
+    max_equipo = max((e[campo_valor] for e in top_equipos),      default=1)
     max_tend   = max((d['paros'] for d in tendencia),        default=1)
 
     # ── Responsables disponibles para el filtro ───────────────────────────────
@@ -255,6 +264,7 @@ def dashboard(request):
         'max_equipo':               max_equipo,
         'max_tend':                 max_tend,
         'estatus_filtro':           estatus_filtro,
+        'orden_top':                orden_top,
     })
 
 @login_required
@@ -325,9 +335,13 @@ def dashboard_json(request):
     total_minutos = qs.aggregate(t=Sum('tiempo_minutos'))['t'] or 0
     promedio_min  = round(total_minutos / total_paros, 1) if total_paros else 0
 
-    top_responsables = list(qs.values('responsable').annotate(total=Count('id'), minutos=Sum('tiempo_minutos')).order_by('-total')[:8])
-    top_fallas       = list(qs.values('falla').annotate(total=Count('id'), minutos=Sum('tiempo_minutos')).order_by('-total')[:8])
-    top_equipos      = list(qs.values('equipo').annotate(total=Count('id'), minutos=Sum('tiempo_minutos')).order_by('-total')[:8])
+    orden_top   = request.GET.get('orden_top', 'minutos')
+    orden_top   = orden_top if orden_top in ('minutos', 'cantidad') else 'minutos'
+    campo_orden = '-minutos' if orden_top == 'minutos' else '-total'
+
+    top_responsables = list(qs.values('responsable').annotate(total=Count('id'), minutos=Sum('tiempo_minutos')).order_by(campo_orden)[:8])
+    top_fallas       = list(qs.values('falla').annotate(total=Count('id'), minutos=Sum('tiempo_minutos')).order_by(campo_orden)[:8])
+    top_equipos      = list(qs.values('equipo').annotate(total=Count('id'), minutos=Sum('tiempo_minutos')).order_by(campo_orden)[:8])
 
     turno1 = qs.filter(turno=1).count()
     turno2 = qs.filter(turno=2).count()
@@ -384,9 +398,9 @@ def dashboard_json(request):
         'top_responsables': [{'nombre': r['responsable'] or '', 'total': r['total'], 'minutos': r['minutos'] or 0} for r in top_responsables],
         'top_fallas':       [{'nombre': f['falla'] or '',       'total': f['total'], 'minutos': f['minutos'] or 0} for f in top_fallas],
         'top_equipos':      [{'nombre': e['equipo'] or '',      'total': e['total'], 'minutos': e['minutos'] or 0} for e in top_equipos],
-        'max_resp':         max((r['total'] for r in top_responsables), default=1),
-        'max_falla':        max((f['total'] for f in top_fallas),       default=1),
-        'max_equipo':       max((e['total'] for e in top_equipos),      default=1),
+        'max_resp':         max((r[campo_orden.lstrip('-')] for r in top_responsables), default=1),
+        'max_falla':        max((f[campo_orden.lstrip('-')] for f in top_fallas),       default=1),
+        'max_equipo':       max((e[campo_orden.lstrip('-')] for e in top_equipos),      default=1),
         'chart_labels':     chart_labels,
         'chart_data':       chart_data,
     })

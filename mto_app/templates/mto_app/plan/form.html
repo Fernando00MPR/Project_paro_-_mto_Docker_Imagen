@@ -27,7 +27,7 @@
             <div class="card-subtitle">{% trans "Completa todos los campos del plan" %}</div>
         </div>
     </div>
-    <form method="post">
+    <form method="post" id="form-plan" onsubmit="return confirmarCambioFrecuencia(event)">
         {% csrf_token %}
         <div class="form-grid">
             <div class="form-field">
@@ -52,7 +52,7 @@
             </div>
             <div class="form-field">
                 <label>{% trans "Frecuencia" %} *</label>
-                <select name="frecuencia" required>
+                <select name="frecuencia" id="select-frecuencia" data-original="{{ plan.frecuencia|default:'' }}" required>
                     <option value="">— {% trans "Seleccionar" %} —</option>
                     {% for val, label in frecuencias %}
                     <option value="{{ val }}" {% if plan.frecuencia == val %}selected{% endif %}>
@@ -147,4 +147,46 @@
         </div>
     </form>
 </div>
+
+
+<!-- ── Aviso: cambiar frecuencia de un plan con registros ya guardados ── -->
+<div id="modal-aviso-frecuencia"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
+                min-width:320px; max-width:440px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Esta tarea ya tiene registros guardados" %}</div>
+        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">
+            {% trans 'Cambiar la frecuencia puede hacer que algunas semanas ya completadas dejen de calzar con el nuevo patrón (quedarán marcadas como "Fuera de frecuencia" en vez de desaparecer). ¿Confirmas el cambio?' %}
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button type="button" onclick="cerrarAvisoFrecuencia()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <button type="button" onclick="confirmarGuardarFrecuencia()" class="btn btn-primary">{% trans "Sí, cambiar frecuencia" %}</button>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function confirmarCambioFrecuencia(e) {
+    const tieneRegistros = {{ tiene_registros|yesno:"true,false" }};
+    const sel = document.getElementById('select-frecuencia');
+    if (!tieneRegistros || !sel || sel.value === sel.dataset.original) return true;
+    e.preventDefault();
+    document.getElementById('modal-aviso-frecuencia').style.display = 'flex';
+    return false;
+}
+function confirmarGuardarFrecuencia() {
+    document.getElementById('modal-aviso-frecuencia').style.display = 'none';
+    document.getElementById('form-plan').submit();
+}
+function cerrarAvisoFrecuencia() {
+    document.getElementById('modal-aviso-frecuencia').style.display = 'none';
+}
+document.getElementById('modal-aviso-frecuencia').addEventListener('click', function(e) {
+    if (e.target === this) cerrarAvisoFrecuencia();
+});
+</script>
+{% endblock %}
+
 {% endblock %}

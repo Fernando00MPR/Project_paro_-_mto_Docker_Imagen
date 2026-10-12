@@ -96,7 +96,7 @@
 
         <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Período" %}</label>
-            <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value); if(this.value !== 'custom' && this.value !== 'semana') prepararExclusiones();"
+            <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value); if(this.value !== 'custom') prepararExclusiones();"
                     style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:150px;">
                 <option value="hoy"     {% if periodo == 'hoy'    %}selected{% endif %}>  {% trans "Hoy" %}</option>
                 <option value="7"       {% if periodo == '7'      %}selected{% endif %}>  {% trans "Últimos 7 días" %}</option>

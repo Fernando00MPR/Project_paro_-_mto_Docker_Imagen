@@ -207,7 +207,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ── Modal calendario ──────────────────────────────────────────────────────────
+let modalHuboCambio = false;
+
 function abrirModal(pk, semana, anio) {
+    modalHuboCambio = false;
     let url = '/mto/equipos/' + pk + '/modal/';
     const params = new URLSearchParams();
     if (anio) params.set('anio', anio);
@@ -235,9 +238,17 @@ function cerrarModal() {
 }
 
 window.addEventListener('message', function(e) {
-    if (e.data === 'cerrar_modal') {
+    
+    if (e.data === 'hubo_cambio') {
+        modalHuboCambio = true;
+    } else if (e.data === 'cerrar_modal') {
         cerrarModal();
-        window.location.reload();
+        // Solo recarga la tabla si de verdad se guardó/eliminó algo dentro
+        // del modal — si solo se abrió a consultar el calendario, cerrar es
+        // instantáneo en vez de forzar una recarga completa de la página.
+        if (modalHuboCambio) {
+            window.location.reload();
+        }
     } else if (typeof e.data === 'string' && e.data.startsWith('cambiar_anio:')) {
         const parts = e.data.split(':');
         document.getElementById('modal-iframe').src = '/mto/equipos/' + parts[2] + '/modal/?anio=' + parts[1];

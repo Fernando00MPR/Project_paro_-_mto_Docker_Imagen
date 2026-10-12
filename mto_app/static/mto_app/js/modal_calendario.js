@@ -46,6 +46,11 @@ window.addEventListener('message', function(e) {
         iframe.src = '';
         iframe.style.height = '0';
     } else if (typeof e.data === 'string' && e.data.startsWith('registro_guardado:')) {
+        // Se avisa al padre directamente (no solo al cerrar) porque este
+        // iframe se recarga a sí mismo ahora mismo — si después se cambia
+        // de año dentro del modal, ese recargo perdería cualquier marca
+        // puesta en su propia URL.
+        window.parent.postMessage('hubo_cambio', '*');
         const parts      = e.data.split(':');
         const pk         = parts[1];
         const anio       = parts[2];

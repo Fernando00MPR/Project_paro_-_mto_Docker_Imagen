@@ -158,6 +158,7 @@
     .mc-cell-cancelada   { background: #fbe9ec; border-color: #f2c9d0; color: var(--mc-danger); }
     .mc-cell-vacio       { background: var(--mc-neutral-bg); border-color: var(--mc-neutral-border); color: var(--mc-neutral); }
     .mc-cell-actual      { box-shadow: 0 0 0 2px var(--mc-primary); }
+    .mc-cell-fuera       { border-style: dashed; border-width: 2px; }
 
     /* ── Fila colapsable (Semanas del año) ── */
     .mc-collapse-wrap { padding: 8px 24px; }
@@ -230,10 +231,10 @@
         </div>
         <div class="mc-cal-grid">
             {% for item in fechas %}
-            <div class="mc-cal-cell {% if item.registro %}mc-cell-{{ item.registro.estado }}{% else %}mc-cell-vacio{% endif %}{% if item.actual %} mc-cell-actual{% endif %}"
-                 title="{% trans 'Semana' %} {{ item.semana }} &middot; {% if item.registro %}{{ item.registro.get_estado_display }}{% else %}{% trans 'Sin generar' %}{% endif %}"
-                 onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">{{ item.semana }}
-            </div>
+                <div class="mc-cal-cell {% if item.registro %}mc-cell-{{ item.registro.estado }}{% else %}mc-cell-vacio{% endif %}{% if item.actual %} mc-cell-actual{% endif %}{% if item.fuera_de_frecuencia %} mc-cell-fuera{% endif %}"
+                    title="{% trans 'Semana' %} {{ item.semana }} &middot; {% if item.registro %}{{ item.registro.get_estado_display }}{% else %}{% trans 'Sin generar' %}{% endif %}{% if item.fuera_de_frecuencia %} &middot; {% trans 'Fuera de la frecuencia actual' %}{% endif %}"
+                    onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">{{ item.semana }}
+                </div>
             {% endfor %}
         </div>
     </div>
@@ -294,39 +295,43 @@
                     {% if item.registro %}
                         {% if item.registro.estado == 'completada' %}
                             {% with bg="#D1FAE5" border="#6EE7B7" tc="#065F46" %}
-                            <div style="padding:10px 12px; border-radius:8px; background:{{ bg }}; border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid {{ border }}{% endif %}; cursor:pointer;"
+                            <div style="padding:10px 12px; border-radius:8px; background:{{ bg }}; border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid {{ border }}{% endif %}; cursor:pointer;{% if item.fuera_de_frecuencia %}border-style:dashed;{% endif %}"
                                 onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
                                 <div style="font-size:10px; font-weight:700; color:{{ tc }}; letter-spacing:.05em;">S{{ item.semana }}</div>
                                 <div style="font-size:12px; font-weight:600; color:{{ tc }}; margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
                                 <div style="font-size:10px; color:{{ tc }}; margin-top:3px; opacity:.85;">{% trans "Completada" %}</div>
+                                {% if item.fuera_de_frecuencia %}<div style="font-size:9.5px; color:#8a6410; margin-top:2px; font-weight:600;">{% trans "Fuera de frecuencia" %}</div>{% endif %}
                             </div>
                             {% endwith %}
                         {% elif item.registro.estado == 'reagendada' %}
                             <div style="padding:10px 12px; border-radius:8px; background:#E0E7FF;
                                         border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid var(--mc-info){% endif %};
-                                        cursor:pointer;"
+                                        cursor:pointer;{% if item.fuera_de_frecuencia %}border-style:dashed;{% endif %}"
                                 onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
                                 <div style="font-size:10px; font-weight:700; color:var(--mc-info); letter-spacing:.05em;">S{{ item.semana }}</div>
                                 <div style="font-size:12px; font-weight:600; color:var(--mc-info); margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
                                 <div style="font-size:10px; color:var(--mc-info); margin-top:3px; opacity:.85;">{% trans "Reagendada" %}</div>
+                                {% if item.fuera_de_frecuencia %}<div style="font-size:9.5px; color:#8a6410; margin-top:2px; font-weight:600;">{% trans "Fuera de frecuencia" %}</div>{% endif %}
                             </div>
                         {% elif item.registro.estado == 'cancelada' %}
                             <div style="padding:10px 12px; border-radius:8px; background:#FEE2E2;
                                         border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid #FCA5A5{% endif %};
-                                        cursor:pointer;"
+                                        cursor:pointer;{% if item.fuera_de_frecuencia %}border-style:dashed;{% endif %}"
                                 onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
                                 <div style="font-size:10px; font-weight:700; color:#991B1B; letter-spacing:.05em;">S{{ item.semana }}</div>
                                 <div style="font-size:12px; font-weight:600; color:#991B1B; margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
                                 <div style="font-size:10px; color:#991B1B; margin-top:3px; opacity:.85;">{% trans "Cancelada" %}</div>
+                                {% if item.fuera_de_frecuencia %}<div style="font-size:9.5px; color:#8a6410; margin-top:2px; font-weight:600;">{% trans "Fuera de frecuencia" %}</div>{% endif %}
                             </div>
                         {% else %}
                             <div style="padding:10px 12px; border-radius:8px; background:var(--mc-warn-bg);
                                         border:{% if item.actual %}2px solid var(--mc-primary){% else %}1px solid var(--mc-warn-border){% endif %};
-                                        cursor:pointer;"
+                                        cursor:pointer;{% if item.fuera_de_frecuencia %}border-style:dashed;{% endif %}"
                                 onclick="abrirFormRegistro({{ plan.pk }}, {{ item.semana }}, {{ anio }})">
                                 <div style="font-size:10px; font-weight:700; color:var(--mc-warn); letter-spacing:.05em;">S{{ item.semana }}</div>
                                 <div style="font-size:12px; font-weight:600; color:var(--mc-warn); margin-top:2px;">{{ item.fecha|date:"d M" }} – {{ item.domingo|date:"d M" }}</div>
                                 <div style="font-size:10px; color:var(--mc-warn); margin-top:3px; opacity:.85;">{{ item.registro.get_estado_display }}</div>
+                                {% if item.fuera_de_frecuencia %}<div style="font-size:9.5px; color:#8a6410; margin-top:2px; font-weight:600;">{% trans "Fuera de frecuencia" %}</div>{% endif %}
                             </div>
                         {% endif %}
                     {% else %}
