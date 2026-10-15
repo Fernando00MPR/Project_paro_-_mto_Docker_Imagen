@@ -113,11 +113,11 @@ function validarCampo(input) {
     const val = input.value.trim();
     if (val) {
         input.style.borderColor = '#10B981';
-        input.style.background  = 'var(--white)';
+        input.style.background  = '#fff';
         input.style.boxShadow   = '0 0 0 3px rgba(16,185,129,.08)';
     } else {
         input.style.borderColor = '#EF4444';
-        input.style.background  = 'var(--white)';
+        input.style.background  = '#fff';
         input.style.boxShadow   = '0 0 0 3px rgba(239,68,68,.08)';
     }
 }

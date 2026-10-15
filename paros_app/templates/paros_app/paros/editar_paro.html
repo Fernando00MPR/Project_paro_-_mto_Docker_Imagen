@@ -315,10 +315,11 @@
                     <div style="font-size:11px; color:var(--text-2); margin-bottom:2px; font-weight:500;">{{ b.campo_label }}</div>
                     <div style="font-size:11px; color:var(--text-3);">
                         {% if b.valor_anterior %}
-                            <span style="font-style:italic;">"{{ b.valor_anterior_display }}"</span>
+                            <span style="font-weight:100; color:var(--text);">"{{ b.valor_anterior_display }}"</span>
                             <span style="color:var(--text-3);">→</span>
                         {% endif %}
-                        <span style="font-style:italic; color:var(--text);">"{{ b.valor_nuevo_display }}"</span>
+                        
+                        <span style="font-weight:600; color:var(--text);">"{{ b.valor_nuevo_display }}"</span>
                     </div>
                     {% endif %}
                 </div>

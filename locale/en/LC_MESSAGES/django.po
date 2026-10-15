@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 21:08-0600\n"
+"POT-Creation-Date: 2026-10-13 22:19-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -391,6 +391,7 @@ msgstr "Service Types"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:255
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:454
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:372
+#: .\paros_app\templates\paros_app\analisis_paros.html:249
 #: .\paros_app\templates\paros_app\bitacora_agv.html:224
 #: .\paros_app\templates\paros_app\bitacora_agv.html:265
 #: .\paros_app\templates\paros_app\dashboard.html:292
@@ -1052,7 +1053,7 @@ msgstr "Delete all spare parts in this area"
 #: .\paros_app\templates\paros_app\moldes\catalogo_moldes.html:341
 #: .\paros_app\templates\paros_app\paros\crear_paro.html:217
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:257
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:361
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:362
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:453
 #: .\paros_app\templates\paros_app\registro_produccion.html:536
 #: .\paros_app\templates\paros_app\registro_produccion.html:587
@@ -1093,7 +1094,7 @@ msgstr ""
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:374
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:418
 #: .\paros_app\templates\paros_app\moldes\catalogo_moldes.html:336
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:366
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:367
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:449
 #: .\paros_app\templates\paros_app\registro_produccion.html:535
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:349
@@ -1158,9 +1159,9 @@ msgstr "Spare Part Images"
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:390
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:592
 #: .\paros_app\templates\paros_app\analisis_paros.html:207
-#: .\paros_app\templates\paros_app\analisis_paros.html:249
-#: .\paros_app\templates\paros_app\analisis_paros.html:306
-#: .\paros_app\templates\paros_app\analisis_paros.html:459
+#: .\paros_app\templates\paros_app\analisis_paros.html:259
+#: .\paros_app\templates\paros_app\analisis_paros.html:316
+#: .\paros_app\templates\paros_app\analisis_paros.html:470
 #: .\paros_app\templates\paros_app\bitacora_agv.html:368
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:185
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:227
@@ -1346,7 +1347,7 @@ msgstr "Delete follow-up"
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:412
 #: .\paros_app\templates\paros_app\moldes\catalogo_moldes.html:146
 #: .\paros_app\templates\paros_app\moldes\catalogo_moldes.html:330
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:356
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:357
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:444
 #: .\paros_app\templates\paros_app\registro_produccion.html:532
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:148
@@ -1612,13 +1613,13 @@ msgstr "Duration"
 
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:375
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:400
-#: .\paros_app\models.py:378
+#: .\paros_app\models.py:382
 msgid "Inyección"
 msgstr "Injection"
 
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:376
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:401
-#: .\paros_app\models.py:379
+#: .\paros_app\models.py:383
 msgid "Pintura"
 msgstr "Paint"
 
@@ -2156,7 +2157,7 @@ msgstr "Catalog"
 
 #: .\login_app\templates\login_app\form_usuario.html:221
 #: .\paros_app\templates\paros_app\analisis_paros.html:189
-#: .\paros_app\templates\paros_app\analisis_paros.html:231
+#: .\paros_app\templates\paros_app\analisis_paros.html:233
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas.html:30
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:103
 #: .\paros_app\templates\paros_app\paros\crear_paro.html:97
@@ -2176,7 +2177,7 @@ msgstr "Fault"
 #: .\mto_app\templates\mto_app\plan\lista.html:273
 #: .\mto_app\templates\mto_app\plan\lista.html:340 .\paros_app\models.py:81
 #: .\paros_app\templates\paros_app\analisis_paros.html:191
-#: .\paros_app\templates\paros_app\analisis_paros.html:233
+#: .\paros_app\templates\paros_app\analisis_paros.html:235
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:99
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:55
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:258
@@ -2203,7 +2204,7 @@ msgstr "Equipment"
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:498
 #: .\paros_app\models.py:96
 #: .\paros_app\templates\paros_app\analisis_paros.html:193
-#: .\paros_app\templates\paros_app\analisis_paros.html:235
+#: .\paros_app\templates\paros_app\analisis_paros.html:237
 #: .\paros_app\templates\paros_app\dashboard.html:123
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:273
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:304
@@ -3070,7 +3071,7 @@ msgstr "Open menu"
 
 #: .\menu_app\templates\menu_app\base_menu.html:1324
 #: .\mto_app\templates\mto_app\plan\lista.html:567
-#: .\paros_app\templates\paros_app\analisis_paros.html:461
+#: .\paros_app\templates\paros_app\analisis_paros.html:472
 #: .\paros_app\templates\paros_app\bitacora_agv.html:304
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:243
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:310
@@ -5228,7 +5229,7 @@ msgstr "Accepted"
 
 #: .\paros_app\models.py:66
 #: .\paros_app\templates\paros_app\analisis_paros.html:195
-#: .\paros_app\templates\paros_app\analisis_paros.html:237
+#: .\paros_app\templates\paros_app\analisis_paros.html:239
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas.html:31
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:104
 msgid "Tipo de falla"
@@ -5302,22 +5303,22 @@ msgstr "Hour-by-Hour area"
 msgid "Configuración de hora x hora"
 msgstr "Hour-by-Hour configuration"
 
-#: .\paros_app\models.py:365 .\paros_app\models.py:368
+#: .\paros_app\models.py:369 .\paros_app\models.py:372
 msgid "Área de bitácora de AGVs"
 msgstr "AGV logbook area"
 
-#: .\paros_app\models.py:371 .\paros_app\models.py:372
+#: .\paros_app\models.py:375 .\paros_app\models.py:376
 msgid "Configuración de bitácora de AGVs"
 msgstr "AGV logbook configuration"
 
-#: .\paros_app\models.py:383
+#: .\paros_app\models.py:387
 #: .\paros_app\templates\paros_app\bitacora_agv.html:355
 #: .\paros_app\templates\paros_app\bitacora_agv.html:494
 #: .\paros_app\templates\paros_app\hora_hora.html:344
 msgid "Día"
 msgstr "Day"
 
-#: .\paros_app\models.py:384
+#: .\paros_app\models.py:388
 msgid "Noche"
 msgstr "Night"
 
@@ -5463,22 +5464,22 @@ msgid "que generan el 80%% del tiempo perdido"
 msgstr "that account for 80%% of the lost time"
 
 #: .\paros_app\templates\paros_app\analisis_paros.html:197
-#: .\paros_app\templates\paros_app\analisis_paros.html:239
+#: .\paros_app\templates\paros_app\analisis_paros.html:241
 msgid "Atendió"
 msgstr "Handled By"
 
 #: .\paros_app\templates\paros_app\analisis_paros.html:203
-#: .\paros_app\templates\paros_app\analisis_paros.html:245
+#: .\paros_app\templates\paros_app\analisis_paros.html:255
 msgid "Expandir"
 msgstr "Expand"
 
 #: .\paros_app\templates\paros_app\analisis_paros.html:215
-#: .\paros_app\templates\paros_app\analisis_paros.html:257
+#: .\paros_app\templates\paros_app\analisis_paros.html:267
 msgid "Demasiadas barras para mostrar aquí."
 msgstr ""
 
 #: .\paros_app\templates\paros_app\analisis_paros.html:217
-#: .\paros_app\templates\paros_app\analisis_paros.html:259
+#: .\paros_app\templates\paros_app\analisis_paros.html:269
 #, fuzzy
 #| msgid "Área completa"
 msgid "Abrir en pantalla completa"
@@ -5488,53 +5489,64 @@ msgstr "Complete area"
 msgid "Tendencia de paros"
 msgstr "Downtime trend"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:227
+#: .\paros_app\templates\paros_app\analisis_paros.html:228
 msgid "Ordenado por tiempo acumulado — mayor a menor"
 msgstr "Sorted by accumulated time — highest to lowest"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:270
+#: .\paros_app\templates\paros_app\analisis_paros.html:228
+msgid "Ordenado por cantidad de paros — mayor a menor"
+msgstr "Sorted by number of stoppages — highest to lowest"
+
+#: .\paros_app\templates\paros_app\analisis_paros.html:247
+#: .\paros_app\templates\paros_app\dashboard.html:288
+#, fuzzy
+#| msgid "Minutos perdidos"
+msgid "Minutos"
+msgstr "Minutes lost"
+
+#: .\paros_app\templates\paros_app\analisis_paros.html:280
 #: .\paros_app\templates\paros_app\dashboard.html:210
 msgid "Tendencia diaria de paros"
 msgstr "Daily downtime trend"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:271
+#: .\paros_app\templates\paros_app\analisis_paros.html:281
 msgid "Minutos perdidos por día en el período seleccionado"
 msgstr "Minutes lost per day in the selected period"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:275
-#: .\paros_app\templates\paros_app\analisis_paros.html:290
+#: .\paros_app\templates\paros_app\analisis_paros.html:285
+#: .\paros_app\templates\paros_app\analisis_paros.html:300
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:151
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:161
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:171
 msgid "Año anterior"
 msgstr "Previous year"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:283
-#: .\paros_app\templates\paros_app\analisis_paros.html:298
+#: .\paros_app\templates\paros_app\analisis_paros.html:293
+#: .\paros_app\templates\paros_app\analisis_paros.html:308
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:156
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:166
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:176
 msgid "Año siguiente"
 msgstr "Next year"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:327
+#: .\paros_app\templates\paros_app\analisis_paros.html:338
 msgid "Filtrar fallas"
 msgstr "Filter faults"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:328
+#: .\paros_app\templates\paros_app\analisis_paros.html:339
 msgid "Desmarca las que no quieres ver en los gráficos"
 msgstr "Uncheck the ones you don't want to see in the charts"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:329
+#: .\paros_app\templates\paros_app\analisis_paros.html:340
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:163
 msgid "Buscar falla…"
 msgstr "Search failure…"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:342
-#: .\paros_app\templates\paros_app\analisis_paros.html:366
-#: .\paros_app\templates\paros_app\analisis_paros.html:390
-#: .\paros_app\templates\paros_app\analisis_paros.html:413
-#: .\paros_app\templates\paros_app\analisis_paros.html:437
+#: .\paros_app\templates\paros_app\analisis_paros.html:353
+#: .\paros_app\templates\paros_app\analisis_paros.html:377
+#: .\paros_app\templates\paros_app\analisis_paros.html:401
+#: .\paros_app\templates\paros_app\analisis_paros.html:424
+#: .\paros_app\templates\paros_app\analisis_paros.html:448
 #: .\paros_app\templates\paros_app\dashboard.html:314
 #: .\paros_app\templates\paros_app\dashboard.html:335
 #: .\paros_app\templates\paros_app\dashboard.html:356
@@ -5542,60 +5554,60 @@ msgstr "Search failure…"
 msgid "Sin datos"
 msgstr "No data"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:345
-#: .\paros_app\templates\paros_app\analisis_paros.html:369
-#: .\paros_app\templates\paros_app\analisis_paros.html:393
-#: .\paros_app\templates\paros_app\analisis_paros.html:416
-#: .\paros_app\templates\paros_app\analisis_paros.html:440
+#: .\paros_app\templates\paros_app\analisis_paros.html:356
+#: .\paros_app\templates\paros_app\analisis_paros.html:380
+#: .\paros_app\templates\paros_app\analisis_paros.html:404
+#: .\paros_app\templates\paros_app\analisis_paros.html:427
+#: .\paros_app\templates\paros_app\analisis_paros.html:451
 msgid "Seleccionar todo"
 msgstr "Select all"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:346
-#: .\paros_app\templates\paros_app\analisis_paros.html:370
-#: .\paros_app\templates\paros_app\analisis_paros.html:394
-#: .\paros_app\templates\paros_app\analisis_paros.html:417
-#: .\paros_app\templates\paros_app\analisis_paros.html:441
+#: .\paros_app\templates\paros_app\analisis_paros.html:357
+#: .\paros_app\templates\paros_app\analisis_paros.html:381
+#: .\paros_app\templates\paros_app\analisis_paros.html:405
+#: .\paros_app\templates\paros_app\analisis_paros.html:428
+#: .\paros_app\templates\paros_app\analisis_paros.html:452
 msgid "Ninguno"
 msgstr "None"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:351
+#: .\paros_app\templates\paros_app\analisis_paros.html:362
 msgid "Filtrar equipos"
 msgstr "Filter equipment"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:352
-#: .\paros_app\templates\paros_app\analisis_paros.html:376
-#: .\paros_app\templates\paros_app\analisis_paros.html:400
-#: .\paros_app\templates\paros_app\analisis_paros.html:423
+#: .\paros_app\templates\paros_app\analisis_paros.html:363
+#: .\paros_app\templates\paros_app\analisis_paros.html:387
+#: .\paros_app\templates\paros_app\analisis_paros.html:411
+#: .\paros_app\templates\paros_app\analisis_paros.html:434
 msgid "Desmarca los que no quieres ver en los gráficos"
 msgstr "Uncheck the ones you don't want to see in the charts"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:353
+#: .\paros_app\templates\paros_app\analisis_paros.html:364
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:173
 msgid "Buscar equipo…"
 msgstr "Search equipment…"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:375
+#: .\paros_app\templates\paros_app\analisis_paros.html:386
 msgid "Filtrar responsables"
 msgstr "Filter responsible parties"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:377
+#: .\paros_app\templates\paros_app\analisis_paros.html:388
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:168
 msgid "Buscar responsable…"
 msgstr "Search responsible…"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:399
+#: .\paros_app\templates\paros_app\analisis_paros.html:410
 msgid "Filtrar tipo de falla"
 msgstr "Filter failure type"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:401
+#: .\paros_app\templates\paros_app\analisis_paros.html:412
 msgid "Buscar tipo…"
 msgstr "Search type…"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:422
+#: .\paros_app\templates\paros_app\analisis_paros.html:433
 msgid "Filtrar quién atendió"
 msgstr "Filter by Handled By"
 
-#: .\paros_app\templates\paros_app\analisis_paros.html:424
+#: .\paros_app\templates\paros_app\analisis_paros.html:435
 msgid "Buscar…"
 msgstr "Search…"
 
@@ -5804,12 +5816,6 @@ msgstr[1] ""
 "\n"
 "                            %(count)s downtimes\n"
 "                        "
-
-#: .\paros_app\templates\paros_app\dashboard.html:288
-#, fuzzy
-#| msgid "Minutos perdidos"
-msgid "Minutos"
-msgstr "Minutes lost"
 
 #: .\paros_app\templates\paros_app\dashboard.html:300
 msgid "Top responsables"
@@ -6962,11 +6968,11 @@ msgstr "System"
 msgid "Paro creado"
 msgstr "Downtime created"
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:331
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:332
 msgid "Sin cambios registrados aún"
 msgstr "No changes recorded yet"
 
-#: .\paros_app\templates\paros_app\paros\editar_paro.html:353
+#: .\paros_app\templates\paros_app\paros\editar_paro.html:354
 msgid "¿Eliminar imagen?"
 msgstr "Delete image?"
 
@@ -7436,109 +7442,109 @@ msgstr "Responsible (English)"
 msgid "Importar responsables"
 msgstr "Import responsible parties"
 
-#: .\paros_app\views\analisis_paros.py:165
-#: .\paros_app\views\analisis_paros.py:185
-#: .\paros_app\views\analisis_paros.py:186
-#: .\paros_app\views\analisis_paros.py:295
-#: .\paros_app\views\analisis_paros.py:345
+#: .\paros_app\views\analisis_paros.py:167
+#: .\paros_app\views\analisis_paros.py:187
+#: .\paros_app\views\analisis_paros.py:188
+#: .\paros_app\views\analisis_paros.py:297
+#: .\paros_app\views\analisis_paros.py:347
 msgid "Sin quien atendio"
 msgstr "No attendant"
 
-#: .\paros_app\views\analisis_paros.py:227
+#: .\paros_app\views\analisis_paros.py:229
 msgid "S"
 msgstr "W"
 
-#: .\paros_app\views\analisis_paros.py:239
-#: .\paros_app\views\analisis_paros.py:370 .\paros_app\views\bitacora_agv.py:57
-#: .\paros_app\views\dashboard.py:155 .\paros_app\views\dashboard.py:368
+#: .\paros_app\views\analisis_paros.py:241
+#: .\paros_app\views\analisis_paros.py:372 .\paros_app\views\bitacora_agv.py:57
+#: .\paros_app\views\dashboard.py:155 .\paros_app\views\dashboard.py:372
 #: .\paros_app\views\hora_hora.py:80
 #: .\paros_app\views\indicadores_produccion.py:422
 msgid "Enero"
 msgstr "January"
 
-#: .\paros_app\views\analisis_paros.py:239
-#: .\paros_app\views\analisis_paros.py:370 .\paros_app\views\bitacora_agv.py:57
-#: .\paros_app\views\dashboard.py:155 .\paros_app\views\dashboard.py:368
+#: .\paros_app\views\analisis_paros.py:241
+#: .\paros_app\views\analisis_paros.py:372 .\paros_app\views\bitacora_agv.py:57
+#: .\paros_app\views\dashboard.py:155 .\paros_app\views\dashboard.py:372
 #: .\paros_app\views\hora_hora.py:80
 #: .\paros_app\views\indicadores_produccion.py:422
 msgid "Febrero"
 msgstr "February"
 
-#: .\paros_app\views\analisis_paros.py:239
-#: .\paros_app\views\analisis_paros.py:370 .\paros_app\views\bitacora_agv.py:57
-#: .\paros_app\views\dashboard.py:155 .\paros_app\views\dashboard.py:368
+#: .\paros_app\views\analisis_paros.py:241
+#: .\paros_app\views\analisis_paros.py:372 .\paros_app\views\bitacora_agv.py:57
+#: .\paros_app\views\dashboard.py:155 .\paros_app\views\dashboard.py:372
 #: .\paros_app\views\hora_hora.py:80
 #: .\paros_app\views\indicadores_produccion.py:422
 msgid "Marzo"
 msgstr "March"
 
-#: .\paros_app\views\analisis_paros.py:239
-#: .\paros_app\views\analisis_paros.py:370 .\paros_app\views\bitacora_agv.py:57
-#: .\paros_app\views\dashboard.py:155 .\paros_app\views\dashboard.py:368
+#: .\paros_app\views\analisis_paros.py:241
+#: .\paros_app\views\analisis_paros.py:372 .\paros_app\views\bitacora_agv.py:57
+#: .\paros_app\views\dashboard.py:155 .\paros_app\views\dashboard.py:372
 #: .\paros_app\views\hora_hora.py:80
 #: .\paros_app\views\indicadores_produccion.py:422
 msgid "Abril"
 msgstr "April"
 
-#: .\paros_app\views\analisis_paros.py:240
-#: .\paros_app\views\analisis_paros.py:371 .\paros_app\views\bitacora_agv.py:58
-#: .\paros_app\views\dashboard.py:156 .\paros_app\views\dashboard.py:369
+#: .\paros_app\views\analisis_paros.py:242
+#: .\paros_app\views\analisis_paros.py:373 .\paros_app\views\bitacora_agv.py:58
+#: .\paros_app\views\dashboard.py:156 .\paros_app\views\dashboard.py:373
 #: .\paros_app\views\hora_hora.py:81
 #: .\paros_app\views\indicadores_produccion.py:423
 msgid "Mayo"
 msgstr "May"
 
-#: .\paros_app\views\analisis_paros.py:240
-#: .\paros_app\views\analisis_paros.py:371 .\paros_app\views\bitacora_agv.py:58
-#: .\paros_app\views\dashboard.py:156 .\paros_app\views\dashboard.py:369
+#: .\paros_app\views\analisis_paros.py:242
+#: .\paros_app\views\analisis_paros.py:373 .\paros_app\views\bitacora_agv.py:58
+#: .\paros_app\views\dashboard.py:156 .\paros_app\views\dashboard.py:373
 #: .\paros_app\views\hora_hora.py:81
 #: .\paros_app\views\indicadores_produccion.py:423
 msgid "Junio"
 msgstr "June"
 
-#: .\paros_app\views\analisis_paros.py:240
-#: .\paros_app\views\analisis_paros.py:371 .\paros_app\views\bitacora_agv.py:58
-#: .\paros_app\views\dashboard.py:156 .\paros_app\views\dashboard.py:369
+#: .\paros_app\views\analisis_paros.py:242
+#: .\paros_app\views\analisis_paros.py:373 .\paros_app\views\bitacora_agv.py:58
+#: .\paros_app\views\dashboard.py:156 .\paros_app\views\dashboard.py:373
 #: .\paros_app\views\hora_hora.py:81
 #: .\paros_app\views\indicadores_produccion.py:423
 msgid "Julio"
 msgstr "July"
 
-#: .\paros_app\views\analisis_paros.py:240
-#: .\paros_app\views\analisis_paros.py:371 .\paros_app\views\bitacora_agv.py:58
-#: .\paros_app\views\dashboard.py:156 .\paros_app\views\dashboard.py:369
+#: .\paros_app\views\analisis_paros.py:242
+#: .\paros_app\views\analisis_paros.py:373 .\paros_app\views\bitacora_agv.py:58
+#: .\paros_app\views\dashboard.py:156 .\paros_app\views\dashboard.py:373
 #: .\paros_app\views\hora_hora.py:81
 #: .\paros_app\views\indicadores_produccion.py:423
 msgid "Agosto"
 msgstr "August"
 
-#: .\paros_app\views\analisis_paros.py:241
-#: .\paros_app\views\analisis_paros.py:372 .\paros_app\views\bitacora_agv.py:59
-#: .\paros_app\views\dashboard.py:157 .\paros_app\views\dashboard.py:370
+#: .\paros_app\views\analisis_paros.py:243
+#: .\paros_app\views\analisis_paros.py:374 .\paros_app\views\bitacora_agv.py:59
+#: .\paros_app\views\dashboard.py:157 .\paros_app\views\dashboard.py:374
 #: .\paros_app\views\hora_hora.py:82
 #: .\paros_app\views\indicadores_produccion.py:424
 msgid "Septiembre"
 msgstr "September"
 
-#: .\paros_app\views\analisis_paros.py:241
-#: .\paros_app\views\analisis_paros.py:372 .\paros_app\views\bitacora_agv.py:59
-#: .\paros_app\views\dashboard.py:157 .\paros_app\views\dashboard.py:370
+#: .\paros_app\views\analisis_paros.py:243
+#: .\paros_app\views\analisis_paros.py:374 .\paros_app\views\bitacora_agv.py:59
+#: .\paros_app\views\dashboard.py:157 .\paros_app\views\dashboard.py:374
 #: .\paros_app\views\hora_hora.py:82
 #: .\paros_app\views\indicadores_produccion.py:424
 msgid "Octubre"
 msgstr "October"
 
-#: .\paros_app\views\analisis_paros.py:241
-#: .\paros_app\views\analisis_paros.py:372 .\paros_app\views\bitacora_agv.py:59
-#: .\paros_app\views\dashboard.py:157 .\paros_app\views\dashboard.py:370
+#: .\paros_app\views\analisis_paros.py:243
+#: .\paros_app\views\analisis_paros.py:374 .\paros_app\views\bitacora_agv.py:59
+#: .\paros_app\views\dashboard.py:157 .\paros_app\views\dashboard.py:374
 #: .\paros_app\views\hora_hora.py:82
 #: .\paros_app\views\indicadores_produccion.py:424
 msgid "Noviembre"
 msgstr "November"
 
-#: .\paros_app\views\analisis_paros.py:241
-#: .\paros_app\views\analisis_paros.py:372 .\paros_app\views\bitacora_agv.py:59
-#: .\paros_app\views\dashboard.py:157 .\paros_app\views\dashboard.py:370
+#: .\paros_app\views\analisis_paros.py:243
+#: .\paros_app\views\analisis_paros.py:374 .\paros_app\views\bitacora_agv.py:59
+#: .\paros_app\views\dashboard.py:157 .\paros_app\views\dashboard.py:374
 #: .\paros_app\views\hora_hora.py:82
 #: .\paros_app\views\indicadores_produccion.py:424
 msgid "Diciembre"

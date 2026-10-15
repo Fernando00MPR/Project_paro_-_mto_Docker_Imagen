@@ -49,6 +49,10 @@ const red = '#EF4444';
 function crearGraficaPareto(canvasId) {
     const indigoSolid  = colorIndigo();
     const colorValores = esModoOscuro() ? '#FFFFFF' : indigoSolid;
+
+    // Índice del % acumulado más cercano a 80 (la regla 80/20 del Pareto).
+    const idx80 = ACUM_P.reduce((best, v, i) => Math.abs(v -80) < Math.abs(ACUM_P[best] - 80) ? i : best, 0);
+
     return new Chart(document.getElementById(canvasId), {
         data: {
             labels: LABELS_P,
@@ -61,9 +65,9 @@ function crearGraficaPareto(canvasId) {
             responsive:true, maintainAspectRatio:false, layout:{padding:{top:24}},
             plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===0 ? ` ${ctx.raw} min` : ` ${ctx.raw}%` }}},
             scales:{
-                y:  { beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#9CA3AF'} },
-                y1: { beginAtZero:true, max:100, position:'right', grid:{display:false}, ticks:{font:{size:11},color:red,callback:v=>v+'%'} },
-                x:  { grid:{display:false}, ticks:{font:{size:10}, color:'#9CA3AF', maxRotation:45, minRotation:45, autoSkip:false} }
+                y:  { beginAtZero: true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font: {size: 11}, color:'#9CA3AF'} },
+                y1: { beginAtZero: true, max:110, position:'right', grid:{display: false}, ticks:{font: {size: 11}, color: red, stepSize: 20, callback:v=>v+'%'} },
+                x:  { grid:{display: false}, ticks:{font: {size:10}, color:'#9CA3AF', maxRotation: 45, minRotation: 45, autoSkip: false} }
             }
         },
         plugins:[{ id:'paretoLabels', afterDatasetsDraw(chart) {
@@ -82,6 +86,24 @@ function crearGraficaPareto(canvasId) {
                 }
                 ctx.restore();
             });
+
+            // Línea de referencia en 80% + resaltado del punto más cercano
+            const puntoCercano80 = chart.getDatasetMeta(1).data[idx80];
+            if (puntoCercano80 && ACUM_P.length) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(puntoCercano80.x, puntoCercano80.y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = red;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#fff';
+                ctx.stroke();
+                ctx.font = 'bold 11px Segoe UI,sans-serif';
+                ctx.fillStyle = red;
+                ctx.textAlign = 'center';
+                ctx.fillText(ACUM_P[idx80] + '%', puntoCercano80.x, puntoCercano80.y - 12);
+                ctx.restore();
+            }
         }}]
     });
 }
@@ -92,12 +114,16 @@ let chartParetoOriginal = crearGraficaPareto('chartPareto');
 function crearGraficaBarrasAnalisis(canvasId) {
     const indigoSolid  = colorIndigo();
     const colorValores = esModoOscuro() ? '#FFFFFF' : indigoSolid;
+    const porCantidad  = ORDEN_BARRAS === 'cantidad';
+    const dataBarras   = porCantidad ? NPAROS_B : MINUTOS_B;
     return new Chart(document.getElementById(canvasId), {
         type:'bar',
-        data:{ labels:LABELS_B, datasets:[{data:MINUTOS_B, backgroundColor:indigoSolid, borderRadius:5, label:'Minutos'}] },
+        data:{ labels:LABELS_B, datasets:[{data:dataBarras, backgroundColor:indigoSolid, borderRadius:5, label: porCantidad ? 'Paros' : 'Minutos'}] },
         options:{
             responsive:true, maintainAspectRatio:false, layout:{padding:{top:30}},
-            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} min (${NPAROS_B[ctx.dataIndex]} paros)` }}},
+            plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => porCantidad
+                ? ` ${ctx.raw} paros (${MINUTOS_B[ctx.dataIndex]} min)`
+                : ` ${ctx.raw} min (${NPAROS_B[ctx.dataIndex]} paros)` }}},
             scales:{
                 y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#9CA3AF'} },
                 x:{ grid:{display:false}, ticks:{font:{size:10}, color:'#9CA3AF' ,maxRotation:45, minRotation:45, autoSkip:false} }
@@ -106,20 +132,22 @@ function crearGraficaBarrasAnalisis(canvasId) {
         plugins:[{ id:'topLabels', afterDatasetsDraw(chart) {
             const {ctx} = chart;
             chart.getDatasetMeta(0).data.forEach((bar,i) => {
-                ctx.save(); 
-                ctx.textAlign = 'center';           
+                ctx.save();
+                ctx.textAlign = 'center';
+                const principal  = porCantidad ? NPAROS_B[i]  : MINUTOS_B[i];
+                const secundario = porCantidad ? MINUTOS_B[i] : NPAROS_B[i];
                 if(LABELS_B.length > 14){
-                    ctx.font = 'bold 10px Segoe UI,sans-serif'; 
+                    ctx.font = 'bold 10px Segoe UI,sans-serif';
                     ctx.fillStyle = colorValores;
-                    ctx.fillText(MINUTOS_B[i], bar.x, bar.y - 14);
+                    ctx.fillText(principal, bar.x, bar.y - 14);
                     ctx.font = '10px Segoe UI,sans-serif'; ctx.fillStyle = '#9CA3AF';
-                    ctx.fillText('('+NPAROS_B[i]+')', bar.x, bar.y - 3);
+                    ctx.fillText('('+secundario+')', bar.x, bar.y - 3);
                 }else{
-                    ctx.font = 'bold 10px Segoe UI,sans-serif'; 
+                    ctx.font = 'bold 10px Segoe UI,sans-serif';
                     ctx.fillStyle = colorValores;
-                    ctx.fillText(''+MINUTOS_B[i]+' min', bar.x, bar.y - 14);
+                    ctx.fillText(''+principal+(porCantidad ? ' paros' : ' min'), bar.x, bar.y - 14);
                     ctx.font = '10px Segoe UI,sans-serif'; ctx.fillStyle = '#9CA3AF';
-                    ctx.fillText(''+NPAROS_B[i]+' Paros', bar.x, bar.y - 3);
+                    ctx.fillText(''+secundario+(porCantidad ? ' min' : ' Paros'), bar.x, bar.y - 3);
                 }
                 ctx.restore();
             });
@@ -254,6 +282,20 @@ function setModoBarras(modo) {
         const activo = modo === m;
         el.style.background = activo ? 'var(--indigo)' : 'var(--white)';
         el.style.color      = activo ? '#fff' : 'var(--text-2)';
+    });
+}
+
+// ── Toggle orden Barras (minutos / cantidad) ────────────────────────────────────
+function setOrdenBarras(orden) {
+    document.getElementById('input-orden-barras').value = orden;
+    const idsOrden = { minutos: 'ob-minutos', cantidad: 'ob-cantidad' };
+    ['minutos', 'cantidad'].forEach(o => {
+        const el = document.getElementById(idsOrden[o]);
+        if (!el) return;
+        const activo = orden === o;
+        el.style.background = activo ? 'var(--white)' : 'transparent';
+        el.style.color      = activo ? 'var(--indigo)' : 'var(--text-3)';
+        el.style.boxShadow  = activo ? '0 1px 3px rgba(0,0,0,.08)' : 'none';
     });
 }
 

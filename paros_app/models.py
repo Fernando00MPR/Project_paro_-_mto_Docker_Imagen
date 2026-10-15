@@ -183,6 +183,8 @@ class BitacoraParo(models.Model):
             return self.ESTATUS_LABELS.get(self.valor_anterior, self.valor_anterior)
         if self.campo == 'turno' and self.valor_anterior in ('1', '2'):
             return f'Turno {self.valor_anterior}'
+        if self.campo == 'hora':
+            return ':'.join(self.valor_anterior.split((':')[:2]))
         return self.valor_anterior
 
     def valor_nuevo_display(self):
@@ -190,6 +192,8 @@ class BitacoraParo(models.Model):
             return self.ESTATUS_LABELS.get(self.valor_nuevo, self.valor_nuevo)
         if self.campo == 'turno' and self.valor_nuevo in ('1', '2'):
             return f'Turno {self.valor_nuevo}'
+        if self.campo == 'hora':
+            return ':'.join(self.valor_nuevo.split((':')[:2]))
         return self.valor_nuevo
 
     def estatus_color(self):

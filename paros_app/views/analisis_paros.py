@@ -117,13 +117,16 @@ def analisis_paros(request):
         qs = qs.filter(equipo__in=equipos_en_subarea)
 
     # ── Exclusiones por checkbox ──────────────────────────────────────────────
-    fallas_excluidas  = request.GET.getlist('excluir_falla')
-    resp_excluidas    = request.GET.getlist('excluir_resp')
-    modo_pareto       = request.GET.get('modo_pareto', 'falla')
-    modo_barras       = request.GET.get('modo_barras', 'falla')
-    tipos_excluidos   = request.GET.getlist('excluir_tipo')
-    atendio_excluidos = request.GET.getlist('excluir_atendio')
-    equipos_excluidos = request.GET.getlist('excluir_equipo')
+    fallas_excluidas   = request.GET.getlist('excluir_falla')
+    resp_excluidas     = request.GET.getlist('excluir_resp')
+    modo_pareto        = request.GET.get('modo_pareto', 'falla')
+    modo_barras        = request.GET.get('modo_barras', 'falla')
+    orden_barras       = request.GET.get('orden_barras', 'minutos')
+    orden_barras       = orden_barras if orden_barras in ('minutos', 'cantidad') else 'minutos'
+    campo_orden_barras = 'minutos' if orden_barras == 'minutos' else 'n_paros'
+    tipos_excluidos    = request.GET.getlist('excluir_tipo')
+    atendio_excluidos  = request.GET.getlist('excluir_atendio')
+    equipos_excluidos  = request.GET.getlist('excluir_equipo')
 
     # ── Listas para los paneles (antes de exclusión) ──────────────────────────
     lista_fallas = (
@@ -300,7 +303,7 @@ def analisis_paros(request):
             qs_graf
             .values('equipo')
             .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
-            .order_by('-minutos')
+            .order_by('-' + campo_orden_barras)
         )
         labels_p  = [g['equipo'] for g in grupos_pareto]
         minutos_p = [g['minutos'] or 0 for g in grupos_pareto]
@@ -331,7 +334,7 @@ def analisis_paros(request):
             if tipo:
                 tipo_dict_b[tipo]['n_paros'] += 1
                 tipo_dict_b[tipo]['minutos'] += p['tiempo_minutos'] or 0
-        sorted_tipos_b = sorted(tipo_dict_b.items(), key=lambda x: x[1]['minutos'], reverse=True)
+        sorted_tipos_b = sorted(tipo_dict_b.items(), key=lambda x: x[1][campo_orden_barras], reverse=True)
         labels_b  = [t[0] for t in sorted_tipos_b]
         minutos_b = [t[1]['minutos'] for t in sorted_tipos_b]
         nparos_b  = [t[1]['n_paros'] for t in sorted_tipos_b]
@@ -340,7 +343,7 @@ def analisis_paros(request):
             qs_graf
             .values('atendio')
             .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
-            .order_by('-minutos')
+            .order_by('-' + campo_orden_barras)
         )
         labels_b  = [g['atendio'] or _('Sin quien atendio') for g in grupos_barras]
         minutos_b = [g['minutos'] or 0 for g in grupos_barras]
@@ -350,7 +353,7 @@ def analisis_paros(request):
             qs_graf
             .values('equipo')
             .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
-            .order_by('-minutos')
+            .order_by('-' + campo_orden_barras)
         )
         labels_b  = [g['equipo'] for g in grupos_barras]
         minutos_b = [g['minutos'] or 0 for g in grupos_barras]
@@ -360,7 +363,7 @@ def analisis_paros(request):
         grupos_barras = (
             qs_graf.values(campo_barras)
                 .annotate(n_paros=Count('id'), minutos=Sum('tiempo_minutos'))
-                .order_by('-minutos')
+                .order_by('-' + campo_orden_barras)
         )
         labels_b  = [g[campo_barras] for g in grupos_barras]
         minutos_b = [g['minutos'] or 0 for g in grupos_barras]
@@ -392,6 +395,7 @@ def analisis_paros(request):
         'semana_actual':        semana_actual,
         'modo_pareto':          modo_pareto,
         'modo_barras':          modo_barras,
+        'orden_barras':         orden_barras,
         'total_paros':          total_paros,
         'total_minutos':        total_minutos,
         'promedio_min':         promedio_min,

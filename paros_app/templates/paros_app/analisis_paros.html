@@ -171,7 +171,7 @@
 
         <input type="hidden" name="modo_pareto" id="input-modo-pareto" value="{{ modo_pareto }}">
         <input type="hidden" name="modo_barras" id="input-modo-barras" value="{{ modo_barras }}">
-
+        <input type="hidden" name="orden_barras" id="input-orden-barras" value="{{ orden_barras }}">
     </form>
 </div>
 
@@ -179,7 +179,7 @@
 <div id="charts-grid" style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px;">
     <!-- Pareto -->
     <div class="card" style="padding:16px 18px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
             <div>
                 <div style="font-size:13px;font-weight:700;color:var(--text);">{% trans "Diagrama de Pareto" %}</div>
                 <div style="font-size:11px;color:var(--text-3);">{% if modo_pareto == 'falla' %}{% trans "Fallas" %}{% elif modo_pareto == 'responsable' %}{% trans "Responsables" %}{% elif modo_pareto == 'atendio' %}{% trans "Quién atendió" %}{% elif modo_pareto == 'equipo' %}{% trans "Equipos" %}{% else %}{% trans "Tipos de falla" %}{% endif %} {% trans "que generan el 80% del tiempo perdido" %}</div>
@@ -221,25 +221,41 @@
 
     <!-- Barras -->
     <div class="card" style="padding:16px 18px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
             <div>
                 <div style="font-size:13px;font-weight:700;color:var(--text);">{% trans "Tendencia de paros" %}</div>
-                <div style="font-size:11px;color:var(--text-3);">{% trans "Ordenado por tiempo acumulado — mayor a menor" %}</div>
+                <div style="font-size:11px;color:var(--text-3);">
+                    {% if orden_barras == 'minutos' %}{% trans "Ordenado por tiempo acumulado — mayor a menor" %}{% else %}{% trans "Ordenado por cantidad de paros — mayor a menor" %}{% endif %}
+                </div>
             </div>
-            <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow-x:auto;height:28px;max-width:100%;">
-                <button type="button" id="bb-falla" onclick="setModoBarras('falla'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_barras == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
-                <button type="button" id="bb-equipo" onclick="setModoBarras('equipo'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'equipo' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'equipo' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Equipo" %}</button>           
-                <button type="button" id="bb-resp" onclick="setModoBarras('responsable'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
-                <button type="button" id="bb-tipo" onclick="setModoBarras('tipo_falla'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'tipo_falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'tipo_falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Tipo de falla" %}</button>
-                <button type="button" id="bb-atendio" onclick="setModoBarras('atendio'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'atendio' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'atendio' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Atendió" %}</button>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div style="display:inline-flex;background:var(--surface);border-radius:999px;padding:3px;gap:2px;">
+                    <button type="button" id="ob-minutos" onclick="setOrdenBarras('minutos'); prepararExclusiones();"
+                            style="padding:0 14px;height:22px;font-size:12px;font-weight:600;cursor:pointer;border:none;border-radius:999px;font-family:inherit;
+                                   background:{% if orden_barras == 'minutos' %}var(--white){% else %}transparent{% endif %};
+                                   color:{% if orden_barras == 'minutos' %}var(--indigo){% else %}var(--text-3){% endif %};
+                                   box-shadow:{% if orden_barras == 'minutos' %}0 1px 3px rgba(0,0,0,.08){% else %}none{% endif %};">{% trans "Minutos" %}</button>
+                    <button type="button" id="ob-cantidad" onclick="setOrdenBarras('cantidad'); prepararExclusiones();"
+                            style="padding:0 14px;height:22px;font-size:12px;font-weight:600;cursor:pointer;border:none;border-radius:999px;font-family:inherit;
+                                   background:{% if orden_barras == 'cantidad' %}var(--white){% else %}transparent{% endif %};
+                                   color:{% if orden_barras == 'cantidad' %}var(--indigo){% else %}var(--text-3){% endif %};
+                                   box-shadow:{% if orden_barras == 'cantidad' %}0 1px 3px rgba(0,0,0,.08){% else %}none{% endif %};">{% trans "Cantidad" %}</button>
+                </div>
+                <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow-x:auto;height:28px;max-width:100%;">
+                    <button type="button" id="bb-falla" onclick="setModoBarras('falla'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_barras == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
+                    <button type="button" id="bb-equipo" onclick="setModoBarras('equipo'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'equipo' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'equipo' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Equipo" %}</button>
+                    <button type="button" id="bb-resp" onclick="setModoBarras('responsable'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
+                    <button type="button" id="bb-tipo" onclick="setModoBarras('tipo_falla'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'tipo_falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'tipo_falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Tipo de falla" %}</button>
+                    <button type="button" id="bb-atendio" onclick="setModoBarras('atendio'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'atendio' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'atendio' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Atendió" %}</button>
+                </div>
             </div>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:6px;">
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:6px;">
             <button type="button" onclick="abrirModalGrafico('barras')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
                 {% trans "Expandir" %}
@@ -312,15 +328,16 @@
 
 <!-- Paneles de exclusión -->
 <form method="get" id="form-exclusion" style="margin-top:16px;">
-    <input type="hidden" name="area"        value="{{ area_id }}">
-    <input type="hidden" name="periodo"     value="{{ periodo }}">
-    <input type="hidden" name="fecha_desde" value="{{ fecha_desde }}">
-    <input type="hidden" name="fecha_hasta" value="{{ fecha_hasta }}">
-    <input type="hidden" name="semana_num"  value="{{ semana_num }}">
-    <input type="hidden" name="turno"       value="{{ turno }}">
-    <input type="hidden" name="modo_pareto" value="{{ modo_pareto }}">
-    <input type="hidden" name="modo_barras" value="{{ modo_barras }}">
-    <input type="hidden" name="estatus"     value="{{ estatus_filtro }}">
+    <input type="hidden" name="area"         value="{{ area_id }}">
+    <input type="hidden" name="periodo"      value="{{ periodo }}">
+    <input type="hidden" name="fecha_desde"  value="{{ fecha_desde }}">
+    <input type="hidden" name="fecha_hasta"  value="{{ fecha_hasta }}">
+    <input type="hidden" name="semana_num"   value="{{ semana_num }}">
+    <input type="hidden" name="turno"        value="{{ turno }}">
+    <input type="hidden" name="modo_pareto"  value="{{ modo_pareto }}">
+    <input type="hidden" name="modo_barras"  value="{{ modo_barras }}">
+    <input type="hidden" name="orden_barras" value="{{ orden_barras }}">
+    <input type="hidden" name="estatus"      value="{{ estatus_filtro }}">
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
         <div class="card" style="padding:16px 18px;">
@@ -477,13 +494,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 <script>
-const LABELS_P  = {{ labels_p|safe }};
-const MINUTOS_P = {{ minutos_p|safe }};
-const NPAROS_P  = {{ nparos_p|safe }};
-const ACUM_P    = {{ acum_p|safe }};
-const LABELS_B  = {{ labels_b|safe }};
-const MINUTOS_B = {{ minutos_b|safe }};
-const NPAROS_B  = {{ nparos_b|safe }};
+const LABELS_P     = {{ labels_p|safe }};
+const MINUTOS_P    = {{ minutos_p|safe }};
+const NPAROS_P     = {{ nparos_p|safe }};
+const ACUM_P       = {{ acum_p|safe }};
+const LABELS_B     = {{ labels_b|safe }};
+const MINUTOS_B    = {{ minutos_b|safe }};
+const NPAROS_B     = {{ nparos_b|safe }};
+const ORDEN_BARRAS = "{{ orden_barras }}";
 
 const LABELS_T  = {{ labels_t|safe }};
 const MINUTOS_T = {{ minutos_t|safe }};
