@@ -341,7 +341,7 @@ select.filter-select,
 }
 
 /* Responsive para la tabla */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .accion-input {
         width: 110px;
     }
@@ -930,7 +930,7 @@ tbody tr {
     opacity: .45;
     cursor: not-allowed;
 }
-@media (max-width: 600px) {
+@media (max-width: 767px) {
     .modal-fechas-overlay { align-items: flex-end; }
     .modal-fechas-panel {
         width: 100%;

@@ -1,576 +1,657 @@
 {% extends "menu_app/base_menu.html" %}
 {% load i18n %}
 {% load static %}
-{% block title %}{% trans "Seguimientos de OTs" %}{% endblock %}
+{% block title %}{% trans "Seguimientos correctivos" %}{% endblock %}
 {% block extra_css %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap">
 <link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/filter_select.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/page_size_toggle.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/row_action_button.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/seguimientos_escritorio.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/seguimientos_movil.css' %}">
 {% endblock %}
 {% block content %}
 
-<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
-    <div>
-        <div class="card-title">{% trans "Seguimientos de OTs" %}
-            {% if area_nombre %} — {{ area_nombre }}{% endif %}
-        </div>
-        <div class="card-subtitle">
-            {% trans "Acciones correctivas registradas por orden de trabajo" %}
-        </div>
-    </div>
-    <button type="button" onclick="abrirModalManual(event)" class="btn btn-primary" 
-    style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
-        + {% trans "Nuevo seguimiento" %}
-    </button>
-</div>
+<div class="sge sg-desktop-only">
 
-<!-- Filtros -->
-<div style="padding:10px 14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px;">
-    <style>
-      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
-         Mismo tono que el texto (--text): hex literal porque no se puede
-         meter var() dentro del data URI. */
-      .seg-filtros select {
-          padding: 7px 34px 7px 10px;
-          box-sizing: border-box;
-          appearance: none; -webkit-appearance: none;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-          background-repeat: no-repeat;
-          background-position: right 10px center;
-          background-size: 14px;
-      }
-      /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
-         select { background: var(--white) !important; }, que borra el chevron de
-         arriba por especificidad + !important. Se repite aquí con el mismo peso
-         para ganar por ir declarada después en el documento. */
-      [data-theme="dark"] .seg-filtros select {
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 10px center !important;
-          background-size: 14px !important;
-      }
-      /* El selector de fecha trae 42px por defecto (compartido con el resto
-         del sitio); se achica a la misma altura que el resto de este filtro
-         (33px / radio 7px). */
-      .seg-filtros .dp-control {
-          height: 33px;
-          border-radius: 7px;
-      }
-      /* Modal "Nuevo/Editar seguimiento" — mismo box-model que sm-fecha tenía
-         antes (padding 8px 10px, sin altura fija, radio 7px). */
-      #modal-manual .dp-control {
-          height: auto;
-          padding: 8px 10px;
-          border-radius: 7px;
-      }
-    </style>
-    <form method="get" class="seg-filtros" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-        {% if area_filtro %}<input type="hidden" name="area" value="{{ area_filtro }}">{% endif %}
-        <div class="filter-group">
-            <label>{% trans "Estatus" %}</label>
-            <select name="estatus" onchange="this.form.submit()">
-                <option value="">{% trans "Todos" %}</option>
-                {% for val, label in estatus_choices %}
-                <option value="{{ val }}" {% if estatus_filtro == val %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
+    <!-- ── Encabezado ── -->
+    <header class="sge-head">
+        <div class="sge-head-txt">
+            <h1 class="sge-titulo">{% trans "Seguimientos correctivos" %}{% if area_nombre %} — {{ area_nombre }}{% endif %}</h1>
+            <div class="sge-sub">{% trans "Acciones correctivas registradas de forma independiente" %}</div>
         </div>
-        <div class="filter-group">
-            <label>{% trans "Tipo" %}</label>
-            <select name="tipo" onchange="this.form.submit()">
-                <option value="">{% trans "Todos" %}</option>
-                <option value="ot" {% if tipo_filtro == 'ot' %}selected{% endif %}>{% trans "Seguimientos de OTs" %}</option>
-                <option value="manual" {% if tipo_filtro == 'manual' %}selected{% endif %}>{% trans "Correctivos" %}</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>{% trans "No. Orden" %}</label>
-            <input type="text" name="orden" value="{{ filtro_orden }}"
-                placeholder="Buscar orden..." style="width:130px;"
-                onchange="this.form.submit()">
-        </div>
-        <div class="filter-group">
-            <label>{% trans "Problema" %}</label>
-            <input type="text" name="problema" value="{{ filtro_problema }}"
-                placeholder="Buscar problema..."
-                style="min-width:300px;"
-                onchange="this.form.submit()">
-        </div>
-        <div class="filter-group">
-            <label>{% trans "Acción" %}</label>
-            <input type="text" name="accion" value="{{ filtro_accion }}"
-                placeholder="Buscar acción..."
-                style="min-width:300px;"
-                onchange="this.form.submit()">
-        </div>
-        <div class="filter-group">
-            <label>{% trans "Validación" %}</label>
-            <select name="validado" onchange="this.form.submit()">
-                <option value="">{% trans "Todos" %}</option>
-                <option value="1" {% if filtro_validado == '1' %}selected{% endif %}>{% trans "Validado" %}</option>
-                <option value="0" {% if filtro_validado == '0' %}selected{% endif %}>{% trans "Pendiente" %}</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>{% trans "Creado desde" %}</label>
-            {% include 'menu_app/_date_picker.html' with name='fecha_desde' initial=filtro_fecha_desde dp_id='dp-fecha-desde' %}
-        </div>
-        <div class="filter-group">
-            <label>{% trans "Creado hasta" %}</label>
-            {% include 'menu_app/_date_picker.html' with name='fecha_hasta' initial=filtro_fecha_hasta dp_id='dp-fecha-hasta' %}
-        </div>
-    </form>
-</div>
-
-<!-- Tabla -->
-<div class="card">
-
-    <!-- ── Selector de columnas ── -->
-    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-        <div style="position:relative;" id="seg-col-picker-wrap">
-            <button onclick="toggleSegColPicker()" class="btn btn-ghost btn-sm"
-                    style="display:flex; align-items:center; gap:6px;">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/>
-                </svg>
-                {% trans "Columnas" %}
+        <div class="sge-dl" id="sge-dl">
+            <button type="button" class="sge-dl-btn" id="sge-dl-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="sge-dl-menu"
+                    data-url="{% url 'mto:seguimientos_exportar' %}">
+                <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>
+                <span class="sge-dl-spin" aria-hidden="true"></span>
+                <span class="txt">{% trans "Descargar" %}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
-            <div id="seg-col-picker" style="display:none; position:absolute; right:0; top:36px; z-index:100;
-                                        background:var(--white); border:1px solid var(--border);
-                                        border-radius:10px; padding:12px 16px; min-width:200px;
-                                        box-shadow:var(--shadow-md);">
-                <div style="font-size:11px; font-weight:600; color:var(--text-3);
-                            text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">
-                    {% trans "Mostrar columnas" %}
-                </div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <label class="seg-col-toggle" data-col="seg-col-orden"><input type="checkbox" checked onchange="toggleSegCol('seg-col-orden', this.checked)"> {% trans "No. Orden" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-codigo"><input type="checkbox" checked onchange="toggleSegCol('seg-col-codigo', this.checked)"> {% trans "Código plan" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-tipo"><input type="checkbox" checked onchange="toggleSegCol('seg-col-tipo', this.checked)"> {% trans "Tipo" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-problema"><input type="checkbox" checked onchange="toggleSegCol('seg-col-problema', this.checked)"> {% trans "Problema" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-accion"><input type="checkbox" checked onchange="toggleSegCol('seg-col-accion', this.checked)"> {% trans "Acción" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-responsable"><input type="checkbox" checked onchange="toggleSegCol('seg-col-responsable', this.checked)"> {% trans "Responsable" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-compromiso"><input type="checkbox" checked onchange="toggleSegCol('seg-col-compromiso', this.checked)"> {% trans "Compromiso" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-estatus"><input type="checkbox" checked onchange="toggleSegCol('seg-col-estatus', this.checked)"> {% trans "Estatus" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-creado"><input type="checkbox" checked onchange="toggleSegCol('seg-col-creado', this.checked)"> {% trans "Creado" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-notas"><input type="checkbox" checked onchange="toggleSegCol('seg-col-notas', this.checked)"> {% trans "Notas" %}</label>
-                    <label class="seg-col-toggle" data-col="seg-col-validacion"><input type="checkbox" checked onchange="toggleSegCol('seg-col-validacion', this.checked)"> {% trans "Validación" %}</label>
+            <div class="sge-dl-menu" id="sge-dl-menu" role="menu" aria-label="{% trans 'Descargar' %}" hidden>
+                <div class="sge-dl-tit">{% trans "Qué descargar" %}</div>
+                {% if filtros_escritorio_activos %}
+                <button type="button" class="sge-dl-rad" role="menuitemradio" tabindex="-1" aria-checked="true" data-alcance="filtrado" data-n="{{ combinados_page.paginator.count }}">
+                    <i aria-hidden="true"></i>{% blocktrans count n=combinados_page.paginator.count %}Lo que ves · {{ n }} seguimiento{% plural %}Lo que ves · {{ n }} seguimientos{% endblocktrans %}
+                </button>
+                {% endif %}
+                <button type="button" class="sge-dl-rad" role="menuitemradio" tabindex="-1" aria-checked="{% if filtros_escritorio_activos %}false{% else %}true{% endif %}" data-alcance="todos" data-n="{{ total_seguimientos }}">
+                    <i aria-hidden="true"></i>{% blocktrans count n=total_seguimientos %}Todos · {{ n }} seguimiento{% plural %}Todos · {{ n }} seguimientos{% endblocktrans %}
+                </button>
+                <div class="sge-dl-sep" role="separator"></div>
+                <div class="sge-dl-tit">{% trans "Formato" %}</div>
+                <button type="button" class="sge-dl-op" role="menuitem" tabindex="-1" data-formato="xlsx">
+                    <span class="caja xlsx" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m9 9 6 6m0-6-6 6"/></svg></span>
+                    <span class="tx"><b>{% trans "Excel (.xlsx)" %}</b><small>{% trans "Con formato, listo para filtrar" %}</small></span>
+                </button>
+                <button type="button" class="sge-dl-op" role="menuitem" tabindex="-1" data-formato="csv">
+                    <span class="caja csv" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
+                    <span class="tx"><b>{% trans "CSV (.csv)" %}</b><small>{% trans "Texto plano, para otros sistemas" %}</small></span>
+                </button>
+                <div class="sge-dl-vacio" id="sge-dl-vacio" hidden>{% trans "No hay seguimientos para descargar" %}</div>
+            </div>
+        </div>
+        {% if puede_llenar_seguimiento %}<button type="button" class="sge-btn-pri" onclick="abrirModalManual(event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            {% trans "Nuevo seguimiento" %}
+        </button>{% endif %}
+        <div class="sge-idioma">{% include 'menu_app/_language_selector.html' %}</div>
+    </header>
+
+    <!-- ── Filtros ── -->
+    <section class="sge-filtros" aria-label="{% trans 'Filtros' %}">
+        <div class="sge-fila">
+            <label class="sge-buscar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" id="sge-q" value="{{ filtro_q }}" autocomplete="off"
+                       placeholder="{% trans 'Buscar por no. de orden, problema, acción o notas…' %}"
+                       aria-label="{% trans 'Buscar seguimientos' %}">
+            </label>
+
+            {% include "mto_app/_filter_select.html" with fs_id="sge-resp" name="responsable" label=_("Responsable") icono="persona" valor=filtro_responsable valor_label=responsable_label todas_label=_("Todos") opciones=responsables_filtro %}
+            {% include "mto_app/_filter_select.html" with fs_id="sge-val" name="validado" label=_("Validación") icono="check" valor=filtro_validado valor_label=validacion_label todas_label=_("Todas") opciones=validacion_filtro %}
+
+            <div class="sge-creado{% if creado_label %} sge-activo{% endif %}" id="sge-creado">
+                <button type="button" class="sge-creado-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="sge-creado-pop">
+                    <span class="sge-ico" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    </span>
+                    <span class="sge-creado-txt">
+                        <span class="sge-creado-lab">{% trans "Creado" %}</span>
+                        <span class="sge-creado-val">{% firstof creado_label _("Cualquier fecha") %}</span>
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="sge-pop" id="sge-creado-pop" role="listbox" aria-label="{% trans 'Creado' %}" hidden>
+                    <button type="button" class="sge-op" role="option" data-creado="" aria-selected="{% if not creado_label %}true{% else %}false{% endif %}">{% trans "Cualquier fecha" %}</button>
+                    <button type="button" class="sge-op" role="option" data-creado="semana" aria-selected="{% if filtro_creado == 'semana' %}true{% else %}false{% endif %}">{% trans "Esta semana" %}</button>
+                    <button type="button" class="sge-op" role="option" data-creado="mes" aria-selected="{% if filtro_creado == 'mes' %}true{% else %}false{% endif %}">{% trans "Este mes" %}</button>
+                    <button type="button" class="sge-op" role="option" data-creado="30dias" aria-selected="{% if filtro_creado == '30dias' %}true{% else %}false{% endif %}">{% trans "Últimos 30 días" %}</button>
+                    <button type="button" class="sge-op" role="option" data-creado="rango" aria-selected="{% if not filtro_creado and creado_label %}true{% else %}false{% endif %}">{% trans "Rango personalizado" %}</button>
+                    <div class="sge-rango" id="sge-rango"{% if filtro_creado or not creado_label %} hidden{% endif %}>
+                        <div class="sge-rango-campo"><span>{% trans "Desde" %}</span>{% include 'menu_app/_date_picker.html' with name='sge_desde' initial=filtro_fecha_desde dp_id='dp-sge-desde' %}</div>
+                        <div class="sge-rango-campo"><span>{% trans "Hasta" %}</span>{% include 'menu_app/_date_picker.html' with name='sge_hasta' initial=filtro_fecha_hasta dp_id='dp-sge-hasta' %}</div>
+                        <button type="button" id="sge-rango-aplicar">{% trans "Aplicar" %}</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="table-wrap" style="overflow-x:auto;">
-        <table id="tabla-seguimientos-ot" class="sticky-actions-col">
-            <thead>
-                <tr>
-                    <th class="seg-col-orden"       style="text-align:center; width:120px;">
-                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden_por' and k != 'direccion' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden_por=no_orden&direccion={% if orden_por == 'no_orden' and direccion == 'desc' %}asc{% else %}desc{% endif %}"
-                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if orden_por == 'no_orden' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if orden_por == 'no_orden' %}600{% else %}500{% endif %};">
-                            {% trans "No. Orden" %}
-                            {% if orden_por == 'no_orden' %}
-                                {% if direccion == 'desc' %}
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                                {% else %}
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+        <div class="sge-fila">
+            <span class="sge-etq">{% trans "ESTATUS" %}</span>
+            <button type="button" class="sge-chip" data-set="estatus" data-val="" aria-pressed="{% if not estatus_filtro %}true{% else %}false{% endif %}">{% trans "Todos" %} {{ conteo_todos }}</button>
+            <button type="button" class="sge-chip" data-set="estatus" data-val="pendiente" aria-pressed="{% if estatus_filtro == 'pendiente' %}true{% else %}false{% endif %}">
+                <i class="sge-punto" style="background:var(--sge-pend-dot)"></i>
+                    {% trans "Pendiente" %} {{ conteo_estatus.pendiente }}
+            </button>
+            <button type="button" class="sge-chip" data-set="estatus" data-val="en_proceso" aria-pressed="{% if estatus_filtro == 'en_proceso' %}true{% else %}false{% endif %}">
+                <i class="sge-punto" style="background:var(--sge-proc-dot)"></i>
+                    {% trans "En proceso" %} {{ conteo_estatus.en_proceso }}
+            </button>
+            <button type="button" class="sge-chip" data-set="estatus" data-val="completado" aria-pressed="{% if estatus_filtro == 'completado' %}true{% else %}false{% endif %}">
+                <i class="sge-punto" style="background:var(--sge-comp-dot)"></i>
+                    {% trans "Completado" %} {{ conteo_estatus.completado }}
+            </button>
+
+            <span class="sge-sep"></span>
+
+            <span class="sge-etq">{% trans "ATENCIÓN" %}</span>
+            <button type="button" class="sge-chip sge-att venc" data-set="atencion" data-val="vencidos" aria-pressed="{% if filtro_atencion == 'vencidos' %}true{% else %}false{% endif %}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5m0 3h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+                {% trans "Vencidos" %} {{ conteo_atencion.vencidos }}
+            </button>
+            <button type="button" class="sge-chip sge-att sinresp" data-set="atencion" data-val="sin_resp" aria-pressed="{% if filtro_atencion == 'sin_resp' %}true{% else %}false{% endif %}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 19a4 4 0 0 0-8 0M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 8l4 4m0-4-4 4"/></svg>
+                {% trans "Sin responsable" %} {{ conteo_atencion.sin_resp }}
+            </button>
+            <button type="button" class="sge-chip sge-att sinfecha" data-set="atencion" data-val="sin_fecha" aria-pressed="{% if filtro_atencion == 'sin_fecha' %}true{% else %}false{% endif %}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"/></svg>
+                {% trans "Sin fecha" %} {{ conteo_atencion.sin_fecha }}
+            </button>
+            <button type="button" class="sge-chip sge-att porval" data-set="atencion" data-val="por_validar" aria-pressed="{% if filtro_atencion == 'por_validar' %}true{% else %}false{% endif %}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/></svg>
+                {% trans "Por validar" %} {{ conteo_atencion.por_validar }}
+            </button>
+
+            {% if filtros_escritorio_activos %}
+            <a class="sge-limpiar" href="{% url 'mto:lista_seguimientos' %}{% if url_limpiar %}?{{ url_limpiar }}{% endif %}">{% trans "Limpiar filtros" %}</a>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- ── Tabla ── -->
+    <section class="sge-card">
+        <div class="sge-card-head">
+            <span class="sge-card-tt">{% blocktrans count n=combinados_page.paginator.count %}{{ n }} seguimiento{% plural %}{{ n }} seguimientos{% endblocktrans %}</span>
+            {% if orden_por == 'fecha_creacion' and direccion == 'desc' %}<span class="sge-card-nota">· {% trans "más recientes primero" %}</span>{% endif %}
+
+            <div class="sge-cols" id="seg-col-picker-wrap">
+                <button type="button" class="sge-btn-sec" onclick="toggleSegColPicker()" aria-haspopup="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M10 4v16M15 4v16"/></svg>
+                    {% trans "Columnas" %}
+                </button>
+                <div id="seg-col-picker" class="sge-pop" style="display:none; left:auto; right:0; width:210px; padding:12px 16px;">
+                    <div style="font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">{% trans "Mostrar columnas" %}</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <label class="seg-col-toggle" data-col="sge-c-notas"><input type="checkbox" checked onchange="toggleSegCol('sge-c-notas', this.checked)"> {% trans "Notas" %}</label>
+                        <label class="seg-col-toggle" data-col="sge-c-val"><input type="checkbox" checked onchange="toggleSegCol('sge-c-val', this.checked)"> {% trans "Validación" %}</label>
+                        <label class="seg-col-toggle" data-col="sge-c-creado"><input type="checkbox" checked onchange="toggleSegCol('sge-c-creado', this.checked)"> {% trans "Creado" %}</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sge-scroll">
+            <table id="tabla-seguimientos" class="sge-tabla sticky-actions-col" data-puede-editar="{% if puede_editar_seguimiento %}1{% endif %}">
+                <thead>
+                    <tr>
+                        <th class="sge-c-orden">{% trans "No. orden" %}</th>
+                        <th class="sge-c-prob">{% trans "Problema" %}</th>
+                        <th class="sge-c-accion">{% trans "Acción" %}</th>
+                        <th class="sge-c-notas">{% trans "Notas" %}</th>
+                        <th class="sge-c-resp">{% trans "Responsable" %}</th>
+                        <th class="sge-c-comp"{% if orden_por == 'fecha_compromiso' %} aria-sort="{% if direccion == 'asc' %}ascending{% else %}descending{% endif %}"{% endif %}>
+                            <a href="?{% if qs_sin_orden %}{{ qs_sin_orden }}&amp;{% endif %}orden_por=fecha_compromiso&amp;direccion={% if orden_por == 'fecha_compromiso' and direccion == 'asc' %}desc{% else %}asc{% endif %}">{% trans "Compromiso" %}{% if orden_por == 'fecha_compromiso' %} {% if direccion == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a>
+                        </th>
+                        <th class="sge-c-est">{% trans "Estatus" %}</th>
+                        <th class="sge-c-val">{% trans "Validación" %}</th>
+                        <th class="sge-c-creado"{% if orden_por == 'fecha_creacion' %} aria-sort="{% if direccion == 'asc' %}ascending{% else %}descending{% endif %}"{% endif %}>
+                            <a href="?{% if qs_sin_orden %}{{ qs_sin_orden }}&amp;{% endif %}orden_por=fecha_creacion&amp;direccion={% if orden_por == 'fecha_creacion' and direccion == 'desc' %}asc{% else %}desc{% endif %}">{% trans "Creado" %}{% if orden_por == 'fecha_creacion' %} {% if direccion == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a>
+                        </th>
+                        <th class="sge-c-acc">{% trans "Acciones" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seg in seguimientos_manuales %}
+                    <tr{% if seg.dias_vencido %} class="sge-vencida"{% endif %} data-sm-id="{{ seg.id }}"
+                        data-orden="{{ seg.no_orden }}" data-problema="{{ seg.problema }}" data-accion="{{ seg.accion }}"
+                        data-notas="{{ seg.notas }}" data-responsable="{{ seg.responsable }}"
+                        data-fecha="{{ seg.fecha_compromiso|date:'Y-m-d' }}" data-estatus="{{ seg.estatus }}"
+                        data-creado="{{ seg.fecha_creacion|date:'Y-m-d' }}" data-creado-txt="{{ seg.fecha_creacion|date:'d/m/Y' }}"
+                        data-area="{{ seg.area.nombre|default:'' }}" data-estatus-label="{{ seg.get_estatus_display }}">
+                        <td class="sge-c-orden">
+                            <a href="#" class="sge-orden" aria-label="{% trans 'Editar' %} {{ seg.no_orden }}" onclick="editarManual(event, {{ seg.id }})">{{ seg.no_orden }}</a>
+                            {% if seg.codigo_plan %}<div class="sge-plan">{% trans "Plan" %} {{ seg.codigo_plan }}</div>{% endif %}
+                        </td>
+                        <td class="sge-c-prob"><div class="sge-txt fuerte">{{ seg.problema }}</div></td>
+                        <td class="sge-c-accion">{% if seg.accion %}<div class="sge-txt">{{ seg.accion }}</div>{% else %}<span class="sge-vacio">—</span>{% endif %}</td>
+                        <td class="sge-c-notas">{% if seg.notas %}<div class="sge-txt nota">{{ seg.notas }}</div>{% else %}<span class="sge-vacio">—</span>{% endif %}</td>
+                        <td class="sge-c-resp">
+                            {% if seg.responsable %}
+                            <div class="sge-resp"><span class="sge-av">{{ seg.iniciales }}</span><span>{{ seg.responsable }}</span></div>
+                            {% else %}
+                            <div class="sge-resp sin"><span class="sge-av">?</span><span>{% trans "Sin responsable" %}</span></div>
+                            {% endif %}
+                        </td>
+                        <td class="sge-c-comp">
+                            {% if seg.fecha_compromiso %}
+                                <div class="sge-fecha{% if seg.dias_vencido %} venc{% endif %}">{{ seg.fecha_compromiso|date:"d/m/Y" }}</div>
+                                {% if seg.dias_vencido %}
+                                <span class="sge-sub-chip {% if seg.vencido_fuerte %}venc2{% else %}venc{% endif %}">{% blocktrans count n=seg.dias_vencido %}Vencido {{ n }} día{% plural %}Vencido {{ n }} días{% endblocktrans %}</span>
+                                {% elif seg.estatus == 'completado' %}
+                                <span class="sge-sub-chip ok">{% trans "Cumplido" %}</span>
                                 {% endif %}
                             {% else %}
-                                <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+                                <div class="sge-fecha{% if seg.estatus != 'completado' %} sin{% endif %}">{% trans "Sin fecha" %}</div>
                             {% endif %}
-                        </a>
-                    </th>
-                    <th class="seg-col-codigo"      style="text-align:center; width:100px;">{% trans "Código plan" %}</th>
-                    <th class="seg-col-tipo"        style="text-align:center; width:100px;">{% trans "Tipo" %}</th>
-                    <th class="seg-col-problema"    style="text-align:left;   width:300px;">{% trans "Problema" %}</th>
-                    <th class="seg-col-accion"      style="text-align:left;   width:300px;">{% trans "Acción" %}</th>
-                    <th class="seg-col-responsable" style="text-align:left;   width:140px;">{% trans "Responsable" %}</th>
-                    <th class="seg-col-compromiso"  style="text-align:center; width:150px;">{% trans "Compromiso" %}</th>
-                    <th class="seg-col-estatus"     style="text-align:center; width:150px;">{% trans "Estatus" %}</th>
-                    <th class="seg-col-creado"      style="text-align:center; width:100px;">
-                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden_por' and k != 'direccion' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden_por=fecha_creacion&direccion={% if orden_por == 'fecha_creacion' and direccion == 'desc' %}asc{% else %}desc{% endif %}"
-                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if orden_por == 'fecha_creacion' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if orden_por == 'fecha_creacion' %}600{% else %}500{% endif %};">
-                            {% trans "Creado" %}
-                            {% if orden_por == 'fecha_creacion' %}
-                                {% if direccion == 'desc' %}
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                                {% else %}
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
-                                {% endif %}
-                            {% else %}
-                                <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
-                            {% endif %}
-                        </a>
-                    </th>
-                    <th class="seg-col-notas"       style="text-align:left;   width:200px;">{% trans "Notas" %}</th>
-                    <th class="seg-col-validacion"  style="text-align:center; width:100px;">{% trans "Validación" %}</th>
-                    <th style="text-align:center;   width:200px;">{% trans "Acciones" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for seg in seguimientos %}
-                <tr data-ot-id="{{ seg.id }}">
-                    <td class="seg-col-orden"      style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">
-                        {{ seg.no_orden }}
-                    </td>
-                    <td class="seg-col-codigo"     style="font-size:12px; color:var(--text-2); text-align:center;">
-                        {{ seg.registro.plan.codigo }}
-                    </td>
-                    <td class="seg-col-tipo"       style="text-align:center;">
-                        <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#FCEBEB; color:#A32D2D;">
-                            {{ seg.get_tipo_display }}
-                        </span>
-                    </td>
-                    <td class="seg-col-problema"   style="max-width:200px; white-space:normal;">{{ seg.problema }}</td>
-                    <td class="seg-col-accion"     style="max-width:180px; white-space:normal; color:var(--text-2);">{{ seg.accion|default:"—" }}</td>
-                    <td class="seg-col-responsable" >{{ seg.responsable|default:"—" }}</td>
-                    <td class="seg-col-compromiso" style="color:var(--text-2); text-align:center;">
-                        {% if seg.fecha_compromiso %}{{ seg.fecha_compromiso|date:"d/m/Y" }}{% else %}—{% endif %}
-                    </td>
-                    <td class="seg-col-estatus"    style="text-align:center;">
-                        {% if seg.estatus == 'pendiente' %}
-                            <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#FAEEDA; color:#854F0B;">{% trans "Pendiente" %}</span>
-                        {% elif seg.estatus == 'en_proceso' %}
-                            <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#E6F1FB; color:#185FA5;">{% trans "En proceso" %}</span>
-                        {% else %}
-                            <span style="padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:#EAF3DE; color:#3B6D11;">{% trans "Completado" %}</span>
-                        {% endif %}
-                    </td>
-                    <td class="seg-col-creado"     style="color:var(--text-3); font-size:12px; text-align:center;">{{ seg.fecha_creacion|date:"d/m/Y" }}</td>
-                    <td class="seg-col-notas"      style="max-width:150px; white-space:normal; color:var(--text-2); font-size:12px;">{{ seg.notas|default:"—" }}</td>
-                    <td class="seg-col-validacion" style="text-align:center;">
-                        <button onclick="toggleValidadoOT({{ seg.id }}, this)"
-                                style="padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:none;
-                                    background:{% if seg.validado %}#EAF3DE{% else %}#F1EFE8{% endif %};
-                                    color:{% if seg.validado %}#3B6D11{% else %}#5F5E5A{% endif %};">
-                            {% if seg.validado %}Validado{% else %}Pendiente{% endif %}
-                        </button>
-                    </td>
-                    <td style="text-align:center;">
-                       
-                        <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
-
-                            {% if seg.imagenes.exists %}
-                                <button onclick="verImagenesSeg(event, 'ot', {{ seg.id }}, '{{ seg.fecha_creacion|date:"d/m/Y" }}', '{{ seg.registro.plan.area.nombre|escapejs }}', '{{ seg.estatus }}', '{{ seg.get_estatus_display|escapejs }}')"
-                                        title="{% trans 'Ver imágenes' %}"
-                                        style="display:inline-flex; align-items:center; justify-content:center;
-                                            width:32px; height:30px; border-radius:6px; border:1px solid var(--border);
-                                            background:var(--surface); color:var(--text-2); cursor:pointer; padding:0; flex-shrink:0;">
-                                    <svg width="14" height="14" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                </button>
-                            {% else %}
-                                <div style="width:32px; height:32px; flex-shrink:0;"></div>
-                            {% endif %}
-                            
-                            {% if puede_editar_seguimiento %}
-                            <button onclick="editarOT(event, {{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
-                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                        font-size:12px; border-radius:6px; border:1px solid var(--border);
-                                        background:var(--surface); color:var(--text); cursor:pointer;
-                                        white-space:nowrap; font-family:inherit; height:30px;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                {% trans "Editar" %}
+                        </td>
+                        <td class="sge-c-est"><span class="sge-est {{ seg.estatus }}"><i></i>{{ seg.get_estatus_display }}</span></td>
+                        <td class="sge-c-val">
+                            <button type="button" class="sge-val{% if seg.validado %} ok{% endif %}" onclick="toggleValidadoManual({{ seg.id }}, this)"
+                                    {% if not puede_validar_seguimiento %}disabled aria-disabled="true" title="{% trans 'No tienes permiso para validar' %}"{% elif seg.estatus != 'completado' and not seg.validado %}aria-disabled="true" title="{% trans 'No se puede validar: la actividad aún no está completada' %}"{% else %}title="{% trans 'Cambiar validación' %}"{% endif %}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{% if seg.validado %}m5 12 5 5 9-10{% else %}M12 7v5l3 2{% endif %}"/></svg>
+                                <span>{% if seg.validado %}{% trans "Validado" %}{% else %}{% trans "Por validar" %}{% endif %}</span>
                             </button>
-                            {% endif %}
-                            
+                        </td>
+                        <td class="sge-c-creado"><span class="sge-creado-f">{{ seg.fecha_creacion|date:"d/m/Y" }}</span></td>
+                        <td class="sge-c-acc">
+                            {% with o=seg.no_orden %}
+                            {% blocktrans count n=seg.fotos asvar lbl_fotos %}Ver {{ n }} foto de {{ o }}{% plural %}Ver {{ n }} fotos de {{ o }}{% endblocktrans %}
+                            {% blocktrans asvar lbl_editar %}Editar {{ o }}{% endblocktrans %}
+                            {% blocktrans asvar lbl_borrar %}Eliminar {{ o }}{% endblocktrans %}
+                            <div class="row-acts">
+                                {% include 'menu_app/_row_action_button.html' with variant='foto' title=_("Ver fotos") label=lbl_fotos action='verFotosFila' target_id=seg.id count=seg.fotos %}
+                                {% if puede_editar_seguimiento %}{% include 'menu_app/_row_action_button.html' with variant='edit' title=_("Editar") label=lbl_editar action='editarManual' target_id=seg.id %}{% endif %}
+                                {% if puede_eliminar_seguimiento %}{% include 'menu_app/_row_action_button.html' with variant='del' title=_("Eliminar") label=lbl_borrar action='confirmarEliminarManual' target_id=seg.id %}{% endif %}
+                            </div>
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="sge-vacio-fila">
+                        <td colspan="10">
+                            {% if filtros_escritorio_activos %}{% trans "Sin resultados con estos filtros" %}
+                            <a href="{% url 'mto:lista_seguimientos' %}{% if url_limpiar %}?{{ url_limpiar }}{% endif %}">{% trans "Limpiar filtros" %}</a>
+                            {% else %}{% trans "No hay seguimientos registrados." %}{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-                            {% if puede_eliminar_seguimiento %}
-                            <button onclick="confirmarEliminarOT(event, {{ seg.id }})"
-                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                        font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
-                                        background:#FFF5F5; color:#DC2626; cursor:pointer;
-                                        white-space:nowrap; font-family:inherit; height:30px;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                                {% trans "Eliminar" %}
-                            </button>
-                            {% endif %}
-                            
+        <div class="sge-hbar" id="sge-hbar" hidden aria-hidden="true"><div></div></div>
 
-                        </div>
-                
-                    </td>
-                </tr>
-                {% endfor %}
-
-                {% for seg in seguimientos_manuales %}
-                <tr data-sm-id="{{ seg.id }}">
-                    <td class="seg-col-orden"       style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">
-                        {{ seg.no_orden }}
-                    </td>
-                    <td class="seg-col-codigo"      style="font-size:12px;color:var(--text-2);text-align:center;">—</td>
-                    <td class="seg-col-tipo"        style="text-align:center;">
-                        <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#FCEBEB;color:#A32D2D;">
-                            {{ seg.get_tipo_display }}
-                        </span>
-                    </td>
-                    <td class="seg-col-problema"    style="max-width:200px;white-space:normal;">{{ seg.problema }}</td>
-                    <td class="seg-col-accion"      style="max-width:180px;white-space:normal;color:var(--text-2);">{{ seg.accion|default:"—" }}</td>
-                    <td class="seg-col-responsable">{{ seg.responsable|default:"—" }}</td>
-                    <td class="seg-col-compromiso"  style="color:var(--text-2);text-align:center;">
-                        {% if seg.fecha_compromiso %}{{ seg.fecha_compromiso|date:"d/m/Y" }}{% else %}—{% endif %}
-                    </td>
-                    <td class="seg-col-estatus"     style="text-align:center;">
-                        {% if seg.estatus == 'pendiente' %}
-                            <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#FAEEDA;color:#854F0B;">{% trans "Pendiente" %}</span>
-                        {% elif seg.estatus == 'en_proceso' %}
-                            <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#E6F1FB;color:#185FA5;">{% trans "En proceso" %}</span>
-                        {% else %}
-                            <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#EAF3DE;color:#3B6D11;">{% trans "Completado" %}</span>
-                        {% endif %}
-                    </td>
-                    <td class="seg-col-creado"      style="color:var(--text-3);font-size:12px;text-align:center;">{{ seg.fecha_creacion|date:"d/m/Y" }}</td>
-                    <td class="seg-col-notas"       style="max-width:150px;white-space:normal;color:var(--text-2);font-size:12px;">{{ seg.notas|default:"—" }}</td>
-                    <td class="seg-col-validacion"  style="text-align:center;">
-                        <button onclick="toggleValidadoManual({{ seg.id }}, this)"
-                                style="padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:none;
-                                    background:{% if seg.validado %}#EAF3DE{% else %}#F1EFE8{% endif %};
-                                    color:{% if seg.validado %}#3B6D11{% else %}#5F5E5A{% endif %};">
-                            {% if seg.validado %}Validado{% else %}Pendiente{% endif %}
-                        </button>
-                    </td>
-                    <td style="text-align:center;">
-        
-                        <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
-
-                            {% if seg.imagenes.exists %}
-                                <button onclick="verImagenesSeg(event, 'manual', {{ seg.id }}, '{{ seg.fecha_creacion|date:"d/m/Y" }}', '{{ seg.area.nombre|escapejs }}', '{{ seg.estatus }}', '{{ seg.get_estatus_display|escapejs }}')"
-                                        title="{% trans 'Ver imágenes' %}"
-                                        style="display:inline-flex; align-items:center; justify-content:center;
-                                            width:32px; height:30px; border-radius:6px; border:1px solid var(--border);
-                                            background:var(--surface); color:var(--text-2); cursor:pointer; padding:0; flex-shrink:0;">
-                                    <svg width="14" height="14" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                </button>
-                            {% else %}
-                                <div style="width:32px; height:32px; flex-shrink:0;"></div>
-                            {% endif %}
-
-                            {% if puede_editar_seguimiento %}
-                            <button onclick="editarManual(event, {{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')"
-                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                        font-size:12px; border-radius:6px; border:1px solid var(--border);
-                                        background:var(--surface); color:var(--text); cursor:pointer;
-                                        white-space:nowrap; font-family:inherit; height:30px;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                {% trans "Editar" %}
-                            </button>
-                            {% endif %}
-
-                            {% if puede_eliminar_seguimiento %}
-                            <button onclick="confirmarEliminarManual(event, {{ seg.id }})"
-                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                        font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
-                                        background:#FFF5F5; color:#DC2626; cursor:pointer;
-                                        white-space:nowrap; font-family:inherit; height:30px;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                                {% trans "Eliminar" %}
-                            </button>
-                            {% endif %}
-
-                        </div>
-
-                    </td>
-                </tr>
-                {% endfor %}
-
-                {% if not seguimientos and not seguimientos_manuales %}
-                <tr>
-                    <td colspan="12" style="text-align:center; padding:40px; color:var(--text-3);">
-                        {% trans "No hay seguimientos registrados." %}
-                    </td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
-        
-        <!-- ── Paginación ── -->
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
-            <div class="pagination" style="margin:0;">
+        <div class="sge-pie">
+            {% if combinados_page.paginator.count %}
+            <span>{% blocktrans with a=combinados_page.start_index b=combinados_page.end_index n=combinados_page.paginator.count %}Mostrando {{ a }}–{{ b }} de {{ n }}{% endblocktrans %}</span>
+            {% else %}
+            <span>{% trans "Sin resultados con estos filtros" %}</span>
+            {% endif %}
+            {% include 'menu_app/_page_size_toggle.html' with ps_id='sge-per-page' label=_("Filas por página") options=per_page_options value=per_page storage_key='pageSize:seguimientos' %}
+            <nav class="sge-pag" aria-label="{% trans 'Paginación' %}">
                 {% if combinados_page.has_previous %}
-                    <a href="?area={{ area_filtro }}&estatus={{ estatus_filtro }}&tipo={{ tipo_filtro }}&orden={{ filtro_orden }}&problema={{ filtro_problema }}&accion={{ filtro_accion }}&validado={{ filtro_validado }}&fecha_desde={{ filtro_fecha_desde }}&fecha_hasta={{ filtro_fecha_hasta }}&per_page={{ per_page }}&page={{ combinados_page.previous_page_number }}">‹</a>
-                {% else %}
-                    <span class="disabled">‹</span>
-                {% endif %}
+                <a href="?{% if qs_sin_page %}{{ qs_sin_page }}&amp;{% endif %}page={{ combinados_page.previous_page_number }}" aria-label="{% trans 'Página anterior' %}">‹</a>
+                {% else %}<span class="off" aria-hidden="true">‹</span>{% endif %}
                 {% for num in combinados_page.paginator.page_range %}
-                    {% if combinados_page.number == num %}
-                        <span class="current">{{ num }}</span>
-                    {% elif num > combinados_page.number|add:'-3' and num < combinados_page.number|add:'3' %}
-                        <a href="?area={{ area_filtro }}&estatus={{ estatus_filtro }}&tipo={{ tipo_filtro }}&orden={{ filtro_orden }}&problema={{ filtro_problema }}&accion={{ filtro_accion }}&validado={{ filtro_validado }}&fecha_desde={{ filtro_fecha_desde }}&fecha_hasta={{ filtro_fecha_hasta }}&per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
-                    {% endif %}
+                    {% if num == combinados_page.number %}<span class="actual" aria-current="page">{{ num }}</span>
+                    {% elif num == 1 or num == combinados_page.paginator.num_pages or num > combinados_page.number|add:'-3' and num < combinados_page.number|add:'3' %}
+                    <a href="?{% if qs_sin_page %}{{ qs_sin_page }}&amp;{% endif %}page={{ num }}">{{ num }}</a>
+                    {% elif num == combinados_page.number|add:'-3' or num == combinados_page.number|add:'3' %}<span class="off">…</span>{% endif %}
                 {% endfor %}
                 {% if combinados_page.has_next %}
-                    <a href="?area={{ area_filtro }}&estatus={{ estatus_filtro }}&tipo={{ tipo_filtro }}&orden={{ filtro_orden }}&problema={{ filtro_problema }}&accion={{ filtro_accion }}&validado={{ filtro_validado }}&fecha_desde={{ filtro_fecha_desde }}&fecha_hasta={{ filtro_fecha_hasta }}&per_page={{ per_page }}&page={{ combinados_page.next_page_number }}">›</a>
-                {% else %}
-                    <span class="disabled">›</span>
-                {% endif %}
+                <a href="?{% if qs_sin_page %}{{ qs_sin_page }}&amp;{% endif %}page={{ combinados_page.next_page_number }}" aria-label="{% trans 'Página siguiente' %}">›</a>
+                {% else %}<span class="off" aria-hidden="true">›</span>{% endif %}
+            </nav>
+        </div>
+    </section>
+</div>
+
+<!-- ═══ Vista de celular (≤767px) — ver seguimientos_movil.css / .js ═══ -->
+<div id="sg-movil" class="movil-only">
+    <!-- Encabezado: el script "topbar" de base_menu lo pasa a la barra sticky -->
+    <div class="movil-only" data-topbar-movil>
+        <div class="sg-titulos">
+            <div>{% trans "Seguimientos de OTs" %}</div>
+            <div id="sg-subtitulo" data-n="{{ combinados_page.paginator.count }}">{% if area_nombre %}{{ area_nombre }} · {% endif %}{% blocktrans count n=combinados_page.paginator.count %}{{ n }} seguimiento{% plural %}{{ n }} seguimientos{% endblocktrans %}</div>
+        </div>
+    </div>
+
+    <div class="sg-buscar-fila">
+        <label class="sg-buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="sg-buscar" value="{{ filtro_q }}" enterkeyhint="search"
+                   placeholder="{% trans 'Orden, problema o acción' %}" aria-label="{% trans 'Buscar por orden, problema o acción' %}">
+        </label>
+        <button type="button" class="sg-btn-filtros" onclick="sgAbrirFiltros(event)"
+                aria-label="{% if filtros_activos %}{% blocktrans count n=filtros_activos %}Filtros, {{ n }} activo{% plural %}Filtros, {{ n }} activos{% endblocktrans %}{% else %}{% trans 'Filtros' %}{% endif %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            {% trans "Filtros" %}
+            {% if filtros_activos %}<span class="sg-badge" aria-hidden="true">{{ filtros_activos }}</span>{% endif %}
+        </button>
+    </div>
+
+    <div class="sg-chips" role="group" aria-label="{% trans 'Estatus' %}">
+        <button type="button" data-estatus="" aria-pressed="{% if not estatus_filtro %}true{% else %}false{% endif %}">{% trans "Todos" %} <span data-conteo="">{{ conteo_todos }}</span></button>
+        <button type="button" data-estatus="pendiente" aria-pressed="{% if estatus_filtro == 'pendiente' %}true{% else %}false{% endif %}"><i class="pendiente"></i>{% trans "Pendiente" %} <span data-conteo="pendiente">{{ conteo_estatus.pendiente }}</span></button>
+        <button type="button" data-estatus="en_proceso" aria-pressed="{% if estatus_filtro == 'en_proceso' %}true{% else %}false{% endif %}"><i class="en_proceso"></i>{% trans "En proceso" %} <span data-conteo="en_proceso">{{ conteo_estatus.en_proceso }}</span></button>
+        <button type="button" data-estatus="completado" aria-pressed="{% if estatus_filtro == 'completado' %}true{% else %}false{% endif %}"><i class="completado"></i>{% trans "Completado" %} <span data-conteo="completado">{{ conteo_estatus.completado }}</span></button>
+    </div>
+
+    {% comment %}Las tarjetas solo traen los datos; seguimientos_movil.js pinta su contenido (el mismo código pinta las nuevas y las editadas).{% endcomment %}
+    <div id="sg-lista">
+        {% for s in combinados_page %}
+        <article class="sg-card" data-tipo="{% if s.es_ot %}ot{% else %}manual{% endif %}" data-id="{{ s.id }}"
+                 data-orden="{{ s.no_orden }}" data-codigo="{{ s.codigo_plan }}" data-semana="{{ s.semana }}"
+                 data-problema="{{ s.problema }}" data-accion="{{ s.accion|default:'' }}"
+                 data-responsable="{{ s.responsable|default:'' }}" data-fecha="{{ s.fecha_compromiso|date:'Y-m-d' }}"
+                 data-estatus="{{ s.estatus }}" data-notas="{{ s.notas|default:'' }}"
+                 data-creado="{{ s.fecha_creacion|date:'d/m/Y' }}" data-validado="{% if s.validado %}1{% else %}0{% endif %}"
+                 data-nimg="{{ s.imagenes.count }}"
+                 data-area="{% if s.es_ot %}{{ s.registro.plan.area.nombre }}{% else %}{{ s.area.nombre|default:'' }}{% endif %}"></article>
+        {% endfor %}
+    </div>
+    <div class="sg-vacio" id="sg-vacio"{% if combinados_page.paginator.count %} hidden{% endif %}>
+        {% if filtro_q or filtros_activos or estatus_filtro %}{% trans "No hay seguimientos con estos filtros." %}{% else %}{% trans "No hay seguimientos registrados." %}{% endif %}
+    </div>
+
+    {% if combinados_page.has_next %}
+    <button type="button" id="sg-cargar-mas" data-next="{{ combinados_page.next_page_number }}"
+            data-fin="{{ combinados_page.end_index }}" data-total="{{ combinados_page.paginator.count }}"
+            data-per-page="{{ combinados_page.paginator.per_page }}">{% trans "Cargar más" %}</button>
+    {% endif %}
+    <div class="sg-espacio-fab"></div>
+</div>
+
+{% if puede_llenar_seguimiento %}<button type="button" class="sg-fab movil-only" onclick="sgNuevo(event)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    {% trans "Nuevo seguimiento" %}
+</button>{% endif %}
+
+<!-- Hoja: filtros -->
+<div id="sg-sheet-filtros" class="modal-backdrop movil-only sg-hoja" style="display:none;">
+    <div class="modal-box sheet-movil sg-filtros" role="dialog" aria-modal="true" aria-labelledby="sg-filtros-titulo">
+        <div class="sg-asa"><span></span></div>
+        <div class="sg-filtros-head">
+            <h2 id="sg-filtros-titulo">{% trans "Filtros" %}</h2>
+            <button type="button" class="sg-btn-texto" onclick="sgLimpiarFiltros()">{% trans "Limpiar todo" %}</button>
+        </div>
+        <div class="sg-filtros-cuerpo">
+            <div class="sg-seccion">
+                <span class="sg-seccion-t" id="sgfl-val-t">{% trans "VALIDACIÓN" %}</span>
+                <div class="sg-seg" role="group" aria-labelledby="sgfl-val-t" data-filtro="validado">
+                    <button type="button" data-v="">{% trans "Todas" %}</button>
+                    <button type="button" data-v="0">{% trans "Por validar" %}</button>
+                    <button type="button" data-v="1">{% trans "Validado" %}</button>
+                </div>
+            </div>
+            <div class="sg-seccion">
+                <span class="sg-seccion-t">{% trans "CREADO" %}</span>
+                <div class="sg-rango">
+                    <label>{% trans "Desde" %}<input type="date" id="sgfl-desde"></label>
+                    <label>{% trans "Hasta" %}<input type="date" id="sgfl-hasta"></label>
+                </div>
+                <div class="sg-atajos">
+                    <button type="button" data-rango="mes">{% trans "Este mes" %}</button>
+                    <button type="button" data-rango="90">{% trans "Últimos 90 días" %}</button>
+                </div>
+            </div>
+            <div class="sg-seccion">
+                <span class="sg-seccion-t">{% trans "COMPROMISO" %}</span>
+                <div class="sg-switch-fila">
+                    <span id="sgfl-venc-t">{% trans "Solo vencidos" %}</span>
+                    <button type="button" class="sg-switch" id="sgfl-vencidos" role="switch" aria-checked="false" aria-labelledby="sgfl-venc-t"><span></span></button>
+                </div>
+            </div>
+            <div class="sg-seccion">
+                <span class="sg-seccion-t">{% trans "BÚSQUEDA DETALLADA" %}</span>
+                <label class="sg-campo-fl">{% trans "Problema" %}<input type="search" id="sgfl-problema" placeholder="{% trans 'Buscar problema…' %}"></label>
+                <label class="sg-campo-fl">{% trans "Acción" %}<input type="search" id="sgfl-accion" placeholder="{% trans 'Buscar acción…' %}"></label>
             </div>
         </div>
-
+        <div class="sg-pie">
+            <button type="button" class="sg-btn-principal" id="sgfl-ver" onclick="sgAplicarFiltros()">{% trans "Aplicar filtros" %}</button>
+        </div>
     </div>
 </div>
 
-<!-- ── Modal nuevo/editar seguimiento — fondo blanco fijo como en los catálogos ── -->
-<style>
-    #modal-manual .mf-box { background: #fff; }
-    #modal-manual .mf-doc-title { color: #1d1d24; }
-    #modal-manual .mf-doc-subtitle { color: #9b9ba6; }
-    #modal-manual .form-field label { color: #33333c; }
-    #modal-manual .form-field input,
-    #modal-manual .form-field textarea {
-        background: #fff; color: #1d1d24; border-color: #d8d8e0;
-    }
-    #modal-manual .form-field input::placeholder,
-    #modal-manual .form-field textarea::placeholder { color: #9b9ba6; }
-    #modal-manual .form-field input:focus,
-    #modal-manual .form-field textarea:focus {
-        outline: none; border-color: var(--indigo);
-        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
-    }
-    #modal-manual .dp-control { background: #fff; border-color: #d8d8e0; }
-    #modal-manual .dp-control:hover { border-color: #9b9ba6; }
-    #modal-manual .dp-text, #modal-manual .dp-text--vacio, #modal-manual .dp-icon { color: #1d1d24; }
-    #modal-manual .ref-count { color: #9b9ba6; }
-    #modal-manual #sm-resp-dropdown { background: #fff; }
-    #modal-manual #sm-dropzone { border-color: #d8d8e0; background: #fafafb; }
-    #modal-manual #sm-dropzone svg { color: #9b9ba6; }
-    #modal-manual #sm-dropzone > div { color: #33333c; }
-    #modal-manual .btn-ghost { color: #33333c; border-color: #d8d8e0; }
-    #modal-manual .btn-ghost:hover { background: #f2f2f5; color: #1d1d24; }
-    /* Animación (ver keyframes globales en base_menu.html): este modal no usa
-       .modal-backdrop/.modal-box, así que se declara aparte. */
-    #modal-manual { animation: modal-overlay-in 220ms both; }
-    #modal-manual .mf-box {
-        transform-origin: 50% 50%;
-        animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
-    }
-    #modal-manual[data-closing],
-    #modal-manual[data-closing] .mf-box {
-        animation: none; opacity: 0;
-        transition: opacity 120ms ease-out, transform 120ms ease-out;
-    }
-    #modal-manual[data-closing] .mf-box { transform: scale(.97); }
-</style>
-<div id="modal-manual"
-     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
-            z-index:3000; align-items:center; justify-content:center;">
-    <div class="mf-box" style="border-radius:12px; padding:24px 28px;
-                min-width:360px; max-width:480px; width:90%; max-height:90vh; overflow-y:auto;
-                box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-            <div>
-                <div class="mf-doc-title" style="font-size:14px; font-weight:600;" id="modal-manual-titulo">
-                    {% trans "Nuevo seguimiento" %}
+<!-- Pantalla completa: nuevo / editar seguimiento -->
+<div id="sg-form" class="sg-pantalla movil-only" role="dialog" aria-modal="true" aria-labelledby="sg-form-titulo" hidden>
+    <header class="sg-form-head">
+        <button type="button" class="sg-btn-icono gris" id="sg-form-cerrar" aria-label="{% trans 'Cerrar' %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+        <div class="sg-form-titulos">
+            <div id="sg-form-titulo"></div>
+            <div id="sg-form-sub"></div>
+        </div>
+        <button type="button" class="sg-btn-icono" id="sg-form-mas" aria-label="{% trans 'Más acciones' %}" hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+    </header>
+    <div class="sg-form-cuerpo">
+        <label class="sg-campo">
+            <span>{% trans "Problema encontrado" %} <b class="sg-req" aria-hidden="true">*</b></span>
+            <textarea id="sgf-problema" rows="3" required aria-describedby="sgf-problema-error" placeholder="{% trans 'Describe el problema…' %}"></textarea>
+            <span class="sg-error" id="sgf-problema-error" hidden>{% trans "Describe el problema" %}</span>
+        </label>
+        <label class="sg-campo">
+            <span>{% trans "Acción realizada" %}</span>
+            <textarea id="sgf-accion" rows="3" placeholder="{% trans 'Describe la acción tomada…' %}"></textarea>
+        </label>
+        <div class="sg-campo">
+            <span id="sgf-resp-t">{% trans "Responsable" %}</span>
+            <button type="button" class="sg-selector" id="sgf-resp" aria-labelledby="sgf-resp-t sgf-resp-txt">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+                <span id="sgf-resp-txt"></span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+        </div>
+        <div class="sg-campo">
+            <span id="sgf-fecha-t">{% trans "Fecha compromiso" %}</span>
+            {% comment %}El input de fecha nativo va encima, transparente: al tocarlo abre el selector del teléfono.{% endcomment %}
+            <div class="sg-selector sg-fecha">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>
+                <span id="sgf-fecha-txt" aria-hidden="true"></span>
+                <input type="date" id="sgf-fecha" aria-labelledby="sgf-fecha-t">
+            </div>
+            <div class="sg-atajos">
+                <button type="button" data-atajo="7">{% trans "En 1 semana" %}</button>
+                <button type="button" data-atajo="14">{% trans "En 2 semanas" %}</button>
+                <button type="button" data-atajo="fin">{% trans "Fin de mes" %}</button>
+            </div>
+        </div>
+        <div class="sg-campo">
+            <span id="sgf-est-t">{% trans "Estatus" %}</span>
+            <div class="sg-estatus" role="group" aria-labelledby="sgf-est-t">
+                <button type="button" data-v="pendiente">{% trans "Pendiente" %}</button>
+                <button type="button" data-v="en_proceso">{% trans "En proceso" %}</button>
+                <button type="button" data-v="completado">{% trans "Completado" %}</button>
+            </div>
+        </div>
+        <label class="sg-campo">
+            <span>{% trans "Notas adicionales" %} <small>({% trans "opcional" %})</small></span>
+            <textarea id="sgf-notas" rows="2" placeholder="{% trans 'Notas opcionales…' %}"></textarea>
+        </label>
+        <div class="sg-campo">
+            <div class="sg-img-head"><span>{% trans "Imágenes" %}</span><small id="sgf-img-n"></small></div>
+            <div class="sg-imgs" id="sgf-imgs"></div>
+        </div>
+    </div>
+    <div class="sg-form-pie">
+        <button type="button" class="sg-btn-sec" id="sg-form-cancelar">{% trans "Cancelar" %}</button>
+        <button type="button" class="sg-btn-principal" id="sg-form-guardar">{% trans "Guardar seguimiento" %}</button>
+    </div>
+</div>
+
+<!-- Hoja: elegir responsable (mismo diseño que "Asignar responsable" del Plan) -->
+<div id="sg-sheet-personas" class="modal-backdrop movil-only sg-hoja" style="display:none;">
+    <div class="modal-box sheet-movil sg-personas-hoja" role="dialog" aria-modal="true" aria-labelledby="sg-personas-titulo">
+        <div class="sg-asa"><span></span></div>
+        <h2 class="sg-sheet-titulo" id="sg-personas-titulo">{% trans "Responsable" %}</h2>
+        <label class="sg-buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="sg-personas-buscar" placeholder="{% trans 'Buscar persona' %}" aria-label="{% trans 'Buscar persona' %}">
+        </label>
+        <div class="sg-personas" id="sg-personas" role="radiogroup" aria-labelledby="sg-personas-titulo"></div>
+    </div>
+</div>
+
+<!-- Hoja: ⋯ del formulario de edición -->
+<div id="sg-sheet-mas" class="modal-backdrop movil-only sg-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="sg-mas-titulo">
+        <div class="sg-asa"><span></span></div>
+        <h2 class="sg-sheet-titulo" id="sg-mas-titulo"></h2>
+        {% if puede_validar_seguimiento %}
+        <button type="button" class="sg-accion" id="sg-mas-validar">
+            <span class="sg-accion-icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>
+            <span id="sg-mas-validar-txt"></span>
+        </button>
+        {% endif %}
+        {% if puede_eliminar_seguimiento %}
+        <button type="button" class="sg-accion peligro" id="sg-mas-eliminar">
+            <span class="sg-accion-icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></span>
+            {% trans "Eliminar seguimiento" %}
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Hojas de confirmación: eliminar / ¿salir sin guardar? -->
+
+<div id="sg-sheet-eliminar" class="modal-backdrop movil-only sg-hoja sg-alerta" style="display:none;">
+    <div class="modal-box sheet-movil" role="alertdialog" aria-modal="true" aria-labelledby="sg-elim-titulo" aria-describedby="sg-elim-texto">
+        <div class="sg-asa"><span></span></div>
+        <div class="sg-confirma">
+            <span class="sg-confirma-icono peligro">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </span>
+            <h2 id="sg-elim-titulo">{% trans "¿Eliminar este seguimiento?" %}</h2>
+            <p id="sg-elim-texto">{% trans "Esta acción no se puede deshacer." %}</p>
+            <div class="sg-confirma-botones">
+                <button type="button" class="sg-confirma-seguro" id="sg-elim-cancelar">{% trans "Cancelar" %}</button>
+                <button type="button" class="sg-confirma-peligro" id="sg-elim-ok">{% trans "Eliminar" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="sg-sheet-salir" class="modal-backdrop movil-only sg-hoja sg-alerta" style="display:none;">
+    <div class="modal-box sheet-movil" role="alertdialog" aria-modal="true" aria-labelledby="sg-salir-titulo" aria-describedby="sg-salir-texto">
+        <div class="sg-asa"><span></span></div>
+        <div class="sg-confirma">
+            <span class="sg-confirma-icono">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4M12 17.2v.1"/></svg>
+            </span>
+            <h2 id="sg-salir-titulo"></h2>
+            <p id="sg-salir-texto"></p>
+            <div class="sg-confirma-botones">
+                <button type="button" class="sg-confirma-seguro" id="sg-salir-seguir"></button>
+                <button type="button" class="sg-confirma-peligro" id="sg-salir-descartar"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal Nuevo / Editar seguimiento (escritorio) ── -->
+<div id="modal-manual" class="sge-m" role="presentation">
+    <div class="mf-box sge-modal" role="dialog" aria-modal="true" aria-labelledby="sge-m-titulo">
+
+        <div class="sge-m-head">
+            <span class="sge-m-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path id="sge-m-ico-path" d="M12 5v14M5 12h14"/></svg>
+            </span>
+            <div class="sge-m-tt">
+                <h2 id="sge-m-titulo">
+                    <span id="sge-m-titulo-txt">{% trans "Nuevo seguimiento" %}</span>
+                    <span class="orden" id="sge-m-orden" hidden></span>
+                    <span class="tipo" id="sge-m-tipo" hidden>{% trans "Correctivo" %}</span>
+                </h2>
+                <div class="sge-m-sub" id="sge-m-sub"></div>
+            </div>
+            <button type="button" class="sge-x" id="sge-m-cerrar" aria-label="{% trans 'Cerrar' %}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+        </div>
+
+        <div class="sge-m-cuerpo">
+            <div class="sge-col">
+                <div>
+                    <label class="sge-lab" for="sm-problema">{% trans "Problema encontrado" %} <span class="req" aria-hidden="true">*</span><span class="cnt" id="sge-cnt-problema">0 / 500</span></label>
+                    <textarea class="sge-ta" id="sm-problema" maxlength="500" style="height:104px;" aria-required="true" aria-describedby="sge-err-problema"
+                              placeholder="{% trans '¿Qué falla se encontró? Equipo, síntoma, ubicación…' %}"></textarea>
+                    <div class="sge-err" id="sge-err-problema" hidden>{% trans "Describe el problema" %}</div>
                 </div>
-                <div class="mf-doc-subtitle" style="font-size:11px;">{% trans "Seguimiento independiente de OTs" %}</div>
-            </div>
-            <button type="button" onclick="cerrarModalManual()"
-                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
-                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
-                    style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s; flex-shrink:0;">✕</button>
-        </div>
-
-        <div class="form-field modal-row" style="margin-bottom:12px;">
-            <label>{% trans "Problema encontrado" %}</label>
-            <textarea id="sm-problema" rows="3" placeholder="Describe el problema..."
-                      style="padding:8px 10px; border:1px solid; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; width:100%;"></textarea>
-        </div>
-        <div class="form-field modal-row" style="margin-bottom:12px;">
-            <label>{% trans "Acción realizada" %}</label>
-            <textarea id="sm-accion" rows="2" placeholder="Describe la acción tomada..."
-                      style="padding:8px 10px; border:1px solid; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; width:100%;"></textarea>
-        </div>
-        <div class="form-field modal-row" style="margin-bottom:12px; position:relative;">
-            <label>{% trans "Responsable" %}</label>
-            <input type="text" id="sm-responsable" placeholder="Buscar responsable..." autocomplete="off"
-                style="padding:8px 10px; border:1px solid; border-radius:7px; font-family:inherit; font-size:14px; width:100%;">
-            <div id="sm-resp-dropdown" style="display:none; position:absolute; left:0; right:0; top:100%;
-                border:1px solid var(--indigo); border-top:none;
-                border-radius:0 0 7px 7px; z-index:5000; max-height:180px; overflow-y:auto;
-                box-shadow:0 4px 16px rgba(0,0,0,.15);"></div>
-        </div>
-        <div class="form-field modal-row" style="margin-bottom:12px;">
-            <label>{% trans "Fecha compromiso" %}</label>
-            {% include 'menu_app/_date_picker.html' with name='sm_fecha_iso' dp_id='dp-sm-fecha' %}
-        </div>
-        <div class="modal-row" style="margin-bottom:12px;">
-            <label style="font-size:12px; font-weight:600; color:#33333c; display:block; margin-bottom:6px;">{% trans "Estatus" %}</label>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button type="button" class="sm-pill" data-val="pendiente" onclick="smEstatus('pendiente')"
-                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid #854F0B; background:#FAEEDA; color:#854F0B;">{% trans "Pendiente" %}</button>
-                <button type="button" class="sm-pill" data-val="en_proceso" onclick="smEstatus('en_proceso')"
-                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #d8d8e0; background:#fff; color:#33333c;">{% trans "En proceso" %}</button>
-                <button type="button" class="sm-pill" data-val="completado" onclick="smEstatus('completado')"
-                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #d8d8e0; background:#fff; color:#33333c;">{% trans "Completado" %}</button>
-            </div>
-            <input type="hidden" id="sm-estatus" value="pendiente">
-            <input type="hidden" id="sm-id" value="">
-            <input type="hidden" id="sm-ot-id" value="">
-        </div>
-        <div class="form-field modal-row" style="margin-bottom:16px;">
-            <label>{% trans "Notas adicionales" %}</label>
-            <textarea id="sm-notas" rows="2" placeholder="Notas opcionales..."
-                      style="padding:8px 10px; border:1px solid; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical; width:100%;"></textarea>
-        </div>
-
-        <!-- ── Imágenes ── -->
-        <div class="form-field modal-row" style="margin-bottom:16px;">
-            <label>{% trans "Imágenes" %} <span class="ref-count" style="font-weight:400;">({% trans "máximo 4" %})</span></label>
-            <div id="sm-dropzone"
-                style="border:2px dashed; border-radius:8px; padding:18px;
-                        text-align:center; cursor:pointer;
-                        transition:border-color .15s;">
-                <svg width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-bottom:6px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <div style="font-size:12px;">
-                    {% trans "Arrastra imágenes aquí o haz clic para seleccionar" %}
+                <div>
+                    <label class="sge-lab" for="sm-accion">{% trans "Acción realizada" %} <span class="opc">{% trans "opcional" %}</span><span class="cnt" id="sge-cnt-accion">0 / 500</span></label>
+                    <textarea class="sge-ta" id="sm-accion" maxlength="500" style="height:88px;" aria-describedby="sge-err-accion"
+                              placeholder="{% trans '¿Qué se hizo o qué se va a hacer?' %}"></textarea>
+                    <div class="sge-err" id="sge-err-accion" hidden>{% trans "Describe la acción realizada" %}</div>
                 </div>
-                <input type="file" id="sm-input-imagenes" accept="image/*" multiple style="display:none;">
+                <div>
+                    <label class="sge-lab" for="sm-notas">{% trans "Notas adicionales" %} <span class="opc">{% trans "opcional" %}</span></label>
+                    <textarea class="sge-ta" id="sm-notas" style="height:72px;"
+                              placeholder="{% trans 'Refacciones usadas, observaciones…' %}"></textarea>
+                </div>
             </div>
-            <div id="sm-preview-imagenes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+
+            <div class="sge-col">
+                <div>
+                    <label class="sge-lab" id="sge-resp-lab" for="sm-resp-input">{% trans "Responsable" %} <span class="req" aria-hidden="true">*</span></label>
+                    <div class="sge-combo" id="sge-combo">
+                        <span class="elegido-txt" id="sge-resp-elegido"></span>
+                        <input type="text" id="sm-resp-input" role="combobox" autocomplete="off" aria-autocomplete="list"
+                               aria-expanded="false" aria-controls="sm-resp-lista" aria-describedby="sge-err-resp"
+                               placeholder="{% trans 'Buscar responsable…' %}">
+                        <button type="button" class="quitar" id="sge-resp-quitar" aria-label="{% trans 'Quitar responsable' %}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                        </button>
+                        <ul class="sge-lista" id="sm-resp-lista" role="listbox" aria-labelledby="sge-resp-lab" hidden></ul>
+                    </div>
+                    <div class="sge-err" id="sge-err-resp" hidden>{% trans "Elige un responsable de la lista" %}</div>
+                </div>
+
+                <div>
+                    <label class="sge-lab">{% trans "Fecha compromiso" %}</label>
+                    <div class="sge-fecha-fila">
+                        <div class="sge-fechaw" id="sge-fechaw" style="flex:1; min-width:0;">
+                            {% include 'menu_app/_date_picker.html' with name='sm_fecha_iso' dp_id='dp-sm-fecha' %}
+                        </div>
+                        <span class="sge-semana" id="sge-semana" aria-live="polite"></span>
+                    </div>
+                    <div class="sge-atajos" id="sge-atajos">
+                        <button type="button" class="sge-atajo" data-atajo="hoy" aria-pressed="false">{% trans "Hoy" %}</button>
+                        <button type="button" class="sge-atajo" data-atajo="7" aria-pressed="false">{% trans "+1 semana" %}</button>
+                        <button type="button" class="sge-atajo" data-atajo="14" aria-pressed="false">{% trans "+2 semanas" %}</button>
+                        <button type="button" class="sge-atajo" data-atajo="fin" aria-pressed="false">{% trans "Fin de mes" %}</button>
+                    </div>
+                    <div class="sge-err" id="sge-err-fecha" hidden></div>
+                </div>
+
+                <div>
+                    <label class="sge-lab" id="sge-est-lab">{% trans "Estatus" %}</label>
+                    <div class="sge-estatus" role="radiogroup" aria-labelledby="sge-est-lab">
+                        <button type="button" class="sge-eb sm-pill" role="radio" data-val="pendiente" aria-checked="false" onclick="smEstatus('pendiente')"><i></i>{% trans "Pendiente" %}</button>
+                        <button type="button" class="sge-eb sm-pill" role="radio" data-val="en_proceso" aria-checked="false" onclick="smEstatus('en_proceso')"><i></i>{% trans "En proceso" %}</button>
+                        <button type="button" class="sge-eb sm-pill" role="radio" data-val="completado" aria-checked="false" onclick="smEstatus('completado')"><i></i>{% trans "Completado" %}</button>
+                    </div>
+                    <input type="hidden" id="sm-estatus" value="pendiente">
+                    <input type="hidden" id="sm-id" value="">
+                </div>
+
+                <div>
+                    <label class="sge-lab">{% trans "Imágenes" %} <span class="cnt" id="sge-cnt-imgs">0 / 4</span></label>
+                    <div class="sge-imgs" id="sm-grid"></div>
+                    <input type="file" id="sm-input-imagenes" accept="image/jpeg,image/png" multiple hidden>
+                    <div class="sge-ayuda">{% trans "Arrastra, pega (Ctrl + V) o haz clic · JPG o PNG hasta 5 MB" %}</div>
+                </div>
+            </div>
         </div>
 
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button type="button" onclick="cerrarModalManual()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-            <button type="button" onclick="guardarManual()" class="btn btn-primary">{% trans "Guardar" %}</button>
+        <div class="sge-m-pie">
+            {% if puede_eliminar_seguimiento %}
+            <button type="button" class="eliminar" id="sge-m-eliminar" hidden>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg>
+                {% trans "Eliminar" %}
+            </button>
+            {% endif %}
+            <span class="atajo">{% trans "Ctrl + Enter para guardar" %}</span>
+            <button type="button" class="cancelar" id="sge-m-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="guardar" id="sge-m-guardar">{% trans "Crear seguimiento" %}</button>
+        </div>
+    </div>
+</div>
+
+<!-- ¿Descartar cambios? -->
+<div id="modal-descartar" class="sge-m" style="z-index:4500;" role="presentation">
+    <div class="mf-box sge-dlg" role="alertdialog" aria-modal="true" aria-labelledby="sge-d-tt" aria-describedby="sge-d-tx">
+        <h2 id="sge-d-tt">{% trans "¿Descartar cambios?" %}</h2>
+        <p id="sge-d-tx"></p>
+        <div class="sge-dlg-btns">
+            <button type="button" class="seguro" id="sge-d-seguir">{% trans "Seguir editando" %}</button>
+            <button type="button" class="peligro" id="sge-d-descartar">{% trans "Descartar" %}</button>
         </div>
     </div>
 </div>
 
 <!-- Modal eliminar -->
-<div id="modal-confirm-del" class="modal-backdrop"
-     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
-            z-index:4000; align-items:center; justify-content:center;">
-    <div class="modal-box" style="background:var(--white); border-radius:12px; padding:24px 28px; text-align:left;
-                min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:8px;">
-            {% trans "Eliminar seguimiento" %}
-        </div>
-        <div style="font-size:13px; color:var(--text-2); margin-bottom:20px;">
-            {% trans "Esta acción no se puede deshacer." %}
-        </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button onclick="cerrarModalDel()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-            <button onclick="ejecutarEliminar()" class="btn btn-danger"
-                    style="background:#EF4444; color:#fff; border-color:#EF4444;">
-                {% trans "Sí, eliminar" %}
-            </button>
+<div id="modal-confirm-del" class="sge-m" style="z-index:4000;" role="presentation">
+    <div class="mf-box sge-dlg" role="alertdialog" aria-modal="true" aria-labelledby="sge-del-tt" aria-describedby="sge-del-tx">
+        <h2 id="sge-del-tt">{% trans "Eliminar seguimiento" %}</h2>
+        <p id="sge-del-tx">{% trans "Esta acción no se puede deshacer." %}</p>
+        <div class="sge-dlg-btns">
+            <button type="button" onclick="cerrarModalDel()">{% trans "Cancelar" %}</button>
+            <button type="button" class="peligro" onclick="ejecutarEliminar()">{% trans "Eliminar" %}</button>
         </div>
     </div>
 </div>
@@ -657,15 +738,110 @@
     const SM_LIMITE_IMAGENES_TPL  = "{% trans 'Solo se agregaron {n} imagen(es), límite de 4 alcanzado' %}";
 </script>
 <script src="{% static 'menu_app/js/date_picker.js' %}"></script>
-<script>
-    // Creado desde/hasta son el selector de fecha único; no soporta
-    // onchange="" inline como el <input type="date"> nativo que reemplazó.
-    document.querySelector('#dp-fecha-desde .dp-value').addEventListener('change', function () {
-        this.closest('form').submit();
-    });
-    document.querySelector('#dp-fecha-hasta .dp-value').addEventListener('change', function () {
-        this.closest('form').submit();
-    });
-</script>
+<script src="{% static 'mto_app/js/filter_select.js' %}"></script>
+<script src="{% static 'menu_app/js/page_size_toggle.js' %}"></script>
 <script src="{% static 'mto_app/js/lista_seguimientos.js' %}"></script>
+<script>
+/* Textos del JS de escritorio (seguimientos_escritorio.js), mismo patrón que SEG_MOVIL. */
+window.SGE_I18N = {
+    noValidable:   "{% trans 'No se puede validar: la actividad aún no está completada' %}",
+    descargando:   "{% trans 'Descargando…' %}",
+    preparando:    "{% trans 'Preparando archivo…' %}",
+    descargados:   "{% trans 'Se descargaron {n} seguimientos' %}",
+    errorDescarga: "{% trans 'No se pudo generar el archivo. Intenta de nuevo.' %}",
+    nuevoTitulo:   "{% trans 'Nuevo seguimiento' %}",
+    editarTitulo:  "{% trans 'Editar seguimiento' %}",
+    nuevoSub:      "{% trans 'Acción correctiva independiente de OTs' %}",
+    editarSub:     "{% trans 'Creado el {fecha}' %}",
+    crear:         "{% trans 'Crear seguimiento' %}",
+    guardar:       "{% trans 'Guardar cambios' %}",
+    guardando:     "{% trans 'Guardando…' %}",
+    creadoToast:   "{% trans 'Seguimiento {orden} creado' %}",
+    guardadoToast: "{% trans 'Cambios guardados' %}",
+    eliminadoToast:"{% trans 'Seguimiento {orden} eliminado' %}",
+    eliminarMsg:   "{% trans '¿Eliminar el seguimiento {orden}? Esta acción no se puede deshacer.' %}",
+    fechaMin:      "{% trans 'La fecha compromiso no puede ser anterior a {fecha}' %}",
+    semana:        "{% trans 'Semana {n}' %}",
+    buscando:      "{% trans 'Buscando…' %}",
+    sinCoincidencias: "{% trans 'Sin coincidencias' %}",
+    errorBuscar:   "{% trans 'No se pudo buscar. Revisa tu conexión.' %}",
+    agregar:       "{% trans 'Agregar' %}",
+    quitarImg:     "{% trans 'Quitar imagen' %}",
+    verImg:        "{% trans 'Ver imagen' %}",
+    tipoImg:       "{% trans 'Solo se aceptan imágenes JPG o PNG' %}",
+    tamImg:        "{% trans 'Cada imagen debe pesar máximo 5 MB' %}",
+    validado:      "{% trans 'Validado' %}",
+    porValidar:    "{% trans 'Por validar' %}",
+    descartarNuevo:  "{% trans 'Este seguimiento todavía no se ha guardado. Si sales ahora, perderás lo que escribiste y las imágenes.' %}",
+    descartarEditar: "{% trans 'Modificaste este seguimiento. Si sales ahora, se quedará como estaba antes.' %}",
+};
+</script>
+<script src="{% static 'mto_app/js/seguimientos_escritorio.js' %}"></script>
+{{ responsables_movil|json_script:"sg-responsables" }}
+<script>
+window.SEG_MOVIL = {
+    hoy: "{{ hoy|date:'Y-m-d' }}",
+    areaNombre: "{{ area_nombre|default:''|escapejs }}",
+    puedeEditar: {% if puede_editar_seguimiento %}true{% else %}false{% endif %},
+    puedeValidar: {% if puede_validar_seguimiento %}true{% else %}false{% endif %},
+    i18n: {
+        ot:              "{% trans 'OT' %}",
+        correctivo:      "{% trans 'Correctivo' %}",
+        pendiente:       "{% trans 'Pendiente' %}",
+        en_proceso:      "{% trans 'En proceso' %}",
+        completado:      "{% trans 'Completado' %}",
+        soloCompletado:  "{% trans 'No se puede validar: la actividad aún no está completada' %}",
+        lblProblema:     "{% trans 'Problema' %}",
+        lblAccion:       "{% trans 'Acción' %}",
+        lblNotas:        "{% trans 'Notas' %}",
+        creado:          "{% trans 'Creado' %}",
+        sinFecha:        "{% trans 'Sin fecha' %}",
+        vencido:         "{% trans '{fecha} · vencido {n} d' %}",
+        sinResp:         "{% trans 'Sin responsable' %}",
+        validado:        "{% trans 'Validado' %}",
+        porValidar:      "{% trans 'Por validar' %}",
+        unaFoto:         "{% trans '1 foto' %}",
+        nFotos:          "{% trans '{n} fotos' %}",
+        verFotos:        "{% trans 'Ver imágenes' %}",
+        plan:            "{% trans 'Plan {codigo}' %}",
+        abrirSeg:        "{% trans 'Editar seguimiento {orden}' %}",
+        nuevo:           "{% trans 'Nuevo seguimiento' %}",
+        editar:          "{% trans 'Editar seguimiento' %}",
+        subNuevo:        "{% trans 'Seguimiento independiente de OTs' %}",
+        subEditar:       "{% trans 'No. orden {orden}' %}",
+        elegirResp:      "{% trans 'Elegir responsable' %}",
+        sinAsignar:      "{% trans 'Sin asignar' %}",
+        fechaVacia:      "{% trans 'dd/mm/aaaa' %}",
+        nDe4:            "{% trans '{n} de 4' %}",
+        quitarImg:       "{% trans 'Quitar imagen' %}",
+        camara:          "{% trans 'Cámara' %}",
+        tomarFoto:       "{% trans 'Tomar foto' %}",
+        galeria:         "{% trans 'Galería' %}",
+        elegirGaleria:   "{% trans 'Elegir de la galería' %}",
+        maxImg:          "{% trans 'Máximo 4 imágenes por seguimiento' %}",
+        guardando:       "{% trans 'Guardando…' %}",
+        guardado:        "{% trans 'Seguimiento guardado' %}",
+        eliminado:       "{% trans 'Seguimiento eliminado' %}",
+        errorGuardar:    "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
+        errorCargar:     "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
+        marcarValidado:  "{% trans 'Marcar como validado' %}",
+        quitarValidado:  "{% trans 'Quitar validación' %}",
+        unSeg:           "{% trans '1 seguimiento' %}",
+        nSeg:            "{% trans '{n} seguimientos' %}",
+        verUno:          "{% trans 'Ver 1 seguimiento' %}",
+        verN:            "{% trans 'Ver {n} seguimientos' %}",
+        sinResultados:   "{% trans 'Sin resultados' %}",
+        cargarN:         "{% trans 'Cargar {n} más' %}",
+        salirNuevoTitulo:    "{% trans '¿Salir sin guardar?' %}",
+        salirNuevoTexto:     "{% trans 'Este seguimiento todavía no se ha guardado. Si sales ahora, perderás lo que escribiste y las imágenes.' %}",
+        salirNuevoSeguir:    "{% trans 'Seguir con el seguimiento' %}",
+        salirNuevoDescartar: "{% trans 'Salir y descartar' %}",
+        salirEditarTitulo:    "{% trans '¿Salir sin guardar los cambios?' %}",
+        salirEditarTexto:     "{% trans 'Modificaste este seguimiento. Si sales ahora, se quedará como estaba antes.' %}",
+        salirEditarSeguir:    "{% trans 'Seguir editando' %}",
+        salirEditarDescartar: "{% trans 'Descartar cambios' %}",
+    },
+};
+</script>
+<script src="{% static 'mto_app/js/seguimientos_movil.js' %}"></script>
 {% endblock %}

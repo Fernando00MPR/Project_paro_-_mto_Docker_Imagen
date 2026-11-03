@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Area, PlanMantenimiento, HistorialRutina
+from .models import Area, PlanMantenimiento, HistorialRutina, Rutina
 
 @admin.register(Area)
 class AreaAdmin(admin.ModelAdmin):
@@ -22,3 +22,9 @@ class HistorialRutinaAdmin(admin.ModelAdmin):
     search_fields = ['usuario__username', 'plan_trabajo', 'codigo_plan', 'nombre_plan']
     readonly_fields = ['fecha', 'usuario', 'accion', 'area', 'plan_trabajo',
                        'codigo_plan', 'nombre_plan', 'pasos_afectados', 'motivo']
+
+@admin.register(Rutina)
+class RutinaAdmin(admin.ModelAdmin):
+    list_display  = ['plan_trabajo', 'area', 'codigo_documento', 'prioridad', 'creador']
+    list_filter   = ['area', 'prioridad']
+    search_fields = ['plan_trabajo', 'codigo_documento', 'creador', 'locacion']

@@ -3,274 +3,305 @@
 {% load static %}
 {% block title %}{% trans "Backlog de seguimientos" %}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'mto_app/css/backlog_mobile.css' %}">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap">
+<link rel="stylesheet" href="{% static 'mto_app/css/filter_select.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/week_select.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/backlog_escritorio.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/backlog_movil.css' %}">
 {% endblock %}
 {% block content %}
 
-<div class="bl-head-row">
-    <div class="bl-head" style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
-        <div>
-            <div class="card-title">{% trans "Backlog de seguimientos" %}{% if area_nombre %} — {{ area_nombre }}{% endif %}</div>
-            <div class="card-subtitle bl-head-subtitle">{% trans "Órdenes con fecha de compromiso vencida — pendientes y en proceso" %}</div>
-        </div>
-    </div>
+<!-- ═══ Vista de escritorio (≥768px) — ver backlog_escritorio.css / .js ═══ -->
+<div id="bkd" class="bkd bk-desktop-only" data-rangos="{{ rangos_antiguedad|join:',' }}"
+     data-exportar="{% url 'mto:backlog_exportar' %}">
 
-    <!-- Filtro área -->
-    <div class="bl-filter" style="padding:10px 14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px;">
-        <style>
-          /* Flecha nativa del select pegada al borde → chevron propio con espacio + más ancho.
-             Mismo tono que el texto (--text): hex literal porque no se puede
-             meter var() dentro del data URI. */
-          .bl-filter select {
-              width: 260px;
-              height: 40px;
-              box-sizing: border-box;
-              padding: 0 34px 0 10px;
-              border-radius: 8px;
-              font-size: 14px;
-              appearance: none; -webkit-appearance: none;
-              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-              background-repeat: no-repeat;
-              background-position: right 10px center;
-              background-size: 14px;
-              background-color: var(--white);
-          }
-          /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
-             select { background: var(--white) !important; }, que borra el chevron de
-             arriba por especificidad + !important. Se repite aquí con el mismo peso
-             para ganar por ir declarada después en el documento. */
-          [data-theme="dark"] .bl-filter select {
-              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-              background-repeat: no-repeat !important;
-              background-position: right 10px center !important;
-              background-size: 14px !important;
-          }
-        </style>
-        <form method="get" class="bl-filter-form" style="display:flex; gap:10px; align-items:flex-end;">
-            <div class="filter-group">
-                <label>{% trans "Área" %}</label>
-                <span class="bl-filter-dot" aria-hidden="true"></span>
-                <select name="area" onchange="this.form.submit()">
-                    <option value="">{% trans "Todas las áreas" %}</option>
-                    {% for a in areas %}
-                    <option value="{{ a.id }}" {% if area_id == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nombre }}</option>
-                    {% endfor %}
-                </select>
+    <!-- Encabezado con filtros: Área y Semana recargan la página; Tipo filtra aquí -->
+    <div class="bkd-head">
+        <div class="bkd-head-txt">
+            <h1 class="bkd-titulo">{% trans "Backlog de seguimientos" %}</h1>
+            <p class="bkd-sub">{% trans "Órdenes con fecha de compromiso vencida — pendientes y en proceso" %}</p>
+        </div>
+        <form method="get" class="bkd-filtros">
+            {% include "mto_app/_filter_select.html" with fs_id="bk-area-d" name="area" label=_("Área") icono="edificio" valor=area_id valor_label=area_nombre todas_label=_("Todas las áreas") todas_meta=areas_filtro.todas_meta opciones=areas_filtro.opciones %}
+            {% include "mto_app/_week_select.html" with ws_id="bk-sem-d" name="semana" label=_("Semana de compromiso") valor_label=filtro_semana_label datos=semanas_filtro %}
+            <div class="bkd-seg" role="group" aria-label="{% trans 'Tipo' %}">
+                <button type="button" data-tipo="" aria-pressed="true">{% trans "Todas" %} {{ total_general }}</button>
+                <button type="button" data-tipo="ot" aria-pressed="false">{% trans "OTs" %} {{ total_ots }}</button>
+                <button type="button" data-tipo="manual" aria-pressed="false">{% trans "Correctivos" %} {{ total_manuales }}</button>
             </div>
-        </form>
-    </div>
-</div><!-- /.bl-head-row -->
-
-{% if personas %}
-
-{% with total_ot=0 total_manual=0 %}
-
-<!-- KPIs -->
-{% with total_general=0 %}
-<div class="bl-kpis" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;">
-    <div class="bl-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
-        <div style="font-size:11px; color:var(--text-3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">{% trans "Total vencidos" %}</div>
-        <div style="font-size:28px; font-weight:700; color:var(--indigo); line-height:1;">
-            {% with t=0 %}
-            {{ personas|length }}
-            {% endwith %}
-        </div>
-        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "responsables con atrasos" %}</div>
-    </div>
-    <div class="bl-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
-        <div style="font-size:11px; color:var(--text-3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">{% trans "Seguimientos de OTs" %}</div>
-        <div style="font-size:28px; font-weight:700; color:var(--indigo); line-height:1;">{{ total_ots }}</div>
-        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "órdenes vencidas" %}</div>
-    </div>
-    <div class="bl-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
-        <div style="font-size:11px; color:var(--text-3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">{% trans "Correctivos" %}</div>
-        <div style="font-size:28px; font-weight:700; color:#E24B4A; line-height:1;">{{ total_manuales }}</div>
-        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "seguimientos vencidos" %}</div>
-    </div>
-</div>
-{% endwith %}
-
-<!-- Gráficos generales -->
-<div class="bl-charts" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
-
-    <!-- Barras general -->
-    <div class="card bl-card bl-load" style="padding:16px 18px;">
-        <div style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px;">{% trans "Carga por responsable" %}</div>
-        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; font-size:11px; color:var(--text-2); justify-content:center;">
-            <span style="display:flex; align-items:center; gap:4px; white-space:nowrap;"><span style="width:8px;height:8px;border-radius:2px;background:var(--indigo);"></span>{% trans "Seguimiento de OTs" %} — {{ total_ots }}</span>
-            <span style="display:flex; align-items:center; gap:4px; white-space:nowrap;"><span style="width:8px;height:8px;border-radius:2px;background:#E24B4A;"></span>{% trans "Correctivo" %} — {{ total_manuales }}</span>
-        </div>
-        {% with max_total=personas.0.total %}
-        <div style="display:flex; flex-direction:column; gap:12px;">
-            {% for p in personas %}
-            <div>
-                 <div class="bl-bar-label" style="display:flex; justify-content:space-between; gap:10px; font-size:11px; color:var(--text-2); margin-bottom:4px;">
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; flex:1;">{{ p.nombre }}</span>
-                    <span style="font-weight:600; color:var(--text); flex-shrink:0;">{{ p.total }}</span>
-                </div>
-                <div style="display:flex; gap:2px; height:10px; background:var(--surface); border-radius:5px; overflow:hidden;">
-                    {% if p.ot %}<div style="background:var(--indigo); width:{% widthratio p.ot|length max_total 100 %}%;"></div>{% endif %}
-                    {% if p.manual %}<div style="background:#E24B4A; width:{% widthratio p.manual|length max_total 100 %}%;"></div>{% endif %}
-                </div>
-                <div style="font-size:10px; color:var(--text-3); margin-top:3px;">
-                    {% if p.ot %}{{ p.ot|length }} {% trans "Seguimiento de OTs" %} {{ p.ot|length|pluralize }}{% endif %}{% if p.ot and p.manual %} · {% endif %}{% if p.manual %}{{ p.manual|length }} {% trans "Correctivo" %}{{ p.manual|length|pluralize }}{% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endwith %}
-    </div>
-
-    <!-- Pastel general -->
-    <div class="card bl-card bl-pie" style="padding:16px 18px;">
-        <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin:0 auto; width:fit-content;">
-            <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px; color:var(--text-2); justify-content:center;">
-                <span style="display:flex; align-items:center; gap:4px;">
-                    <span style="width:8px;height:8px;border-radius:2px;background:var(--indigo);"></span>
-                    {% trans "Seguimiento de OTs" %} — {{ total_ots }}
-                </span>
-                <span style="display:flex; align-items:center; gap:4px;">
-                    <span style="width:8px;height:8px;border-radius:2px;background:#E24B4A;"></span>
-                    {% trans "Correctivos" %} — {{ total_manuales }}
-                </span>
-            </div>
-            <div style="position:relative; width:120px; height:120px;">
-                <svg viewBox="0 0 36 36" style="width:120px; height:120px; transform:rotate(-90deg);">
-                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="4"/>
-                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--indigo)" stroke-width="4"
-                        stroke-dasharray="{{ pct_ot_general }} {{ pct_m_general }}"
-                        stroke-linecap="round"/>
-                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E24B4A" stroke-width="4"
-                        stroke-dasharray="{{ pct_m_general }} {{ pct_ot_general }}"
-                        stroke-dashoffset="-{{ pct_ot_general }}"
-                        stroke-linecap="round"/>
+            <a class="bkd-btn" id="bkd-exportar" href="{% url 'mto:backlog_exportar' %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/>
                 </svg>
-                <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                    <div style="font-size:22px; font-weight:700; color:var(--text);">{{ total_general }}</div>
-                    <div style="font-size:9px; color:var(--text-3);">{% trans "total" %}</div>
+                {% trans "Exportar" %}
+            </a>
+        </form>
+        <div class="bkd-idioma">{% include 'menu_app/_language_selector.html' %}</div>
+    </div>
+
+    {% if personas %}
+    <!-- Indicadores (2×2) + gráfica de pastel -->
+    <div class="bkd-fila">
+        <div class="bkd-kpis">
+            <div class="bkd-kpi">
+                <div class="bkd-kpi-l">{% trans "Órdenes vencidas" %}</div>
+                <div class="bkd-kpi-v">
+                    <b class="rojo">{{ total_general }}</b>
+                    <span>{% blocktrans count n=personas|length %}de {{ n }} responsable{% plural %}de {{ n }} responsables{% endblocktrans %}</span>
+                </div>
+            </div>
+            <div class="bkd-kpi">
+                <div class="bkd-kpi-l azul"><i class="bkd-punto ot" aria-hidden="true"></i>{% trans "Seguimiento de OTs" %}</div>
+                <div class="bkd-kpi-v">
+                    <b class="azul">{{ total_ots }}</b>
+                    <span>{% blocktrans with pct=pct_ot_general %}{{ pct }}% del backlog{% endblocktrans %}</span>
+                </div>
+            </div>
+            <div class="bkd-kpi">
+                <div class="bkd-kpi-l rojo"><i class="bkd-punto co" aria-hidden="true"></i>{% trans "Correctivos" %}</div>
+                <div class="bkd-kpi-v">
+                    <b class="rojo">{{ total_manuales }}</b>
+                    <span>{% blocktrans with pct=pct_m_general %}{{ pct }}% del backlog{% endblocktrans %}</span>
+                </div>
+            </div>
+            <div class="bkd-kpi" role="img"
+                 aria-label="{% trans 'Antigüedad' %}:{% for r in antiguedad %} {{ r.label }} {{ r.n }}{% if not forloop.last %},{% endif %}{% endfor %}">
+                <div class="bkd-kpi-l">{% trans "Antigüedad" %}</div>
+                <div class="bkd-ant-barra" aria-hidden="true">
+                    {% for r in antiguedad %}{% if r.n %}<i class="{{ r.clave }}" style="flex:{{ r.n }};"></i>{% endif %}{% endfor %}
+                </div>
+                <div class="bkd-ant-leyenda" aria-hidden="true">
+                    {% for r in antiguedad %}<span title="{{ r.label }}"><b class="{{ r.clave }}">{{ r.n }}</b> {{ r.corto }}</span>{% endfor %}
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-{% endwith %}
-
-<!-- Lista colapsable por persona -->
-<div style="display:flex; flex-direction:column; gap:8px;">
-    {% for p in personas %}
-    <div class="bl-person-row" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
-
-        <!-- Colapsable (izquierda, ocupa todo el ancho) -->
-        <div class="bl-person" style="flex:1; background:var(--white); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
-            <div class="bl-person-head" onclick="togglePersona('p{{ forloop.counter }}')"
-                role="button" tabindex="0" aria-expanded="false" aria-controls="p{{ forloop.counter }}"
-                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePersona('p{{ forloop.counter }}');}"
-                style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px;
-                        background:var(--surface); cursor:pointer;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:34px; height:34px; border-radius:50%; background:var(--indigo-lt);
-                                display:flex; align-items:center; justify-content:center;
-                                font-size:12px; font-weight:600; color:var(--indigo); flex-shrink:0;">
-                        {{ p.nombre|slice:":2"|upper }}
-                    </div>
-                    <div>
-                        <div style="font-size:13px; font-weight:600; color:var(--text);">{{ p.nombre }}</div>
-                        <div style="font-size:11px; color:var(--text-3);">{{ p.total }} {% trans "vencida" %}{{ p.total|pluralize:"s" }}</div>
+        <section class="bkd-pie" aria-labelledby="bkd-pie-titulo">
+            <div class="bkd-pie-head">
+                <h2 class="bkd-pie-titulo" id="bkd-pie-titulo">{% trans "Distribución del backlog" %}</h2>
+                <div class="bkd-tabs" role="tablist" aria-label="{% trans 'Ver distribución por' %}">
+                    <button type="button" role="tab" id="bkd-tab-ant"  data-vista="ant"  aria-selected="true"  aria-controls="bkd-pie-cuerpo">{% trans "Antigüedad" %}</button>
+                    <button type="button" role="tab" id="bkd-tab-tipo" data-vista="tipo" aria-selected="false" aria-controls="bkd-pie-cuerpo" tabindex="-1">{% trans "Tipo" %}</button>
+                    <button type="button" role="tab" id="bkd-tab-resp" data-vista="resp" aria-selected="false" aria-controls="bkd-pie-cuerpo" tabindex="-1">{% trans "Responsable" %}</button>
+                </div>
+            </div>
+            <div class="bkd-pie-cuerpo" id="bkd-pie-cuerpo" role="tabpanel" aria-labelledby="bkd-tab-ant">
+                <div class="bkd-dona" role="img">
+                    <svg viewBox="0 0 132 132" width="132" height="132" aria-hidden="true"></svg>
+                    <div class="bkd-dona-centro" aria-hidden="true">
+                        <b>{{ total_general }}</b>
+                        <span>{% trans "vencidas" %}</span>
                     </div>
                 </div>
-                <div class="bl-badges" style="display:flex; gap:4px; align-items:center; flex-wrap:nowrap">
-                    {% if p.ot %}
-                    <span style="background:var(--indigo-lt); color:var(--indigo); padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap">
-                        {{ p.ot|length }} {% trans "Seguimiento de OTs" %}
-                    </span>
-                    {% endif %}
-                    {% if p.manual %}
-                    <span style="background:#FCEBEB; color:#A32D2D; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap">
-                        {{ p.manual|length }} {% trans "Correctivo" %}
-                    </span>
-                    {% endif %}
-                    <svg id="chev-p{{ forloop.counter }}" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        style="flex-shrink:0; color:var(--text-3); transition:transform .2s; margin-left:4px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                <ul class="bkd-leyenda"></ul>
+            </div>
+            <div class="bkd-tip" role="tooltip" hidden></div>
+        </section>
+    </div>
+
+    <!-- Maestro-detalle: Carga por responsable + tabla de órdenes -->
+    <div class="bkd-md">
+        <section class="bkd-carga" aria-labelledby="bkd-carga-titulo">
+            <div class="bkd-card-head">
+                <h2 class="bkd-h2" id="bkd-carga-titulo">{% trans "Carga por responsable" %}</h2>
+                <span class="bkd-muted">{% trans "Ordenado por vencidas" %}</span>
+            </div>
+            <ul class="bkd-carga-lista" id="bkd-carga" role="listbox" aria-labelledby="bkd-carga-titulo"></ul>
+        </section>
+
+        <section class="bkd-tabla-card" aria-labelledby="bkd-tabla-titulo">
+            <div class="bkd-card-head">
+                <h2 class="bkd-h2" id="bkd-tabla-titulo">{% trans "Órdenes vencidas" %} - <span id="bkd-tabla-quien">{% trans "Todos" %}</span></h2>
+                <label class="bkd-buscar">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M20 20l-3.5-3.5"/>
                     </svg>
-                </div>
+                    <input type="search" id="bkd-q" placeholder="{% trans 'Buscar folio o descripción' %}" aria-label="{% trans 'Buscar folio o descripción' %}">
+                </label>
             </div>
-            <div id="p{{ forloop.counter }}" class="bl-person-body" style="display:none; padding:10px 14px; flex-direction:column; gap:6px;">
-                {% for seg in p.ot %}
-                <div class="bl-item" style="background:var(--surface); border-radius:8px; padding:8px 10px; border-left:3px solid var(--indigo);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                        <span style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">{{ seg.no_orden }}</span>
-                        <span style="background:#FCEBEB; color:#A32D2D; padding:1px 7px; border-radius:20px; font-size:10px; font-weight:600;">
-                            {{ seg.dias_atraso }} {% trans "día" %}{{ seg.dias_atraso|pluralize }}
-                        </span>
-                    </div>
-                    <div style="font-size:12px; color:var(--text); margin-bottom:2px;">{{ seg.problema|truncatechars:70 }}</div>
-                    <div style="font-size:11px; color:var(--text-3);">{% trans "Vence:" %} {{ seg.fecha_compromiso|date:"d/m/Y" }} · {% trans "Seguimiento de OTs" %}</div>
-                </div>
-                {% endfor %}
-                {% for seg in p.manual %}
-                <div class="bl-item" style="background:var(--surface); border-radius:8px; padding:8px 10px; border-left:3px solid #E24B4A;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                        <span style="font-family:'DM Sans',sans-serif; font-size:12px; color:var(--indigo); font-weight:600; text-align:center;">{{ seg.no_orden }}</span>
-                        <span style="background:#FCEBEB; color:#A32D2D; padding:1px 7px; border-radius:20px; font-size:10px; font-weight:600;">
-                            {{ seg.dias_atraso }} {% trans "día" %}{{ seg.dias_atraso|pluralize }}
-                        </span>
-                    </div>
-                    <div style="font-size:12px; color:var(--text); margin-bottom:2px;">{{ seg.problema|truncatechars:70 }}</div>
-                    <div style="font-size:11px; color:var(--text-3);">{% trans "Vence:" %} {{ seg.fecha_compromiso|date:"d/m/Y" }} · {% trans "Correctivo" %}</div>
-                </div>
-                {% endfor %}
+            <div class="bkd-tabla-scroll">
+                <table class="bkd-tabla">
+                    <thead>
+                        <tr>
+                            <th data-col="folio"><button type="button">{% trans "Folio" %}</button></th>
+                            <th data-col="tipo"><button type="button">{% trans "Tipo" %}</button></th>
+                            <th data-col="resp"><button type="button">{% trans "Responsable" %}</button></th>
+                            <th data-col="desc"><button type="button">{% trans "Descripción" %}</button></th>
+                            <th data-col="semana"><button type="button">{% trans "Semana" %}</button></th>
+                            <th data-col="vencia"><button type="button">{% trans "Vencía" %}</button></th>
+                            <th data-col="dias" class="der" aria-sort="descending"><button type="button">{% trans "Atraso" %}</button></th>
+                        </tr>
+                    </thead>
+                    <tbody id="bkd-tbody"></tbody>
+                </table>
             </div>
-        </div>
-
-        <!-- Gráficos (derecha) -->
-        <div id="grafico-{{ forloop.counter }}" class="bl-person-chart" data-grafico
-            style="background:var(--white); border:1px solid var(--border); border-radius:10px;
-            padding:10px 14px; display:flex; align-items:center;
-            justify-content:center; gap:10px; flex-shrink:0; width:500px;">
-            <div id="donut-wrapper-{{ forloop.counter }}" style="position:relative; width:56px; height:56px; flex-shrink:0;">
-                <canvas id="donut-{{ forloop.counter }}" width="56" height="56"
-                        data-ot="{{ p.ot|length }}" data-manual="{{ p.manual|length }}"></canvas>
-                <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
-                    <span style="font-size:13px; font-weight:700; color:var(--text);">{{ p.total }}</span>
-                </div>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                {% if p.ot %}
-                <div style="font-size:9px; color:var(--text-2); display:flex; align-items:center; gap:3px; white-space:nowrap;">
-                    <span style="width:6px; height:6px; border-radius:1px; background:var(--indigo); flex-shrink:0;"></span>
-                    {{ p.ot|length }} {% trans "Seguimiento de OTs" %} 
-                </div>
-                {% endif %}
-                {% if p.manual %}
-                <div style="font-size:9px; color:var(--text-2); display:flex; align-items:center; gap:3px; white-space:nowrap;">
-                    <span style="width:6px; height:6px; border-radius:1px; background:#E24B4A; flex-shrink:0;"></span>
-                    {{ p.manual|length }} {% trans "Correctivo" %} 
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
+        </section>
     </div>
-    {% endfor %}
+    {{ ordenes_json|json_script:"bkd-ordenes" }}
+    {{ antiguedad|json_script:"bkd-rangos" }}
+
+    {% else %}
+    <div class="bkd-vacio">
+        <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="bkd-vacio-t">{% trans "Sin atrasos" %}</div>
+        <div>{% trans "Todos los seguimientos están al día." %}</div>
+    </div>
+    {% endif %}
 </div>
 
-{% else %}
-<div class="card bl-empty" style="text-align:center; padding:60px; color:var(--text-3);">
-    <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-         style="margin:0 auto 16px; display:block; opacity:.3;">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-    <div style="font-size:15px; font-weight:600; margin-bottom:6px;">{% trans "Sin atrasos" %} </div>
-    <div style="font-size:13px;">{% trans "Todos los seguimientos están al día." %} </div>
+
+<!-- ═══ Vista de celular (≤767px) — ver backlog_movil.css / .js ═══ -->
+<div id="bk-movil" class="movil-only" data-rangos="{{ rangos_antiguedad|join:',' }}">
+    <!-- Encabezado: el script "topbar" de base_menu lo pasa a la barra sticky -->
+    <div class="movil-only" data-topbar-movil>
+        <div class="bk-titulos">
+            <div class="bk-titulo">{% trans "Backlog" %}</div>
+            <div class="bk-subtitulo">{% trans "Órdenes con compromiso vencido" %}</div>
+        </div>
+        <button type="button" class="bk-btn-icono" onclick="bkAbrirMas(event)" aria-label="{% trans 'Más acciones: idioma' %}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+    </div>
+
+    <div class="bk-filtros">
+        {% include "mto_app/_filter_select.html" with fs_id="bk-area-m" name="area" label=_("Área") icono="edificio" valor=area_id valor_label=area_nombre todas_label=_("Todas las áreas") todas_meta=areas_filtro.todas_meta opciones=areas_filtro.opciones %}
+        {% include "mto_app/_week_select.html" with ws_id="bk-sem-m" name="semana" label=_("Semana de compromiso") valor_label=filtro_semana_label datos=semanas_filtro %}
+    </div>
+
+    {% if personas %}
+    <section class="bk-resumen" aria-label="{% trans 'Resumen' %}">
+        <div class="bk-principal">
+            <span class="bk-total">{{ total_general }}</span>
+            <span>{% blocktrans count n=total_general %}orden vencida{% plural %}órdenes vencidas{% endblocktrans %} · {% blocktrans count n=personas|length %}{{ n }} responsable{% plural %}{{ n }} responsables{% endblocktrans %}</span>
+        </div>
+        <div class="bk-barra" role="img" aria-label="{% blocktrans count n=total_ots %}{{ n }} seguimiento de OT{% plural %}{{ n }} seguimientos de OTs{% endblocktrans %} {% trans 'y' %} {% blocktrans count n=total_manuales %}{{ n }} correctivo{% plural %}{{ n }} correctivos{% endblocktrans %}">
+            {% if total_ots %}<i class="ot" style="flex:{{ total_ots }};"></i>{% endif %}
+            {% if total_manuales %}<i class="co" style="flex:{{ total_manuales }};"></i>{% endif %}
+        </div>
+        <div class="bk-mini">
+            <div class="bk-mini-card ot">
+                <div class="bk-mini-l1"><i></i>{% trans "Seguimiento de OTs" %}</div>
+                <div class="bk-mini-l2"><b>{{ total_ots }}</b><span>{{ pct_ot_general }}%</span></div>
+            </div>
+            <div class="bk-mini-card co">
+                <div class="bk-mini-l1"><i></i>{% trans "Correctivos" %}</div>
+                <div class="bk-mini-l2"><b>{{ total_manuales }}</b><span>{{ pct_m_general }}%</span></div>
+            </div>
+        </div>
+        <div class="bk-chips">
+            {% if mas_6_meses %}<span class="alto">{% blocktrans count n=mas_6_meses %}{{ n }} con más de 6 meses{% plural %}{{ n }} con más de 6 meses{% endblocktrans %}</span>{% endif %}
+            <span>{% blocktrans count n=mas_antigua %}Más antigua: {{ n }} día{% plural %}Más antigua: {{ n }} días{% endblocktrans %}</span>
+        </div>
+    </section>
+
+    <div class="bk-seg" role="group" aria-label="{% trans 'Tipo' %}">
+        <button type="button" data-tipo="" aria-pressed="true">{% trans "Todas" %} {{ total_general }}</button>
+        <button type="button" data-tipo="ot" aria-pressed="false">{% trans "OTs" %} {{ total_ots }}</button>
+        <button type="button" data-tipo="manual" aria-pressed="false">{% trans "Correctivos" %} {{ total_manuales }}</button>
+    </div>
+
+    <div id="bk-lista">
+        {% for p in personas %}
+        <section class="bk-persona">
+            <button type="button" class="bk-head" aria-controls="bk-p{{ forloop.counter }}"
+                    aria-expanded="{% if personas|length == 1 %}true{% else %}false{% endif %}">
+                <span class="bk-fila1">
+                    <span class="bk-avatar" data-nombre="{{ p.nombre }}" aria-hidden="true"></span>
+                    <span class="bk-nombre-wrap">
+                        <span class="bk-nombre">{{ p.nombre }}</span>
+                        <span class="bk-desglose"></span>
+                    </span>
+                    <span class="bk-num">{{ p.total }}</span>
+                    <svg class="bk-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </span>
+                <span class="bk-barra-p" role="img"><i class="ot"></i><i class="co"></i></span>
+            </button>
+            <ul class="bk-ordenes" id="bk-p{{ forloop.counter }}"{% if personas|length != 1 %} hidden{% endif %}>
+                {% for o in p.ordenes %}
+                <li data-tipo="{{ o.tipo }}">
+                    {% if o.url_plan %}<a class="bk-orden" href="{{ o.url_plan }}">{% else %}<div class="bk-orden">{% endif %}
+                        <span class="bk-orden-txt">
+                            <span class="bk-orden-l1">
+                                <span class="bk-folio">{{ o.no_orden }}</span>
+                                <span class="bk-sem">{{ o.semana }}</span>
+                                <span class="bk-tag {{ o.tipo }}">{% if o.tipo == 'ot' %}{% trans "OT" %}{% else %}{% trans "Correctivo" %}{% endif %}</span>
+                            </span>
+                            <span class="bk-desc">{{ o.problema }}</span>
+                            <span class="bk-vence">{% trans "Vencía" %} {{ o.fecha_compromiso|date:"d/m/Y" }}</span>
+                        </span>
+                        <span class="bk-dias" data-dias="{{ o.dias_atraso }}">
+                            <b>{{ o.dias_atraso }}</b>
+                            <small>{% blocktrans count n=o.dias_atraso context "atraso" %}día{% plural %}días{% endblocktrans %}</small>
+                        </span>
+                    {% if o.url_plan %}</a>{% else %}</div>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bk-vacio">
+        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" style="opacity:.4;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <b>{% trans "Sin atrasos" %}</b>
+        {% trans "Todos los seguimientos están al día." %}
+    </div>
+    {% endif %}
 </div>
-{% endif %}
+
+<!-- Hoja: más acciones (idioma) -->
+<div id="bk-sheet-mas" class="modal-backdrop movil-only" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="bk-mas-titulo">
+        <div class="bk-asa"><span></span></div>
+        <h2 class="bk-sheet-titulo" id="bk-mas-titulo">{% trans "Más acciones" %}</h2>
+        <div class="bk-idioma">
+            <span class="bk-idioma-t">{% trans "Idioma" %}</span>
+            {% include 'menu_app/_language_selector.html' %}
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="{% static 'mto_app/js/backlog_seguimientos.js' %}"></script>
+<script>
+window.BACKLOG_ESCRITORIO = {
+    i18n: {
+        ots:          "{% trans 'Seguimiento de OTs' %}",
+        correctivos:  "{% trans 'Correctivos' %}",
+        otros:        "{% trans 'Otros' %}",
+        todosResp:    "{% trans 'Todos los responsables' %}",
+        todos:        "{% trans 'Todos' %}",
+        maxUnDia:     "{% trans 'máx 1 día' %}",
+        maxDias:      "{% trans 'máx {n} días' %}",
+        unDia:        "{% trans '1 día' %}",
+        dias:         "{% trans '{n} días' %}",
+        unaOt:        "{% trans '1 OT' %}",
+        nOts:         "{% trans '{n} OTs' %}",
+        unCorrectivo: "{% trans '1 correctivo' %}",
+        nCorrectivos: "{% trans '{n} correctivos' %}",
+        ot:           "{% trans 'OT' %}",
+        correctivo:   "{% trans 'Correctivo' %}",
+        sinResultados:"{% trans 'Sin órdenes que coincidan' %}",
+    },
+};
+</script>
+<script>
+window.BACKLOG_MOVIL = {
+    i18n: {
+        unaOt:        "{% trans '1 OT' %}",
+        nOts:         "{% trans '{n} OTs' %}",
+        unCorrectivo: "{% trans '1 correctivo' %}",
+        nCorrectivos: "{% trans '{n} correctivos' %}",
+    },
+};
+</script>
+<script src="{% static 'mto_app/js/filter_select.js' %}"></script>
+<script src="{% static 'mto_app/js/week_select.js' %}"></script>
+<script src="{% static 'mto_app/js/backlog_escritorio.js' %}"></script>
+<script src="{% static 'mto_app/js/backlog_movil.js' %}"></script>
 {% endblock %}

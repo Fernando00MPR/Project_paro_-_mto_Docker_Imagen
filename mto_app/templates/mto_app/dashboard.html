@@ -1,297 +1,453 @@
 {% extends "menu_app/base_menu.html" %}
-{% load i18n %}
+{% load i18n humanize %}
 {% block title %}{% trans "Dashboard" %}{% endblock %}
 {% block extra_head %}
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='14' width='8' height='16' rx='2' fill='%234F46E5'/><rect x='12' y='8' width='8' height='22' rx='2' fill='%234F46E5' opacity='.7'/><rect x='22' y='2' width='8' height='28' rx='2' fill='%234F46E5' opacity='.4'/></svg>">
 {% endblock %}
 {% load static %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'mto_app/css/dashboard_mobile.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/filter_select.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/dashboard_escritorio.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/dashboard_movil.css' %}">
 {% endblock %}
 {% block content %}
 
-<!-- Título -->
-<div class="dsh-head" style="margin-bottom:20px;">
-    <div class="card-title">
-        {% trans "Dashboard" %}
-        {% if filtro_area %}
-            —
-            {% for a in areas %}{% if a.pk|stringformat:"s" == filtro_area %}{{ a.nombre }}{% endif %}{% endfor %}
-        {% endif %}
-    </div>
-    
-    <div class="card-subtitle">
-        {% trans "Semana" %} {{ filtro_semana }} &middot; {{ lunes_filtro|date:"d M" }} – {{ domingo_filtro|date:"d M Y" }}
-    </div>
-        
-</div>
+<div class="dshd dsh-desktop-only">
 
-<!-- ── Filtros ── -->
-<div class="dsh-filters-wrap">
-    <button type="button" class="dsh-filters-toggle" aria-expanded="false" aria-controls="dsh-filters"
-            onclick="toggleFiltros(this)">
-        <span class="dsh-filters-dot"></span>
-        {% trans "Filtros" %} · S{{ filtro_semana }}
-    </button>
-
-    <style>
-      .dsh-filters select,
-      .dsh-filters input,
-      .dsh-filters .btn {
-          height: 40px;
-          box-sizing: border-box;
-          border-radius: 8px;
-          font-size: 14px;
-      }
-      .dsh-filters .btn {
-          display: inline-flex;
-          align-items: center;
-          padding: 0 16px;
-          font-weight: 500;
-          white-space: nowrap;
-          text-decoration: none;
-      }
-      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
-         Mismo tono que el texto (--text): hex literal porque no se puede
-         meter var() dentro del data URI. */
-      .dsh-filters select {
-          padding: 0 34px 0 10px;
-          appearance: none; -webkit-appearance: none;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-          background-repeat: no-repeat;
-          background-position: right 10px center;
-          background-size: 14px;
-          background-color: var(--white);
-      }
-      /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
-         select { background: var(--white) !important; }, que borra el chevron de
-         arriba por especificidad + !important. Se repite aquí con el mismo peso
-         para ganar por ir declarada después en el documento. */
-      [data-theme="dark"] .dsh-filters select {
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 10px center !important;
-          background-size: 14px !important;
-      }
-      .dsh-filters .filter-divider {
-          width: 1px;
-          height: 40px;
-          background: var(--border);
-          margin: 0 4px;
-          align-self: flex-end;
-      }
-    </style>
-    <form method="get" id="dsh-filters" class="dsh-filters"
-                            style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;
-                            padding:14px; background:var(--white); border:1px solid var(--border);
-                            border-radius:var(--radius); align-items:flex-end;">
-        <div class="filter-group">
-            <label>{% trans "Área" %}</label>
-             <select name="area" onchange="this.form.submit()" style="width:260px;">
-                <option value="">{% trans "Todas las áreas" %}</option>
-                {% for a in areas %}
-                <option value="{{ a.pk }}" {% if filtro_area == a.pk|stringformat:"s" %}selected{% endif %}>
-                    {{ a.nombre }}
-                </option>
-                {% endfor %}
-            </select>
+    <!-- ── Encabezado ── -->
+    <header class="dshd-head">
+        <div class="dshd-head-txt">
+            <h1 class="dshd-titulo">{% trans "Dashboard de mantenimiento" %}</h1>
+            <div class="dshd-sub">{% trans "Cumplimiento del plan por semana" %}</div>
         </div>
-        <div class="filter-group">
-            <label>{% trans "Semana" %}</label>
-            <input type="number" name="semana" min="1" max="52"
-                    value="{{ filtro_semana }}" onchange="this.form.submit()"
-                    style="border:1px solid var(--border); padding:0 10px; background:var(--white); color:var(--text); font-family:inherit;">
-        </div>
-        <div class="filter-group">
-            <label>{% trans "Año" %}</label>
-            <input type="number" name="anio" min="2020" max="2099"
-                value="{{ anio }}" onchange="this.form.submit()"
-                style="border:1px solid var(--border); padding:0 10px; background:var(--white); color:var(--text); font-family:inherit;">
-        </div>
-        <div class="filter-divider"></div>
-        <div class="filter-actions">
-            <a href="{% url 'mto:dashboard' %}" class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
-        </div>
-    </form>
-</div>
-
-<!-- ── Métricas ── -->
-<div class="dsh-kpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:24px;">
-
-    <div class="dsh-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
-        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Planes activos" %}</div>
-        <div style="font-size:26px; font-weight:500; line-height:1; color:var(--text);">{{ total_planes }}</div>
-        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{{ total_semana }} {% trans "tocan esta semana" %}</div>
-    </div>
-
-    <div class="dsh-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
-        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Sin registrar (vencidas)" %}</div>
-        <div style="font-size:26px; font-weight:500; line-height:1;
-                    color:{% if total_vencidos > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
-            {{ total_vencidos }}
-        </div>
-        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "semanas anteriores a Semana" %} {{ filtro_semana }}</div>
-    </div>
-
-    <div class="dsh-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
-        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Sin responsable" %}</div>
-        <div style="font-size:26px; font-weight:500; line-height:1;
-                    color:{% if sin_responsable > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
-            {{ sin_responsable }}
-        </div>
-        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "en semana" %} {{ filtro_semana }}</div>
-    </div>
-
-    <div class="dsh-kpi dsh-kpi-main" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
-        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Cumplimiento semana" %} {{ filtro_semana }}</div>
-        <div style="font-size:26px; font-weight:500; line-height:1;
-                    color:{% if cumplimiento_pct >= 90 %}#1D9E75{% elif cumplimiento_pct >= 50 %}#854F0B{% else %}#E24B4A{% endif %};">
-            {{ cumplimiento_pct }}%
-        </div>
-        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">
-            {{ completadas }} {% trans "de" %} {{ total_semana }} {% trans "completadas" %}
-        </div>
-    </div>
-
-    <div class="dsh-kpi" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;">
-        <div style="font-size:12px; color:var(--text-2); margin-bottom:6px;">{% trans "Pendientes" %}</div>
-        <div style="font-size:22px; font-weight:500; line-height:1;
-                    color:{% if pendientes > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
-            {{ pendientes }}<span style="font-size:14px; color:{% if pendientes > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">/{{ total_semana }}</span>
-        </div>
-        <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "de" %} {{ total_semana }} {% trans "en semana" %} {{ filtro_semana }}</div>
-    </div>
-
-</div>
-
-<!-- ── Gráfico cumplimiento por semana ── -->
-<div class="dsh-chart-card" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:24px;">
-    <div class="dsh-chart-head" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
-        <div>
-            <div style="font-size:13px; font-weight:500;">{% trans "Cumplimiento por semana" %} — {{ anio }}</div>
-            <div style="font-size:11px; color:var(--text-3); margin-top:2px;">
-                {% if filtro_area %}{% for a in areas %}{% if a.pk|stringformat:"s" == filtro_area %}{{ a.nombre }}{% endif %}{% endfor %}{% else %}{% trans "Todas las áreas" %}{% endif %}
+        <div class="dshd-head-acciones">
+            <div class="dshd-semana" id="dshd-semana">
+                <a class="dshd-flecha" aria-label="{% trans 'Semana anterior' %}"
+                   href="?{% if filtro_area %}area={{ filtro_area }}&amp;{% endif %}semana={{ semana_anterior.semana }}&amp;anio={{ semana_anterior.anio }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+                </a>
+                <button type="button" class="dshd-sem-btn" id="dshd-sem-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="dshd-sem-pop">
+                    <b>{% blocktrans with n=filtro_semana a=anio %}Semana {{ n }} · {{ a }}{% endblocktrans %}</b>
+                    <span>{{ lunes_filtro|date:"d M" }} – {{ domingo_filtro|date:"d M" }}</span>
+                </button>
+                <a class="dshd-flecha" aria-label="{% trans 'Semana siguiente' %}"
+                   href="?{% if filtro_area %}area={{ filtro_area }}&amp;{% endif %}semana={{ semana_siguiente.semana }}&amp;anio={{ semana_siguiente.anio }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                </a>
+                <div class="dshd-pop" id="dshd-sem-pop" role="dialog" aria-modal="false" aria-label="{% trans 'Elegir semana' %}" hidden>
+                    <div class="dshd-pop-anio">
+                        <button type="button" class="dshd-pop-flecha" id="dshd-anio-prev" aria-label="{% trans 'Año anterior' %}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+                        </button>
+                        <span class="dshd-pop-anio-n" id="dshd-pop-anio-n" aria-live="polite"></span>
+                        <button type="button" class="dshd-pop-flecha" id="dshd-anio-next" aria-label="{% trans 'Año siguiente' %}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                        </button>
+                    </div>
+                    <div class="dshd-wk-grid" id="dshd-wk-grid" role="grid" aria-label="{% trans 'Semanas del año' %}"></div>
+                    <button type="button" class="dshd-pop-hoy" id="dshd-pop-hoy">{% trans "Esta semana" %}</button>
+                </div>
             </div>
-        </div>
-        <div style="display:flex; gap:12px; align-items:center;">
-            <div class="dsh-legend" style="display:flex; gap:10px; font-size:11px; color:var(--text-2);">
-                <span style="display:flex; align-items:center; gap:4px;">
-                    <span style="width:10px; height:10px; border-radius:2px; background:#1D9E75; display:inline-block;"></span>{% trans "Mayor o igual que 90%" %}
-                </span>
-                <span style="display:flex; align-items:center; gap:4px;">
-                    <span style="width:10px; height:10px; border-radius:2px; background:#E24B4A; display:inline-block;"></span>{% trans "Menor que 90%" %}
-                </span>
-            </div>
-            <button onclick="descargarGrafico()" class="btn btn-ghost btn-sm"
-                    style="display:flex; align-items:center; gap:4px; font-size:11px;">
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+            {% include "mto_app/_filter_select.html" with fs_id="dshd-area" name="area" label=_("Área") icono="edificio" valor=filtro_area valor_label=area_nombre todas_label=_("Todas las áreas") todas_meta=areas_filtro.todas_meta opciones=areas_filtro.opciones %}
+
+            <button type="button" class="dshd-btn-sec" id="dshd-descargar">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
                 {% trans "Descargar" %}
             </button>
+            <div class="dshd-idioma">{% include 'menu_app/_language_selector.html' %}</div>
         </div>
-    </div>
-    <div class="dsh-chart-box" style="position:relative; width:100%; height:280px;">
-        <div class="dsh-chart-rail">
-            <canvas id="chartCumplimiento" role="img" aria-label="Gráfico de cumplimiento por semana">{% trans "Cumplimiento semanal." %}</canvas>
-    
-        </div>
-    </div>
-</div>
+    </header>
 
-<!-- ── Segunda fila ── -->
-<div class="dsh-tabs" role="tablist">
-    <button type="button" role="tab" class="dsh-tab is-active" data-target="dsh-list-week"
-            aria-selected="true" onclick="mostrarLista('dsh-list-week', this)">
-        {% trans "Semana" %} {{ filtro_semana }} · {{ total_semana }}
-    </button>
-    <button type="button" role="tab" class="dsh-tab" data-target="dsh-list-overdue"
-            aria-selected="false" onclick="mostrarLista('dsh-list-overdue', this)">
-        {% trans "Vencidas" %} · {{ total_vencidos }}
-    </button>
-</div>
-
-<div class="dsh-lists" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
-
-    <!-- Planes vencidos sin registro -->
-    <div id="dsh-list-overdue" class="dsh-list dsh-list-overdue" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <div style="font-size:13px; font-weight:500;">{% trans "Ordenes de trabajo vencidas sin registro" %}</div>
-            {% if total_vencidos > 6 %}
-            <span style="font-size:11px; color:var(--text-3);">+{{ total_vencidos|add:"-6" }} {% trans "más" %}</span>
-            {% endif %}
-        </div>
-        <div class="dsh-list-body" style="max-height:320px; overflow-y:auto;">
-            {% for v in vencidos %}
-            <div class="dsh-row" style="display:flex; justify-content:space-between; align-items:flex-start;
-                        padding:8px 0; border-bottom:1px solid var(--border); font-size:12px;">
-                <div style="min-width:0;">
-                    <div style="font-weight:500; color:var(--text);">{{ v.plan.codigo }}</div>
-                    <div style="color:var(--text-2); font-size:11px; margin-top:1px; white-space:normal;">
-                        {{ v.plan.actividad }}
-                    </div>
-                    <div style="color:var(--text-3); font-size:11px; margin-top:2px;">
-                        {{ v.plan.area.nombre }} &middot; {{ v.plan.get_frecuencia_display }} &middot; S{{ v.semana }} &middot; {{ v.lunes|date:"d M" }}
-                    </div>
-                </div>
-                <span style="display:inline-block; font-size:11px; font-weight:500; padding:2px 8px;
-                             border-radius:20px; flex-shrink:0; margin-left:8px;
-                             {% if v.atraso >= 3 %}background:#FCEBEB; color:#A32D2D;
-                             {% else %}background:#FAEEDA; color:#854F0B;{% endif %}">
-                    {{ v.atraso }} {% trans "semana" %}
-                </span>
+    <!-- ── Cumplimiento + indicadores ── -->
+    <div class="dshd-fila">
+        <section class="dshd-cumpl" aria-label="{% trans 'Cumplimiento de la semana' %}">
+            <div class="dshd-cumpl-l1">
+                <span>{% blocktrans with n=filtro_semana %}CUMPLIMIENTO S{{ n }}{% endblocktrans %}</span>
+                <span>{% blocktrans with m=meta %}Meta {{ m }}%{% endblocktrans %}</span>
             </div>
-            {% empty %}
-            <div style="color:var(--text-3); font-size:13px; padding:8px 0;">
-                {% trans "Sin vencidos antes de la semana" %} {{ filtro_semana }}. ✓
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Detalle semana -->
-    <div id="dsh-list-week" class="dsh-list dsh-list-week" style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
-        <div style="font-size:13px; font-weight:500; margin-bottom:14px;">
-            {% trans "Detalles de la semana" %} {{ filtro_semana }}
-            <span style="font-size:11px; font-weight:400; color:var(--text-3);">
-                ({{ lunes_filtro|date:"d M" }} – {{ domingo_filtro|date:"d M" }})
-            </span>
-        </div>
-        <div class="dsh-list-body" style="max-height:320px; overflow-y:auto;">
-            {% for item in semana_detalle %}
-            <div class="dsh-row" style="display:flex; justify-content:space-between; align-items:center;
-                        padding:7px 0; border-bottom:1px solid var(--border); font-size:12px;">
-                <div style="min-width:0; flex:1;">
-                    <div style="font-weight:500; color:var(--text);">{{ item.plan.codigo }}</div>
-                    <div style="color:var(--text-2); font-size:11px; margin-top:1px; white-space:normal;">
-                        {{ item.plan.actividad }}
-                    </div>
-                    <div style="color:var(--text-3); font-size:11px; margin-top:1px;">
-                        {% if item.responsable %}{{ item.responsable.nombre }} {{ item.responsable.apellidos }}{% else %}{% trans "Sin responsable" %}{% endif %}
-                    </div>
-                </div>
-                {% if item.estado == 'completada' %}
-                    <span style="font-size:10px; font-weight:600; color:#065F46; background:#D1FAE5; padding:2px 8px; border-radius:20px; flex-shrink:0;">{% trans "Completada" %}</span>
-                {% elif item.estado == 'pendiente' %}
-                    <span style="font-size:10px; font-weight:600; color:#92400E; background:#FEF3C7; padding:2px 8px; border-radius:20px; flex-shrink:0;">{% trans "Pendiente" %}</span>
-                {% elif item.estado == 'reagendada' %}
-                    <span style="font-size:10px; font-weight:600; color:var(--indigo-dk); background:var(--indigo-lt); padding:2px 8px; border-radius:20px; flex-shrink:0;">{% trans "Reagendada" %}</span>
-                {% elif item.estado == 'cancelada' %}
-                    <span style="font-size:10px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px; flex-shrink:0;">{% trans "Cancelada" %}</span>
+            <div class="dshd-cumpl-l2">
+                <span class="dshd-pct {% if alcanza_meta %}ok{% else %}bajo{% endif %}">{{ pct_texto }}%</span>
+                {% if total_semana %}
+                    {% if alcanza_meta %}
+                    <span>{% blocktrans with c=completadas t=total_semana %}{{ c }} de {{ t }} completadas · meta alcanzada{% endblocktrans %}</span>
+                    {% else %}
+                    <span>{% blocktrans with c=completadas t=total_semana n=faltan_meta %}{{ c }} de {{ t }} completadas · faltan <b>{{ n }}</b> para la meta{% endblocktrans %}</span>
+                    {% endif %}
                 {% else %}
-                    <span style="font-size:10px; font-weight:600; color:var(--text-3); background:var(--surface); padding:2px 8px; border-radius:20px; flex-shrink:0;">{% trans "Sin registro" %}</span>
+                    <span>{% trans "Sin órdenes programadas" %}</span>
                 {% endif %}
             </div>
-            {% empty %}
-            <div style="color:var(--text-3); font-size:13px; padding:8px 0;">
-                {% trans "Ningún plan toca en semana " %}{{ filtro_semana }}.
+            <div class="dshd-barra" role="img"
+                 aria-label="{% blocktrans with c=completadas t=total_semana m=meta %}{{ c }} de {{ t }} completadas, meta {{ m }}%{% endblocktrans %}">
+                <i class="{% if alcanza_meta %}ok{% else %}bajo{% endif %}"
+                   style="width:{% if pct_exacto %}max(6px, {{ pct_exacto|stringformat:'.2f' }}%){% else %}0{% endif %};"></i>
+                <b style="left:{{ meta }}%;"></b>
+                <span class="dshd-meta-txt" style="left:{{ meta }}%;">{{ meta }}%</span>
             </div>
-            {% endfor %}
+            <div class="dshd-desglose-t">{% blocktrans with n=total_semana %}Estado de las {{ n }} órdenes de la semana{% endblocktrans %}</div>
+            <div class="dshd-apilada" role="img" aria-hidden="true">
+                {% for d in desglose %}
+                <i class="{{ d.clave }}" style="flex:{{ d.n }} 1 0;"></i>
+                {% endfor %}
+            </div>
+            <ul class="dshd-leyenda">
+                {% for d in desglose %}
+                <li><i class="{{ d.clave }}"></i>
+                    {% if d.clave == 'completada' %}{% trans "Completadas" %}
+                    {% elif d.clave == 'pendiente' %}{% trans "Pendientes" %}
+                    {% elif d.clave == 'reagendada' %}{% trans "Reagendadas" %}
+                    {% else %}{% trans "Canceladas" %}{% endif %}
+                    <b>{{ d.n }}</b>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <div class="dshd-kpis">
+            <article class="dshd-kpi pend">
+                <div class="dshd-kpi-l">{% blocktrans with n=filtro_semana %}PENDIENTES S{{ n }}{% endblocktrans %}</div>
+                <div class="dshd-kpi-v">{{ pendientes }}<small>/ {{ total_semana }}</small></div>
+            </article>
+            <article class="dshd-kpi sinresp">
+                <div class="dshd-kpi-l">{% blocktrans with n=filtro_semana %}SIN RESPONSABLE S{{ n }}{% endblocktrans %}</div>
+                <div class="dshd-kpi-v">{{ sin_responsable }}<a href="{{ url_asignar }}">{% trans "Asignar" %} ›</a></div>
+            </article>
+            <article class="dshd-kpi planes">
+                <div class="dshd-kpi-l">{% trans "PLANES ACTIVOS" %}</div>
+                <div class="dshd-kpi-v">{{ total_planes }}<small>{% blocktrans with n=total_semana %}{{ n }} tocan esta semana{% endblocktrans %}</small></div>
+            </article>
+            <article class="dshd-kpi venc">
+                <div class="dshd-kpi-l">{% trans "REGISTROS VENCIDOS" %}</div>
+                <div class="dshd-kpi-v">{{ total_vencidos|intcomma:False }}
+                    <small>{% blocktrans with n=filtro_semana %}sin capturar antes de la S{{ n }}{% endblocktrans %}</small>
+                    <button type="button" data-ir="dshd-vencidas">{% trans "Ver" %} ›</button>
+                </div>
+            </article>
         </div>
     </div>
 
+    <!-- ── Gráfica ── -->
+    <section class="dshd-graf-card">
+        <div class="dshd-graf-head">
+            <div class="dshd-graf-tt">
+                <h2 id="dshd-graf-titulo"></h2>
+                <div id="dshd-graf-sub"></div>
+            </div>
+            <div class="dshd-graf-leyenda">
+                <span><i class="ok"></i>{% blocktrans with m=meta %}≥ {{ m }}%{% endblocktrans %}</span>
+                <span><i class="bajo"></i>{% blocktrans with m=meta %}&lt; {{ m }}%{% endblocktrans %}</span>
+                <span><i class="meta"></i>{% trans "Meta" %}</span>
+                <span><i class="fut"></i>{% trans "Próximas" %}</span>
+            </div>
+            <div class="dshd-graf-rango" role="group" aria-label="{% trans 'Rango de la gráfica' %}">
+                <button type="button" data-rango="12" aria-pressed="false">{% trans "12 sem." %}</button>
+                <button type="button" data-rango="meses" aria-pressed="false">{% trans "Meses" %}</button>
+                <button type="button" data-rango="anio" aria-pressed="true">{% trans "Año" %}</button>
+            </div>
+        </div>
+        <div id="dshd-graf" role="group" aria-label=""></div>
+        <div id="dshd-tip" class="dshd-tip" role="tooltip" hidden></div>
+    </section>
+
+    <!-- ── Tablas ── -->
+    <div class="dshd-tablas">
+        <section class="dshd-tabla" id="dshd-semana-tabla">
+            <div class="dshd-tabla-head">
+                <div class="dshd-tabla-tt">
+                    {% blocktrans with n=filtro_semana %}Semana {{ n }}{% endblocktrans %}
+                    <span>{% blocktrans with t=total_semana %}{{ t }} órdenes{% endblocktrans %}</span>
+                </div>
+                <div class="dshd-chips" role="group" aria-label="{% trans 'Estado' %}" id="dshd-chips-semana">
+                    <button type="button" data-filtro="" aria-pressed="true">
+                        {% trans "Todas" %} {{ total_semana }}
+                    </button>
+                    {% if pendientes %}
+                        <button type="button" data-filtro="pendiente" aria-pressed="false">
+                            {% trans "Pendiente" %} {{ pendientes }}
+                        </button>
+                    {% endif %}
+                    {% if sin_responsable %}
+                        <button type="button" data-filtro="sin_resp" aria-pressed="false">
+                            {% trans "Sin responsable" %} {{ sin_responsable }}
+                        </button>
+                    {% endif %}
+                    {% if conteo_estados.completada %}
+                        <button type="button" data-filtro="completada" aria-pressed="false">
+                            {% trans "Completada" %} {{ conteo_estados.completada }}
+                        </button>
+                    {% endif %}
+                    {% if conteo_estados.reagendada %}
+                        <button type="button" data-filtro="reagendada" aria-pressed="false">
+                            {% trans "Reagendada" %} {{ conteo_estados.reagendada }}
+                        </button>
+                    {% endif %}
+                    {% if conteo_estados.cancelada %}
+                        <button type="button" data-filtro="cancelada" aria-pressed="false">
+                            {% trans "Cancelada" %} {{ conteo_estados.cancelada }}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="dshd-scroll" tabindex="0" role="region" aria-label="{% blocktrans with n=filtro_semana %}Órdenes de la semana {{ n }}{% endblocktrans %}">
+                <table>
+                    <thead><tr>
+                        <th>{% trans "Código" %}</th>
+                        <th>{% trans "Actividad" %}</th>
+                        <th>{% trans "Responsable" %}</th>
+                        <th class="dshd-der">{% trans "Estado" %}</th>
+                    </tr></thead>
+                    <tbody id="dshd-semana-body">
+                        {% for item in filas_semana %}
+                        <tr>
+                            <td><a class="dshd-mono" href="{{ item.url }}">{{ item.plan.codigo }}</a></td>
+                            <td>{{ item.plan.actividad }}</td>
+                            <td>{% if item.responsable %}{{ item.responsable_nombre }}{% else %}<span class="dshd-sinresp">{% trans "Sin responsable" %}</span>{% endif %}</td>
+                            <td class="dshd-der">
+                                <span class="dshd-estado {{ item.estado|default:'sin_registro' }}">
+                                    {% if item.estado == 'completada' %}{% trans "Completada" %}
+                                    {% elif item.estado == 'pendiente' %}{% trans "Pendiente" %}
+                                    {% elif item.estado == 'reagendada' %}{% trans "Reagendada" %}
+                                    {% elif item.estado == 'cancelada' %}{% trans "Cancelada" %}
+                                    {% else %}{% trans "Sin registro" %}{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                            <tr class="dshd-vacio"><td colspan="4">{% blocktrans with n=filtro_semana %}Ningún plan toca en semana {{ n }}.{% endblocktrans %}</td></tr>
+                        {% endfor %}
+                        {% if total_semana > filas_semana|length %}
+                            <tr class="dshd-centinela" data-centinela="semana"><td colspan="4">{% trans "Cargando…" %}</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="dshd-tabla" id="dshd-vencidas">
+            <div class="dshd-tabla-head">
+                <div class="dshd-tabla-tt">
+                    {% trans "Vencidas sin registro" %}
+                    <span class="dshd-vino">{{ total_vencidos|intcomma:False }}</span>
+                </div>
+                <div class="dshd-tabla-nota">{% trans "Más atrasadas primero" %}</div>
+            </div>
+            <div class="dshd-scroll" tabindex="0" role="region" aria-label="{% trans 'Órdenes vencidas sin registro' %}">
+                <table>
+                    <thead><tr>
+                        <th>{% trans "Código" %}</th>
+                        <th>{% trans "Actividad" %}</th>
+                        <th>{% trans "Semana" %}</th>
+                        <th class="dshd-der">{% trans "Atraso" %}</th>
+                    </tr></thead>
+                    <tbody id="dshd-vencidas-body">
+                        {% for v in filas_vencidas %}
+                        <tr>
+                            <td><a class="dshd-mono" href="{{ v.url }}">{{ v.codigo }}</a></td>
+                            <td>{{ v.actividad }}</td>
+                             <td class="dshd-mono">{% if LANGUAGE_CODE == 'en' %}W{% else %}S{% endif %}{{ v.semana }}/{{ v.anio }}</td>
+                            <td class="dshd-der">
+                                <span class="dshd-atraso {{ v.nivel }}">{% blocktrans with n=v.atraso %}{{ n }} semanas{% endblocktrans %}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                            <tr class="dshd-vacio"><td colspan="4">{% blocktrans with n=filtro_semana %}Sin vencidos antes de la semana {{ n }}.{% endblocktrans %} ✓</td></tr>
+                        {% endfor %}
+                        {% if total_vencidos > filas_vencidas|length %}
+                            <tr class="dshd-centinela" data-centinela="vencidas"><td colspan="4">{% trans "Cargando…" %}</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
 </div>
+
+<!-- ═══ Vista de celular (≤767px) — ver dashboard_movil.css / .js ═══ -->
+{% with q_area=filtro_area|default:'' %}
+<div id="dsm-movil" class="movil-only"
+     data-area-nombre="{% if filtro_area %}{% for a in areas %}{% if a.pk|stringformat:'s' == filtro_area %}{{ a.nombre }}{% endif %}{% endfor %}{% else %}{% trans 'todas las áreas' %}{% endif %}">
+    <!-- Encabezado: el script "topbar" de base_menu lo pasa a la barra sticky -->
+    <div class="movil-only" data-topbar-movil>
+        <div class="dsm-titulos">
+            <div>{% trans "Dashboard" %}</div>
+            <div>{% trans "Plan de mantenimiento" %}</div>
+        </div>
+    </div>
+
+    <!-- Semana (flechas) + área -->
+    <div class="dsm-fila-filtros">
+        <div class="dsm-semana">
+            <a class="dsm-flecha" aria-label="{% trans 'Semana anterior' %}"
+               href="?{% if q_area %}area={{ q_area }}&amp;{% endif %}semana={{ semana_anterior.semana }}&amp;anio={{ semana_anterior.anio }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+            </a>
+            <div class="dsm-semana-txt">
+                <b>{% blocktrans with n=filtro_semana a=anio %}Semana {{ n }} · {{ a }}{% endblocktrans %}</b>
+                <span>{{ lunes_filtro|date:"j" }}{% if lunes_filtro.month != domingo_filtro.month %} {{ lunes_filtro|date:"b" }}{% endif %} – {{ domingo_filtro|date:"j b" }}</span>
+            </div>
+            <a class="dsm-flecha" aria-label="{% trans 'Semana siguiente' %}"
+               href="?{% if q_area %}area={{ q_area }}&amp;{% endif %}semana={{ semana_siguiente.semana }}&amp;anio={{ semana_siguiente.anio }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </a>
+        </div>
+        <button type="button" class="dsm-area" onclick="dsmAbrirAreas(event)" aria-label="{% trans 'Área' %}">
+            <span>{% if filtro_area %}{% for a in areas %}{% if a.pk|stringformat:"s" == filtro_area %}{{ a.nombre }}{% endif %}{% endfor %}{% else %}{% trans "Todas" %}{% endif %}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+    </div>
+
+    <!-- Cumplimiento de la semana -->
+    <section class="dsm-card dsm-cumpl" aria-label="{% trans 'Cumplimiento de la semana' %}">
+        <div class="dsm-cumpl-l1">
+            <span>{% blocktrans with n=filtro_semana %}Cumplimiento S{{ n }}{% endblocktrans %}</span>
+            <span>{% blocktrans with m=meta %}Meta {{ m }}%{% endblocktrans %}</span>
+        </div>
+        <div class="dsm-cumpl-l2">
+            <span class="dsm-pct {% if alcanza_meta %}ok{% else %}bajo{% endif %}">{{ pct_texto }}%</span>
+            <span>{% blocktrans with c=completadas t=total_semana %}{{ c }} de {{ t }} completadas{% endblocktrans %}</span>
+        </div>
+        <div class="dsm-barra" role="img"
+             aria-label="{% blocktrans with c=completadas t=total_semana m=meta %}{{ c }} de {{ t }} completadas, meta {{ m }}%{% endblocktrans %}">
+            <i class="{% if alcanza_meta %}ok{% else %}bajo{% endif %}"
+               style="width:{% if pct_exacto %}max(6px, {{ pct_exacto|stringformat:'.2f' }}%){% else %}0{% endif %};"></i>
+            <b style="left:{{ meta }}%;"></b>
+        </div>
+        <div class="dsm-minis">
+            <div class="dsm-mini pend">
+                <small>{% trans "Pendientes" %}</small><b>{{ pendientes }}</b>
+            </div>
+            <button type="button" class="dsm-mini sinresp" onclick="dsmVerSinResponsable()">
+                <small>{% trans "Sin responsable" %}</small><b>{{ sin_responsable }}</b>
+            </button>
+            <div class="dsm-mini planes">
+                <small>{% trans "Planes activos" %}</small><b>{{ total_planes }}</b>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alerta: vencidas sin registro -->
+    {% if total_vencidos %}
+    <button type="button" class="dsm-alerta" onclick="dsmIrVencidas()">
+        <span class="dsm-alerta-icono">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4M12 17.2v.1"/></svg>
+        </span>
+        <span class="dsm-alerta-txt">
+            <b>{{ total_vencidos|intcomma:False }}</b>
+            <span>{% blocktrans with n=filtro_semana %}registros vencidos sin capturar, antes de la S{{ n }}{% endblocktrans %}</span>
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+    {% else %}
+    <div class="dsm-alerta ok">
+        <span class="dsm-alerta-icono">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+        </span>
+        <span class="dsm-alerta-txt"><span>{% trans "Sin registros vencidos" %}</span></span>
+    </div>
+    {% endif %}
+
+    <!-- Gráfica: cumplimiento por semana (la arma dashboard_movil.js) -->
+    <section class="dsm-card dsm-graf-card">
+        <div class="dsm-graf-head">
+            <div>
+                <h2>{% trans "Cumplimiento por semana" %}</h2>
+                <div id="dsm-graf-sub"></div>
+            </div>
+            <button type="button" class="dsm-btn-icono" aria-label="{% trans 'Descargar' %}" onclick="dsmDescargar()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+            </button>
+        </div>
+        <div class="dsm-graf" id="dsm-graf"></div>
+        <div class="dsm-leyenda">
+            <span><i class="ok"></i>≥ {{ meta }}%</span>
+            <span><i class="bajo"></i>&lt; {{ meta }}%</span>
+            <span><i class="meta"></i>{% trans "Meta" %}</span>
+            <button type="button" id="dsm-graf-modo" aria-pressed="false"></button>
+        </div>
+    </section>
+
+    <!-- Pestañas: semana / vencidas -->
+    <div class="dsm-tabs" role="tablist" aria-label="{% trans 'Detalle' %}" id="dsm-tabs">
+        <button type="button" role="tab" id="dsm-tab-semana" aria-controls="dsm-panel-semana" aria-selected="true">
+            {% blocktrans with n=filtro_semana t=total_semana %}Semana {{ n }} · {{ t }}{% endblocktrans %}
+        </button>
+        <button type="button" role="tab" id="dsm-tab-vencidas" aria-controls="dsm-panel-vencidas" aria-selected="false" class="rojo" tabindex="-1">
+            {% trans "Vencidas" %}: {{ total_vencidos|intcomma:False }}
+        </button>
+    </div>
+
+    <div id="dsm-panel-semana" role="tabpanel" aria-labelledby="dsm-tab-semana">
+        {% if detalle_movil %}
+        <div class="dsm-chips" role="group" aria-label="{% trans 'Estado' %}">
+            <button type="button" data-filtro="" aria-pressed="true">{% trans "Todas" %} {{ total_semana }}</button>
+            {% if pendientes %}<button type="button" data-filtro="pendiente" aria-pressed="false">{% trans "Pendiente" %} {{ pendientes }}</button>{% endif %}
+            {% if sin_responsable %}<button type="button" data-filtro="sin_resp" aria-pressed="false">{% trans "Sin responsable" %} {{ sin_responsable }}</button>{% endif %}
+            {% if conteo_estados.completada %}<button type="button" data-filtro="completada" aria-pressed="false">{% trans "Completada" %} {{ conteo_estados.completada }}</button>{% endif %}
+            {% if conteo_estados.reagendada %}<button type="button" data-filtro="reagendada" aria-pressed="false">{% trans "Reagendada" %} {{ conteo_estados.reagendada }}</button>{% endif %}
+            {% if conteo_estados.cancelada %}<button type="button" data-filtro="cancelada" aria-pressed="false">{% trans "Cancelada" %} {{ conteo_estados.cancelada }}</button>{% endif %}
+        </div>
+        <section class="dsm-lista">
+            <ul id="dsm-semana-lista">
+                {% for item in detalle_movil %}
+                <li data-estado="{{ item.estado|default:'sin_registro' }}" data-sinresp="{% if item.responsable %}0{% else %}1{% endif %}">
+                    <a class="dsm-fila" href="{{ item.url }}">
+                        <span class="dsm-fila-txt">
+                            <span class="dsm-codigo">{{ item.plan.codigo }}</span>
+                            <span class="dsm-act">{{ item.plan.actividad }}</span>
+                            <span class="dsm-resp{% if not item.responsable %} vacio{% endif %}">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+                                {% if item.responsable %}{{ item.responsable_nombre }}{% else %}{% trans "Sin responsable" %}{% endif %}
+                            </span>
+                        </span>
+                        <span class="dsm-estado {{ item.estado|default:'sin_registro' }}">{% if item.estado == 'completada' %}{% trans "Completada" %}{% elif item.estado == 'pendiente' %}{% trans "Pendiente" %}{% elif item.estado == 'reagendada' %}{% trans "Reagendada" %}{% elif item.estado == 'cancelada' %}{% trans "Cancelada" %}{% else %}{% trans "Sin registro" %}{% endif %}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <button type="button" class="dsm-mas" id="dsm-semana-mas"></button>
+        </section>
+        {% else %}
+        <div class="dsm-vacio">{% blocktrans with n=filtro_semana %}Ningún plan toca en la semana {{ n }}.{% endblocktrans %}</div>
+        {% endif %}
+    </div>
+
+    <div id="dsm-panel-vencidas" role="tabpanel" aria-labelledby="dsm-tab-vencidas" hidden>
+        {% if total_vencidos %}
+        {% if vencidas_areas|length > 1 %}
+        <div class="dsm-chips" role="group" aria-label="{% trans 'Área' %}" id="dsm-vencidas-chips">
+            <button type="button" data-area="" aria-pressed="true">{% trans "Todas" %} · {{ total_vencidos|intcomma }}</button>
+            {% for a in vencidas_areas %}
+            <button type="button" data-area="{{ a.id }}" aria-pressed="false">{{ a.nombre }} · {{ a.n|intcomma }}</button>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <section class="dsm-lista">
+            <ul id="dsm-vencidas-lista"></ul>
+            <button type="button" class="dsm-mas" id="dsm-vencidas-mas"></button>
+        </section>
+        {% else %}
+        <div class="dsm-vacio">{% blocktrans with n=filtro_semana %}Sin vencidos antes de la semana {{ n }}.{% endblocktrans %} ✓</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Hoja: elegir área -->
+<div id="dsm-sheet-areas" class="modal-backdrop movil-only dsm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="dsm-areas-titulo">
+        <div class="dsm-asa"><span></span></div>
+        <h2 class="dsm-sheet-titulo" id="dsm-areas-titulo">{% trans "Área" %}</h2>
+        <a class="dsm-opcion" href="?semana={{ filtro_semana }}&amp;anio={{ anio }}" {% if not filtro_area %}aria-current="true"{% endif %}>{% trans "Todas las áreas" %}</a>
+        {% for a in areas %}
+        <a class="dsm-opcion" href="?area={{ a.pk }}&amp;semana={{ filtro_semana }}&amp;anio={{ anio }}" {% if filtro_area == a.pk|stringformat:"s" %}aria-current="true"{% endif %}>{{ a.nombre }}</a>
+        {% endfor %}
+    </div>
+</div>
+{% endwith %}
 
 {% endblock %}
 
@@ -308,5 +464,54 @@ window.DASHBOARD_CONFIG = {
 };
 </script>
 {% load static %}
-<script src="{% static 'mto_app/js/dashboard.js' %}"></script>
+<script src="{% static 'mto_app/js/filter_select.js' %}"></script>
+{{ datos_escritorio|json_script:"dshd-datos" }}
+<script>
+window.DSHD_I18N = {
+    tituloSem:           "{% trans 'Cumplimiento por semana — {anio}' %}",
+    tituloMes:           "{% trans 'Cumplimiento por mes — {anio}' %}",
+    sub:                 "{% trans '{area} · haz clic en una semana para verla' %}",
+    subMes:              "{% trans '{area} · haz clic en un mes para ver sus semanas' %}",
+    tipSem:              "{% trans '{n} · {rango}: {pct} · {c} de {t}' %}",
+    tipMes:              "{% trans '{mes}: {pct} · {c} de {t}' %}",
+    tipDetalle:          "{% trans '{c} de {t}' %}",
+    sinDatos:            "{% trans 'sin datos' %}",
+    grafAria:            "{% trans 'Cumplimiento de {desde} a {hasta}. Meta {meta}%.' %}",
+    barraAria:           "{% trans '{etiqueta}: {pct}' %}",
+    sinResp:             "{% trans 'Sin responsable' %}",
+    pendiente:           "{% trans 'Pendiente' %}",
+    completada:          "{% trans 'Completada' %}",
+    reagendada:          "{% trans 'Reagendada' %}",
+    cancelada:           "{% trans 'Cancelada' %}",
+    sinRegistro:         "{% trans 'Sin registro' %}",
+    sinResultadosSemana: "{% trans 'Sin resultados' %}",
+    semanas:             "{% trans '{n} semanas' %}",
+    semCorta:            "{% trans 'S{n}/{a}' %}",
+    cargando:            "{% trans 'Cargando…' %}",
+    errorCargar:         "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
+    semanasDe:           "{% trans 'Semanas de {anio}' %}",
+    celda:               "{% trans 'Semana {n}, {rango}' %}",
+    estaSemana:          "{% trans 'Esta semana' %}",
+    archivo:             "Cumplimiento_{{ anio }}.png",
+};
+</script>
+<script src="{% static 'mto_app/js/dashboard_escritorio.js' %}"></script>
+{{ datos_movil|json_script:"dsm-datos" }}
+<script>
+window.DSM_I18N = {
+    sub12:        "{% trans 'Últimas 12 semanas · {area}' %}",
+    subAnio:      "{% trans 'Año {anio} · {area}' %}",
+    verAnio:      "{% trans 'Ver año completo' %}",
+    ver12:        "{% trans 'Ver últimas 12 semanas' %}",
+    semanaAria:   "{% trans 'Semana {s} de {a}: {pct}' %}",
+    sinDatos:     "{% trans 'sin datos' %}",
+    grafAria:     "{% trans 'Cumplimiento semanal de la S{desde} a la S{hasta}. Meta {meta}%.' %}",
+    verSemana:    "{% trans 'Ver las {n} de la semana' %}",
+    verVencidas:  "{% trans 'Ver las {n} vencidas' %}",
+    semCorto:     "{% trans '{n} sem.' %}",
+    errorCargar:  "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
+    archivo:      "Cumplimiento_Semanas_{{ anio }}.png",
+};
+</script>
+<script src="{% static 'mto_app/js/dashboard_movil.js' %}"></script>
 {% endblock %}

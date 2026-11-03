@@ -1,0 +1,243 @@
+/* catalogos_movil.css — Vista de celular (≤767px) de los catálogos de fallas,
+   equipos, responsables y moldes. La vista de escritorio no se toca: solo se
+   oculta (.cat-desktop-only) dentro del @media. */
+
+.movil-only { display: none; }
+
+@media (min-width: 768px) {
+    .movil-only { display: none !important; }
+}
+
+@media (max-width: 767px) {
+    .cat-desktop-only { display: none !important; }
+    .movil-only { display: block; }
+
+    /* ── Encabezado ── */
+    .cm-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .cm-titulos { flex: 1; min-width: 0; }
+    .cm-titulo { font-size: 19px; font-weight: 600; line-height: 1.25; color: var(--text); }
+    .cm-subtitulo { font-size: 13px; color: var(--text-3); margin-top: 2px; }
+    .cm-btn-mas {
+        width: 40px; height: 40px; min-width: 40px; border-radius: 10px;
+        border: 1px solid var(--border); background: var(--white); color: var(--text);
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    /* ── Buscador global ── */
+    .cm-buscar {
+        display: flex; align-items: center; gap: 8px;
+        height: 46px; padding: 0 12px; margin-bottom: 14px;
+        background: var(--white); border: 1px solid var(--border); border-radius: 12px;
+        color: var(--text-3);
+    }
+    .cm-buscar:focus-within { border-color: var(--indigo); }
+    .cm-buscar input {
+        flex: 1; min-width: 0; border: 0; outline: none; background: transparent;
+        font: inherit; font-size: 16px; color: var(--text);
+    }
+    .cm-sin-resultados {
+        text-align: center; padding: 28px 16px; color: var(--text-3); font-size: 14px;
+    }
+
+    /* ── Tarjeta de área ── */
+    #cm-areas { display: flex; flex-direction: column; gap: 10px; padding-bottom: 40px; }
+    .cm-area {
+        background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+        overflow: hidden;
+    }
+    .cm-area[hidden] { display: none; }
+    .cm-area-head { display: flex; align-items: center; min-height: 56px; }
+    .cm-area-toggle {
+        flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;
+        min-height: 56px; padding: 0 6px 0 16px; border: 0; background: transparent;
+        font: inherit; color: var(--text); text-align: left; cursor: pointer;
+    }
+    .cm-area-nombre { font-size: 15.5px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+    .cm-badge {
+        flex-shrink: 0; min-width: 24px; height: 22px; padding: 0 8px; border-radius: 11px;
+        background: var(--indigo-lt); color: var(--indigo-dk);
+        font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;
+        white-space: nowrap;
+    }
+    .cm-chev { flex-shrink: 0; margin-left: auto; color: var(--text-3); transition: transform .2s; }
+    .cm-area-toggle[aria-expanded="true"] .cm-chev { transform: rotate(180deg); }
+    .cm-area-mas {
+        width: 44px; height: 44px; min-width: 44px; margin-right: 6px; border-radius: 10px;
+        border: 0; background: transparent; color: var(--text-3);
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .cm-area-mas:active, .cm-btn-mas:active, .cm-item-mas:active { background: var(--surface); }
+    .cm-area-body { border-top: 1px solid var(--border); }
+    .cm-area-body[hidden] { display: none; }
+
+    /* ── Filas ── */
+    .cm-lista { list-style: none; margin: 0; padding: 0; }
+    .cm-item { display: flex; align-items: center; border-bottom: 1px solid var(--border); }
+    .cm-item:last-child { border-bottom: 0; }
+    .cm-item[hidden] { display: none; }
+    .cm-item-main {
+        flex: 1; min-width: 0; padding: 11px 4px 11px 16px;
+        display: flex; flex-direction: column; gap: 3px;
+    }
+    .cm-item-main[role="button"] { cursor: pointer; }
+    .cm-item-main[role="button"]:active { background: var(--surface); }
+    .cm-codigo { font-family: 'DM Mono', monospace; font-size: 12px; color: #2C44A8; }
+    .cm-nombre { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.3; overflow-wrap: anywhere; }
+    .cm-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
+    .cm-tags:empty { display: none; }
+    .cm-tag {
+        font-size: 11px; font-weight: 500; line-height: 1; padding: 4px 8px; border-radius: 6px;
+        background: var(--surface); color: var(--text-2);
+    }
+    .cm-tag[data-tipo^="mec"] { background: #E6EBFB; color: #2C44A8; }
+    .cm-tag[data-tipo^="oper"] { background: #FCEFD6; color: #8A5A08; }
+    .cm-origen { font-size: 11px; color: var(--text-3); }
+    .cm-item-mas {
+        width: 44px; height: 44px; min-width: 44px; margin-right: 6px; border-radius: 10px;
+        border: 0; background: transparent; color: var(--text-3);
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    /* ── Pie "Agregar …" ── */
+    .cm-agregar {
+        width: 100%; min-height: 50px; border: 0; border-top: 1px solid var(--border);
+        background: transparent; color: var(--indigo-dk); font: inherit; font-size: 14.5px; font-weight: 600;
+        display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+    }
+    .cm-agregar:active { background: var(--surface); }
+
+    /* ── Área vacía (compacta, punteada) ── */
+    .cm-area-vacia {
+        display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 6px 6px 16px;
+        background: transparent; border: 1.5px dashed var(--border);
+    }
+    .cm-area-vacia[hidden] { display: none; }
+    .cm-vacia-textos { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .cm-vacia-textos .cm-area-nombre { font-size: 14.5px; color: var(--text-2); }
+    .cm-vacia-txt { font-size: 12px; color: var(--text-3); }
+    .cm-vacia-agregar {
+        width: 40px; height: 40px; min-width: 40px; border-radius: 10px;
+        border: 1px solid var(--border); background: var(--white); color: var(--indigo-dk);
+        font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .cm-vacio { text-align: center; padding: 32px 16px; color: var(--text-3); }
+
+    /* ── Hojas inferiores propias ── */
+    .modal-box.sheet-movil {
+        position: fixed; inset: auto 0 0 0; width: 100%; max-width: none; min-width: 0;
+        margin: 0; border-radius: 16px 16px 0 0; overflow-y: auto; text-align: left;
+        max-height: 85vh; padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+    }
+    .sheet-movil::before {
+        content: ''; display: block; width: 36px; height: 4px; border-radius: 2px;
+        background: var(--border); margin: 0 auto 12px;
+    }
+    @keyframes sheet-movil-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-backdrop .modal-box.sheet-movil {
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both;
+        transform-origin: initial;
+    }
+    .modal-backdrop[data-closing] .modal-box.sheet-movil {
+        animation: none; opacity: 1; transform: translateY(100%); transition: transform 160ms ease-out;
+    }
+
+    .cm-sheet-titulo { margin: 0 4px; font-size: 18px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+    .cm-sheet-sub { margin: 2px 4px 10px; font-size: 13px; color: var(--text-3); }
+    .cm-acciones { display: flex; flex-direction: column; }
+    .cm-accion {
+        display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 8px 4px;
+        border: 0; border-radius: 12px; background: transparent; width: 100%;
+        font: inherit; color: var(--text); text-align: left; text-decoration: none; cursor: pointer;
+    }
+    .cm-accion:active { background: var(--surface); }
+    .cm-accion[hidden] { display: none; }
+    .cm-accion-icono {
+        width: 40px; height: 40px; min-width: 40px; border-radius: 10px;
+        background: var(--indigo-lt); color: var(--indigo-dk);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .cm-accion-textos { display: flex; flex-direction: column; min-width: 0; }
+    .cm-accion-label { font-size: 15px; font-weight: 500; }
+    .cm-accion-desc { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+    .cm-accion-peligro { color: var(--red); }
+    .cm-accion-peligro .cm-accion-icono { background: var(--red-lt); color: var(--red); }
+    .cm-separador { height: 1px; background: var(--border); margin: 6px 4px; }
+    .cm-cancelar {
+        width: 100%; height: 48px; margin-top: 8px; border-radius: 12px;
+        border: 1px solid var(--border); background: var(--white); color: var(--text);
+        font: inherit; font-size: 15px; font-weight: 500; cursor: pointer;
+    }
+    .cm-idioma { padding: 8px 4px 4px; }
+    .cm-idioma-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+    .cm-idioma form { width: 100%; }
+    .cm-idioma button { flex: 1; justify-content: center; height: 44px !important; }
+
+    /* ── Modales existentes (agregar/editar/limpiar/eliminar) como hoja ──
+       Sus <style> inline van después de esta hoja con la misma
+       especificidad, por eso los !important. */
+    #modal-agregar .modal-box, #modal-editar .modal-box,
+    #modal-agregar-molde .modal-box, #modal-editar-molde .modal-box,
+    #modal-limpiar .modal-box, #modal-eliminar .modal-box {
+        position: fixed !important; inset: auto 0 0 0 !important;
+        width: 100% !important; max-width: none !important; min-width: 0 !important;
+        margin: 0 !important; border-radius: 16px 16px 0 0 !important;
+        max-height: 92vh !important; text-align: left !important;
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both !important;
+        transform-origin: initial !important;
+    }
+    .modal-backdrop[data-closing]#modal-agregar .modal-box, .modal-backdrop[data-closing]#modal-editar .modal-box,
+    .modal-backdrop[data-closing]#modal-agregar-molde .modal-box, .modal-backdrop[data-closing]#modal-editar-molde .modal-box,
+    .modal-backdrop[data-closing]#modal-limpiar .modal-box, .modal-backdrop[data-closing]#modal-eliminar .modal-box {
+        animation: none !important; opacity: 1 !important;
+        transform: translateY(100%) !important; transition: transform 160ms ease-out !important;
+    }
+    #modal-agregar .modal-box, #modal-editar .modal-box,
+    #modal-agregar-molde .modal-box, #modal-editar-molde .modal-box {
+        display: flex !important; flex-direction: column; overflow: hidden !important;
+    }
+    #modal-agregar form, #modal-editar form, #modal-agregar-molde form, #modal-editar-molde form {
+        display: flex; flex-direction: column; flex: 1; min-height: 0;
+    }
+    #modal-agregar .mf-header, #modal-editar .mf-header,
+    #modal-agregar-molde .mf-header, #modal-editar-molde .mf-header { padding: 16px 16px 12px !important; }
+    #modal-agregar .mf-body, #modal-editar .mf-body,
+    #modal-agregar-molde .mf-body, #modal-editar-molde .mf-body {
+        flex: 1; min-height: 0; max-height: none !important; padding: 16px !important; gap: 18px !important;
+    }
+    #modal-agregar .mf-row, #modal-editar .mf-row { flex-direction: column; }
+    #modal-agregar .form-field input, #modal-agregar .form-field select,
+    #modal-editar .form-field input, #modal-editar .form-field select,
+    #modal-agregar-molde .form-field input, #modal-editar-molde .form-field input {
+        height: 46px; font-size: 16px !important;
+    }
+    #modal-agregar .mf-close, #modal-editar .mf-close,
+    #modal-agregar-molde .mf-close, #modal-editar-molde .mf-close { width: 40px !important; height: 40px !important; }
+    #modal-agregar .mf-footer, #modal-editar .mf-footer,
+    #modal-agregar-molde .mf-footer, #modal-editar-molde .mf-footer {
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important;
+    }
+    #modal-agregar .mf-required, #modal-editar .mf-required,
+    #modal-agregar-molde .mf-required, #modal-editar-molde .mf-required { display: none; }
+    #modal-agregar .mf-actions, #modal-editar .mf-actions,
+    #modal-agregar-molde .mf-actions, #modal-editar-molde .mf-actions { flex: 1; }
+    .mf-actions .btn-mf-secondary, .mf-actions .btn-mf-primary { flex: 1; height: 48px; font-size: 15px !important; }
+
+    #modal-limpiar .modal-box, #modal-eliminar .modal-box {
+        padding: 22px 16px calc(16px + env(safe-area-inset-bottom)) !important;
+    }
+    #modal-limpiar .modal-actions, #modal-eliminar .modal-actions {
+        flex-direction: column; align-items: stretch;
+    }
+    #modal-limpiar .modal-actions .btn, #modal-eliminar .modal-actions .btn,
+    #modal-limpiar .modal-actions form, #modal-eliminar .modal-actions form { width: 100%; }
+    #modal-limpiar .modal-actions .btn, #modal-eliminar .modal-actions .btn {
+        height: 48px; justify-content: center; font-size: 15px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .modal-box.sheet-movil,
+        #modal-agregar .modal-box, #modal-editar .modal-box,
+        #modal-agregar-molde .modal-box, #modal-editar-molde .modal-box,
+        #modal-limpiar .modal-box, #modal-eliminar .modal-box { animation: none !important; }
+    }
+}

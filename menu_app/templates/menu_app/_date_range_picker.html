@@ -48,7 +48,7 @@
         </div>
     </div>
 
-    {% if chips|default:True %}
+    {% if chips != False %}
     <div class="dpr-chips">
         <div class="dpr-chip" data-atajo="hoy">{% trans "Hoy" %}</div>
         <div class="dpr-chip" data-atajo="7dias">{% trans "Últimos 7 días" %}</div>

@@ -1,0 +1,66 @@
+{% load i18n %}
+{% comment %}
+  Aviso "Esta sección aún no está lista para celular".
+  Inclúyelo como PRIMER elemento del {% block content %}:
+      {% include 'menu_app/_no_disponible_movil.html' %}
+  En ≤767px se muestra y oculta todo lo que viene después dentro de <main>
+  (tablas, modales, botones flotantes). En escritorio no se ve ni cambia nada.
+{% endcomment %}
+<section class="nd-movil" aria-labelledby="nd-movil-titulo">
+    <div class="nd-ilustracion" aria-hidden="true">
+        <svg width="112" height="112" viewBox="0 0 112 112" fill="none">
+            <rect x="30" y="10" width="52" height="92" rx="10" class="nd-tel" stroke-width="3"/>
+            <rect x="48" y="16" width="16" height="4" rx="2" class="nd-l2"/>
+            <rect x="38" y="30" width="36" height="8" rx="3" class="nd-l1"/>
+            <rect x="38" y="44" width="24" height="6" rx="3" class="nd-l1"/>
+            <rect x="38" y="56" width="36" height="6" rx="3" class="nd-l1"/>
+            <rect x="38" y="68" width="30" height="6" rx="3" class="nd-l1"/>
+            <circle cx="80" cy="80" r="20" fill="#D9822B"/>
+            <path d="M73 87l10-10m-2-4a5 5 0 0 1 6 6l-3-1-2 2 1 3a5 5 0 0 1-6-6" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+    <span class="nd-badge"><span></span>{% trans "EN DESARROLLO" %}</span>
+    <h1 id="nd-movil-titulo">{% trans "Esta sección aún no está lista para celular" %}</h1>
+    <p>{% trans "Estamos trabajando en su versión móvil. Mientras tanto, puedes abrirla desde una computadora o tableta para usarla completa." %}</p>
+    <a href="{% url 'paros:lista_paros' %}" class="nd-volver">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+        {% trans "Volver a Paros" %}
+    </a>
+</section>
+<style>
+    .nd-movil { display: none; }
+    @media (max-width: 767px) {
+        /* Oculta el resto de la página (hermanos dentro de <main>). */
+        .main > .nd-movil ~ * { display: none !important; }
+        .nd-movil {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: calc(100vh - 110px); min-height: calc(100dvh - 110px);
+            padding: 0 12px 40px; text-align: center; box-sizing: border-box;
+        }
+        .nd-ilustracion {
+            position: relative; width: 184px; height: 184px; border-radius: 92px; background: var(--indigo-lt);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .nd-ilustracion::before {
+            content: ''; position: absolute; inset: 18px; border-radius: 74px;
+            border: 2px dashed color-mix(in oklab, var(--indigo) 30%, transparent);
+        }
+        .nd-ilustracion svg { position: relative; }
+        .nd-tel { fill: var(--white); stroke: var(--indigo); }
+        .nd-l1  { fill: var(--indigo-lt); }
+        .nd-l2  { fill: color-mix(in oklab, var(--indigo) 30%, transparent); }
+        .nd-badge {
+            margin-top: 28px; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px;
+            border-radius: 14px; background: #FDF0E1; color: #A85200; font-size: 12px; font-weight: 600; letter-spacing: .04em;
+        }
+        .nd-badge span { width: 6px; height: 6px; border-radius: 3px; background: #D9822B; }
+        .nd-movil h1 { margin: 14px 0 0; font-size: 24px; font-weight: 600; line-height: 1.25; color: var(--text); }
+        .nd-movil p  { margin: 12px 0 0; font-size: 15px; line-height: 1.55; color: var(--text-3); }
+        .nd-volver {
+            width: 100%; margin-top: 32px; height: 52px; border-radius: 14px; background: var(--indigo); color: #fff;
+            font-size: 16px; font-weight: 600; text-decoration: none;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .nd-volver:hover { color: #fff; }
+    }
+</style>

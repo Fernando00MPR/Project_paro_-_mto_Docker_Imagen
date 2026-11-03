@@ -1,0 +1,85 @@
+{% load i18n %}
+{% comment %}
+    Modal "Distribución de OTs por semana" (36D, solo escritorio). Lo abre el menú Opciones del Plan
+    ([data-abrir-distribucion]); los datos del año los pide distribucion_ots.js a mto:distribucion_ots.
+    Estilos en distribucion_ots.css (.dot-*).
+{% endcomment %}
+<div class="dot-fondo" id="dot-fondo" hidden>
+    <div class="dot-dlg" role="dialog" aria-modal="true" aria-labelledby="dot-t">
+        <header class="dot-cab">
+            <span class="dot-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M9 20V4M14 20v-7M19 20V8"/></svg></span>
+            <div class="dot-cab-t">
+                <h2 id="dot-t">{% trans "Distribución de OTs por semana" %}</h2>
+                <p id="dot-sub"></p>
+            </div>
+            <button type="button" class="dot-x" id="dot-x" aria-label="{% trans 'Cerrar' %}">✕</button>
+        </header>
+        <div class="dot-barra">
+            <div class="dot-leyenda" id="dot-leyenda"></div>
+            <div class="dot-anio">
+                <button type="button" id="dot-anio-prev" aria-label="{% trans 'Año anterior' %}">‹</button>
+                <span id="dot-anio-n" aria-live="polite"></span>
+                <button type="button" id="dot-anio-next" aria-label="{% trans 'Año siguiente' %}">›</button>
+            </div>
+        </div>
+        <div class="dot-cuerpo" id="dot-cuerpo">
+            <div class="dot-kpis" id="dot-kpis"></div>
+            <div class="dot-graf">
+                <div class="dot-plot" id="dot-graf"></div>
+                <div class="dot-ejex" id="dot-ejex" aria-hidden="true"></div>
+                <p class="dot-ayuda">{% trans "Semanas futuras en tono claro: OTs programadas por el plan. Clic en una barra para ver sus OTs." %}</p>
+            </div>
+            <section class="dot-det" aria-label="{% trans 'Detalle de la semana' %}">
+                <div class="dot-det-izq" id="dot-det-izq"></div>
+                <div class="dot-det-der">
+                    <div class="dot-tab dot-tab-cab" aria-hidden="true">
+                        <span>{% trans "No. OT" %}</span><span>{% trans "CÓDIGO" %}</span><span>{% trans "TAREA · EQUIPO" %}</span><span>{% trans "RESPONSABLE" %}</span><span>{% trans "ESTATUS" %}</span>
+                    </div>
+                    <div id="dot-ots"></div>
+                    <div class="dot-det-pie">
+                        <span id="dot-mas"></span>
+                        <button type="button" class="dot-ir" id="dot-ir">{% trans "Ver semana en el plan" %} →</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <footer class="dot-pie">
+            <span>{% trans "← → cambian de semana · Esc para cerrar" %}</span>
+            <button type="button" class="dot-cerrar" id="dot-cerrar">{% trans "Cerrar" %}</button>
+        </footer>
+    </div>
+</div>
+<script type="application/json" id="dot-i18n">{
+    "sub":         "{% trans 'Plan de mantenimiento · {area} · {n} OTs en {anio}' %}",
+    "subSinArea":  "{% trans 'Plan de mantenimiento · {n} OTs en {anio}' %}",
+    "total":       "{% trans 'Total' %}",
+    "completadas": "{% trans 'Completadas' %}",
+    "validadas":   "{% trans 'Validadas' %}",
+    "pendientes":  "{% trans 'Pendientes' %}",
+    "totalOts":    "{% trans 'Total de OTs' %}",
+    "kTotal":      "{% trans 'TOTAL DE OTS' %}",
+    "kProm":       "{% trans 'PROMEDIO POR SEMANA' %}",
+    "kMin":        "{% trans 'MÍNIMO EN UNA SEMANA' %}",
+    "kMax":        "{% trans 'MÁXIMO EN UNA SEMANA' %}",
+    "enAnio":      "{% trans 'en el año' %}",
+    "ots":         "{% trans 'OTs' %}",
+    "nOts":        "{% trans '{n} OTs' %}",
+    "ot1":         "{% trans '1 OT' %}",
+    "selTitulo1":  "{% trans 'S{n} · 1 OT' %}",
+    "semCorta":    "{% trans 'S{n}' %}",
+    "promedio":    "{% trans 'Promedio {x} OTs/sem' %}",
+    "hoy":         "{% trans 'Hoy · S{n}' %}",
+    "semanas":     "{% trans 'OTs por semana' %}",
+    "aria":        "{% trans 'Semana {n}: {t} OTs, {c} completadas, {v} validadas, {p} pendientes' %}",
+    "semSel":      "{% trans 'SEMANA SELECCIONADA' %}",
+    "selTitulo":   "{% trans 'S{n} · {t} OTs' %}",
+    "actual":      "{% trans 'semana actual' %}",
+    "programada":  "{% trans 'programada' %}",
+    "sinOts":      "{% trans 'Sin OTs programadas esta semana' %}",
+    "mostrando":   "{% trans 'Mostrando {a} de {n} OTs · primero las pendientes' %}",
+    "completada":  "{% trans 'Completada' %}",
+    "validada":    "{% trans 'Validada' %}",
+    "pendiente":   "{% trans 'Pendiente' %}",
+    "verOt":       "{% trans 'Ver {no} en el plan' %}",
+    "error":       "{% trans 'No se pudo cargar la distribución.' %}"
+}</script>

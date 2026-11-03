@@ -1,0 +1,126 @@
+/* bitacora_agv_movil.css — Vista de celular (≤767px) de la Bitácora de AGVs.
+   Reutiliza hora_hora_movil.css (encabezado, selector de mes, tarjetas, KPIs,
+   segmentados, hojas inferiores, lista de periodos); aquí solo va lo propio
+   de AGVs: pestañas de área, calendario con dos turnos por día y bloques de
+   captura por turno. */
+
+@media (max-width: 767px) {
+    .agv-desktop-only { display: none !important; }
+
+    #agv-movil { padding-bottom: 24px; }
+    #agv-movil .hm-card {
+        background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+        margin-bottom: 12px;
+    }
+    #agv-movil .hm-fila-mes { margin-bottom: 10px; }
+
+    /* ── Pestañas de área ── */
+    .am-areas { margin-bottom: 12px; }
+    .am-areas button { height: 52px; min-width: 0; }
+    .am-areas .am-a1 { font-size: 14px; }
+    .am-areas .am-a2 { font-size: 11px; color: var(--text-3); font-weight: 400; }
+
+    /* ── Tarjeta del mes ── */
+    .am-mes-card { padding: 14px 12px 12px; }
+    .am-kpis { padding: 0; }
+    .am-kpis .hm-kpi { padding: 8px 10px; }
+    .am-kpis .hm-kpi-num { font-size: 18px; }
+    .am-kpi-btn { border: 0; font: inherit; text-align: left; cursor: pointer; color: inherit; }
+    .am-kpi-btn:disabled { cursor: default; }
+    .am-sin { color: #A8322A !important; }
+    .am-ayuda {
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        margin-top: 14px; padding: 0 2px; font-size: 12px; color: var(--text-3);
+    }
+    .am-ayuda-ley { display: flex; align-items: center; gap: 10px; font-size: 11px; white-space: nowrap; }
+    .am-ayuda-ley span { display: inline-flex; align-items: center; gap: 4px; }
+    .am-cal { margin-top: 10px; }
+
+    .am-dia {
+        height: 66px; border-radius: 10px; border: 1px solid var(--border); background: var(--white);
+        padding: 3px; font: inherit; display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+        position: relative; min-width: 0; cursor: pointer;
+    }
+    .am-dia-num { font-size: 11px; color: var(--text-3); text-align: left; padding-left: 3px; line-height: 14px; }
+    .am-pill {
+        height: 21px; border-radius: 6px; font-size: 12px; font-weight: 600;
+        display: flex; align-items: center; justify-content: center; overflow: hidden;
+        background: #F5F5FA; color: #9A9CAE;
+    }
+    .am-pill.ok    { background: #CDEBD8; color: #1B5E36; }
+    .am-pill.bajo  { background: #F6CFCB; color: #8E2A23; }
+    /* Sin target configurado: mismos tonos que las celdas de escritorio. */
+    .am-pill.sin-t-dia   { background: #E6F1FB; color: #185FA5; }
+    .am-pill.sin-t-noche { background: #EEEDFE; color: #3C3489; }
+    .am-nota { position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 3px; background: #D9822B; }
+    .am-dia[aria-pressed="true"] { border: 2px solid var(--text); padding: 2px; }
+    [data-theme="dark"] .am-dia[aria-pressed="true"] { border-color: #F59E0B; }
+    .am-leyenda i.punto { width: 6px; height: 6px; border-radius: 3px; }
+
+    /* ── Hoja de captura: un bloque por turno ── */
+    .am-cap-head { display: flex; align-items: center; gap: 4px; }
+    .am-cap-head > div { flex: 1; min-width: 0; text-align: center; }
+    .am-cap-head .hc-fecha { font-size: 17px; }
+    .am-cap-head button {
+        width: 44px; height: 44px; min-width: 44px; border-radius: 22px; border: 0; background: transparent;
+        color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+    }
+    .am-cap-head button:disabled { opacity: .3; cursor: default; }
+    .am-turnos { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+    .am-turno { border: 1px solid var(--border); border-radius: 16px; padding: 12px; }
+    .am-turno-top { display: flex; align-items: center; gap: 8px; }
+    .am-turno-top b { flex: 1; font-size: 14px; font-weight: 600; color: var(--text); }
+    .am-chip { padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; background: var(--surface); color: var(--text-3); }
+    .am-chip.ok   { background: #E3F3E9; color: #22663F; }
+    .am-chip.bajo { background: #FBE4E2; color: #A8322A; }
+    .am-turno .hc-valor { margin-top: 10px; }
+    .am-turno .hc-valor button { width: 56px; height: 56px; min-width: 56px; font-size: 24px; }
+    .am-turno .hc-valor input { height: 56px; font-size: 28px; border-width: 1px; border-color: var(--border); }
+    .am-turno .hc-valor input:focus { border-width: 2px; border-color: var(--indigo); }
+    .am-nota-campo { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--text-3); text-transform: uppercase; }
+    .am-nota-campo textarea {
+        box-sizing: border-box; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px;
+        font: inherit; font-size: 16px; font-weight: 400; letter-spacing: 0; text-transform: none;
+        color: var(--text); background: var(--white); resize: none;
+    }
+    .am-cump { margin-top: 14px; padding: 10px 12px; border-radius: 12px; display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+    .am-cump b { font-weight: 600; white-space: nowrap; }
+    .am-cump.ok   { background: #E3F3E9; color: #22663F; }
+    .am-cump.bajo { background: #FBE4E2; color: #A8322A; }
+    .am-cump[hidden] { display: none; }
+
+    /* ── Hoja "⋯" ── */
+    .am-acciones { display: flex; flex-direction: column; margin-top: 8px; }
+    .am-accion {
+        display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 8px 4px; width: 100%;
+        border: 0; border-radius: 12px; background: transparent; font: inherit; font-size: 15px; color: var(--text);
+        text-align: left; cursor: pointer;
+    }
+    .am-accion:active { background: var(--surface); }
+    .am-accion-icono {
+        width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: var(--indigo-lt); color: var(--indigo-dk);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .am-idioma { padding: 8px 4px 4px; }
+    .am-idioma-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+    .am-idioma form { width: 100%; }
+    .am-idioma button { flex: 1; justify-content: center; height: 44px !important; }
+
+    /* ── Modal de target existente como hoja ── */
+    #modal-target-agv .modal-box {
+        position: fixed !important; inset: auto 0 0 0 !important; width: 100% !important; min-width: 0 !important;
+        margin: 0 !important; border-radius: 24px 24px 0 0 !important; box-sizing: border-box;
+        padding: 20px 20px calc(20px + env(safe-area-inset-bottom)) !important;
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both !important; transform-origin: initial !important;
+    }
+    .modal-backdrop[data-closing]#modal-target-agv .modal-box {
+        animation: none !important; opacity: 1 !important; transform: translateY(100%) !important;
+        transition: transform 160ms ease-out !important;
+    }
+    #modal-target-agv input { height: 44px; font-size: 16px !important; box-sizing: border-box; }
+    #modal-target-agv .btn { height: 48px; flex: 1; justify-content: center; font-size: 15px; }
+
+    @media (prefers-reduced-motion: reduce) {
+        #modal-target-agv .modal-box { animation: none !important; }
+    }
+}

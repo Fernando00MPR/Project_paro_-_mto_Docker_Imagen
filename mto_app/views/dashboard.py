@@ -1,10 +1,125 @@
+from collections import Counter
 from datetime import date, timedelta
+from urllib.parse import urlencode
 import json
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils.translation import gettext as _, ngettext
 
 from ..models import Area, PlanMantenimiento, RegistroEjecucion
-from .utils import lunes_de_semana, INTERVALO, _planes_que_tocan
+from .utils import lunes_de_semana, INTERVALO, _planes_que_tocan, areas_visibles_mto, areas_ids_restringidas
+from .backlog import COLORES_AREA
+from django.urls import reverse
+from django.utils.formats import date_format
+
+
+# Meta de cumplimiento semanal (la misma que separa "≥ 90%" / "< 90%" en escritorio).
+META_CUMPLIMIENTO = 90
+# Celular: órdenes vencidas que se cargan por bloque.
+VENCIDAS_POR_BLOQUE = 20
+# Escritorio: filas que se cargan por bloque en las tablas con scroll infinito
+# (primeras 50 ya vienen en el HTML; de ahí en adelante se piden por AJAX).
+FILAS_POR_BLOQUE_ESC = 50
+# Celular: orden de los estados en "Detalles de la semana" (None = sin registro).
+# También usado por escritorio para la tabla "Semana {n}" (mismo orden).
+ORDEN_ESTADO = {None: 0, 'pendiente': 1, 'reagendada': 2, 'cancelada': 3, 'completada': 4}
+
+
+def _url_plan(plan, lunes):
+    """Abre el plan en el Plan de mantenimiento, en la semana dada (?abrir=)."""
+    anio, semana, _dia = lunes.isocalendar()
+    return reverse('mto:lista_plan') + '?' + urlencode({
+        'area': plan.area_id, 'semana': semana, 'anio': anio,
+        'q': plan.codigo, 'estado': 'todas', 'abrir': plan.pk,
+    })
+
+
+def _url_plan_semana(area_id, semana, anio, extra=None):
+    """Abre el Plan de mantenimiento en la semana/área filtradas del dashboard.
+    `extra` agrega parámetros adicionales (p. ej. resp=ninguno para "Asignar")."""
+    params = {'semana': semana, 'anio': anio}
+    if area_id:
+        params['area'] = area_id
+    if extra:
+        params.update(extra)
+    return reverse('mto:lista_plan') + '?' + urlencode(params)
+
+
+def _nivel_atraso(semanas):
+    """3 niveles de atraso (mismos umbrales/colores que dashboard_movil.js/css)."""
+    if semanas <= 8:
+        return 'ambar'
+    if semanas <= 26:
+        return 'rojo'
+    return 'oscuro'
+
+
+def _vencida_json(v, escritorio=False):
+    plan = v['plan']
+    data = {
+        'codigo':     plan.codigo,
+        'actividad':  plan.actividad,
+        'area':       plan.area.nombre,
+        'frecuencia': str(plan.get_frecuencia_display()),
+        'semana':     v['semana'],
+        'fecha':      date_format(v['lunes'], 'd M'),
+        'atraso':     v['atraso'],
+        'url':        _url_plan(plan, v['lunes']),
+    }
+    if escritorio:
+        data['anio']  = v['lunes'].isocalendar()[0]
+        data['nivel'] = _nivel_atraso(v['atraso'])
+    return data
+
+
+def _detalle_semana(planes_semana, registros_semana, lunes_filtro):
+    """Lista de {plan, registro, estado, responsable, url} de la semana filtrada,
+    ordenada: sin registro, pendiente, reagendada, cancelada, completada; luego
+    código. La usan tanto el celular (detalle_movil) como la tabla de escritorio."""
+    detalle = []
+    for p in planes_semana:
+        reg = registros_semana.get(p.id)
+        detalle.append({
+            'plan':               p,
+            'registro':           reg,
+            'estado':             reg.estado if reg else None,
+            'responsable':        reg.responsable if reg else None,
+            'responsable_nombre': reg.nombre_responsable() if reg else '',
+            'url':                _url_plan(p, lunes_filtro),
+        })
+    detalle.sort(key=lambda x: (ORDEN_ESTADO.get(x['estado'], 5), x['plan'].locacion, x['plan'].actividad or '',  x['plan'].codigo))
+
+    return detalle
+
+
+def _pasa_filtro(item, f):
+    """Espejo de pasaFiltro() en dashboard_movil.js: filtra "Detalles de la
+    semana" por chip de estado. 'pendiente' agrupa pendiente + sin registro,
+    igual que el KPI "Pendientes"."""
+    if not f:
+        return True
+    if f == 'pendiente':
+        return item['estado'] in (None, 'pendiente')
+    if f == 'sin_resp':
+        return not item['responsable']
+    return item['estado'] == f
+
+
+def _detalle_json(item):
+    r = item['responsable']
+    return {
+        'codigo':      item['plan'].codigo,
+        'actividad':   item['plan'].actividad,
+        'responsable': item['responsable_nombre'] if r else None,
+        'estado':      item['estado'] or 'sin_registro',
+        'url':         item['url'],
+    }
+
+
+def _meta_area(n):
+    return ngettext('%(n)s plan', '%(n)s planes', n) % {'n': n} if n else _('Sin planes')
+
 
 @login_required
 def dashboard(request):
@@ -23,12 +138,15 @@ def dashboard(request):
         lunes_filtro  = lunes_de_semana(anio, semana_actual)
         filtro_semana = semana_actual
 
-    areas = Area.objects.filter(activa=True)
+    areas = areas_visibles_mto(request)
+    areas_ids = areas_ids_restringidas(request)
+    if area_id and areas_ids is not None and area_id not in {str(i) for i in areas_ids}:
+        area_id = ''        # un ?area= de otra área se ignora
 
-    planes_qs = PlanMantenimiento.objects.select_related('area').filter(activo=True)
-    if area_id:
-        planes_qs = planes_qs.filter(area_id=area_id)
-    planes_list = list(planes_qs)
+    todos_planes = list(PlanMantenimiento.objects.select_related('area').filter(activo=True))
+    if areas_ids is not None:
+        todos_planes = [p for p in todos_planes if p.area_id in areas_ids]
+    planes_list  = [p for p in todos_planes if not area_id or str(p.area_id) == area_id]
 
     planes_semana = _planes_que_tocan(planes_list, lunes_filtro)
 
@@ -57,30 +175,38 @@ def dashboard(request):
 
     cumplimiento_pct = round(completadas * 100 / total_semana) if total_semana else 0
 
-    areas_stats = {}
-    for p in planes_semana:
-        a = str(p.area_id)
-        if a not in areas_stats:
-            areas_stats[a] = {'nombre': p.area.nombre, 'total': 0, 'completadas': 0}
-        areas_stats[a]['total'] += 1
-        reg = registros_semana.get(p.id)
-        if reg and reg.estado == 'completada':
-            areas_stats[a]['completadas'] += 1
+    area_nombre = None
+    if area_id:
+        area_nombre = next((a.nombre for a in areas if str(a.pk) == area_id), None)
 
-    for v in areas_stats.values():
-        v['pct'] = round(v['completadas'] * 100 / v['total']) if v['total'] else 0
+    # Detalle de la semana (celular y escritorio comparten el mismo cálculo/orden).
+    semana_detalle = _detalle_semana(planes_semana, registros_semana, lunes_filtro)
+    detalle_movil  = semana_detalle
+    conteo_estados = Counter(item['estado'] or 'sin_registro' for item in detalle_movil)
 
-    areas_stats_list = sorted(areas_stats.values(), key=lambda x: -x['pct'])
+    # Escritorio: "Semana {n}" pide más filas (?detalle=1&desde=&filtro=) antes
+    # de que se calculen las vencidas, que son más caras.
+    if request.GET.get('detalle') == '1':
+        filtro_chip = request.GET.get('filtro', '').strip()
+        try:
+            desde = max(int(request.GET.get('desde', 0)), 0)
+        except ValueError:
+            desde = 0
+        lista = [x for x in semana_detalle if _pasa_filtro(x, filtro_chip)]
+        return JsonResponse({
+            'total': len(lista),
+            'items': [_detalle_json(x) for x in lista[desde:desde + FILAS_POR_BLOQUE_ESC]],
+        })
 
     pks_planes = [p.id for p in planes_list]
     registros_existentes = set(
         RegistroEjecucion.objects.filter(
             plan_id__in=pks_planes,
-            semana_inicio__gte=date(anio, 1, 1),
+            semana_inicio__gte=date(filtro_anio, 1, 1),
             semana_inicio__lt=lunes_filtro,
         ).values_list('plan_id', 'semana_inicio')
     )
-    
+
     vencidos = []
     for plan in planes_list:
         if not plan.semana_inicio or not plan.anio_inicio:
@@ -90,7 +216,9 @@ def dashboard(request):
             ref_lunes = lunes_de_semana(plan.anio_inicio, plan.semana_inicio)
             cursor    = ref_lunes
             while cursor < lunes_filtro:
-                if cursor >= date(anio, 1, 1):
+                # Desde el 1 de enero del año que se está viendo (antes: el año actual,
+                # así una semana de otro año mostraba vencidas en 0).
+                if cursor >= date(filtro_anio, 1, 1):
                     if (plan.id, cursor) not in registros_existentes:
                         sem_num = cursor.isocalendar()[1]
                         sem_atraso = (lunes_filtro - cursor).days // 7
@@ -106,40 +234,38 @@ def dashboard(request):
 
     vencidos.sort(key=lambda x: -x['atraso'])
     total_vencidos = len(vencidos)
-    vencidos       = vencidos[:6]
+    vencidos_todos = vencidos
+    # Escritorio: mismo contenido, pero con desempate por código (spec 6.2).
+    vencidos_esc = sorted(vencidos_todos, key=lambda v: (-v['atraso'], v['plan'].locacion, v['plan'].actividad or '', v['plan'].codigo))
 
-    semana_detalle = []
-    for p in planes_semana:
-        reg = registros_semana.get(p.id)
-        semana_detalle.append({
-            'plan':        p,
-            'registro':    reg,
-            'estado':      reg.estado if reg else None,
-            'responsable': reg.responsable if reg else None,
+    # "Ver las N vencidas" pide el siguiente bloque (celular: de un área; escritorio: todo).
+    if request.GET.get('vencidas') == '1':
+        es_escritorio = request.GET.get('vista') == 'escritorio'
+        try:
+            desde = max(int(request.GET.get('desde', 0)), 0)
+        except ValueError:
+            desde = 0
+        if es_escritorio:
+            lista, bloque = vencidos_esc, FILAS_POR_BLOQUE_ESC
+        else:
+            varea = request.GET.get('varea', '').strip()
+            lista = [v for v in vencidos_todos if not varea or str(v['plan'].area_id) == varea]
+            bloque = VENCIDAS_POR_BLOQUE
+        return JsonResponse({
+            'total': len(lista),
+            'items': [_vencida_json(v, es_escritorio) for v in lista[desde:desde + bloque]],
         })
-    semana_detalle.sort(key=lambda x: (x['estado'] or 'z'))
 
     tipos = {}
     for p in planes_list:
         tipos[p.tipo_mto] = tipos.get(p.tipo_mto, 0) + 1
-
-    frecuencias_dist = {}
-    for p in planes_list:
-        label = p.get_frecuencia_display()
-        frecuencias_dist[label] = frecuencias_dist.get(label, 0) + 1
-
-    orden_frec = ['Semanal', 'Quincenal', 'Mensual', 'Trimestral', 'Semestral', 'Anual']
-    frecuencias_dist_list = [
-        {'label': k, 'count': frecuencias_dist[k]}
-        for k in orden_frec if k in frecuencias_dist
-    ]
 
     # ── Datos para gráfico de cumplimiento por semana ──
 
     planes_grafico_list = planes_list
 
     lunes_semanas = {}
-    for s in range(1, 53):
+    for s in range(1, 54):   # incluye la S53 en los años que la tienen (2026, 2032…)
         try:
             lunes_semanas[s] = lunes_de_semana(filtro_anio, s)
         except Exception:
@@ -170,30 +296,161 @@ def dashboard(request):
         totales_grafico.append(len(planes_s))
         completadas_grafico.append(completadas_s)
 
+    # ── Vista de celular ──
+    def cumplimiento(lunes, completados):
+        """{s, a, pct (exacto o None sin planes), c, t} de una semana."""
+        planes_s = _planes_que_tocan(planes_list, lunes)
+        comp = sum(1 for p in planes_s if (p.id, lunes) in completados)
+        anio_s, sem_s, _dia = lunes.isocalendar()
+        return {'s': sem_s, 'a': anio_s, 'c': comp, 't': len(planes_s),
+                'pct': round(comp * 100 / len(planes_s), 2) if planes_s else None}
+
+    # Gráfica: las 12 semanas que terminan en la seleccionada (puede cruzar de año).
+    lunes_12 = [lunes_filtro - timedelta(weeks=k) for k in range(11, -1, -1)]
+    completados_12 = set(
+        RegistroEjecucion.objects.filter(
+            plan_id__in=pks_planes, semana_inicio__in=lunes_12, estado='completada'
+        ).values_list('plan_id', 'semana_inicio')
+    )
+    serie_12   = [cumplimiento(l, completados_12) for l in lunes_12]
+    serie_anio = [cumplimiento(l, completados_grafico_qs) for l in lunes_semanas.values()]
+
+    # Escritorio: 11 semanas antes de la S1 del año filtrado, para que la vista
+    # "12 sem." pueda terminar en cualquier semana de enero/febrero sin salirse
+    # del año calculado por el gráfico anual.
+    lunes_s1    = lunes_semanas[1]
+    lunes_prev  = [lunes_s1 - timedelta(weeks=k) for k in range(11, 0, -1)]
+    completados_prev = set(
+        RegistroEjecucion.objects.filter(
+            plan_id__in=pks_planes, semana_inicio__in=lunes_prev, estado='completada'
+        ).values_list('plan_id', 'semana_inicio')
+    )
+    serie_prev = [cumplimiento(l, completados_prev) for l in lunes_prev]
+
+    pct_exacto = completadas * 100 / total_semana if total_semana else 0
+    anio_ant, sem_ant, _d = (lunes_filtro - timedelta(weeks=1)).isocalendar()
+    anio_sig, sem_sig, _d = (lunes_filtro + timedelta(weeks=1)).isocalendar()
+
+    # Vencidas: primer bloque + conteo por área (chips, solo con "Todas las áreas").
+    vencidas_areas = []
+    if not area_id:
+        por_area_venc = Counter(v['plan'].area_id for v in vencidos_todos)
+        nombres = {v['plan'].area_id: v['plan'].area.nombre for v in vencidos_todos}
+        vencidas_areas = [{'id': a, 'nombre': nombres[a], 'n': n} for a, n in por_area_venc.most_common()]
+
+    # ── Escritorio ──
+
+    # Selector de Área: cuántos planes toca cada área esta semana (con los
+    # demás filtros aplicados), igual que _areas_filtro() en backlog.py.
+    planes_semana_todas_areas = _planes_que_tocan(todos_planes, lunes_filtro)
+    por_area_planes = Counter(p.area_id for p in planes_semana_todas_areas)
+    areas_filtro = {
+        'opciones': [{
+            'value': str(a.pk),
+            'label': a.nombre,
+            'color': COLORES_AREA[i % len(COLORES_AREA)],
+            'meta':  _meta_area(por_area_planes.get(a.pk, 0)),
+        } for i, a in enumerate(areas)],
+        'todas_meta': _meta_area(len(planes_semana_todas_areas)),
+    }
+
+    # "faltan N para la meta" = techo(meta% de programadas) − completadas.
+    if total_semana:
+        objetivo    = -(-META_CUMPLIMIENTO * total_semana // 100)  # redondeo hacia arriba
+        faltan_meta = max(objetivo - completadas, 0)
+    else:
+        faltan_meta = 0
+
+    desglose = [
+        {'clave': 'completada', 'n': completadas},
+        {'clave': 'pendiente',  'n': pendientes},
+        {'clave': 'reagendada', 'n': conteo_estados.get('reagendada', 0)},
+        {'clave': 'cancelada',  'n': conteo_estados.get('cancelada', 0)},
+    ]
+    desglose = [d for d in desglose if d['n'] > 0]
+
+    url_plan_semana = _url_plan_semana(area_id, filtro_semana, filtro_anio)
+    url_asignar     = _url_plan_semana(area_id, filtro_semana, filtro_anio, {'resp': 'ninguno'})
+
+    filas_semana   = semana_detalle[:FILAS_POR_BLOQUE_ESC]
+    filas_vencidas = [_vencida_json(v, escritorio=True) for v in vencidos_esc[:FILAS_POR_BLOQUE_ESC]]
+
+    datos_escritorio = {
+        'meta':         META_CUMPLIMIENTO,
+        'semana':       filtro_semana,
+        'anio':         filtro_anio,
+        'actualSemana': semana_actual,
+        'actualAnio':   anio,
+        'area':         area_nombre or str(_('Todas las áreas')),
+        'serie':        serie_prev + serie_anio,
+        'nAnterior':    len(serie_prev),
+        'totalSemana':  total_semana,
+        'conteos': {
+            '':           total_semana,
+            'pendiente':  pendientes,
+            'sin_resp':   sin_responsable,
+            'completada': completadas,
+            'reagendada': conteo_estados.get('reagendada', 0),
+            'cancelada':  conteo_estados.get('cancelada', 0),
+        },
+        'totalVencidas': total_vencidos,
+        'porBloque':     FILAS_POR_BLOQUE_ESC,
+    }
+
+    ctx_movil = {
+        'meta':              META_CUMPLIMIENTO,
+        'pct_exacto':        pct_exacto,
+        'pct_texto':         '<1' if 0 < pct_exacto < 1 else str(round(pct_exacto)),
+        'alcanza_meta':      pct_exacto >= META_CUMPLIMIENTO,
+        'semana_anterior':   {'semana': sem_ant, 'anio': anio_ant},
+        'semana_siguiente':  {'semana': sem_sig, 'anio': anio_sig},
+        'detalle_movil':     detalle_movil,
+        'conteo_estados':    conteo_estados,
+        'vencidas_areas':    vencidas_areas,
+        'datos_movil': {
+            'meta':      META_CUMPLIMIENTO,
+            'semana':    filtro_semana,
+            'anio':      filtro_anio,
+            'serie12':   serie_12,
+            'serieAnio': serie_anio,
+            'vencidas':  [_vencida_json(v) for v in vencidos_todos[:VENCIDAS_POR_BLOQUE]],
+            'totalVencidas': total_vencidos,
+            'porBloque': VENCIDAS_POR_BLOQUE,
+        },
+    }
+
     ctx = {
-        'areas':             areas,
-        'filtro_area':       area_id,
-        'filtro_semana':     filtro_semana,
-        'semana_actual':     semana_actual,
-        'lunes_filtro':      lunes_filtro,
-        'domingo_filtro':    lunes_filtro + timedelta(days=6),
-        'anio':              filtro_anio,
-        'total_planes':      total_planes,
-        'total_semana':      total_semana,
-        'completadas':       completadas,
-        'pendientes':        pendientes,
-        'sin_registro':      sin_registro,
-        'sin_responsable':   sin_responsable,
-        'cumplimiento_pct':  cumplimiento_pct,
-        'areas_stats':       areas_stats_list,
-        'vencidos':          vencidos,
-        'total_vencidos':    total_vencidos,
-        'semana_detalle':    semana_detalle,
-        'tipos':             tipos,
-        'frecuencias_dist':  frecuencias_dist_list,
-        'cumplimiento_semanas': json.dumps(semanas_grafico),
-        'cumplimiento_valores': json.dumps(valores_grafico),
-        'cumplimiento_totales':    json.dumps(totales_grafico),
+        **ctx_movil,
+        'areas':                    areas,
+        'filtro_area':              area_id,
+        'area_nombre':              area_nombre,
+        'filtro_semana':            filtro_semana,
+        'semana_actual':            semana_actual,
+        'lunes_filtro':             lunes_filtro,
+        'domingo_filtro':           lunes_filtro + timedelta(days=6),
+        'anio':                     filtro_anio,
+        'total_planes':             total_planes,
+        'total_semana':             total_semana,
+        'completadas':              completadas,
+        'pendientes':               pendientes,
+        'sin_registro':             sin_registro,
+        'sin_responsable':          sin_responsable,
+        'cumplimiento_pct':         cumplimiento_pct,
+        'total_vencidos':           total_vencidos,
+        'semana_detalle':           semana_detalle,
+        'tipos':                    tipos,
+        'cumplimiento_semanas':     json.dumps(semanas_grafico),
+        'cumplimiento_valores':     json.dumps(valores_grafico),
+        'cumplimiento_totales':     json.dumps(totales_grafico),
         'cumplimiento_completadas': json.dumps(completadas_grafico),
+        # Escritorio
+        'areas_filtro':             areas_filtro,
+        'faltan_meta':              faltan_meta,
+        'desglose':                 desglose,
+        'url_plan_semana':          url_plan_semana,
+        'url_asignar':              url_asignar,
+        'filas_semana':             filas_semana,
+        'filas_vencidas':           filas_vencidas,
+        'datos_escritorio':         datos_escritorio,
     }
     return render(request, 'mto_app/dashboard.html', ctx)

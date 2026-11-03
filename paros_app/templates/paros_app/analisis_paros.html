@@ -24,16 +24,16 @@
 {% endblock %}
 {% block content %}
 
-<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+<div class="analisis-desktop-only" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
     <div>
         <div class="card-title">{% trans "Análisis de paros" %}</div>
     </div>
     {% include 'menu_app/_language_selector.html' %}
 </div>
-<div class="card-subtitle" style="margin-bottom:18px;">{% trans "Distribución de paros por falla o responsable" %}</div>
+<div class="analisis-desktop-only card-subtitle" style="margin-bottom:18px;">{% trans "Distribución de paros por falla o responsable" %}</div>
 
 <!-- KPIs -->
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;max-width:750px">
+<div class="analisis-desktop-only" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;max-width:750px">
     <div class="card" style="padding:14px 18px;">
         <div style="font-size:11px;color:var(--text-3);margin-bottom:3px;">{% trans "Total paros" %}</div>
         <div style="font-size:24px;font-weight:700;color:var(--indigo);">{{ total_paros }}</div>
@@ -51,416 +51,613 @@
     </div>
 </div>
 
-<!-- Filtros principales -->
-<div class="card" style="margin-bottom:16px;padding:14px 18px;">
-    <style>
-      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
-         Usa !important porque cada select trae su padding en el atributo
-         style="" (mayor especificidad que una regla de clase normal). */
-      .paros-analisis-filtros select {
-          padding-right: 34px !important;
-          appearance: none !important; -webkit-appearance: none !important;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 10px center !important;
-          background-size: 14px !important;
-      }
-      [data-theme="dark"] .paros-analisis-filtros select {
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 10px center !important;
-          background-size: 14px !important;
-      }
-      /* El selector de fecha trae 42px por defecto (compartido con el resto
-         del sitio); se achica a la misma altura que el resto de los filtros
-         de esta página (33px / radio 7px). */
-      .paros-analisis-filtros .dp-control {
-          height: 33px;
-          border-radius: 7px;
-      }
-    </style>
-    <form method="get" id="form-principal" class="paros-analisis-filtros" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
-        {% for f in fallas_excluidas %}<input type="hidden" name="excluir_falla" value="{{ f }}">{% endfor %}
-        {% for r in resp_excluidas %}<input type="hidden" name="excluir_resp" value="{{ r }}">{% endfor %}
-        {% for t in tipos_excluidos %}<input type="hidden" name="excluir_tipo" value="{{ t }}">{% endfor %}
-        {% for a in atendio_excluidos %}<input type="hidden" name="excluir_atendio" value="{{ a }}">{% endfor %}
-        {% for e in equipos_excluidos %}<input type="hidden" name="excluir_equipo"  value="{{ e }}">{% endfor %}
+<div id="filtros-backdrop" class="movil-only" style="display:none;" onclick="cerrarSheetFiltros()"></div>
 
-        <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Área" %}</label>
-            <select name="area" onchange="prepararExclusiones()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
-                <option value="">{% trans "Todas las áreas" %}</option>
-                {% for a in areas %}<option value="{{ a.id }}" {% if area_id == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nombre }}</option>{% endfor %}
-            </select>
-        </div>
+<div id="filtros-exclusiones-wrap">
+    <div class="movil-only ap-sheet-head">
+        <h2>{% trans "Filtros" %}</h2>
+        <button type="button" class="ap-btn-restablecer" onclick="restablecerFiltrosMovil()">{% trans "Restablecer" %}</button>
+    </div>
+    <!-- Filtros principales -->
+    <div class="card" style="margin-bottom:16px;padding:14px 18px;">
+        <style>
+        /* Flecha nativa del select pegada al borde → chevron propio con espacio.
+            Usa !important porque cada select trae su padding en el atributo
+            style="" (mayor especificidad que una regla de clase normal). */
+        .paros-analisis-filtros select {
+            padding-right: 34px !important;
+            appearance: none !important; -webkit-appearance: none !important;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 10px center !important;
+            background-size: 14px !important;
+        }
+        [data-theme="dark"] .paros-analisis-filtros select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 10px center !important;
+            background-size: 14px !important;
+        }
+        /* El selector de fecha trae 42px por defecto (compartido con el resto
+            del sitio); se achica a la misma altura que el resto de los filtros
+            de esta página (33px / radio 7px). */
+        .paros-analisis-filtros .dp-control {
+            height: 33px;
+            border-radius: 7px;
+        }
+        </style>
+        <form method="get" id="form-principal" class="paros-analisis-filtros" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+            {% for f in fallas_excluidas %}<input type="hidden" name="excluir_falla" value="{{ f }}">{% endfor %}
+            {% for r in resp_excluidas %}<input type="hidden" name="excluir_resp" value="{{ r }}">{% endfor %}
+            {% for t in tipos_excluidos %}<input type="hidden" name="excluir_tipo" value="{{ t }}">{% endfor %}
+            {% for a in atendio_excluidos %}<input type="hidden" name="excluir_atendio" value="{{ a }}">{% endfor %}
+            {% for e in equipos_excluidos %}<input type="hidden" name="excluir_equipo"  value="{{ e }}">{% endfor %}
 
-        <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Período" %}</label>
-            <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value); if(this.value !== 'custom') prepararExclusiones();"
-                    style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:150px;">
-                <option value="hoy"     {% if periodo == 'hoy'    %}selected{% endif %}>  {% trans "Hoy" %}</option>
-                <option value="7"       {% if periodo == '7'      %}selected{% endif %}>  {% trans "Últimos 7 días" %}</option>
-                <option value="30"      {% if periodo == '30'     %}selected{% endif %}>  {% trans "Últimos 30 días" %}</option>
-                <option value="semana"  {% if periodo == 'semana' %}selected{% endif %}>  {% trans "Por número de semana" %}</option>
-                <option value="semanas" {% if periodo == 'semanas' %}selected{% endif %}> {% trans "Por semana (año actual)" %}</option>
-                <option value="mes"     {% if periodo == 'mes'    %}selected{% endif %}>  {% trans "Por mes" %}</option>
-                <option value="meses"   {% if periodo == 'meses'  %}selected{% endif %}>  {% trans "Por meses (año completo)" %}</option>
-                <option value="custom"  {% if periodo == 'custom' %}selected{% endif %}>  {% trans "Rango personalizado" %}</option>
-            </select>
-        </div>
+            <div class="fg-area" style="display:flex;flex-direction:column;gap:4px;">
+                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Área" %}</label>
+                <select name="area" onchange="onCambioExclusion()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
+                    <option value="">{% trans "Todas las áreas" %}</option>
+                    {% for a in areas %}<option value="{{ a.id }}" {% if area_id == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nombre }}</option>{% endfor %}
+                </select>
+            </div>
 
-        <div id="wrap-semana" style="display:none;flex-direction:column;gap:4px;">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Semana" %}</label>
-            <input type="number" name="semana_num" value="{{ semana_num|default:semana_actual }}" min="1" max="53"
-                   style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);width:80px;" onchange="prepararExclusiones()">
-        </div>
+            <div class="fg-periodo" style="display:flex;flex-direction:column;gap:4px;">
+                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Período" %}</label>
+                <select name="periodo" id="sel-periodo" onchange="togglePeriodo(this.value); if(this.value !== 'custom') prepararExclusiones();"
+                        style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:150px;">
+                    <option value="hoy"     {% if periodo == 'hoy'    %}selected{% endif %}>  {% trans "Hoy" %}</option>
+                    <option value="7"       {% if periodo == '7'      %}selected{% endif %}>  {% trans "Últimos 7 días" %}</option>
+                    <option value="30"      {% if periodo == '30'     %}selected{% endif %}>  {% trans "Últimos 30 días" %}</option>
+                    <option value="semana"  {% if periodo == 'semana' %}selected{% endif %}>  {% trans "Por número de semana" %}</option>
+                    <option value="semanas" {% if periodo == 'semanas' %}selected{% endif %}> {% trans "Por semana (año actual)" %}</option>
+                    <option value="mes"     {% if periodo == 'mes'    %}selected{% endif %}>  {% trans "Por mes" %}</option>
+                    <option value="meses"   {% if periodo == 'meses'  %}selected{% endif %}>  {% trans "Por meses (año completo)" %}</option>
+                    <option value="custom"  {% if periodo == 'custom' %}selected{% endif %}>  {% trans "Rango personalizado" %}</option>
+                </select>
+            </div>
 
-        <div id="wrap-mes" style="display:none;gap:8px;">
-            <div style="display:flex;flex-direction:column;gap:4px;">
-                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Mes" %}</label>
-                <select name="mes_num" onchange="prepararExclusiones()"
-                        style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);">
-                    {% for num, nombre in meses %}
-                     <option value="{{ num }}" {% if mes_num|default:mes_actual|stringformat:"s" == num|stringformat:"s" %}selected{% endif %}>{{ nombre }}</option>
+            <div id="wrap-semana" style="display:none;flex-direction:column;gap:4px;">
+                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Semana" %}</label>
+                <input type="number" name="semana_num" value="{{ semana_num|default:semana_actual }}" min="1" max="53"
+                    style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);width:80px;" onchange="onCambioExclusion()">
+            </div>
+
+            <div id="wrap-mes" style="display:none;gap:8px;">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Mes" %}</label>
+                    <select name="mes_num" onchange="prepararExclusiones()"
+                            style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);">
+                        {% for num, nombre in meses %}
+                        <option value="{{ num }}" {% if mes_num|default:mes_actual|stringformat:"s" == num|stringformat:"s" %}selected{% endif %}>{{ nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Año" %}</label>
+                    <input type="number" name="anio_mes" value="{{ anio_mes|default:anio_actual }}" min="2015" max="{{ anio_actual }}"
+                        style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);width:80px;" onchange="prepararExclusiones()">
+                </div>
+            </div>
+
+            <div id="wrap-desde" style="display:none;flex-direction:column;gap:4px;">
+                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Desde" %}</label>
+                {% include 'menu_app/_date_picker.html' with name='fecha_desde' initial=fecha_desde dp_id='dp-fecha-desde' %}
+            </div>
+            <div id="wrap-hasta" style="display:none;flex-direction:column;gap:4px;">
+                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Hasta" %}</label>
+                {% include 'menu_app/_date_picker.html' with name='fecha_hasta' initial=fecha_hasta dp_id='dp-fecha-hasta' %}
+            </div>
+
+            <div class="fg-subarea" style="display:flex;flex-direction:column;gap:4px;">
+                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Sub área" %}</label>
+                <select name="sub_area" onchange="onCambioExclusion()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
+                    <option value="" {% if not sub_area_sel %}selected{% endif %}>— {% trans "Todas" %} —</option>
+                    {% for sa in subareas_disponibles %}
+                    <option value="{{ sa }}" {% if sub_area_sel == sa %}selected{% endif %}>{{ sa }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;">
-                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Año" %}</label>
-                <input type="number" name="anio_mes" value="{{ anio_mes|default:anio_actual }}" min="2015" max="{{ anio_actual }}"
-                       style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);width:80px;" onchange="prepararExclusiones()">
-            </div>
-        </div>
-
-        <div id="wrap-desde" style="display:none;flex-direction:column;gap:4px;">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Desde" %}</label>
-            {% include 'menu_app/_date_picker.html' with name='fecha_desde' initial=fecha_desde dp_id='dp-fecha-desde' %}
-        </div>
-        <div id="wrap-hasta" style="display:none;flex-direction:column;gap:4px;">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Hasta" %}</label>
-            {% include 'menu_app/_date_picker.html' with name='fecha_hasta' initial=fecha_hasta dp_id='dp-fecha-hasta' %}
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Sub área" %}</label>
-            <select name="sub_area" onchange="prepararExclusiones()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
-                <option value="" {% if not sub_area_sel %}selected{% endif %}>— {% trans "Todas" %} —</option>
-                {% for sa in subareas_disponibles %}
-                <option value="{{ sa }}" {% if sub_area_sel == sa %}selected{% endif %}>{{ sa }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Turno" %}</label>
-            <select name="turno" onchange="prepararExclusiones()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:120px;">
-                <option value=""  {% if turno == ''  %}selected{% endif %}>{% trans "Ambos turnos" %}</option>
-                <option value="1" {% if turno == '1' %}selected{% endif %}>{% trans "Turno 1" %}</option>
-                <option value="2" {% if turno == '2' %}selected{% endif %}>{% trans "Turno 2" %}</option>
-            </select>
-        </div>
-         <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Estatus" %}</label>
-            <select name="estatus" onchange="prepararExclusiones()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
-                <option value=""        {% if estatus_filtro == ''        %}selected{% endif %}>{% trans "Todos" %}</option>
-                <option value="verde"   {% if estatus_filtro == 'verde'   %}selected{% endif %}>{% trans "Aceptados" %}</option>
-                <option value="rojo"    {% if estatus_filtro == 'rojo'    %}selected{% endif %}>{% trans "Rechazados" %}</option>
-                <option value="amarillo"{% if estatus_filtro == 'amarillo'%}selected{% endif %}>{% trans "Pendientes" %}</option>
-            </select>
-        </div>
-
-        <input type="hidden" name="modo_pareto" id="input-modo-pareto" value="{{ modo_pareto }}">
-        <input type="hidden" name="modo_barras" id="input-modo-barras" value="{{ modo_barras }}">
-        <input type="hidden" name="orden_barras" id="input-orden-barras" value="{{ orden_barras }}">
-    </form>
-</div>
-
-<!-- Gráficas -->
-<div id="charts-grid" style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px;">
-    <!-- Pareto -->
-    <div class="card" style="padding:16px 18px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
-            <div>
-                <div style="font-size:13px;font-weight:700;color:var(--text);">{% trans "Diagrama de Pareto" %}</div>
-                <div style="font-size:11px;color:var(--text-3);">{% if modo_pareto == 'falla' %}{% trans "Fallas" %}{% elif modo_pareto == 'responsable' %}{% trans "Responsables" %}{% elif modo_pareto == 'atendio' %}{% trans "Quién atendió" %}{% elif modo_pareto == 'equipo' %}{% trans "Equipos" %}{% else %}{% trans "Tipos de falla" %}{% endif %} {% trans "que generan el 80% del tiempo perdido" %}</div>
-            </div>
-            <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow-x:auto;height:28px;max-width:100%;">
-                <button type="button" id="bp-falla" onclick="setModoPareto('falla'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_pareto == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
-                <button type="button" id="bp-equipo" onclick="setModoPareto('equipo'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'equipo' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'equipo' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Equipo" %}</button>
-                <button type="button" id="bp-resp" onclick="setModoPareto('responsable'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
-                <button type="button" id="bp-tipo" onclick="setModoPareto('tipo_falla'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'tipo_falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'tipo_falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Tipo de falla" %}</button>
-                <button type="button" id="bp-atendio" onclick="setModoPareto('atendio'); prepararExclusiones();"
-                        style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'atendio' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'atendio' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Atendió" %}</button>
-            </div>
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:6px;">
-            <button type="button" onclick="abrirModalGrafico('pareto')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
-                {% trans "Expandir" %}
-            </button>
-            <button onclick="descargarGrafico('chartPareto','Pareto')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                {% trans "Descargar" %}
-            </button>
-        </div>
-        <div style="overflow-x:auto;"><canvas id="chartPareto" style="min-width:600px;height:280px;"></canvas></div>
-        <div id="aviso-chartPareto" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:280px;text-align:center;color:var(--text-3);font-size:12.5px;">
-            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.5;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M8 17V10M13 17V6M18 17v-4"/>
-            </svg>
-            {% trans "Demasiadas barras para mostrar aquí." %}
-            <button type="button" onclick="abrirModalGrafico('pareto')" class="btn btn-ghost" style="font-size:12px;">
-                {% trans "Abrir en pantalla completa" %}
-            </button>
-        </div>
-    </div>
-
-    <!-- Barras -->
-    <div class="card" style="padding:16px 18px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
-            <div>
-                <div style="font-size:13px;font-weight:700;color:var(--text);">{% trans "Tendencia de paros" %}</div>
-                <div style="font-size:11px;color:var(--text-3);">
-                    {% if orden_barras == 'minutos' %}{% trans "Ordenado por tiempo acumulado — mayor a menor" %}{% else %}{% trans "Ordenado por cantidad de paros — mayor a menor" %}{% endif %}
+            
+            <div class="fg-turno" style="display:flex;flex-direction:column;gap:4px;">
+                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Turno" %}</label>
+                <select name="turno" onchange="onCambioExclusion()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:120px;">
+                    <option value=""  {% if turno == ''  %}selected{% endif %}>{% trans "Ambos turnos" %}</option>
+                    <option value="1" {% if turno == '1' %}selected{% endif %}>{% trans "Turno 1" %}</option>
+                    <option value="2" {% if turno == '2' %}selected{% endif %}>{% trans "Turno 2" %}</option>
+                </select>
+                <div class="movil-only ap-segmentado ap-segmentado-3" role="group" aria-label="{% trans 'Turno' %}" data-proxy-de="turno">
+                    <button type="button" class="ap-seg" data-valor="" aria-pressed="{% if turno == '' %}true{% else %}false{% endif %}">{% trans "Ambos" %}</button>
+                    <button type="button" class="ap-seg" data-valor="1" aria-pressed="{% if turno == '1' %}true{% else %}false{% endif %}">{% trans "Turno 1" %}</button>
+                    <button type="button" class="ap-seg" data-valor="2" aria-pressed="{% if turno == '2' %}true{% else %}false{% endif %}">{% trans "Turno 2" %}</button>
                 </div>
             </div>
-            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
-                <div style="display:inline-flex;background:var(--surface);border-radius:999px;padding:3px;gap:2px;">
-                    <button type="button" id="ob-minutos" onclick="setOrdenBarras('minutos'); prepararExclusiones();"
-                            style="padding:0 14px;height:22px;font-size:12px;font-weight:600;cursor:pointer;border:none;border-radius:999px;font-family:inherit;
-                                   background:{% if orden_barras == 'minutos' %}var(--white){% else %}transparent{% endif %};
-                                   color:{% if orden_barras == 'minutos' %}var(--indigo){% else %}var(--text-3){% endif %};
-                                   box-shadow:{% if orden_barras == 'minutos' %}0 1px 3px rgba(0,0,0,.08){% else %}none{% endif %};">{% trans "Minutos" %}</button>
-                    <button type="button" id="ob-cantidad" onclick="setOrdenBarras('cantidad'); prepararExclusiones();"
-                            style="padding:0 14px;height:22px;font-size:12px;font-weight:600;cursor:pointer;border:none;border-radius:999px;font-family:inherit;
-                                   background:{% if orden_barras == 'cantidad' %}var(--white){% else %}transparent{% endif %};
-                                   color:{% if orden_barras == 'cantidad' %}var(--indigo){% else %}var(--text-3){% endif %};
-                                   box-shadow:{% if orden_barras == 'cantidad' %}0 1px 3px rgba(0,0,0,.08){% else %}none{% endif %};">{% trans "Cantidad" %}</button>
+            <div class="fg-estatus" style="display:flex;flex-direction:column;gap:4px;">
+                <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);">{% trans "Estatus" %}</label>
+                <select name="estatus" onchange="onCambioExclusion()" style="height:33px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-size:12px;background:var(--white);color:var(--text);min-width:140px;">
+                    <option value=""        {% if estatus_filtro == ''        %}selected{% endif %}>{% trans "Todos" %}</option>
+                    <option value="verde"   {% if estatus_filtro == 'verde'   %}selected{% endif %}>{% trans "Aceptados" %}</option>
+                    <option value="rojo"    {% if estatus_filtro == 'rojo'    %}selected{% endif %}>{% trans "Rechazados" %}</option>
+                    <option value="amarillo"{% if estatus_filtro == 'amarillo'%}selected{% endif %}>{% trans "Pendientes" %}</option>
+                </select>
+                <div class="movil-only ap-segmentado ap-segmentado-4" role="group" aria-label="{% trans 'Estatus' %}" data-proxy-de="estatus">
+                    <button type="button" class="ap-seg" data-valor="" aria-pressed="{% if estatus_filtro == '' %}true{% else %}false{% endif %}">{% trans "Todos" %}</button>
+                    <button type="button" class="ap-seg" data-valor="verde" aria-pressed="{% if estatus_filtro == 'verde' %}true{% else %}false{% endif %}">{% trans "Aceptados" %}</button>
+                    <button type="button" class="ap-seg" data-valor="rojo" aria-pressed="{% if estatus_filtro == 'rojo' %}true{% else %}false{% endif %}">{% trans "Rechazados" %}</button>
+                    <button type="button" class="ap-seg" data-valor="amarillo" aria-pressed="{% if estatus_filtro == 'amarillo' %}true{% else %}false{% endif %}">{% trans "Pendientes" %}</button>
+                </div>
+            </div>
+
+            <input type="hidden" name="modo_pareto" id="input-modo-pareto" value="{{ modo_pareto }}">
+            <input type="hidden" name="modo_barras" id="input-modo-barras" value="{{ modo_barras }}">
+            <input type="hidden" name="orden_barras" id="input-orden-barras" value="{{ orden_barras }}">
+        </form>
+    </div>
+
+    <!-- Gráficas -->
+    <div id="charts-grid" style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px;">
+        <!-- Pareto -->
+        <div class="card" style="padding:16px 18px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+                <div>
+                    <div style="font-size:13px;font-weight:700;color:var(--text);">{% trans "Diagrama de Pareto" %}</div>
+                    <div style="font-size:11px;color:var(--text-3);">{% if modo_pareto == 'falla' %}{% trans "Fallas" %}{% elif modo_pareto == 'responsable' %}{% trans "Responsables" %}{% elif modo_pareto == 'atendio' %}{% trans "Quién atendió" %}{% elif modo_pareto == 'equipo' %}{% trans "Equipos" %}{% else %}{% trans "Tipos de falla" %}{% endif %} {% trans "que generan el 80% del tiempo perdido" %}</div>
                 </div>
                 <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow-x:auto;height:28px;max-width:100%;">
-                    <button type="button" id="bb-falla" onclick="setModoBarras('falla'); prepararExclusiones();"
-                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_barras == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
-                    <button type="button" id="bb-equipo" onclick="setModoBarras('equipo'); prepararExclusiones();"
-                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'equipo' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'equipo' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Equipo" %}</button>
-                    <button type="button" id="bb-resp" onclick="setModoBarras('responsable'); prepararExclusiones();"
-                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
-                    <button type="button" id="bb-tipo" onclick="setModoBarras('tipo_falla'); prepararExclusiones();"
-                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'tipo_falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'tipo_falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Tipo de falla" %}</button>
-                    <button type="button" id="bb-atendio" onclick="setModoBarras('atendio'); prepararExclusiones();"
-                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'atendio' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'atendio' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Atendió" %}</button>
+                    <button type="button" id="bp-falla" onclick="setModoPareto('falla'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_pareto == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
+                    <button type="button" id="bp-equipo" onclick="setModoPareto('equipo'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'equipo' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'equipo' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Equipo" %}</button>
+                    <button type="button" id="bp-resp" onclick="setModoPareto('responsable'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
+                    <button type="button" id="bp-tipo" onclick="setModoPareto('tipo_falla'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'tipo_falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'tipo_falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Tipo de falla" %}</button>
+                    <button type="button" id="bp-atendio" onclick="setModoPareto('atendio'); prepararExclusiones();"
+                            style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_pareto == 'atendio' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_pareto == 'atendio' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Atendió" %}</button>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:6px;">
+                <button type="button" onclick="abrirModalGrafico('pareto')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+                    {% trans "Expandir" %}
+                </button>
+                <button onclick="descargarGrafico('chartPareto','Pareto')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    {% trans "Descargar" %}
+                </button>
+            </div>
+            <div style="overflow-x:auto;"><canvas id="chartPareto" style="min-width:600px;height:280px;"></canvas></div>
+            <div id="aviso-chartPareto" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:280px;text-align:center;color:var(--text-3);font-size:12.5px;">
+                <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.5;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M8 17V10M13 17V6M18 17v-4"/>
+                </svg>
+                {% trans "Demasiadas barras para mostrar aquí." %}
+                <button type="button" onclick="abrirModalGrafico('pareto')" class="btn btn-ghost" style="font-size:12px;">
+                    {% trans "Abrir en pantalla completa" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Barras -->
+        <div class="card" style="padding:16px 18px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+                <div>
+                    <div style="font-size:13px;font-weight:700;color:var(--text);">{% trans "Tendencia de paros" %}</div>
+                    <div style="font-size:11px;color:var(--text-3);">
+                        {% if orden_barras == 'minutos' %}{% trans "Ordenado por tiempo acumulado — mayor a menor" %}{% else %}{% trans "Ordenado por cantidad de paros — mayor a menor" %}{% endif %}
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+                    <div style="display:inline-flex;background:var(--surface);border-radius:999px;padding:3px;gap:2px;">
+                        <button type="button" id="ob-minutos" onclick="setOrdenBarras('minutos'); prepararExclusiones();"
+                                style="padding:0 14px;height:22px;font-size:12px;font-weight:600;cursor:pointer;border:none;border-radius:999px;font-family:inherit;
+                                    background:{% if orden_barras == 'minutos' %}var(--white){% else %}transparent{% endif %};
+                                    color:{% if orden_barras == 'minutos' %}var(--indigo){% else %}var(--text-3){% endif %};
+                                    box-shadow:{% if orden_barras == 'minutos' %}0 1px 3px rgba(0,0,0,.08){% else %}none{% endif %};">{% trans "Minutos" %}</button>
+                        <button type="button" id="ob-cantidad" onclick="setOrdenBarras('cantidad'); prepararExclusiones();"
+                                style="padding:0 14px;height:22px;font-size:12px;font-weight:600;cursor:pointer;border:none;border-radius:999px;font-family:inherit;
+                                    background:{% if orden_barras == 'cantidad' %}var(--white){% else %}transparent{% endif %};
+                                    color:{% if orden_barras == 'cantidad' %}var(--indigo){% else %}var(--text-3){% endif %};
+                                    box-shadow:{% if orden_barras == 'cantidad' %}0 1px 3px rgba(0,0,0,.08){% else %}none{% endif %};">{% trans "Cantidad" %}</button>
+                    </div>
+                    <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow-x:auto;height:28px;max-width:100%;">
+                        <button type="button" id="bb-falla" onclick="setModoBarras('falla'); prepararExclusiones();"
+                                style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;background:{% if modo_barras == 'falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Falla" %}</button>
+                        <button type="button" id="bb-equipo" onclick="setModoBarras('equipo'); prepararExclusiones();"
+                                style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'equipo' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'equipo' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Equipo" %}</button>
+                        <button type="button" id="bb-resp" onclick="setModoBarras('responsable'); prepararExclusiones();"
+                                style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'responsable' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'responsable' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Responsable" %}</button>
+                        <button type="button" id="bb-tipo" onclick="setModoBarras('tipo_falla'); prepararExclusiones();"
+                                style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'tipo_falla' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'tipo_falla' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Tipo de falla" %}</button>
+                        <button type="button" id="bb-atendio" onclick="setModoBarras('atendio'); prepararExclusiones();"
+                                style="padding:0 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;border-left:1px solid var(--border);font-family:inherit;background:{% if modo_barras == 'atendio' %}var(--indigo){% else %}var(--white){% endif %};color:{% if modo_barras == 'atendio' %}#fff{% else %}var(--text-2){% endif %};">{% trans "Atendió" %}</button>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:6px;">
+                <button type="button" onclick="abrirModalGrafico('barras')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+                    {% trans "Expandir" %}
+                </button>
+                <button onclick="descargarGrafico('chartBarras','Tendencia')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    {% trans "Descargar" %}
+                </button>
+            </div>
+            <div style="overflow-x:auto;"><canvas id="chartBarras" style="min-width:600px;height:280px;"></canvas></div>
+            <div id="aviso-chartBarras" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:280px;text-align:center;color:var(--text-3);font-size:12.5px;">
+                <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.5;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M8 17V10M13 17V6M18 17v-4"/>
+                </svg>
+                {% trans "Demasiadas barras para mostrar aquí." %}
+                <button type="button" onclick="abrirModalGrafico('barras')" class="btn btn-ghost" style="font-size:12px;">
+                    {% trans "Abrir en pantalla completa" %}
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Tendencia diaria -->
+    <div id="card-tendencia-diaria" class="card" style="margin-top:16px; padding:16px 18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div>
+                <div style="font-size:13px; font-weight:700; color:var(--text);">{% trans "Tendencia diaria de paros" %}</div>
+                <div style="font-size:11px; color:var(--text-3);">{% trans "Minutos perdidos por día en el período seleccionado" %}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div id="wrap-anio-semanas" style="display:none;align-items:center;gap:2px;border:1px solid var(--border);border-radius:999px;padding:0 6px;height:30px;box-sizing:border-box;">
+                    <button type="button" onclick="cambiarAnioSemanas(-1)" aria-label="{% trans 'Año anterior' %}" class="anio-btn-semanas"
+                            style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;cursor:pointer;border-radius:50%;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <input type="number" name="anio_semanas" id="input-anio-semanas" form="form-principal"
+                        value="{{ anio_semanas|default:anio_actual }}" min="2015" max="{{ anio_actual }}"
+                        onchange="prepararExclusiones()"
+                        style="width:44px;text-align:center;border:none;background:none;font-size:13px;font-weight:600;color:var(--indigo);font-family:'DM Mono', monospace;-moz-appearance:textfield;">
+                    <button type="button" onclick="cambiarAnioSemanas(1)" aria-label="{% trans 'Año siguiente' %}" class="anio-btn-semanas"
+                            style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;cursor:pointer;border-radius:50%;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+
+                <div id="wrap-meses" style="display:none;align-items:center;gap:2px;border:1px solid var(--border);border-radius:999px;padding:0 6px;height:30px;box-sizing:border-box;">
+                    <button type="button" onclick="cambiarAnioMeses(-1)" aria-label="{% trans 'Año anterior' %}" class="anio-btn-semanas"
+                            style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;cursor:pointer;border-radius:50%;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <input type="number" name="anio_meses" id="input-anio-meses" form="form-principal"
+                        value="{{ anio_meses|default:anio_actual }}" min="2015" max="{{ anio_actual }}"
+                        onchange="prepararExclusiones()"
+                        style="width:44px;text-align:center;border:none;background:none;font-size:13px;font-weight:600;color:var(--indigo);font-family:'DM Mono', monospace;-moz-appearance:textfield;">
+                    <button type="button" onclick="cambiarAnioMeses(1)" aria-label="{% trans 'Año siguiente' %}" class="anio-btn-semanas"
+                            style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;cursor:pointer;border-radius:50%;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+
+                <button onclick="descargarGrafico('chartTendenciaAnalisis','Tendencia_Diaria')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    {% trans "Descargar" %}
+                </button>
+            </div>
+        </div>
+        <div style="overflow-x:auto;"><canvas id="chartTendenciaAnalisis" style="min-width:600px;height:260px;"></canvas></div>
+    </div>
+
+    <!-- Paneles de exclusión -->
+    <form method="get" id="form-exclusion" style="margin-top:16px;">
+        <input type="hidden" name="area"         value="{{ area_id }}">
+        <input type="hidden" name="periodo"      value="{{ periodo }}">
+        <input type="hidden" name="fecha_desde"  value="{{ fecha_desde }}">
+        <input type="hidden" name="fecha_hasta"  value="{{ fecha_hasta }}">
+        <input type="hidden" name="semana_num"   value="{{ semana_num }}">
+        <input type="hidden" name="turno"        value="{{ turno }}">
+        <input type="hidden" name="modo_pareto"  value="{{ modo_pareto }}">
+        <input type="hidden" name="modo_barras"  value="{{ modo_barras }}">
+        <input type="hidden" name="orden_barras" value="{{ orden_barras }}">
+        <input type="hidden" name="estatus"      value="{{ estatus_filtro }}">
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
+            <div class="card panel-exclusion" data-panel="fallas" style="padding:16px 18px;">
+                <button type="button" class="movil-only panel-exclusion-header" aria-expanded="false" data-panel="fallas" onclick="toggleAcordeonPanel(this)">
+                    <span class="pe-nombre">{% trans "Fallas" %}</span>
+                    <span class="pe-contador"></span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="panel-exclusion-body">
+                    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar fallas" %}</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca las que no quieres ver en los gráficos" %}</div>
+                    <input type="text" id="buscador-fallas" placeholder="{% trans 'Buscar falla…' %}"
+                        style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
+                    <div id="lista-fallas" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
+                        {% for f in lista_fallas %}
+                        <label class="falla-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
+                            onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                            <input type="checkbox" class="chk-falla" data-val="{{ f.falla }}"
+                                {% if f.falla not in fallas_excluidas %}checked{% endif %}
+                                onchange="onCambioExclusion()"
+                                style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
+                            <span style="flex:1;">{{ f.falla }}</span>
+                            <span style="font-size:11px;color:var(--text-3);">{{ f.minutos }} min</span>
+                        </label>
+                        {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                        <button type="button" onclick="toggleTodos('lista-fallas',true); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                        <button type="button" onclick="toggleTodos('lista-fallas',false); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card panel-exclusion" data-panel="equipos" style="padding:16px 18px;">
+                <button type="button" class="movil-only panel-exclusion-header" aria-expanded="false" data-panel="equipos" onclick="toggleAcordeonPanel(this)">
+                    <span class="pe-nombre">{% trans "Equipos" %}</span>
+                    <span class="pe-contador"></span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="panel-exclusion-body">
+                    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar equipos" %}</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
+                    <input type="text" id="buscador-equipos" placeholder="{% trans 'Buscar equipo…' %}"
+                        style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
+                    <div id="lista-equipos" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
+                        {% for e in lista_equipos %}
+                        <label class="equipo-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
+                            onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                            <input type="checkbox" class="chk-equipo" data-val="{{ e.equipo }}"
+                                {% if e.equipo not in equipos_excluidos %}checked{% endif %}
+                                onchange="onCambioExclusion()"
+                                style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
+                            <span style="flex:1;">{{ e.equipo }}</span>
+                            <span style="font-size:11px;color:var(--text-3);">{{ e.minutos }} min</span>
+                        </label>
+                        {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                        <button type="button" onclick="toggleTodos('lista-equipos',true); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                        <button type="button" onclick="toggleTodos('lista-equipos',false); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+                    </div>
+                </div>
+            </div>
+            
+
+            <div class="card panel-exclusion" data-panel="responsables" style="padding:16px 18px;">
+                <button type="button" class="movil-only panel-exclusion-header" aria-expanded="false" data-panel="responsables" onclick="toggleAcordeonPanel(this)">
+                    <span class="pe-nombre">{% trans "Responsables" %}</span>
+                    <span class="pe-contador"></span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="panel-exclusion-body">
+                    <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
+                    <input type="text" id="buscador-resp" placeholder="{% trans 'Buscar responsable…' %}"
+                        style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
+                    <div id="lista-responsables" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
+                        {% for r in lista_responsables %}
+                        <label class="resp-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
+                            onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                            <input type="checkbox" class="chk-resp" data-val="{{ r.responsable }}"
+                                {% if r.responsable not in resp_excluidas %}checked{% endif %}
+                                    onchange="onCambioExclusion()"
+                                style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
+                            <span style="flex:1;">{{ r.responsable }}</span>
+                            <span style="font-size:11px;color:var(--text-3);">{{ r.minutos }} min</span>
+                        </label>
+                        {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                        <button type="button" onclick="toggleTodos('lista-responsables',true); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                        <button type="button" onclick="toggleTodos('lista-responsables',false); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card panel-exclusion" data-panel="tipos" style="padding:16px 18px;">
+                <button type="button" class="movil-only panel-exclusion-header" aria-expanded="false" data-panel="tipos" onclick="toggleAcordeonPanel(this)">
+                    <span class="pe-nombre">{% trans "Tipo de falla" %}</span>
+                    <span class="pe-contador"></span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="panel-exclusion-body">
+                    <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
+                    <input type="text" id="buscador-tipos" placeholder="{% trans 'Buscar tipo…' %}"
+                        style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
+                    <div id="lista-tipos" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
+                        {% for t in lista_tipos %}
+                        <label class="tipo-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
+                            onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                            <input type="checkbox" class="chk-tipo" data-val="{{ t }}"
+                                {% if t not in tipos_excluidos %}checked{% endif %}
+                                    onchange="onCambioExclusion()"
+                                style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
+                            <span style="flex:1;">{{ t }}</span>
+                        </label>
+                        {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                        <button type="button" onclick="toggleTodos('lista-tipos',true); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                        <button type="button" onclick="toggleTodos('lista-tipos',false); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card panel-exclusion" data-panel="atendio" style="padding:16px 18px;">
+                <button type="button" class="movil-only panel-exclusion-header" aria-expanded="false" data-panel="atendio" onclick="toggleAcordeonPanel(this)">
+                    <span class="pe-nombre">{% trans "Quién atendió" %}</span>
+                    <span class="pe-contador"></span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="panel-exclusion-body">
+                    <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
+                    <input type="text" id="buscador-atendio" placeholder="{% trans 'Buscar…' %}"
+                        style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
+                    <div id="lista-atendio" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
+                        {% for a in lista_atendio %}
+                        <label class="atendio-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
+                            onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
+                            <input type="checkbox" class="chk-atendio" data-val="{{ a.atendio }}"
+                                {% if a.atendio not in atendio_excluidos %}checked{% endif %}
+                                onchange="onCambioExclusion()"
+                                style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
+                            <span style="flex:1;">{{ a.atendio }}</span>
+                            <span style="font-size:11px;color:var(--text-3);">{{ a.minutos }} min</span>
+                        </label>
+                        {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+                        <button type="button" onclick="toggleTodos('lista-atendio',true); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
+                        <button type="button" onclick="toggleTodos('lista-atendio',false); onCambioExclusion();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
+                    </div>
                 </div>
             </div>
         </div>
-        <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:6px;">
-            <button type="button" onclick="abrirModalGrafico('barras')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
-                {% trans "Expandir" %}
-            </button>
-            <button onclick="descargarGrafico('chartBarras','Tendencia')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                {% trans "Descargar" %}
-            </button>
-        </div>
-        <div style="overflow-x:auto;"><canvas id="chartBarras" style="min-width:600px;height:280px;"></canvas></div>
-        <div id="aviso-chartBarras" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:280px;text-align:center;color:var(--text-3);font-size:12.5px;">
-            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.5;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M8 17V10M13 17V6M18 17v-4"/>
-            </svg>
-            {% trans "Demasiadas barras para mostrar aquí." %}
-            <button type="button" onclick="abrirModalGrafico('barras')" class="btn btn-ghost" style="font-size:12px;">
-                {% trans "Abrir en pantalla completa" %}
-            </button>
-        </div>
+    </form>
+    <div class="movil-only ap-sheet-pie">
+        <button type="button" class="ap-btn-aplicar" onclick="aplicarFiltrosMovil()">{% trans "Aplicar filtros" %}</button>
     </div>
-
 </div>
 
-<!-- Tendencia diaria -->
-<div class="card" style="margin-top:16px; padding:16px 18px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+<!-- ════════════════════════════════════════════════════════════════════════
+     Vista móvil (≤767px) de Análisis de paros.
+     Oculta por defecto; se muestra solo bajo @media (max-width:767px).
+     No reemplaza ningún dato — reutiliza los mismos context vars / globals
+     JS (LABELS_B/MINUTOS_B/NPAROS_B/ORDEN_BARRAS, LABELS_T/MINUTOS_T) y
+     funciones existentes (setModoBarras, setOrdenBarras, cambiarAnioSemanas,
+     descargarGrafico, prepararExclusiones) que ya alimenta el bloque
+     "Diagrama de Pareto"/"Tendencia de paros"/"Tendencia diaria" de arriba.
+     ════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Header móvil -->
+<div class="movil-header movil-only">
+    <div class="mh-titulos">
+        <div class="mh-titulo">{% trans "Análisis de paros" %}</div>
+        <div class="mh-subtitulo">{% trans "Por falla, equipo o responsable" %}</div>
+    </div>
+    <button type="button" class="btn-mh-mas" aria-label="{% trans 'Descargar e idioma' %}" onclick="abrirSheetMas(event)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+    </button>
+</div>
+
+<!-- Barra de filtros -->
+<div class="movil-chips-bar movil-only">
+    <button type="button" class="mcb-btn-filtros" onclick="abrirSheetFiltros(event)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        {% trans "Filtros" %}
+        <span class="mcb-badge" id="ap-badge-filtros"></span>
+    </button>
+    <div id="ap-chips-activos" class="mcb-chips"></div>
+</div>
+
+<!-- KPIs -->
+<section class="movil-kpis-3col movil-only" aria-label="{% trans 'Indicadores' %}">
+    <div class="mk3-col">
+        <div class="mk3-label">{% trans "Total paros" %}</div>
+        <div class="mk3-valor">{{ total_paros }}</div>
+        <div class="mk3-nota">{% trans "en el periodo" %}</div>
+    </div>
+    <div class="mk3-col">
+        <div class="mk3-label">{% trans "Tiempo perdido" %}</div>
+        <div class="mk3-valor">{{ total_minutos }}<span class="mk3-unidad"> min</span></div>
+        <div class="mk3-nota">≈ {% widthratio total_minutos 60 1 %} {% trans "horas" %}</div>
+    </div>
+    <div class="mk3-col">
+        <div class="mk3-label">{% trans "Promedio" %}</div>
+        <div class="mk3-valor">{{ promedio_min }}<span class="mk3-unidad"> min</span></div>
+        <div class="mk3-nota">{% trans "por paro" %}</div>
+    </div>
+</section>
+
+<!-- Tarjeta "Pareto de paros" (fusiona Diagrama de Pareto + Tendencia de paros) -->
+<section class="card movil-only ap-card-pareto" aria-label="{% trans 'Pareto de paros' %}">
+    <div class="ap-pareto-head">
         <div>
-            <div style="font-size:13px; font-weight:700; color:var(--text);">{% trans "Tendencia diaria de paros" %}</div>
-            <div style="font-size:11px; color:var(--text-3);">{% trans "Minutos perdidos por día en el período seleccionado" %}</div>
+            <h2 class="ap-card-titulo">{% trans "Pareto de paros" %}</h2>
+            <div class="ap-card-subtitulo" id="ap-pareto-subtitulo"></div>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <div id="wrap-anio-semanas" style="display:none;align-items:center;gap:2px;border:1px solid var(--border);border-radius:999px;padding:0 6px;height:30px;box-sizing:border-box;">
-                <button type="button" onclick="cambiarAnioSemanas(-1)" aria-label="{% trans 'Año anterior' %}" class="anio-btn-semanas"
-                        style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;cursor:pointer;border-radius:50%;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
-                <input type="number" name="anio_semanas" id="input-anio-semanas" form="form-principal"
-                       value="{{ anio_semanas|default:anio_actual }}" min="2015" max="{{ anio_actual }}"
-                       onchange="prepararExclusiones()"
-                       style="width:44px;text-align:center;border:none;background:none;font-size:13px;font-weight:600;color:var(--indigo);font-family:'DM Mono', monospace;-moz-appearance:textfield;">
-                <button type="button" onclick="cambiarAnioSemanas(1)" aria-label="{% trans 'Año siguiente' %}" class="anio-btn-semanas"
-                        style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;cursor:pointer;border-radius:50%;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-            </div>
+        <button type="button" class="ap-icon-btn" aria-label="{% trans 'Expandir' %}" onclick="abrirSheetParetoCompleto(event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+    </div>
 
-             <div id="wrap-meses" style="display:none;align-items:center;gap:2px;border:1px solid var(--border);border-radius:999px;padding:0 6px;height:30px;box-sizing:border-box;">
-                <button type="button" onclick="cambiarAnioMeses(-1)" aria-label="{% trans 'Año anterior' %}" class="anio-btn-semanas"
-                        style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;cursor:pointer;border-radius:50%;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
-                <input type="number" name="anio_meses" id="input-anio-meses" form="form-principal"
-                       value="{{ anio_meses|default:anio_actual }}" min="2015" max="{{ anio_actual }}"
-                       onchange="prepararExclusiones()"
-                       style="width:44px;text-align:center;border:none;background:none;font-size:13px;font-weight:600;color:var(--indigo);font-family:'DM Mono', monospace;-moz-appearance:textfield;">
-                <button type="button" onclick="cambiarAnioMeses(1)" aria-label="{% trans 'Año siguiente' %}" class="anio-btn-semanas"
-                        style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;cursor:pointer;border-radius:50%;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-            </div>
+    <div role="tablist" aria-label="{% trans 'Agrupar por' %}" class="ap-tabs-agrupar">
+        <button type="button" role="tab" id="bbm-falla" aria-selected="{% if modo_barras == 'falla' %}true{% else %}false{% endif %}" onclick="setModoBarras('falla'); prepararExclusiones();">{% trans "Falla" %}</button>
+        <button type="button" role="tab" id="bbm-equipo" aria-selected="{% if modo_barras == 'equipo' %}true{% else %}false{% endif %}" onclick="setModoBarras('equipo'); prepararExclusiones();">{% trans "Equipo" %}</button>
+        <button type="button" role="tab" id="bbm-resp" aria-selected="{% if modo_barras == 'responsable' %}true{% else %}false{% endif %}" onclick="setModoBarras('responsable'); prepararExclusiones();">{% trans "Responsable" %}</button>
+        <button type="button" role="tab" id="bbm-tipo" aria-selected="{% if modo_barras == 'tipo_falla' %}true{% else %}false{% endif %}" onclick="setModoBarras('tipo_falla'); prepararExclusiones();">{% trans "Tipo de falla" %}</button>
+        <button type="button" role="tab" id="bbm-atendio" aria-selected="{% if modo_barras == 'atendio' %}true{% else %}false{% endif %}" onclick="setModoBarras('atendio'); prepararExclusiones();">{% trans "Atendió" %}</button>
+    </div>
 
-            <button onclick="descargarGrafico('chartTendenciaAnalisis','Tendencia_Diaria')" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:var(--white);color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:5px;">
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                {% trans "Descargar" %}
+    <div class="ap-pareto-medir-row">
+        <div role="group" aria-label="{% trans 'Medir por' %}" class="ap-medir-segmentado">
+            <button type="button" id="obm-minutos" aria-pressed="{% if orden_barras == 'minutos' %}true{% else %}false{% endif %}" onclick="setOrdenBarras('minutos'); prepararExclusiones();">{% trans "Minutos" %}</button>
+            <button type="button" id="obm-cantidad" aria-pressed="{% if orden_barras == 'cantidad' %}true{% else %}false{% endif %}" onclick="setOrdenBarras('cantidad'); prepararExclusiones();">{% trans "Cantidad" %}</button>
+        </div>
+        <span class="ap-pct-label">% acumulado</span>
+    </div>
+
+    <ol id="pareto-movil-lista" class="ap-pareto-lista"></ol>
+    <button type="button" id="btn-pareto-ver-todos" class="ap-ver-todos" style="display:none;" onclick="abrirSheetParetoCompleto(event)"></button>
+
+    <div class="ap-pareto-leyenda">
+        <span><span class="ap-dot" style="background:var(--indigo);"></span>{% trans "Causan el 80%" %}</span>
+        <span><span class="ap-dot" style="background:#B9C6F3;"></span>{% trans "Resto" %}</span>
+    </div>
+</section>
+
+<!-- Tarjeta "Tendencia semanal" -->
+<section class="card movil-only ap-card-tendencia" aria-label="{% trans 'Tendencia semanal' %}">
+    <div class="ap-tendencia-head">
+        <div>
+            <h2 class="ap-card-titulo">{% trans "Tendencia semanal" %}</h2>
+            <div class="ap-card-subtitulo">{% trans "Minutos perdidos por semana" %}</div>
+        </div>
+        <div class="ap-anio-selector">
+            <button type="button" aria-label="{% trans 'Año anterior' %}" onclick="cambiarAnioSemanas(-1)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span id="ap-anio-actual-movil"></span>
+            <button type="button" aria-label="{% trans 'Año siguiente' %}" onclick="cambiarAnioSemanas(1)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
         </div>
     </div>
-    <div style="overflow-x:auto;"><canvas id="chartTendenciaAnalisis" style="min-width:600px;height:260px;"></canvas></div>
+
+    <div class="ap-mini-kpis">
+        <div class="ap-mini-kpi">
+            <div class="ap-mini-label">{% trans "Peor semana" %}</div>
+            <div class="ap-mini-valor" id="ts-peor-semana">—</div>
+        </div>
+        <div class="ap-mini-kpi">
+            <div class="ap-mini-label">{% trans "Semanas con paros" %}</div>
+            <div class="ap-mini-valor" id="ts-semanas-con-paros">—</div>
+        </div>
+    </div>
+
+    <div id="ts-chart-wrap" class="ts-chart-wrap">
+        <canvas id="chartTendenciaSemanalMovil"></canvas>
+    </div>
+
+    <div class="ap-tendencia-pie">
+        <button type="button" id="btn-ver-anio-completo" onclick="toggleAnioCompletoMovil()">{% trans "Ver año completo" %}</button>
+    </div>
+</section>
+
+<!-- Sheet pantalla completa: lista Pareto sin tope de 10 -->
+<div id="sheet-pareto-completo" class="modal-backdrop movil-only" style="display:none;">
+    <div class="modal-box sheet-movil sheet-pareto-completo" role="dialog" aria-modal="true" aria-label="{% trans 'Pareto de paros' %}">
+        <h2 class="ap-card-titulo">{% trans "Pareto de paros" %}</h2>
+        <ol id="pareto-movil-lista-completa" class="ap-pareto-lista"></ol>
+    </div>
 </div>
 
-<!-- Paneles de exclusión -->
-<form method="get" id="form-exclusion" style="margin-top:16px;">
-    <input type="hidden" name="area"         value="{{ area_id }}">
-    <input type="hidden" name="periodo"      value="{{ periodo }}">
-    <input type="hidden" name="fecha_desde"  value="{{ fecha_desde }}">
-    <input type="hidden" name="fecha_hasta"  value="{{ fecha_hasta }}">
-    <input type="hidden" name="semana_num"   value="{{ semana_num }}">
-    <input type="hidden" name="turno"        value="{{ turno }}">
-    <input type="hidden" name="modo_pareto"  value="{{ modo_pareto }}">
-    <input type="hidden" name="modo_barras"  value="{{ modo_barras }}">
-    <input type="hidden" name="orden_barras" value="{{ orden_barras }}">
-    <input type="hidden" name="estatus"      value="{{ estatus_filtro }}">
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
-        <div class="card" style="padding:16px 18px;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar fallas" %}</div>
-            <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca las que no quieres ver en los gráficos" %}</div>
-            <input type="text" id="buscador-fallas" placeholder="{% trans 'Buscar falla…' %}"
-                   style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
-            <div id="lista-fallas" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
-                {% for f in lista_fallas %}
-                <label class="falla-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
-                       onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
-                    <input type="checkbox" class="chk-falla" data-val="{{ f.falla }}"
-                           {% if f.falla not in fallas_excluidas %}checked{% endif %}
-                           onchange="prepararExclusiones()"
-                           style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
-                    <span style="flex:1;">{{ f.falla }}</span>
-                    <span style="font-size:11px;color:var(--text-3);">{{ f.minutos }} min</span>
-                </label>
-                {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-                <button type="button" onclick="toggleTodos('lista-fallas',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
-                <button type="button" onclick="toggleTodos('lista-fallas',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
-            </div>
+<!-- Sheet "⋯" (descargar e idioma) -->
+<div id="sheet-mas" class="modal-backdrop movil-only" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-label="{% trans 'Descargar e idioma' %}">
+        <h2 class="sm-titulo">{% trans "Descargar e idioma" %}</h2>
+        <div class="sm-body">
+            {% include 'menu_app/_language_selector.html' %}
         </div>
-
-        <div class="card" style="padding:16px 18px;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar equipos" %}</div>
-            <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
-            <input type="text" id="buscador-equipos" placeholder="{% trans 'Buscar equipo…' %}"
-                   style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
-            <div id="lista-equipos" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
-                {% for e in lista_equipos %}
-                <label class="equipo-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
-                       onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
-                    <input type="checkbox" class="chk-equipo" data-val="{{ e.equipo }}"
-                           {% if e.equipo not in equipos_excluidos %}checked{% endif %}
-                           onchange="prepararExclusiones()"
-                           style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
-                    <span style="flex:1;">{{ e.equipo }}</span>
-                    <span style="font-size:11px;color:var(--text-3);">{{ e.minutos }} min</span>
-                </label>
-                {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-                <button type="button" onclick="toggleTodos('lista-equipos',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
-                <button type="button" onclick="toggleTodos('lista-equipos',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
-            </div>
-        </div>
-
-        <div class="card" style="padding:16px 18px;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar responsables" %}</div>
-            <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
-            <input type="text" id="buscador-resp" placeholder="{% trans 'Buscar responsable…' %}"
-                   style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
-            <div id="lista-responsables" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
-                {% for r in lista_responsables %}
-                <label class="resp-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
-                       onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
-                    <input type="checkbox" class="chk-resp" data-val="{{ r.responsable }}"
-                           {% if r.responsable not in resp_excluidas %}checked{% endif %}
-                            onchange="prepararExclusiones()"
-                           style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
-                    <span style="flex:1;">{{ r.responsable }}</span>
-                    <span style="font-size:11px;color:var(--text-3);">{{ r.minutos }} min</span>
-                </label>
-                {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-                <button type="button" onclick="toggleTodos('lista-responsables',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
-                <button type="button" onclick="toggleTodos('lista-responsables',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
-            </div>
-        </div>
-
-        <div class="card" style="padding:16px 18px;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar tipo de falla" %}</div>
-            <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
-            <input type="text" id="buscador-tipos" placeholder="{% trans 'Buscar tipo…' %}"
-                   style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
-            <div id="lista-tipos" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
-                {% for t in lista_tipos %}
-                <label class="tipo-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
-                       onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
-                    <input type="checkbox" class="chk-tipo" data-val="{{ t }}"
-                           {% if t not in tipos_excluidos %}checked{% endif %}
-                            onchange="prepararExclusiones()"
-                           style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
-                    <span style="flex:1;">{{ t }}</span>
-                </label>
-                {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-                <button type="button" onclick="toggleTodos('lista-tipos',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
-                <button type="button" onclick="toggleTodos('lista-tipos',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
-            </div>
-        </div>
-
-        <div class="card" style="padding:16px 18px;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">{% trans "Filtrar quién atendió" %}</div>
-            <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">{% trans "Desmarca los que no quieres ver en los gráficos" %}</div>
-            <input type="text" id="buscador-atendio" placeholder="{% trans 'Buscar…' %}"
-                style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:8px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;">
-            <div id="lista-atendio" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
-                {% for a in lista_atendio %}
-                <label class="atendio-item" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text);"
-                    onmouseover="this.style.background='var(--indigo-lt)'" onmouseout="this.style.background=''">
-                    <input type="checkbox" class="chk-atendio" data-val="{{ a.atendio }}"
-                        {% if a.atendio not in atendio_excluidos %}checked{% endif %}
-                        onchange="prepararExclusiones()"
-                        style="width:14px;height:14px;accent-color:var(--indigo);flex-shrink:0;">
-                    <span style="flex:1;">{{ a.atendio }}</span>
-                    <span style="font-size:11px;color:var(--text-3);">{{ a.minutos }} min</span>
-                </label>
-                {% empty %}<div style="font-size:12px;color:var(--text-3);padding:8px;">{% trans "Sin datos" %}</div>{% endfor %}
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-                <button type="button" onclick="toggleTodos('lista-atendio',true); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--indigo-lt);color:var(--indigo);font-family:inherit;">{% trans "Seleccionar todo" %}</button>
-                <button type="button" onclick="toggleTodos('lista-atendio',false); prepararExclusiones();" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:inherit;">{% trans "Ninguno" %}</button>
-            </div>
-        </div>
-
     </div>
-</form>
+</div>
 
 <!-- Modal de gráfico expandido -->
 <div id="modal-grafico" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;align-items:center;justify-content:center;padding:24px;">
@@ -489,6 +686,230 @@
     </div>
 </div>
 
+<style>
+/* ── Vista móvil (≤767px) de Análisis de paros ── */
+.movil-only { display: none; }
+
+@media (max-width: 767px) {
+    .analisis-desktop-only, #charts-grid, #card-tendencia-diaria { display: none !important; }
+    .movil-only { display: block; }
+}
+@media (min-width: 768px) {
+    .movil-only { display: none !important; }
+}
+
+/* ── #filtros-exclusiones-wrap: display:contents en escritorio (cero efecto),
+   hoja fija en móvil — ver razón en el plan: no se duplica ningún checkbox,
+   se reusa el mismo form/paneles ya existentes. ── */
+#filtros-exclusiones-wrap { display: contents; }
+
+@media (max-width: 767px) {
+    #filtros-exclusiones-wrap {
+        display: none; flex-direction: column;
+        position: fixed; inset: auto 0 0 0; z-index: 1001;
+        background: var(--white); border-radius: 16px 16px 0 0;
+        max-height: 92vh; overflow-y: auto; padding: 10px 20px calc(16px + env(safe-area-inset-bottom));
+    }
+    #filtros-exclusiones-wrap::before {
+        content: ''; display: block; width: 36px; height: 4px; border-radius: 2px;
+        background: var(--border); margin: 0 auto 14px;
+    }
+    #filtros-exclusiones-wrap.abierto {
+        display: flex;
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both;
+    }
+    #filtros-exclusiones-wrap.cerrando {
+        animation: none; transform: translateY(100%); transition: transform 160ms ease-out;
+    }
+    #filtros-backdrop.abierto { display: block; }
+    #filtros-backdrop {
+        position: fixed; inset: 0; z-index: 1000; background: rgba(30,27,75,.45);
+    }
+    @keyframes sheet-movil-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { #filtros-exclusiones-wrap.abierto { animation: none !important; } }
+
+    .ap-sheet-head { display: flex; align-items: center; margin-bottom: 8px; }
+    .ap-sheet-head h2 { flex: 1; margin: 0; font-size: 19px; font-weight: 600; color: var(--text); }
+    .ap-btn-restablecer {
+        border: none; background: transparent; color: var(--indigo-dk); font: inherit;
+        font-size: 14px; font-weight: 500; cursor: pointer; height: 36px; padding: 0 8px;
+    }
+
+    #form-principal { flex-direction: column !important; align-items: stretch !important; gap: 14px !important; }
+    .fg-area     { order: 1; width: 100% !important; }
+    .fg-subarea  { order: 2; width: 100% !important; }
+    .fg-area select, .fg-periodo select { width: 100%; min-width: 0; box-sizing: border-box; }
+    .fg-periodo  { order: 3; width: 100% !important; }
+    #wrap-semana { order: 4; width: 100% !important; }
+    #wrap-mes    { order: 5; width: 100% !important; flex-wrap: wrap !important; }
+    #wrap-desde  { order: 6; width: calc(50% - 6px); }
+    #wrap-hasta  { order: 7; width: calc(50% - 6px); }
+    .fg-turno    { order: 8; width: 100% !important; }
+    .fg-estatus  { order: 9; width: 100% !important; }
+
+    .fg-turno select, .fg-estatus select { display: none !important; }
+    .ap-segmentado {
+        display: grid; gap: 3px; padding: 3px; background: var(--surface); border-radius: 10px;
+    }
+    .ap-segmentado-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .ap-segmentado-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .ap-seg {
+        height: 32px; border: 0; border-radius: 7px; background: transparent;
+        font: inherit; font-size: 11.5px; color: var(--text-3); cursor: pointer; padding: 0 2px;
+    }
+    .ap-seg[aria-pressed="true"] { background: var(--white); font-weight: 600; color: var(--text); box-shadow: 0 1px 3px rgba(30,32,51,.12); }
+
+    /* Acordeones de exclusión */
+    .panel-exclusion { padding: 0 !important; overflow: hidden; }
+    .panel-exclusion-header {
+        width: 100%; height: 52px; display: flex; align-items: center; gap: 8px;
+        border: 0; background: transparent; padding: 0 16px; font: inherit;
+        font-size: 15px; font-weight: 500; color: var(--text); cursor: pointer;
+    }
+    .panel-exclusion-header .pe-nombre { flex: 1; text-align: left; }
+    .panel-exclusion-header .pe-contador { font-size: 13px; color: var(--text-3); }
+    .panel-exclusion-header[data-tiene-exclusiones="1"] .pe-contador { color: #A8322A; font-weight: 500; }
+    .panel-exclusion-header svg { transition: transform .15s; flex-shrink: 0; }
+    .panel-exclusion-header[aria-expanded="true"] svg { transform: rotate(180deg); }
+    .panel-exclusion-body { display: none; padding: 0 16px 16px; }
+    .panel-exclusion-header[aria-expanded="true"] + .panel-exclusion-body { display: block; }
+
+    .ap-sheet-pie {
+        position: sticky; bottom: 0; margin: 12px -20px calc(-16px - env(safe-area-inset-bottom)) -20px;
+        padding: 12px 20px calc(12px + env(safe-area-inset-bottom)); background: var(--white);
+        border-top: 1px solid var(--border);
+    }
+    .ap-btn-aplicar { width: 100%; height: 52px; border: 0; border-radius: 14px; background: var(--indigo); color: #fff; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+}
+
+/* ── Sheets genéricas ("⋯", Pareto completo) — mismo mecanismo que lista_paros.html ── */
+@media (max-width: 767px) {
+    .modal-box.sheet-movil {
+        position: fixed; inset: auto 0 0 0; width: 100%; max-width: none;
+        margin: 0; border-radius: 16px 16px 0 0; overflow-y: auto;
+        max-height: 85vh; padding: 10px 20px 20px;
+    }
+    .sheet-pareto-completo { max-height: 90vh; }
+    .sheet-movil::before {
+        content: ''; display: block; width: 36px; height: 4px; border-radius: 2px;
+        background: var(--border); margin: 0 auto 14px;
+    }
+    .modal-backdrop .modal-box.sheet-movil {
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both;
+    }
+    .modal-backdrop[data-closing] .modal-box.sheet-movil {
+        animation: none; transform: translateY(100%); transition: transform 160ms ease-out;
+    }
+    @media (prefers-reduced-motion: reduce) { .modal-box.sheet-movil { animation: none !important; } }
+
+    .sm-titulo, .ap-card-titulo { margin: 0; font-size: 19px; font-weight: 600; color: var(--text); }
+    .sm-body { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+
+    /* Header */
+    .movil-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .mh-titulos { flex: 1; min-width: 0; }
+    .mh-titulo { font-size: 17px; font-weight: 600; line-height: 1.25; color: var(--text); }
+    .mh-subtitulo { font-size: 12px; color: var(--text-3); }
+    .btn-mh-mas {
+        width: 40px; height: 40px; min-width: 40px; border-radius: 10px;
+        border: 1px solid var(--border); background: var(--white); color: var(--text);
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    /* Barra de filtros + chips */
+    .movil-chips-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
+    .movil-chips-bar::-webkit-scrollbar { display: none; }
+    .mcb-btn-filtros {
+        flex: none; height: 38px; padding: 0 14px; border-radius: 19px; border: none;
+        background: var(--indigo); color: #fff; font: inherit; font-size: 13.5px; font-weight: 500;
+        display: flex; align-items: center; gap: 6px; cursor: pointer;
+    }
+    .mcb-badge {
+        display: none; min-width: 18px; height: 18px; border-radius: 9px; background: #fff; color: var(--indigo);
+        font-size: 11px; font-weight: 600; align-items: center; justify-content: center; padding: 0 4px;
+    }
+    .mcb-badge:not(:empty) { display: flex; }
+    .mcb-chips { display: flex; gap: 8px; }
+    .mcb-chips .mcb-chip {
+        flex: none; height: 38px; padding: 0 14px; border-radius: 19px; border: 1px solid var(--indigo-dk);
+        background: var(--indigo-lt); color: var(--indigo-dk); font-size: 13px; white-space: nowrap;
+        display: flex; align-items: center;
+    }
+
+    /* KPIs de 3 columnas */
+    .movil-kpis-3col {
+        display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+        background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+        margin-bottom: 12px;
+    }
+    .mk3-col { padding: 12px 10px; border-left: 1px solid var(--border); }
+    .mk3-col:first-child { border-left: none; }
+    .mk3-label { font-size: 10.5px; color: var(--text-3); }
+    .mk3-valor { font-size: 21px; font-weight: 600; color: var(--indigo); margin-top: 2px; }
+    .mk3-unidad { font-size: 12px; font-weight: 500; }
+    .mk3-nota { font-size: 10.5px; color: var(--text-3); margin-top: 2px; }
+
+    /* Tarjeta Pareto */
+    .ap-card-pareto, .ap-card-tendencia { padding: 16px; margin-bottom: 12px; }
+    .ap-pareto-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+    .ap-pareto-head > div:first-child { flex: 1; min-width: 0; }
+    .ap-card-subtitulo { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+    .ap-icon-btn {
+        width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+        background: var(--white); color: var(--text-3); display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .ap-tabs-agrupar { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+    .ap-tabs-agrupar::-webkit-scrollbar { display: none; }
+    .ap-tabs-agrupar button {
+        flex: none; height: 32px; padding: 0 13px; border-radius: 16px; border: 1px solid var(--border);
+        background: var(--white); color: var(--text); font: inherit; font-size: 12.5px; cursor: pointer;
+    }
+    .ap-tabs-agrupar button[aria-selected="true"] { background: var(--text); border-color: var(--text); color: #fff; }
+    .ap-pareto-medir-row { display: flex; align-items: center; justify-content: space-between; margin: 12px 0 4px; }
+    .ap-medir-segmentado { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 2px; padding: 3px; background: var(--surface); border-radius: 10px; width: 170px; }
+    .ap-medir-segmentado button { height: 28px; border: 0; border-radius: 8px; background: transparent; font: inherit; font-size: 12px; font-weight: 600; color: var(--text-3); cursor: pointer; }
+    .ap-medir-segmentado button[aria-pressed="true"] { background: var(--white); color: var(--indigo); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .ap-pct-label { font-size: 11px; color: var(--text-3); }
+
+    .ap-pareto-lista { list-style: none; margin: 0; padding: 0; }
+    .ap-pareto-lista li { padding: 9px 0; display: flex; flex-direction: column; gap: 5px; }
+    .ap-pareto-lista li.ap-divisor-80 { border-bottom: 2px dashed #C9D2F5; }
+    .ap-pr-fila1 { display: flex; align-items: baseline; gap: 7px; }
+    .ap-pr-rank { font-size: 11px; color: var(--text-3); width: 14px; flex-shrink: 0; }
+    .ap-pr-nombre { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 500; line-height: 1.3; }
+    .ap-pr-valor { font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+    .ap-pr-fila2 { display: flex; align-items: center; gap: 8px; padding-left: 21px; }
+    .ap-pr-pista { flex: 1; height: 9px; background: var(--surface); border-radius: 5px; overflow: hidden; }
+    .ap-pr-relleno { height: 9px; border-radius: 5px; }
+    .ap-pr-meta { font-size: 10.5px; color: var(--text-3); white-space: nowrap; }
+
+    .ap-ver-todos {
+        width: 100%; height: 40px; margin-top: 8px; border-radius: 10px; border: 1px solid var(--border);
+        background: var(--white); font: inherit; font-size: 13px; color: var(--text); cursor: pointer;
+    }
+    .ap-pareto-leyenda { display: flex; gap: 14px; font-size: 11px; color: var(--text-3); margin-top: 10px; }
+    .ap-pareto-leyenda span { display: flex; align-items: center; gap: 6px; }
+    .ap-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* Tarjeta Tendencia semanal */
+    .ap-tendencia-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .ap-anio-selector { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 10px; }
+    .ap-anio-selector button { width: 32px; height: 36px; border: 0; background: transparent; color: var(--text-3); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .ap-anio-selector span { font-size: 14px; font-weight: 600; color: var(--indigo); font-family: 'DM Mono', monospace; }
+    .ap-mini-kpis { display: flex; gap: 8px; margin-bottom: 14px; }
+    .ap-mini-kpi { flex: 1; background: var(--surface); border-radius: 12px; padding: 9px 11px; }
+    .ap-mini-label { font-size: 10.5px; color: var(--text-3); }
+    .ap-mini-valor { font-size: 14.5px; font-weight: 600; color: var(--text); margin-top: 2px; }
+    .ts-chart-wrap { position: relative; height: 180px; }
+    .ts-chart-wrap.ver-completo { overflow-x: auto; }
+    .ap-tendencia-pie { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .ap-tendencia-pie button {
+        height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border);
+        background: var(--white); font: inherit; font-size: 12.5px; color: var(--text); cursor: pointer;
+        display: flex; align-items: center; gap: 6px;
+    }
+}
+</style>
 
 {% load static %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -515,4 +936,22 @@ crearGraficaTendencia('chartTendenciaAnalisis', LABELS_T, MINUTOS_T, { fontSize:
 document.querySelector('#dp-fecha-desde .dp-value').addEventListener('change', prepararExclusiones);
 document.querySelector('#dp-fecha-hasta .dp-value').addEventListener('change', prepararExclusiones);
 </script>
+
+<script>
+    const i18n = {
+        todos:          "{% trans 'Todos' %}",
+        de:             "{% trans 'de' %}",
+        verTodos:       "{% trans 'Ver todos' %}",
+        causanEl80:     "{% trans 'causan el 80% del tiempo perdido' %}",
+        verAnioCompleto:"{% trans 'Ver año completo' %}",
+        verRecientes:   "{% trans 'Ver recientes' %}",
+        dimFalla:       "{% trans 'Fallas' %}",
+        dimEquipo:      "{% trans 'Equipos' %}",
+        dimResponsable: "{% trans 'Responsables' %}",
+        dimTipoFalla:   "{% trans 'Tipos de falla' %}",
+        dimAtendio:     "{% trans 'Quién atendió' %}",
+    };
+</script>
+<script src="{% static 'paros_app/js/analisis_paros_movil.js' %}" defer></script>
+
 {% endblock %}

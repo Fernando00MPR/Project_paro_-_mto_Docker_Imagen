@@ -2,6 +2,13 @@
 
 const cfg = window.BITACORA_CFG || {};
 
+// Textos traducidos (BITACORA_CFG.i18n en la plantilla); el español es el respaldo.
+function _bitT(clave, respaldo, vars) {
+    let s = (cfg.i18n && cfg.i18n[clave]) || respaldo;
+    Object.keys(vars || {}).forEach(v => { s = s.split('{' + v + '}').join(vars[v]); });
+    return s;
+}
+
 // "Fecha" del modal es el selector de fecha único; su valor real vive en el
 // hidden .dp-value (name="fecha", el que de verdad envía el <form>).
 // setBitFecha() dispara 'change' para que el widget se resincronice y
@@ -17,14 +24,22 @@ function getBitFecha() {
 
 // ── Modal crear / editar ──────────────────────────────────────────────────────
 
+function _bloquearArea(sel) {
+    sel.classList.add('bit-area-bloq'); sel.tabIndex = -1; sel.setAttribute('aria-readonly', 'true');
+}
+
 function abrirModalBitacora(event) {
-    document.getElementById('modal-titulo-bitacora').textContent = 'Nuevo registro';
+    document.getElementById('modal-titulo-bitacora').textContent = _bitT('nuevoRegistro', 'Nuevo registro');
     document.getElementById('form-bitacora').action = cfg.urlNuevo;
     const areaSelect = document.getElementById('bit-area');
-    if (cfg.filtroArea && areaSelect) areaSelect.value = cfg.filtroArea;
+    if (areaSelect) {
+        areaSelect.value = cfg.filtroArea || (document.getElementById('selector-area-mto') || {}).value || areaSelect.value;
+        _bloquearArea(areaSelect);
+    }
     setBitFecha(cfg.hoy);
     document.getElementById('bit-equipo').value      = '';
     document.getElementById('bit-responsable').value = '';
+    document.getElementById('bit-responsable2').value = '';
     document.getElementById('bit-actividad').value   = '';
     document.getElementById('bit-pendiente').value   = '';
     _actualizarContadores();
@@ -32,14 +47,15 @@ function abrirModalBitacora(event) {
     abrirModalConAnimacion('modal-bitacora', event);
 }
 
-function abrirModalEditar(event, id, url, area, fecha, equipo, actividad, pendiente, responsable) {
-    document.getElementById('modal-titulo-bitacora').textContent = 'Editar registro';
+function abrirModalEditar(event, id, url, area, fecha, equipo, actividad, pendiente, responsable, responsable2) {
+    document.getElementById('modal-titulo-bitacora').textContent = _bitT('editarRegistro', 'Editar registro');
     document.getElementById('form-bitacora').action = url;
     const areaSelect = document.getElementById('bit-area');
-    if (areaSelect) areaSelect.value = area;
+    if (areaSelect) { areaSelect.value = area; _bloquearArea(areaSelect); }
     setBitFecha(fecha);
     document.getElementById('bit-equipo').value      = equipo;
     document.getElementById('bit-responsable').value = responsable;
+    document.getElementById('bit-responsable2').value = responsable2 || '';
     document.getElementById('bit-actividad').value   = actividad;
     document.getElementById('bit-pendiente').value   = pendiente;
     _actualizarContadores();
@@ -113,7 +129,7 @@ function previsualizarImagenesBitacora(input) {
     const disponibles   = max - _bitImagenesExistentes.length - _bitArchivosSeleccionados.length;
 
     if (nuevos.length > disponibles) {
-        alert(`Máximo ${max} imágenes. Solo puedes agregar ${disponibles} más.`);
+        alert(_bitT('maxImagenes', 'Máximo {max} imágenes. Solo puedes agregar {n} más.', { max, n: disponibles }));
         input.value = '';
         return;
     }
@@ -179,7 +195,7 @@ function _bitRenderExistentes() {
 }
 
 function _bitEliminarExistente(imagenId, btn) {
-    if (!confirm('¿Eliminar esta imagen?')) return;
+    if (!confirm(_bitT('eliminarImagen', '¿Eliminar esta imagen?'))) return;
     fetch(`${cfg.urlEliminarImagenBase}${imagenId}/eliminar/`, {
         method: 'POST',
         headers: { 'X-CSRFToken': document.querySelector('#form-bitacora [name=csrfmiddlewaretoken]').value },
@@ -201,11 +217,11 @@ function _bitRenderZonaTexto() {
     const texto = document.getElementById('bit-zona-texto');
     if (!texto) return;
     if (total >= max) {
-        texto.textContent = `Límite de ${max} imágenes alcanzado`;
+        texto.textContent = _bitT('limiteImagenes', 'Límite de {max} imágenes alcanzado', { max });
         zona.style.pointerEvents = 'none';
         zona.style.opacity = '0.5';
     } else {
-        texto.textContent = 'Haz clic para seleccionar imágenes';
+        texto.textContent = _bitT('clicImagenes', 'Haz clic para seleccionar imágenes');
         zona.style.pointerEvents = 'auto';
         zona.style.opacity = '1';
     }
@@ -359,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Autocomplete
     _autocomplete('bit-equipo',      'equipo-dropdown-bit',      cfg.urlBuscarEquipos);
     _autocomplete('bit-responsable', 'responsable-dropdown-bit', cfg.urlBuscarResponsables);
+    _autocomplete('bit-responsable2', 'responsable2-dropdown-bit', cfg.urlBuscarResponsables);
 
     // Cerrar modales con backdrop y ESC
     document.getElementById('modal-eliminar-bitacora').addEventListener('click', e => {

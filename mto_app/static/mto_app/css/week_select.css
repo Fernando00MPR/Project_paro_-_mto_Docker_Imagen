@@ -1,0 +1,92 @@
+/* week_select.css — WeekSelect (mto_app/_week_select.html).
+   El botón y el popover/hoja base vienen de filter_select.css (.fs-*); aquí solo
+   el contenido: año, atajos, cuadrícula de semanas y leyenda. Cargar después de
+   filter_select.css. */
+
+.ws {
+    --ws-venc:      #FFF1F0;
+    --ws-badge:     #D9534F;
+    --ws-vacia:     #F5F5FA;
+    --ws-tenue:     #9A9CAE;
+    --ws-oscuro:    #1E2033;
+    --ws-sobre:     #FFFFFF;
+    min-width: 240px;
+    max-width: 340px;
+}
+[data-theme="dark"] .ws {
+    --ws-venc:      rgba(217, 83, 79, .2);
+    --ws-badge:     #E0605C;
+    --ws-vacia:     var(--surface);
+    --ws-tenue:     var(--text-3);
+    --ws-oscuro:    var(--text);
+    --ws-sobre:     #1A1A2E;
+}
+
+/* ── Popover ── */
+.ws-capa { width: 420px; }
+.ws-capa.ws-derecha { left: auto; right: 0; }
+.ws-menu { padding: 14px; }
+.ws-pie { display: none; }
+
+.ws-anio { display: flex; align-items: center; gap: 8px; }
+.ws-flecha {
+    width: 32px; height: 32px; padding: 0; flex: none; border-radius: 8px; border: 1px solid var(--fs-borde);
+    background: var(--fs-fondo); color: var(--fs-txt); display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.ws-flecha:disabled { opacity: .35; cursor: default; }
+.ws-anio-n { flex: 1; text-align: center; font-size: 15px; font-weight: 600; color: var(--fs-txt); }
+
+.ws-atajos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.ws-chip {
+    height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--fs-borde); background: var(--fs-fondo);
+    font: inherit; font-size: 12px; color: var(--fs-txt); cursor: pointer; white-space: nowrap;
+}
+.ws-chip[aria-pressed="true"] { background: var(--ws-oscuro); border-color: var(--ws-oscuro); color: var(--ws-sobre); font-weight: 600; }
+.ws-chip:disabled { color: var(--ws-tenue); cursor: default; }
+
+/* ── Cuadrícula ── */
+.ws-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; margin-top: 12px; }
+.ws-fila { display: contents; }
+.ws-sem {
+    position: relative; height: 36px; padding: 0; box-sizing: border-box; border: 0; border-radius: 8px;
+    background: var(--ws-vacia); color: var(--ws-tenue);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 500; cursor: default;
+}
+.ws-sem.venc { background: var(--ws-venc); color: var(--fs-txt); font-weight: 700; cursor: pointer; }
+.ws-sem.venc:hover { box-shadow: inset 0 0 0 1px var(--ws-badge); }
+.ws-sem.fut { background: var(--fs-fondo); border: 1px dashed var(--fs-borde); }
+.ws-sem.sel { background: var(--fs-pri); color: #fff; font-weight: 700; }
+.ws-sem.act { border: 2px solid var(--ws-oscuro); }
+.ws-sem:focus { outline: none; }
+.ws-sem:focus-visible { outline: 2px solid var(--fs-pri); outline-offset: 1px; }
+.ws-badge {
+    position: absolute; top: 3px; right: 3px; min-width: 14px; height: 14px; padding: 0 3px; box-sizing: border-box;
+    border-radius: 7px; background: var(--ws-badge); color: #fff;
+    font-family: var(--font, inherit); font-size: 9px; font-weight: 700; line-height: 14px; text-align: center;
+}
+.ws-sem.sel .ws-badge { background: #1E2033; }
+
+.ws-leyenda { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 11px; color: var(--fs-muted); }
+.ws-leyenda span { display: flex; align-items: center; gap: 5px; }
+.ws-leyenda i { display: block; flex: none; box-sizing: border-box; }
+.ws-l-venc { width: 14px; height: 14px; border-radius: 7px; background: var(--ws-badge); }
+.ws-l-sel  { width: 12px; height: 12px; border-radius: 3px; background: var(--fs-pri); }
+.ws-l-act  { width: 12px; height: 12px; border-radius: 3px; border: 2px solid var(--ws-oscuro); }
+
+/* ── Celular: hoja inferior con 7 columnas y pie "Ver {n} órdenes" ── */
+@media (max-width: 767px) {
+    .ws { max-width: none; }
+    .ws-capa { width: auto; }
+    .ws-menu { padding-bottom: 0; }
+    .ws-cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding: 0 2px 12px; }
+    .ws-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .ws-sem { height: 44px; font-size: 13px; }
+    .ws-pie {
+        display: block; flex: none; padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+        border-top: 1px solid var(--fs-div); background: var(--fs-fondo);
+    }
+    .ws-ver {
+        width: 100%; height: 52px; border: 0; border-radius: 14px; background: #3D5BD9; color: #fff;
+        font: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+    }
+}

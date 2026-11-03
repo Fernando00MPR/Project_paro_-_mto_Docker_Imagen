@@ -260,9 +260,9 @@ def _build_permisos_mto(usuario):
         am = usuario.acceso_mto
         return {campo: getattr(am, campo, False) for campo in [
             'ver_dashboard', 'ver_backlog',
-            'ver_plan_mantenimiento', 'editar_plan_mantenimiento', 'eliminar_plan_mantenimiento',
+            'ver_plan_mantenimiento', 'editar_plan_mantenimiento', 'eliminar_plan_mantenimiento', 'validar_plan_mantenimiento', 'llenar_plan_mantenimiento',
             'ver_rutinas', 'editar_rutinas', 'eliminar_rutinas',
-            'ver_seguimiento', 'editar_seguimiento', 'eliminar_seguimiento',
+            'ver_seguimiento', 'editar_seguimiento', 'eliminar_seguimiento', 'validar_seguimiento', 'llenar_seguimiento',
             'ver_responsables', 'editar_responsables', 'eliminar_responsables',
             'ver_bitacora', 'editar_bitacora', 'eliminar_bitacora',
             'ver_inventario', 'editar_inventario', 'eliminar_inventario',
@@ -423,10 +423,9 @@ def _guardar_perfil(request, user, areas):
     acceso_mto.activo = 'acceso_mto' in request.POST
     campos_mto = [
         'ver_dashboard', 'ver_backlog',
-        'ver_plan_mantenimiento', 'editar_plan_mantenimiento', 'eliminar_plan_mantenimiento',
+        'ver_plan_mantenimiento', 'editar_plan_mantenimiento', 'eliminar_plan_mantenimiento', 'validar_plan_mantenimiento', 'llenar_plan_mantenimiento',
         'ver_rutinas', 'editar_rutinas', 'eliminar_rutinas',
-        'ver_seguimiento', 'editar_seguimiento', 'eliminar_seguimiento',
-        'ver_responsables', 'editar_responsables', 'eliminar_responsables',
+        'ver_seguimiento', 'editar_seguimiento', 'eliminar_seguimiento', 'validar_seguimiento', 'llenar_seguimiento',
         'ver_bitacora', 'editar_bitacora', 'eliminar_bitacora',
         'ver_inventario', 'editar_inventario', 'eliminar_inventario',
         'ver_seguimiento_refaccion', 'editar_seguimiento_refaccion', 'eliminar_seguimiento_refaccion',

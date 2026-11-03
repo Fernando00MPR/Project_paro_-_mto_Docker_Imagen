@@ -4,532 +4,307 @@
 {% block title %}{% trans "Seguimiento de servicios" %}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/page_size_toggle.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/row_action_button.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/filter_select.css' %}">
+<link rel="stylesheet" href="{% static 'inventario_app/css/inventario_escritorio.css' %}">
+<link rel="stylesheet" href="{% static 'inventario_app/css/seg_refacciones_escritorio.css' %}">
+<link rel="stylesheet" href="{% static 'inventario_app/css/seg_servicios_escritorio.css' %}">
+<script>
+/* Columnas ocultas (localStorage columns:segServicios): se aplican antes de pintar para que la
+   tabla no "salte" al cargar seg_servicios_escritorio.js (<html class="ssv-sin-…">). */
+(function () {
+    try {
+        var o = JSON.parse(localStorage.getItem('columns:segServicios'));
+        if (Array.isArray(o)) o.forEach(function (c) { if (/^[a-z]+$/.test(c)) document.documentElement.classList.add('ssv-sin-' + c); });
+    } catch (e) { /* sin almacenamiento: todas visibles */ }
+})();
+</script>
 {% endblock %}
 {% block content %}
+{% include 'menu_app/_no_disponible_movil.html' %}
 
-<!-- ── Encabezado ── -->
-<div class="card">
+{% comment %}
+    Seguimiento de servicios, escritorio (35D). Mismas piezas que Seguimiento de refacciones
+    (.srd-* en seg_refacciones_escritorio.css, componentes .ive-* de Inventario) y lo propio en
+    seg_servicios_escritorio.css (.ssv-*). Lo manejan seg_servicios_escritorio.js (lista y modal)
+    y catalogo_servicios.js (modal "Catálogo"). Celular muestra "no disponible".
+{% endcomment %}
+<div class="ive srd ssv" id="srd" data-url-exportar="{% url 'inventario:exportar_seguimientos_servicio' %}">
 
-    <div class="card-header">
-        <div>
-            <div class="card-title">
-                {% trans "Seguimiento de servicios" %}
-                {% if filtro_area %}
-                    {% for a in areas %}
-                        {% if a.pk|stringformat:"s" == filtro_area %}
-                            — {{ a.nombre }}
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-            </div>
-            <div class="card-subtitle">{% trans "Seguimiento de solicitudes de servicio: PR, PO y SR" %}</div>
+    {% comment %} ── Encabezado ── {% endcomment %}
+    <header class="ive-head">
+        <div class="ive-head-txt">
+            <h1 class="ive-titulo">{% trans "Seguimiento de servicios" %}</h1>
+            <p class="ive-sub">{% if area_nombre %}{{ area_nombre }} · {% endif %}{% trans "servicios contratados de PR a PO hasta recibir el servicio (SR)" %}</p>
         </div>
-
-        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <div class="ive-acciones srd-acciones">
             {% if puede_editar_seg_servicio %}
-            <button type="button" onclick="abrirModalServ(event)" class="btn btn-primary" 
-                style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
-                + {% trans "Nuevo seguimiento" %}
+            <button type="button" class="ive-btn" onclick="ssvCatalogo.abrir(event)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
+                {% trans "Catálogo" %}
             </button>
             {% endif %}
-            <a href="{% url 'inventario:exportar_seguimientos_servicio' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn btn-ghost" 
-                style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
-                ↓ {% trans "Exportar" %}
+            <a class="ive-btn" id="ssv-exportar" href="{% url 'inventario:exportar_seguimientos_servicio' %}">
+                <svg class="srd-ico-excel" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>
+                {% trans "Exportar Excel" %}
             </a>
-            {% include 'menu_app/_language_selector.html' %}
-        </div>
-    </div>
-
-    <!-- ── Filtros ── -->
-    <style>
-      .filter-bar select,
-      .filter-bar input[type="text"],
-      .filter-bar .btn {
-          height: 40px;
-          box-sizing: border-box;
-          border-radius: 8px;
-          font-size: 14px;
-      }
-      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
-         Mismo tono que el texto (--text): hex literal porque no se puede
-         meter var() dentro del data URI. */
-      .filter-bar select {
-          padding: 0 34px 0 10px;
-          appearance: none; -webkit-appearance: none;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-          background-repeat: no-repeat;
-          background-position: right 10px center;
-          background-size: 14px;
-      }
-      /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
-         select { background: var(--white) !important; }, que borra el chevron de
-         arriba por especificidad + !important. Se repite aquí con el mismo peso
-         para ganar por ir declarada después en el documento. */
-      [data-theme="dark"] .filter-bar select {
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 10px center !important;
-          background-size: 14px !important;
-      }
-      .filter-bar .btn {
-          display: inline-flex;
-          align-items: center;
-          padding: 0 16px;
-          font-weight: 500;
-          white-space: nowrap;
-          text-decoration: none;
-      }
-      .filter-bar .filter-divider {
-          width: 1px;
-          height: 40px;
-          background: var(--border);
-          margin: 0 4px;
-          align-self: flex-end;
-      }
-      /* Selector de rango de fecha del PR (form aparte, sin clase .filter-bar):
-         el widget trae 42px por defecto; se achica al mismo box-model que el
-         resto de .filter-group (padding 7px 10px, sin altura fija, radio 6px). */
-      #dp-fecha-pr-desde .dp-control, #dp-fecha-pr-hasta .dp-control {
-          height: auto;
-          padding: 7px 10px;
-          border-radius: 6px;
-          width: 150px;
-      }
-      /* Modal "Nuevo/editar seguimiento" — mismo box-model que .form-field
-         input (padding 9px 12px, sin altura fija, radio 7px). */
-      #modal-serv .dp-control {
-          height: auto;
-          padding: 9px 12px;
-          border-radius: 7px;
-      }
-    </style>
-    <form method="get" class="filter-bar"
-          style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px;
-                              padding:14px; background:var(--surface); border:1px solid var(--border);
-                              border-radius:var(--radius); align-items:flex-end;">
-        {% if filtro_area %}
-        <input type="hidden" name="area" value="{{ filtro_area }}">
-        {% endif %}
-
-        <div class="filter-group">
-            <label>{% trans "No. Item" %}</label>
-            <input type="text" name="no_item" value="{{ filtro_no_item }}" placeholder="{% trans 'Ej: 001' %}"
-                   oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
-        </div>
-
-        <div class="filter-group">
-            <label>{% trans "Nombre" %}</label>
-            <input type="text" name="nombre" value="{{ filtro_nombre }}" placeholder="{% trans 'Buscar nombre...' %}"
-                   oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
-        </div>
-
-        <div class="filter-group">
-            <label>{% trans "Tipo de servicio" %}</label>
-            <select name="tipo" onchange="this.form.submit()">
-                <option value="">{% trans "Todos" %}</option>
-                {% for t in tipos_servicio %}
-                <option value="{{ t.pk }}" {% if filtro_tipo == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.nombre }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="filter-group">
-            <label>{% trans "No. PR" %}</label>
-            <input type="text" name="pr" value="{{ filtro_pr }}" placeholder="{% trans 'No. PR' %}"
-                   oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
-        </div>
-
-        <div class="filter-group">
-            <label>{% trans "No. PO" %}</label>
-            <input type="text" name="po" value="{{ filtro_po }}" placeholder="{% trans 'No. PO' %}"
-                   oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
-        </div>
-
-        <div class="filter-group">
-            <label>{% trans "No. SR" %}</label>
-            <input type="text" name="sr" value="{{ filtro_sr }}" placeholder="{% trans 'No. SR' %}"
-                   oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);">
-        </div>
-
-        <div class="filter-group">
-            <label>{% trans "Estatus" %}</label>
-            <select name="estatus" onchange="this.form.submit()">
-                <option value="">{% trans "Todos" %}</option>
-                <option value="rojo"     {% if filtro_estatus == 'rojo' %}selected{% endif %}>🔴 {% trans "Sin orden de compra" %}</option>
-                <option value="amarillo" {% if filtro_estatus == 'amarillo' %}selected{% endif %}>🟡 {% trans "Pendiente de recibir" %}</option>
-                <option value="verde"    {% if filtro_estatus == 'verde' %}selected{% endif %}>🟢 {% trans "Recibido" %}</option>
-            </select>
-        </div>
-
-        <div class="filter-divider"></div>
-
-        <a href="{% url 'inventario:lista_seguimientos_servicio' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
-           class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
-
-    </form>
-
-    <!-- ── Indicadores ── -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:0;">
-        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
-            <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Total" %}</div>
-            <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">{{ total_seguimientos }}</div>
-            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "seguimientos registrados" %}</div>
-        </div>
-        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px; border-left:3px solid #EF4444;">
-            <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Sin orden de compra" %}</div>
-            <div style="font-size:24px; font-weight:500; line-height:1; color:#EF4444;">{{ total_rojo }}</div>
-            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "pendiente de generar PO" %}</div>
-        </div>
-        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px; border-left:3px solid #F59E0B;">
-            <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Pendiente de recibir" %}</div>
-            <div style="font-size:24px; font-weight:500; line-height:1; color:#F59E0B;">{{ total_amarillo }}</div>
-            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "con orden de compra" %}</div>
-        </div>
-        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px; border-left:3px solid #10B981;">
-            <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">{% trans "Recibido" %}</div>
-            <div style="font-size:24px; font-weight:500; line-height:1; color:#10B981;">{{ total_verde }}</div>
-            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{% trans "completado" %}</div>
-        </div>
-    </div>
-
-</div>
-
-<div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:10px; flex-wrap:wrap;">
-    
-        <!-- ── Selector de fecha ── -->
-        <form method="get" style="display:flex; gap:8px; justify-content:flex-end; margin-bottom:8px;">
-            {% if filtro_area %}<input type="hidden" name="area" value="{{ filtro_area }}">{% endif %}
-            <div class="filter-group">
-                {% include 'menu_app/_date_picker.html' with name='fecha_pr_desde' initial=fecha_pr_desde dp_id='dp-fecha-pr-desde' %}
-            </div>
-            <div class="filter-group">
-                {% include 'menu_app/_date_picker.html' with name='fecha_pr_hasta' initial=fecha_pr_hasta dp_id='dp-fecha-pr-hasta' %}
-            </div>
-        </form>
-
-        <!-- ── Selector de columnas ── -->
-        <div style="position:relative;" id="serv-col-picker-wrap">
-            <button onclick="toggleServColPicker()" class="btn btn-ghost btn-sm"
-                    style="display:flex; align-items:center; gap:6px;">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/>
-                </svg>
-                {% trans "Columnas" %}
-            </button>
-            <div id="serv-col-picker" style="display:none; position:absolute; right:0; top:36px; z-index:100;
-                                        background:var(--white); border:1px solid var(--border);
-                                        border-radius:10px; padding:12px 16px; min-width:200px;
-                                        box-shadow:var(--shadow-md);">
-                <div style="font-size:11px; font-weight:600; color:var(--text-3);
-                            text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">
-                    {% trans "Mostrar columnas" %}
-                </div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <label class="serv-col-toggle" data-col="serv-col-item">       <input type="checkbox" checked onchange="toggleServCol('serv-col-item', this.checked)"> {% trans "No. Item" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-nombre">     <input type="checkbox" checked onchange="toggleServCol('serv-col-nombre', this.checked)"> {% trans "Nombre" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-cantidad">   <input type="checkbox" checked onchange="toggleServCol('serv-col-cantidad', this.checked)"> {% trans "Cantidad" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-motivo">     <input type="checkbox" checked onchange="toggleServCol('serv-col-motivo', this.checked)"> {% trans "Motivo" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-tipo">       <input type="checkbox" onchange="toggleServCol('serv-col-tipo', this.checked)"> {% trans "Tipo de servicio" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-pr">         <input type="checkbox" checked onchange="toggleServCol('serv-col-pr', this.checked)"> {% trans "No. PR" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-fecha-pr">   <input type="checkbox" checked onchange="toggleServCol('serv-col-fecha-pr', this.checked)"> {% trans "Fecha PR" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-po">         <input type="checkbox" checked onchange="toggleServCol('serv-col-po', this.checked)"> {% trans "No. PO" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-fecha-po">   <input type="checkbox" onchange="toggleServCol('serv-col-fecha-po', this.checked)"> {% trans "Fecha PO" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-sr">         <input type="checkbox" checked onchange="toggleServCol('serv-col-sr', this.checked)"> {% trans "No. SR" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-fecha-sr">   <input type="checkbox" onchange="toggleServCol('serv-col-fecha-sr', this.checked)"> {% trans "Fecha SR" %}</label>
-                    <label class="serv-col-toggle" data-col="serv-col-comentarios"><input type="checkbox" checked onchange="toggleServCol('serv-col-comentarios', this.checked)"> {% trans "Comentarios" %}</label>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ── Tabla ── -->
-    <div class="table-wrap" style="overflow-x:auto;">
-        <table style="table-layout:auto; width:max-content; min-width:100%;">
-            <thead>
-                <tr>
-                    <th class="serv-col-item"        style="text-align:center; width:90px;">{% trans "No. Item" %}</th>
-                    <th class="serv-col-nombre"      style="text-align:left;   width:180px;">{% trans "Nombre" %}</th>
-                    <th class="serv-col-cantidad"    style="text-align:center; width:80px;">{% trans "Cantidad" %}</th>
-                    <th class="serv-col-motivo"      style="text-align:left;   width:200px;">{% trans "Motivo" %}</th>
-                    <th class="serv-col-tipo"        style="text-align:center; width:140px; display:none;">{% trans "Tipo de servicio" %}</th>
-                    <th class="serv-col-pr"          style="text-align:center; width:110px;">{% trans "No. PR" %}</th>
-                    <th class="serv-col-fecha-pr"    style="text-align:center; width:100px;">{% trans "Fecha PR" %}</th>
-                    <th class="serv-col-po"          style="text-align:center; width:110px;">{% trans "No. PO" %}</th>
-                    <th class="serv-col-fecha-po"    style="text-align:center; width:100px; display:none;">{% trans "Fecha PO" %}</th>
-                    <th class="serv-col-sr"          style="text-align:center; width:110px;">{% trans "No. SR" %}</th>
-                    <th class="serv-col-fecha-sr"    style="text-align:center; width:100px; display:none;">{% trans "Fecha SR" %}</th>
-                    <th class="serv-col-comentarios" style="text-align:left;   width:180px;">{% trans "Comentarios" %}</th>
-                    <th                              style="text-align:center; width:140px;">{% trans "Acciones" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for s in seguimientos %}
-                <tr data-id="{{ s.id }}" style="background:{% if s.estatus == 'verde' %}rgba(16,185,129,0.06){% elif s.estatus == 'amarillo' %}rgba(245,158,11,0.06){% else %}rgba(239,68,68,0.06){% endif %};
-                        border-left:3px solid {% if s.estatus == 'verde' %}#10B981{% elif s.estatus == 'amarillo' %}#F59E0B{% else %}#EF4444{% endif %};">
-                    <td class="serv-col-item"        style="text-align:center; white-space:nowrap;"><strong>{{ s.no_item }}</strong></td>
-                    <td class="serv-col-nombre"      style="text-align:left;   white-space:nowrap;">{{ s.nombre }}</td>
-                    <td class="serv-col-cantidad"    style="text-align:center; font-family:'DM Mono',monospace;">{{ s.cantidad }}</td>
-                    <td class="serv-col-motivo"      style="font-size:12px;">{{ s.motivo_servicio }}</td>
-                    <td class="serv-col-tipo"        style="text-align:center; white-space:nowrap; display:none;">
-                        <span class="badge badge-t1">{{ s.tipo_servicio.nombre }}</span>
-                    </td>
-                    <td class="serv-col-pr"          style="text-align:center; white-space:nowrap;">{{ s.numero_pr }}</td>
-                    <td class="serv-col-fecha-pr"    style="text-align:center; color:var(--text-2);">{{ s.fecha_pr|date:"d/m/Y"|default:"--" }}</td>
-                    <td class="serv-col-po"          style="text-align:center; white-space:nowrap;">{{ s.numero_po|default:"--" }}</td>
-                    <td class="serv-col-fecha-po"    style="text-align:center; color:var(--text-2); display:none;">{{ s.fecha_po|date:"d/m/Y"|default:"--" }}</td>
-                    <td class="serv-col-sr"          style="text-align:center; white-space:nowrap;">{{ s.numero_sr|default:"--" }}</td>
-                    <td class="serv-col-fecha-sr"    style="text-align:center; color:var(--text-2); display:none;">{{ s.fecha_sr|date:"d/m/Y"|default:"--" }}</td>
-                    <td class="serv-col-comentarios" style="color:var(--text-2); font-size:12px;">{{ s.comentarios|default:"--" }}</td>
-                    <td style="text-align:center;">
-                        <div style="display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:nowrap;">
-                            {% if puede_editar_seg_servicio %}
-                            <button type="button"
-                                    onclick="editarServ(event, {{ s.id }}, '{{ s.no_item|escapejs }}', '{{ s.nombre|escapejs }}', {{ s.cantidad }}, '{{ s.motivo_servicio|escapejs }}', {{ s.tipo_servicio_id }}, '{{ s.numero_pr|escapejs }}', '{{ s.fecha_pr|date:'Y-m-d'|default:'' }}', '{{ s.numero_po|escapejs }}', '{{ s.fecha_po|date:'Y-m-d'|default:'' }}', '{{ s.numero_sr|escapejs }}', '{{ s.fecha_sr|date:'Y-m-d'|default:'' }}', '{{ s.comentarios|escapejs }}')"
-                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                        font-size:12px; border-radius:6px; border:1px solid var(--border);
-                                        background:var(--surface); color:var(--text); cursor:pointer;
-                                        white-space:nowrap;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                {% trans "Editar" %}
-                            </button>
-                            {% endif %}
-                            {% if puede_eliminar_seg_servicio %}
-                            <button type="button"
-                                    onclick="confirmarEliminarServ(event, '{% url 'inventario:eliminar_seguimiento_servicio' s.id %}')"
-                                    style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                        font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
-                                        background:#FFF5F5; color:#DC2626; cursor:pointer;
-                                        white-space:nowrap;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                                {% trans "Eliminar" %}
-                            </button>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="13" style="text-align:center; color:var(--text-3); padding:24px;">
-                        {% trans "No hay seguimientos registrados." %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ── Paginación ── -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; margin-top:4px;">
-        <div class="pagination" style="margin:0;">
-            {% if seguimientos.has_previous %}
-                <a href="?area={{ filtro_area }}&per_page={{ per_page }}&page={{ seguimientos.previous_page_number }}">‹</a>
-            {% else %}
-                <span class="disabled">‹</span>
-            {% endif %}
-            {% for num in seguimientos.paginator.page_range %}
-                {% if seguimientos.number == num %}
-                    <span class="current">{{ num }}</span>
-                {% elif num > seguimientos.number|add:'-3' and num < seguimientos.number|add:'3' %}
-                    <a href="?area={{ filtro_area }}&per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
-                {% endif %}
-            {% endfor %}
-            {% if seguimientos.has_next %}
-                <a href="?area={{ filtro_area }}&per_page={{ per_page }}&page={{ seguimientos.next_page_number }}">›</a>
-            {% else %}
-                <span class="disabled">›</span>
-            {% endif %}
-        </div>
-    </div>
-
-</div>
-
-<!-- ── Modal confirmar eliminar ── -->
-<div id="modal-eliminar-serv" class="modal-backdrop"
-     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
-            z-index:2000; align-items:center; justify-content:center;">
-    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left;
-                min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar seguimiento" %}</div>
-        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">{% trans "Esta acción no se puede deshacer." %}</div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button onclick="cerrarModalEliminarServ()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-            <form id="form-eliminar-serv" method="post" style="margin:0;">
-                {% csrf_token %}
-                <input type="hidden" name="volver" id="elim-serv-volver" value="">
-                <button type="submit" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ── Modal nuevo/editar seguimiento — fondo blanco fijo como en los catálogos ── -->
-<style>
-    #modal-serv .mf-box { background: #fff; }
-    #modal-serv .mf-doc-title { color: #1d1d24; }
-    #modal-serv .form-field label { color: #33333c; }
-    #modal-serv .form-field input,
-    #modal-serv .form-field select,
-    #modal-serv .form-field textarea {
-        background: #fff; color: #1d1d24; border-color: #d8d8e0;
-    }
-    #modal-serv .form-field select {
-        appearance: none; -webkit-appearance: none;
-        padding-right: 34px;
-        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231d1d24' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        background-size: 14px;
-    }
-    #modal-serv .form-field input::placeholder,
-    #modal-serv .form-field textarea::placeholder { color: #9b9ba6; }
-    #modal-serv .form-field input:focus,
-    #modal-serv .form-field select:focus,
-    #modal-serv .form-field textarea:focus {
-        border-color: var(--indigo);
-        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
-    }
-    #modal-serv .btn-ghost { color: #33333c; border-color: #d8d8e0; }
-    #modal-serv .btn-ghost:hover { background: #f2f2f5; color: #1d1d24; }
-    #modal-serv .dp-control { background: #fff; border-color: #d8d8e0; }
-    #modal-serv .dp-control:hover { border-color: #9b9ba6; }
-    #modal-serv .dp-text, #modal-serv .dp-text--vacio, #modal-serv .dp-icon { color: #1d1d24; }
-    /* Animación (ver keyframes globales en base_menu.html): este modal no usa
-       .modal-backdrop/.modal-box, así que se declara aparte. */
-    #modal-serv { animation: modal-overlay-in 220ms both; }
-    #modal-serv .mf-box {
-        transform-origin: 50% 50%;
-        animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
-    }
-    #modal-serv[data-closing],
-    #modal-serv[data-closing] .mf-box {
-        animation: none; opacity: 0;
-        transition: opacity 120ms ease-out, transform 120ms ease-out;
-    }
-    #modal-serv[data-closing] .mf-box { transform: scale(.97); }
-</style>
-<div id="modal-serv"
-     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
-            z-index:3000; align-items:center; justify-content:center;">
-    <div class="mf-box" style="border-radius:12px; padding:24px 28px;
-                min-width:360px; max-width:560px; width:90%; max-height:90vh; overflow-y:auto;
-                box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <div class="mf-doc-title" style="font-size:14px; font-weight:600;" id="modal-serv-titulo">
+            {% if puede_editar_seg_servicio %}
+            <button type="button" class="ive-btn ive-btn-pri" onclick="srdModal.nuevo(event)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                 {% trans "Nuevo seguimiento" %}
+            </button>
+            {% endif %}
+            <div class="ive-idioma">{% include 'menu_app/_language_selector.html' %}</div>
+        </div>
+    </header>
+
+    {% comment %} ── Tarjetas de estatus (también filtran) ── {% endcomment %}
+    <div class="srd-tabs" role="tablist" aria-label="{% trans 'Estatus' %}">
+        <button type="button" role="tab" class="srd-tab total" data-estatus="" aria-selected="{% if not filtro_estatus %}true{% else %}false{% endif %}">
+            <span class="srd-tab-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5zM9 8h6M9 12h6M9 16h3"/></svg></span>
+            <span class="srd-tab-txt"><span class="srd-tab-l">{% trans "Total" %}</span><span class="srd-tab-v"><b>{{ total_seguimientos }}</b> {% trans "seguimientos" %}</span></span>
+        </button>
+        <button type="button" role="tab" class="srd-tab sin" data-estatus="rojo" aria-selected="{% if filtro_estatus == 'rojo' %}true{% else %}false{% endif %}">
+            <span class="srd-tab-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5m0 3h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>
+            <span class="srd-tab-txt"><span class="srd-tab-l">{% trans "Sin orden de compra" %}</span><span class="srd-tab-v"><b>{{ total_rojo }}</b> {% trans "falta generar PO" %}</span></span>
+        </button>
+        <button type="button" role="tab" class="srd-tab pen" data-estatus="amarillo" aria-selected="{% if filtro_estatus == 'amarillo' %}true{% else %}false{% endif %}">
+            <span class="srd-tab-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/></svg></span>
+            <span class="srd-tab-txt"><span class="srd-tab-l">{% trans "Pendiente de recibir" %}</span><span class="srd-tab-v"><b>{{ total_amarillo }}</b> {% trans "con PO, servicio por recibir" %}</span></span>
+        </button>
+        <button type="button" role="tab" class="srd-tab rec" data-estatus="verde" aria-selected="{% if filtro_estatus == 'verde' %}true{% else %}false{% endif %}">
+            <span class="srd-tab-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></span>
+            <span class="srd-tab-txt"><span class="srd-tab-l">{% trans "Recibido" %}</span><span class="srd-tab-v"><b>{{ total_verde }}</b> {% trans "servicio recibido" %}</span></span>
+        </button>
+    </div>
+
+    <section class="ive-card">
+        {% comment %} ── Buscador, tipo, fecha de registro y columnas ── {% endcomment %}
+        <div class="ive-filtros">
+            <label class="ive-buscar srd-buscar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" id="srd-q" value="{{ filtro_q }}" placeholder="{% trans 'Buscar No. item, servicio, motivo, No. PR, PO o SR…' %}" aria-label="{% trans 'Buscar seguimientos' %}">
+            </label>
+            {% include "mto_app/_filter_select.html" with fs_id="ssv-tipo" name="tipo" label=_("Tipo de servicio") icono="llave" valor=filtro_tipo valor_label=tipo_label todas_label=_("Todos") opciones=tipos_filtro %}
+            <div class="srd-fecha" id="srd-fecha">
+                <button type="button" class="srd-fecha-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="srd-fecha-pop">
+                    <span class="srd-fecha-ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"/></svg></span>
+                    <span class="srd-fecha-txt"><span class="srd-fecha-l">{% trans "Fecha de registro" %}</span><span class="srd-fecha-v">{{ creado_label }}</span></span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="srd-pop" id="srd-fecha-pop" role="listbox" aria-label="{% trans 'Fecha de registro' %}" hidden>
+                    <button type="button" class="srd-op" role="option" data-creado="mes" aria-selected="{% if filtro_creado == 'mes' %}true{% else %}false{% endif %}">{% trans "Este mes" %}</button>
+                    <button type="button" class="srd-op" role="option" data-creado="90" aria-selected="{% if filtro_creado == '90' %}true{% else %}false{% endif %}">{% trans "Últimos 90 días" %}</button>
+                    <button type="button" class="srd-op" role="option" data-creado="anio" aria-selected="{% if filtro_creado == 'anio' %}true{% else %}false{% endif %}">{% trans "Este año" %}</button>
+                    <button type="button" class="srd-op" role="option" data-creado="rango" aria-selected="{% if not filtro_creado %}true{% else %}false{% endif %}">{% trans "Rango personalizado" %}</button>
+                    <div class="srd-rango" id="srd-rango"{% if filtro_creado %} hidden{% endif %}>
+                        <div class="srd-rango-campo"><span>{% trans "Desde" %}</span>{% include 'menu_app/_date_picker.html' with name='srd_desde' initial=filtro_desde dp_id='dp-srd-desde' %}</div>
+                        <div class="srd-rango-campo"><span>{% trans "Hasta" %}</span>{% include 'menu_app/_date_picker.html' with name='srd_hasta' initial=filtro_hasta dp_id='dp-srd-hasta' %}</div>
+                        <button type="button" class="ive-btn ive-btn-pri" id="srd-rango-aplicar">{% trans "Aplicar" %}</button>
+                    </div>
+                </div>
             </div>
-            <button type="button" onclick="cerrarModalServ()"
-                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
-                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
-                    style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s; flex-shrink:0;">✕</button>
+            <span class="srd-conteo">{% blocktrans count n=seguimientos.paginator.count %}{{ n }} servicio{% plural %}{{ n }} servicios{% endblocktrans %}</span>
+            <button type="button" class="ive-btn ive-cols-btn ssv-cols-btn" id="ive-cols-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="ive-cols">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M10 4v16M15 4v16"/></svg>
+                {% trans "Columnas" %} <span class="ive-cols-n" id="ive-cols-n"></span>
+            </button>
+            <div class="ive-cols" id="ive-cols" role="dialog" aria-label="{% trans 'Mostrar columnas' %}" hidden>
+                <div class="ive-cols-head"><span>{% trans "Mostrar columnas" %}</span><span id="ive-cols-n2"></span></div>
+                <div class="ive-cols-cuerpo">
+                    <button type="button" role="menuitemcheckbox" class="ive-col-op" data-col="servicio" aria-disabled="true">{% trans "Servicio" %}</button>
+                    <button type="button" role="menuitemcheckbox" class="ive-col-op" data-col="cantidad">{% trans "Cantidad" %}</button>
+                    <button type="button" role="menuitemcheckbox" class="ive-col-op" data-col="motivo">{% trans "Motivo" %}</button>
+                    <button type="button" role="menuitemcheckbox" class="ive-col-op" data-col="avance">{% trans "Avance" %}</button>
+                    <button type="button" role="menuitemcheckbox" class="ive-col-op" data-col="estatus">{% trans "Estatus" %}</button>
+                    <button type="button" role="menuitemcheckbox" class="ive-col-op" data-col="comentarios">{% trans "Comentarios" %}</button>
+                    <button type="button" role="menuitemcheckbox" class="ive-col-op" data-col="acciones" aria-disabled="true">{% trans "Acciones" %}</button>
+                </div>
+                <div class="ive-cols-pie">
+                    <button type="button" class="ive-link" id="ive-cols-reset">{% trans "Restablecer" %}</button>
+                    <button type="button" class="ive-btn-pri ive-btn-chico" id="ive-cols-listo">{% trans "Listo" %}</button>
+                </div>
+            </div>
         </div>
 
-        <form method="post" action="{% url 'inventario:nuevo_seguimiento_servicio' %}" id="form-serv">
+        {% comment %} ── Tabla ── {% endcomment %}
+        <div class="srd-tabla-scroll">
+            <table class="srd-tabla ssv-tabla" id="srd-tabla">
+                <thead>
+                    <tr>
+                        <th class="c-ref">{% trans "Servicio" %}</th>
+                        <th class="c-cant ssc-cantidad">{% trans "Cantidad" %}</th>
+                        <th class="c-mot ssc-motivo">{% trans "Motivo" %}</th>
+                        <th class="c-avance ssc-avance">{% trans "Avance" %} · PR → PO → SR</th>
+                        <th class="c-est ssc-estatus">{% trans "Estatus" %}</th>
+                        <th class="c-com ssc-comentarios">{% trans "Comentarios" %}</th>
+                        <th class="c-acc">{% trans "Acciones" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in seguimientos %}
+                    <tr data-pk="{{ s.pk }}" data-pr="{{ s.numero_pr }}" class="srd-fila {{ s.estatus }}">
+                        <td class="c-ref">
+                            <span class="srd-nombre">{{ s.nombre }}</span>
+                            <span class="ssv-meta"><span class="srd-cod srd-item">{{ s.no_item }}</span>{% if s.tipo_servicio_id %}<span class="ssv-tipo as-c{{ s.color_tipo }}">{{ s.tipo_servicio.nombre }}</span>{% endif %}</span>
+                        </td>
+                        <td class="c-cant ssc-cantidad"><b>{{ s.cantidad }}</b></td>
+                        <td class="c-mot ssc-motivo{% if not s.motivo_servicio %} vacio{% endif %}">{{ s.motivo_servicio|default:"—" }}</td>
+                        <td class="c-avance ssc-avance">
+                            <div class="srd-pasos">
+                                {% for p in s.pasos %}
+                                <div class="srd-paso {{ p.estado }}">
+                                    <span class="srd-paso-k"><i aria-hidden="true">{% if p.estado == 'hecho' %}<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>{% endif %}</i>{{ p.k }}</span>
+                                    {% if p.estado == 'hecho' %}
+                                    <span class="srd-cod srd-paso-n" title="{{ p.num }}">{{ p.num }}</span>
+                                    <span class="srd-paso-f">{{ p.fecha|date:"d/m/Y" }}</span>
+                                    {% elif p.estado == 'sig' %}
+                                    <span class="srd-paso-n">{% trans "Pendiente" %}</span>
+                                    {% else %}
+                                    <span class="srd-paso-n">—</span>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="c-est ssc-estatus">
+                            <span class="srd-estado {{ s.estatus }}"><i aria-hidden="true"></i>{% if s.estatus == 'rojo' %}{% trans "Sin orden de compra" %}{% elif s.estatus == 'amarillo' %}{% trans "Pendiente de recibir" %}{% else %}{% trans "Recibido" %}{% endif %}</span>
+                            <span class="srd-edad{% if s.estatus == 'rojo' and not s.sin_fecha_pr %} alerta{% endif %}">
+                                {% if s.estatus == 'verde' %}{% trans "Servicio recibido" %}
+                                {% elif s.estatus == 'amarillo' %}{% blocktrans count n=s.dias_po %}hace {{ n }} día con PO{% plural %}hace {{ n }} días con PO{% endblocktrans %}
+                                {% elif s.sin_fecha_pr %}{% trans "PR sin fecha" %}
+                                {% else %}{% blocktrans count n=s.dias %}hace {{ n }} día desde la PR{% plural %}hace {{ n }} días desde la PR{% endblocktrans %}{% endif %}
+                            </span>
+                        </td>
+                        <td class="c-com ssc-comentarios{% if not s.comentarios %} vacio{% endif %}">{{ s.comentarios|default:"—" }}</td>
+                        <td class="c-acc">
+                            <div class="row-acts">
+                                {% if puede_editar_seg_servicio %}
+                                {% blocktrans with pr=s.numero_pr asvar lbl_ed %}Editar seguimiento {{ pr }}{% endblocktrans %}
+                                {% include 'menu_app/_row_action_button.html' with variant='edit' title=_("Editar") label=lbl_ed action='srdEditar' target_id=s.pk %}
+                                {% endif %}
+                                {% if puede_eliminar_seg_servicio %}
+                                {% blocktrans with pr=s.numero_pr asvar lbl_el %}Eliminar seguimiento {{ pr }}{% endblocktrans %}
+                                {% include 'menu_app/_row_action_button.html' with variant='del' title=_("Eliminar") label=lbl_el action='srdEliminar' target_id=s.pk %}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="ive-vacio">
+                            {% trans "No hay seguimientos con estos filtros." %}
+                            {% if puede_editar_seg_servicio %}<button type="button" class="ive-link" onclick="srdModal.nuevo(event)">{% trans "Agregar un seguimiento" %}</button>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% comment %} ── Pie ── {% endcomment %}
+        <div class="ive-pie">
+            <span class="ive-pie-txt">{% blocktrans with a=seguimientos.start_index b=seguimientos.end_index n=seguimientos.paginator.count %}Mostrando <b>{{ a }}–{{ b }}</b> de {{ n }}{% endblocktrans %}</span>
+            {% include 'menu_app/_page_size_toggle.html' with ps_id='srd-per-page' label=_("Filas por página") options=perpage_opts value=per_page storage_key='pageSize:segServicios' %}
+            <nav class="ive-pag" aria-label="{% trans 'Paginación' %}">
+                {% if seguimientos.has_previous %}<a class="ive-pag-b" href="?{{ qs_pag }}{% if qs_pag %}&amp;{% endif %}page={{ seguimientos.previous_page_number }}" aria-label="{% trans 'Página anterior' %}">‹</a>{% else %}<span class="ive-pag-b off" aria-hidden="true">‹</span>{% endif %}
+                {% for p in paginas %}
+                    {% if p == seguimientos.number %}<span class="ive-pag-b act" aria-current="page">{{ p }}</span>
+                    {% elif p == paginas_elipsis %}<span class="ive-pag-e">…</span>
+                    {% else %}<a class="ive-pag-b" href="?{{ qs_pag }}{% if qs_pag %}&amp;{% endif %}page={{ p }}">{{ p }}</a>{% endif %}
+                {% endfor %}
+                {% if seguimientos.has_next %}<a class="ive-pag-b" href="?{{ qs_pag }}{% if qs_pag %}&amp;{% endif %}page={{ seguimientos.next_page_number }}" aria-label="{% trans 'Página siguiente' %}">›</a>{% else %}<span class="ive-pag-b off" aria-hidden="true">›</span>{% endif %}
+            </nav>
+        </div>
+    </section>
+
+    {% if puede_eliminar_seg_servicio %}
+    {% comment %} Confirmación de eliminar desde la fila (POST normal; la vista vuelve con su mensaje) {% endcomment %}
+    <div class="ive-fondo" id="srd-elim" data-url="{% url 'inventario:eliminar_seguimiento_servicio' 0 %}" hidden>
+        <form class="ive-dialogo" role="alertdialog" aria-modal="true" aria-labelledby="srd-elim-t" aria-describedby="srd-elim-d" method="post" id="srd-elim-form">
             {% csrf_token %}
-            <input type="hidden" name="volver" id="serv-volver" value="">
-            <input type="hidden" name="area" id="serv-area-id" value="{{ filtro_area }}">
-
-            <div class="form-grid">
-
-                <div class="form-field modal-row">
-                    <label>{% trans "No. Item" %} *</label>
-                    <input type="text" name="no_item" id="serv-no-item" required>
-                </div>
-
-                <div class="form-field full modal-row">
-                    <label>{% trans "Nombre" %} *</label>
-                    <input type="text" name="nombre" id="serv-nombre" required>
-                </div>
-
-                <div class="form-field full modal-row" style="display:grid; grid-template-columns:110px 1fr; gap:18px 24px;">
-                    <div class="form-field" style="margin:0;">
-                        <label>{% trans "Cantidad" %} *</label>
-                        <input type="number" name="cantidad" id="serv-cantidad" min="1" required>
-                    </div>
-
-                    <div class="form-field" style="margin:0;">
-                        <label>{% trans "Tipo de servicio" %} *</label>
-                        <select name="tipo_servicio" id="serv-tipo" required>
-                            <option value="">{% trans "Selecciona..." %}</option>
-                            {% for t in tipos_servicio %}
-                            <option value="{{ t.pk }}">{{ t.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-field full modal-row">
-                    <label>{% trans "Motivo del servicio" %} * <span style="color:var(--text-3); font-weight:400;">({% trans "máx. 200 caracteres" %})</span></label>
-                    <textarea name="motivo_servicio" id="serv-motivo" maxlength="200" rows="3" required></textarea>
-                </div>
-
-                <div class="form-field modal-row">
-                    <label>{% trans "No. PR" %} *</label>
-                    <input type="text" name="numero_pr" id="serv-numero-pr" required>
-                </div>
-
-                <div class="form-field modal-row">
-                    <label>{% trans "Fecha PR" %}</label>
-                    {% include 'menu_app/_date_picker.html' with name='fecha_pr' dp_id='dp-serv-fecha-pr' %}
-                </div>
-
-                <div class="form-field modal-row">
-                    <label>{% trans "No. PO" %}</label>
-                    <input type="text" name="numero_po" id="serv-numero-po">
-                </div>
-
-                <div class="form-field modal-row">
-                    <label>{% trans "Fecha PO" %}</label>
-                    {% include 'menu_app/_date_picker.html' with name='fecha_po' dp_id='dp-serv-fecha-po' %}
-                </div>
-
-                <div class="form-field modal-row">
-                    <label>{% trans "No. SR" %}</label>
-                    <input type="text" name="numero_sr" id="serv-numero-sr">
-                </div>
-
-                <div class="form-field modal-row">
-                    <label>{% trans "Fecha SR" %}</label>
-                    {% include 'menu_app/_date_picker.html' with name='fecha_sr' dp_id='dp-serv-fecha-sr' %}
-                </div>
-
-                <div class="form-field full modal-row">
-                    <label>{% trans "Comentarios" %}</label>
-                    <textarea name="comentarios" id="serv-comentarios" rows="2"></textarea>
-                </div>
-
-            </div>
-
-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:20px;">
-                <button type="button" onclick="cerrarModalServ()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-                <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
+            <input type="hidden" name="volver" id="srd-elim-volver">
+            <h2 id="srd-elim-t"></h2>
+            <p id="srd-elim-d">{% trans "Esta acción no se puede deshacer." %}</p>
+            <div class="ive-dialogo-pie">
+                <button type="button" class="ive-btn" id="srd-elim-no">{% trans "Cancelar" %}</button>
+                <button type="submit" class="ive-btn ive-btn-rojo">{% trans "Eliminar" %}</button>
             </div>
         </form>
     </div>
+    {% endif %}
+
+    {% if puede_editar_seg_servicio %}
+    {% include "inventario_app/_seg_servicio_modal.html" %}
+    {% include "inventario_app/_catalogo_servicios.html" %}
+    {% endif %}
 </div>
 
 {% endblock %}
 
 {% block extra_js %}
-{% load static %}
-<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
+{{ catalogo_servicios|json_script:"ssv-catalogo" }}
+{{ tipos|json_script:"ssv-tipos" }}
 <script>
-    // Rango de fecha PR es el selector de fecha único; no soporta onchange=""
-    // inline como el <input type="date"> nativo que reemplazó.
-    document.querySelector('#dp-fecha-pr-desde .dp-value').addEventListener('change', function () {
-        this.closest('form').submit();
-    });
-    document.querySelector('#dp-fecha-pr-hasta .dp-value').addEventListener('change', function () {
-        this.closest('form').submit();
-    });
+window.SRD_CFG = {
+    urlBuscar: "{% url 'inventario:buscar_servicios_catalogo' %}",
+    area: "{{ filtro_area }}",
+    i18n: {
+        nuevo:        "{% trans 'Nuevo seguimiento de servicio' %}",
+        editar:       "{% trans 'Editar seguimiento' %}",
+        guardado:     "{% trans 'Seguimiento guardado' %}",
+        eliminarT:    "{% trans '¿Eliminar el seguimiento de la PR {pr}?' %}",
+        obligatorio:  "{% trans 'Este campo es obligatorio.' %}",
+        elegirServ:   "{% trans 'Elige un servicio del catálogo.' %}",
+        elegirArea:   "{% trans 'Elige un área.' %}",
+        cantidadMal:  "{% trans 'Escribe una cantidad entera mayor que 0.' %}",
+        motivoObl:    "{% trans 'El motivo es obligatorio.' %}",
+        prFecha:      "{% trans 'La fecha de la PR es obligatoria.' %}",
+        futura:       "{% trans 'La fecha no puede ser futura.' %}",
+        poAntes:      "{% trans 'La fecha de la PO no puede ser anterior a la de la PR.' %}",
+        srAntes:      "{% trans 'La fecha del SR no puede ser anterior a la de la PO.' %}",
+        igualPr:      "{% trans '¿Seguro? Es el mismo número que la PR' %}",
+        sinServicios: "{% trans 'Sin servicios que coincidan' %}",
+        agregarCat:   "{% trans 'Agregar «{q}» al catálogo' %}",
+        abierta1:     "{% trans '1 PR abierta' %}",
+        abiertasN:    "{% trans '{n} PR abiertas' %}",
+        sinOrden:     "{% trans 'Sin orden de compra' %}",
+        pendiente:    "{% trans 'Pendiente de recibir' %}",
+        recibido:     "{% trans 'Recibido' %}",
+        completado:   "{% trans 'Completado' %}",
+        siguiente:    "{% trans 'Siguiente paso' %}",
+        despuesDe:    "{% trans 'Después de {paso}' %}",
+        descartarT:   "{% trans '¿Descartar cambios?' %}",
+        descartarD:   "{% trans 'Los cambios que hiciste en este seguimiento se perderán.' %}",
+        seguir:       "{% trans 'Seguir editando' %}",
+        descartar:    "{% trans 'Descartar' %}",
+        duplicadoD:   "{% trans '¿Guardarlo de todos modos?' %}",
+        revisar:      "{% trans 'Revisar' %}",
+        guardarIgual: "{% trans 'Guardar de todos modos' %}",
+        eliminarD:    "{% trans 'Esta acción no se puede deshacer.' %}",
+        eliminar:     "{% trans 'Eliminar' %}",
+        cancelar:     "{% trans 'Cancelar' %}",
+        guardar:      "{% trans 'Guardar' %}",
+        errorRed:     "{% trans 'No se pudo guardar. Revisa tu conexión.' %}",
+        colsDe:       "{% trans '{v} de {t}' %}",
+        catExistentes:"{% trans 'EXISTENTES ({n})' %}",
+        catEditar:    "{% trans 'Editar {nombre}' %}",
+        catEliminar:  "{% trans 'Eliminar {nombre}' %}",
+        catEnUso:     "{% trans 'Tiene seguimientos registrados' %}",
+        catEliminarT: "{% trans '¿Eliminar el servicio {nombre}?' %}",
+        catSinRes:    "{% trans 'Sin resultados para “{q}”' %}",
+        catVacio:     "{% trans 'Sin servicios en el catálogo.' %}",
+        catGuardado:  "{% trans 'Servicio guardado' %}",
+        catNoItem:    "{% trans 'No. item' %}",
+        catNombre:    "{% trans 'Nombre' %}",
+        catTipo:      "{% trans 'Tipo de servicio' %}",
+    },
+};
 </script>
-<script src="{% static 'inventario_app/js/lista_seguimientos_servicio.js' %}"></script>
+<script src="{% static 'menu_app/js/date_picker.js' %}"></script>
+<script src="{% static 'menu_app/js/page_size_toggle.js' %}"></script>
+<script src="{% static 'mto_app/js/filter_select.js' %}"></script>
+<script src="{% static 'inventario_app/js/catalogo_servicios.js' %}"></script>
+<script src="{% static 'inventario_app/js/seg_servicios_escritorio.js' %}"></script>
 {% endblock %}

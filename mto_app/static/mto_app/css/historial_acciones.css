@@ -1,0 +1,158 @@
+/* historial_acciones.css — modal "Historial de acciones" (Plan de mantenimiento).
+   Escritorio: modal ancho con tabla. Celular (≤767px): pantalla completa con filas en tarjetas.
+   Colores de la app (--white, --border, --text…) para respetar tema oscuro y acento del usuario. */
+.ha-fondo, .ha {
+    --ha-pri: var(--indigo); --ha-pri-dk: var(--indigo-dk); --ha-pri-lt: var(--indigo-lt);
+    --ha-ok: #22663F; --ha-ok-bg: #E3F3E9; --ha-mal: #A8322A; --ha-mal-bg: #FBE4E2; --ha-mal-lin: #D9534F;
+    --ha-gris-bg: #F0F1F7; --ha-fila: var(--surface);
+}
+[data-theme="dark"] .ha-fondo, [data-theme="dark"] .ha {
+    --ha-ok: #7FD4A0; --ha-ok-bg: rgba(46,139,87,.24); --ha-mal: #F2A19C; --ha-mal-bg: rgba(217,83,79,.24);
+    --ha-gris-bg: var(--surface);
+}
+.ha-fondo { position: fixed; inset: 0; z-index: 2100; background: rgba(30,32,51,.45); display: flex; align-items: center; justify-content: center; padding: 24px; font-family: 'Lexend', inherit; }
+.ha-fondo[hidden] { display: none; }
+.ha-fondo *, .ha-fondo *::before, .ha-fondo *::after { box-sizing: border-box; }
+.ha-fondo button, .ha-fondo input, .ha-fondo select { font-family: inherit; }
+
+.ha-dlg { width: min(1280px, 100%); max-height: calc(100vh - 48px); display: flex; flex-direction: column; background: var(--surface); color: var(--text); border-radius: 18px; box-shadow: 0 24px 64px rgba(30,32,51,.28); overflow: hidden; }
+.ha-cab { display: flex; align-items: flex-start; gap: 12px; padding: 20px 24px 14px; background: var(--white); border-bottom: 1px solid var(--border); }
+.ha-cab > div { flex: 1; min-width: 0; }
+.ha-cab h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.ha-cab p { margin: 2px 0 0; font-size: 13px; color: var(--text-2); }
+.ha-x { width: 28px; height: 28px; flex: none; border: 0; border-radius: 6px; background: transparent; color: #8a8a96; font-size: 15px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, color .15s; }
+.ha-x:hover { background: #EF4444; color: #fff; }
+.ha-cuerpo { overflow-y: auto; padding: 16px 24px 24px; min-height: 200px; }
+.ha-cargando { padding: 48px; text-align: center; color: var(--text-2); font-size: 14px; }
+.ha-cuerpo.ocupado { opacity: .55; pointer-events: none; transition: opacity .15s; }
+
+/* ── Contenido ── */
+.ha { display: flex; flex-direction: column; gap: 14px; }
+.ha-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.ha-kpi { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+.ha-kpi-ico { width: 38px; height: 38px; flex: none; border-radius: 11px; display: flex; align-items: center; justify-content: center; }
+[data-theme="dark"] .ha-kpi-ico { filter: saturate(.8) brightness(.9); }
+.ha-kpi-l { font-size: 12px; color: var(--text-2); }
+.ha-kpi-v { font-size: 22px; font-weight: 600; line-height: 1.2; }
+.ha-kpi-v small { font-size: 12px; font-weight: 400; color: var(--text-2); }
+
+.ha-filtros { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.ha-fila { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ha-buscar { flex: 1 1 320px; max-width: 520px; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; color: var(--text-2); background: var(--white); }
+.ha-buscar:focus-within { border-color: var(--ha-pri); outline: 2px solid var(--ha-pri); outline-offset: -1px; }
+.ha-buscar input { flex: 1; min-width: 0; border: 0; outline: none; font-size: 14px; background: transparent; color: var(--text); }
+.ha-sel { height: 44px; min-width: 170px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--white); display: flex; align-items: center; }
+.ha-sel:focus-within { border-color: var(--ha-pri); outline: 2px solid var(--ha-pri); outline-offset: -1px; }
+.ha-sel-t { display: block; width: 100%; }
+.ha-sel-t small { display: block; font-size: 11px; color: var(--text-2); line-height: 1.1; }
+.ha-sel select {
+    width: 100%; border: 0; outline: none; background-color: transparent; color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer;
+    padding: 0 22px 0 0; appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 0 center; background-size: 14px;
+}
+[data-theme="dark"] .ha-sel select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important; background-position: right 0 center !important; background-size: 14px !important;
+}
+.ha-sel select option { color: #1E2033; background: #fff; }
+.ha-etq { font-size: 12px; font-weight: 600; letter-spacing: .05em; color: var(--text-2); margin-right: 4px; }
+.ha-chip { height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--white); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; }
+.ha-chip-ok { color: var(--ha-ok); }
+.ha-chip-mal { color: var(--ha-mal); }
+.ha-chip[aria-pressed="true"] { background: #1E2033; border-color: #1E2033; color: #fff; font-weight: 600; }
+[data-theme="dark"] .ha-chip[aria-pressed="true"] { background: var(--ha-pri); border-color: var(--ha-pri); }
+.ha-limpiar { margin-left: auto; height: 32px; padding: 0 10px; border: 0; background: transparent; color: var(--ha-pri-dk); font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; }
+.ha-limpiar:hover { text-decoration: underline; }
+.ha-chip:focus-visible, .ha-limpiar:focus-visible, .ha-pag-b:focus-visible, .ha-x:focus-visible { outline: 2px solid var(--ha-pri); outline-offset: 2px; }
+
+
+.ha-tabla-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.ha-tabla-cab { display: flex; align-items: center; gap: 10px; padding: 14px 18px; font-size: 13px; color: var(--text-2); }
+.ha-tabla-cab b { font-size: 16px; font-weight: 600; color: var(--text); }
+.ha-tabla-wrap { overflow-x: auto; }
+.ha-tabla { width: 100%; min-width: 1180px; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
+.ha-tabla th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600; letter-spacing: .05em; color: var(--text-2); background: var(--surface); white-space: nowrap; }
+.ha-tabla td { padding: 11px 12px; vertical-align: top; border-top: 1px solid var(--border); color: var(--text); overflow-wrap: anywhere; }
+.ha-tabla th:first-child, .ha-tabla td:first-child { padding-left: 18px; }
+.ha-tabla th:last-child, .ha-tabla td:last-child { padding-right: 18px; }
+.ha-fila-dato:hover td { background: var(--surface); }
+.ha-elim td:first-child { box-shadow: inset 3px 0 0 var(--ha-mal-lin); }
+.ha-c-fecha { width: 150px; }
+.ha-c-accion { width: 150px; }
+.ha-c-area { width: 170px; }
+.ha-c-pasos { width: 150px; }
+.ha-c-user { width: 170px; }
+.ha-tabla th:nth-child(3) { width: 300px; }
+.ha-tabla th:last-child { width: 200px; }
+.ha-dia { display: block; font-weight: 600; white-space: nowrap; }
+.ha-hora { display: block; margin-top: 2px; color: var(--text-2); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; }
+.ha-acc { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+.ha-acc-ok { background: var(--ha-ok-bg); color: var(--ha-ok); }
+.ha-acc-mal { background: var(--ha-mal-bg); color: var(--ha-mal); }
+.ha-sub { margin-top: 4px; font-size: 11px; color: var(--text-2); }
+.ha-cod-fila { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ha-cod-fila .ha-sub { margin-top: 0; }
+.ha-cod { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 700; color: var(--ha-pri-dk); background: var(--ha-pri-lt); padding: 2px 7px; border-radius: 6px; }
+.ha-nombre { margin-top: 4px; line-height: 1.4; }
+.ha-delta { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 7px; font-size: 11px; font-weight: 600; }
+.ha-d-ok { background: var(--ha-ok-bg); color: var(--ha-ok); }
+.ha-d-mal { background: var(--ha-mal-bg); color: var(--ha-mal); }
+.ha-d-nulo { background: var(--ha-gris-bg); color: var(--text-2); }
+.ha-d-azul { background: var(--ha-pri-lt); color: var(--ha-pri-dk); }
+.ha-av { display: inline-flex; width: 26px; height: 26px; flex: none; border-radius: 50%; background: var(--ha-gris-bg); color: var(--text-2); font-size: 10px; font-weight: 700; align-items: center; justify-content: center; vertical-align: middle; margin-right: 8px; }
+.ha-u { vertical-align: middle; }
+.ha-vacio { color: var(--text-3); }
+.ha-sin-datos { text-align: center; padding: 36px !important; color: var(--text-3) !important; }
+
+.ha-pie { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-2); }
+.ha-pst { margin-left: auto; }
+.ha-pag { display: inline-flex; gap: 4px; align-items: center; }
+.ha-pag-b, .ha-pag-p { min-width: 32px; height: 32px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 13px; text-decoration: none; color: var(--text-2); border: 1px solid var(--border); background: var(--white); }
+.ha-pag-p { border-color: transparent; background: transparent; }
+a.ha-pag-b:hover { background: var(--surface); color: var(--text); }
+.ha-pag-b.activo { background: var(--ha-pri); border-color: var(--ha-pri); color: #fff; font-weight: 600; }
+
+/* ── Celular: pantalla completa y filas como tarjetas ── */
+@media (max-width: 767px) {
+    .ha-fondo { padding: 0; align-items: stretch; }
+    .ha-dlg { max-height: none; height: 100%; border-radius: 0; width: 100%; }
+    .ha-cab { padding: 14px 16px 10px; }
+    .ha-cab h2 { font-size: 17px; }
+    .ha-cuerpo { padding: 12px 16px 24px; }
+    .ha-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .ha-kpi { padding: 10px 12px; gap: 8px; }
+    .ha-kpi-ico { width: 32px; height: 32px; }
+    .ha-kpi-v { font-size: 18px; }
+    .ha-kpi-v small { display: block; }
+    .ha-buscar, .ha-sel { flex: 1 1 100%; max-width: none; }
+    .ha-tabla { min-width: 0; }
+    .ha-tabla, .ha-tabla tbody { display: block; }
+    .ha-tabla thead { display: none; }
+    .ha-tabla tr.ha-fila-dato { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 12px 14px; border-top: 1px solid var(--border); }
+    .ha-tabla tr.ha-fila-dato td { display: block; flex: 1 1 100%; width: auto; padding: 0; border: 0; }
+    .ha-tabla tr.ha-fila-dato td.ha-c-fecha, .ha-tabla tr.ha-fila-dato td.ha-c-accion { flex: 1 1 40%; }
+    .ha-tabla tr.ha-fila-dato td.ha-c-area, .ha-tabla tr.ha-fila-dato td.ha-c-pasos, .ha-tabla tr.ha-fila-dato td.ha-c-user { flex: 0 1 auto; }
+    .ha-elim td:first-child { box-shadow: none; }
+    .ha-elim { box-shadow: inset 3px 0 0 var(--ha-mal-lin); }
+    .ha-tabla tr.ha-fila-dato:hover td { background: transparent; }
+    .ha-pie { justify-content: center; }
+    .ha-pst { margin-left: 0; }
+}
+@media (max-width: 1100px) and (min-width: 768px) {
+    .ha-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .ha-cuerpo.ocupado { transition: none; } }
+.ha-fs { flex: 0 1 280px; min-width: 220px; }
+.ha-fondo .fs-capa { z-index: 2200; }   /* en celular el menú es una hoja fija: debe quedar sobre el modal */
+@media (max-width: 767px) { .ha-fs { flex: 1 1 100%; } }
+
+/* Rango de fechas: control compacto y atajos en la misma fila */
+.ha-fila-fecha { flex: 0 0 340px; max-width: 100%; }
+.ha-fila-fecha .dpr-wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; width: 100%; max-width: none; }
+.ha-fila-fecha .dpr-control { flex: 0 0 340px; max-width: 100%; }
+.ha-fila-fecha .dpr-slot { padding: 6px 12px; }
+@media (max-width: 767px) { .ha-fila-fecha { flex: 1 1 100%; } .ha-fila-fecha .dpr-control { flex: 1 1 100%; } }
+
+/* Sin rango elegido el selector sigue mostrando "hoy" por dentro: se atenúa para que no parezca un filtro activo */
+.ha-sin-rango .dpr-text { color: var(--text-3); }

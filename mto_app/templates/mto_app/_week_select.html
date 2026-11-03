@@ -1,0 +1,86 @@
+{% load i18n %}
+{% comment %}
+    WeekSelect — selector de semana con calendario de semanas (reemplaza un <select>).
+    El botón es el mismo de FilterSelect (mto_app/css/filter_select.css); el contenido
+    del popover lo arma mto_app/js/week_select.js (estilos en mto_app/css/week_select.css).
+    Escritorio: popover, se aplica al elegir. Celular (≤767px): hoja inferior con
+    7 columnas y botón "Ver {n} órdenes".
+
+    Parámetros del include:
+      ws_id        id único del componente (uno por vista si hay dos en la página)
+      name         parámetro GET que filtra (?name=AAAA-SS | mas6)
+      label        etiqueta del botón ("Semana de compromiso")
+      valor_label  texto del valor elegido mientras carga el JS (vacío → "Todas")
+      datos        {valor, actual, conteos: {"AAAA-SS": {cat: n}}, mas6: {cat: n}, total: {cat: n}}
+    La página puede filtrar los conteos por categoría con el.wsCategoria('ot').
+{% endcomment %}
+<div class="fs ws{% if datos.valor %} fs-activo{% endif %}" id="{{ ws_id }}" data-ws data-param="{{ name }}">
+    <div class="fs-ctl">
+        <button type="button" class="fs-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="{{ ws_id }}-dialogo"
+                aria-label="{{ label }}: {% firstof valor_label _('Todas') %}">
+            <span class="fs-ico" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </span>
+            <span class="fs-txt">
+                <span class="fs-label">{{ label }}</span>
+                <span class="fs-valor">{% firstof valor_label _('Todas') %}</span>
+            </span>
+            <svg class="fs-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        {% if datos.valor %}
+        <button type="button" class="fs-x" aria-label="{% trans 'Quitar filtro de semana' %}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="fs-capa ws-capa" hidden>
+        <div class="fs-menu ws-menu" id="{{ ws_id }}-dialogo" role="dialog" aria-label="{% trans 'Elegir semana de compromiso' %}">
+            <div class="fs-asa" aria-hidden="true"><span></span></div>
+            <h2 class="fs-titulo">{{ label }}</h2>
+            <div class="ws-cuerpo">
+                <div class="ws-anio">
+                    <button type="button" class="ws-flecha" data-paso="-1" aria-label="{% trans 'Año anterior' %}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+                    </button>
+                    <span class="ws-anio-n" aria-live="polite"></span>
+                    <button type="button" class="ws-flecha" data-paso="1" aria-label="{% trans 'Año siguiente' %}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                    </button>
+                </div>
+                <div class="ws-atajos">
+                    <button type="button" class="ws-chip" data-valor=""></button>
+                    <button type="button" class="ws-chip" data-valor="actual"></button>
+                    <button type="button" class="ws-chip" data-valor="mas6"></button>
+                </div>
+                <div class="ws-grid" role="grid"></div>
+                <div class="ws-leyenda" aria-hidden="true">
+                    <span><i class="ws-l-venc"></i>{% trans "Órdenes vencidas" %}</span>
+                    <span><i class="ws-l-sel"></i>{% trans "Seleccionada" %}</span>
+                    <span><i class="ws-l-act"></i>{% trans "Semana actual" %}</span>
+                </div>
+            </div>
+            <div class="ws-pie">
+                <button type="button" class="ws-ver"></button>
+            </div>
+        </div>
+    </div>
+    {{ datos|json_script }}
+    <script type="application/json" class="ws-i18n">{
+        "todas":       "{% trans 'Todas' %}",
+        "chipTodas":   "{% trans 'Todas · {n}' %}",
+        "chipActual":  "{% trans 'Esta semana (S{n})' %}",
+        "semana":      "{% trans 'S{n}/{anio}' %}",
+        "semanaN":     "{% trans 'S{n}' %}",
+        "chipActual0": "{% trans 'Esta semana · 0' %}",
+        "chipMas6":    "{% trans 'Más de 6 meses · {n}' %}",
+        "mas6":        "{% trans 'Más de 6 meses' %}",
+        "semanasDe":   "{% trans 'Semanas de {anio}' %}",
+        "celda":       "{% trans 'Semana {n}, {rango}, {venc}' %}",
+        "unaVencida":  "{% trans '1 orden vencida' %}",
+        "nVencidas":   "{% trans '{n} órdenes vencidas' %}",
+        "sinVencidas": "{% trans 'sin órdenes vencidas' %}",
+        "verUna":      "{% trans 'Ver 1 orden' %}",
+        "verN":        "{% trans 'Ver {n} órdenes' %}"
+    }</script>
+</div>

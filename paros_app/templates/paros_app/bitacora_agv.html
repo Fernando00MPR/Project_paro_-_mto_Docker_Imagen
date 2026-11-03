@@ -5,6 +5,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<link rel="stylesheet" href="{% static 'paros_app/css/hora_hora_movil.css' %}">
+<link rel="stylesheet" href="{% static 'paros_app/css/bitacora_agv_movil.css' %}">
 <style>
     /* Franja indicadora de comentario — esquina inferior derecha de la celda */
     .celda-agv .flag-comentario {
@@ -82,7 +84,7 @@
 
 {% block content %}
 
-<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+<div class="agv-desktop-only" style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
     <div>
         <div class="card-title">{% trans "Bitácora de AGVs" %}</div>
         <div class="card-subtitle">{% trans "Conteo de AGVs por turno y día del mes — Inyección y Pintura" %}</div>
@@ -131,7 +133,7 @@
       border-radius: 6px;
   }
 </style>
-<div style="padding:14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:20px;">
+<div class="agv-desktop-only" style="padding:14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:20px;">
     <form method="get" id="form-filtros" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
         <div class="filter-group">
             <label>{% trans "Mes" %}</label>
@@ -150,7 +152,7 @@
 </div>
 
 {% for clave, nombre_interna in areas_internas %}
-<div class="card" style="margin-bottom:16px; padding:0; overflow:hidden;">
+<div class="card agv-desktop-only" style="margin-bottom:16px; padding:0; overflow:hidden;">
 
     <!-- Header colapsable -->
     <div style="display:flex; justify-content:space-between; align-items:center;
@@ -292,6 +294,200 @@
 </div>
 {% endfor %}
 
+<!-- ═══ Vista de celular (≤767px) — ver bitacora_agv_movil.css / .js ═══ -->
+<div id="agv-movil" class="movil-only" data-puede-editar="{% if puede_editar %}1{% else %}0{% endif %}">
+
+    <div class="hm-header">
+        <div class="hm-titulos">
+            <div class="hm-titulo">{% trans "Bitácora de AGVs" %}</div>
+            <div class="hm-subtitulo">{% trans "Conteo por turno y día" %}</div>
+        </div>
+        <button type="button" class="hm-btn-icono" aria-label="{% trans 'Target e idioma' %}" onclick="amAbrirMas(event)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+    </div>
+
+    <div class="hm-fila-mes">
+        <div class="hm-mes">
+            <button type="button" aria-label="{% trans 'Mes anterior' %}" onclick="amCambiarMes(-1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+            </button>
+            <span>{% for num, nombre in meses %}{% if mes == num %}{{ nombre }}{% endif %}{% endfor %} {{ anio }}</span>
+            <button type="button" aria-label="{% trans 'Mes siguiente' %}" onclick="amCambiarMes(1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="hm-seg am-areas" role="tablist" aria-label="{% trans 'Área' %}" id="am-areas"
+         style="grid-template-columns: repeat({{ areas_internas|length }}, minmax(0, 1fr));">
+        {% for clave, nombre_interna in areas_internas %}
+        <button type="button" role="tab" data-interna="{{ clave }}" data-nombre="{{ nombre_interna }}" aria-selected="false">
+            <span class="am-a1">{{ nombre_interna }}</span>
+            <span class="am-a2"></span>
+        </button>
+        {% endfor %}
+    </div>
+
+    <section class="hm-card am-mes-card" aria-label="{% trans 'Resumen del mes' %}">
+        <div class="hm-kpis hm-kpis-3 am-kpis">
+            <div class="hm-kpi"><div class="hm-kpi-label">{% trans "AGVs del mes" %}</div><div class="hm-kpi-num" id="am-k-total">—</div></div>
+            <div class="hm-kpi"><div class="hm-kpi-label">{% trans "Turnos en meta" %}</div><div class="hm-kpi-num" id="am-k-meta">—</div></div>
+            <button type="button" class="hm-kpi am-kpi-btn" id="am-k-sin-btn" aria-label="{% trans 'Sin captura' %}">
+                <div class="hm-kpi-label">{% trans "Sin captura" %}</div><div class="hm-kpi-num" id="am-k-sin">—</div>
+            </button>
+        </div>
+        <div class="am-ayuda">
+            <span>{% if puede_editar %}{% trans "Toca un día para capturar" %}{% endif %}</span>
+            <span class="am-ayuda-ley">
+                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>{% trans "Día arriba" %}</span>
+                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>{% trans "Noche abajo" %}</span>
+            </span>
+        </div>
+        <div class="hm-cal am-cal" id="am-cal"></div>
+        <div class="hm-leyenda am-leyenda">
+            <span><i style="background:#CDEBD8;"></i>≥ {% trans "target" %}</span>
+            <span><i style="background:#F6CFCB;"></i>{% trans "Bajo target" %}</span>
+            <span><i class="punto" style="background:#D9822B;"></i>{% trans "Tiene nota" %}</span>
+        </div>
+    </section>
+
+    <section class="hm-card hm-periodos-card" id="am-cump-card" aria-labelledby="am-cump-titulo">
+        <div class="hm-ef-head" style="padding:0 16px;">
+            <div>
+                <h2 id="am-cump-titulo">{% trans "Cumplimiento" %}</h2>
+                <div class="hm-muted">{% trans "AGVs reales vs target del día" %}</div>
+            </div>
+        </div>
+        <div style="padding:0 16px;">
+            <div class="hm-seg hm-vista" role="group" aria-label="{% trans 'Agrupar por' %}" id="am-vista">
+                <button type="button" data-vista="dia" aria-pressed="true">{% trans "Día" %}</button>
+                <button type="button" data-vista="mes" aria-pressed="false">{% trans "Mes" %}</button>
+                <button type="button" data-vista="anio" aria-pressed="false">{% trans "Año" %}</button>
+            </div>
+            <button type="button" class="hm-rango" onclick="amAbrirRango(event)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color:var(--text-3);"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>
+                <span id="am-rango-txt"></span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" style="color:var(--text-3);"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+        </div>
+        <div class="hm-periodos-head" style="margin-top:12px;">
+            <h3 id="am-periodos-titulo"></h3>
+            <button type="button" class="hm-link" id="am-mostrar-todos"></button>
+        </div>
+        <ol class="hm-periodos" id="am-periodos"></ol>
+        <div class="hm-ef-leyenda">
+            <span><i style="width:2px; height:12px; background:#B7791F; display:inline-block;"></i>{% trans "Target (100%)" %}</span>
+            <span id="am-leg-escala"></span>
+        </div>
+    </section>
+</div>
+
+<!-- Hoja "⋯" -->
+<div id="am-sheet-mas" class="modal-backdrop movil-only am-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="am-mas-titulo">
+        <div class="hm-asa"><span></span></div>
+        <h2 class="hr-titulo" id="am-mas-titulo">{% trans "Más acciones" %}</h2>
+        {% if puede_editar %}
+        <div class="am-acciones">
+            <button type="button" class="am-accion" onclick="amConfigurarTarget(event)">
+                <span class="am-accion-icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg></span>
+                {% trans "Configurar target" %}
+            </button>
+        </div>
+        {% endif %}
+        <div class="am-idioma">
+            <span class="am-idioma-label">{% trans "Idioma" %}</span>
+            {% include 'menu_app/_language_selector.html' %}
+        </div>
+    </div>
+</div>
+
+{% if puede_editar %}
+<!-- Hoja: capturar un día -->
+<div id="am-sheet-captura" class="modal-backdrop movil-only am-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="am-cap-fecha">
+        <div class="hm-asa"><span></span></div>
+        <div class="am-cap-head">
+            <button type="button" id="am-cap-prev" aria-label="{% trans 'Día anterior' %}" onclick="amMoverDia(-1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+            </button>
+            <div>
+                <div class="hm-muted" id="am-cap-ctx"></div>
+                <div class="hc-fecha" id="am-cap-fecha"></div>
+            </div>
+            <button type="button" id="am-cap-next" aria-label="{% trans 'Día siguiente' %}" onclick="amMoverDia(1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+        </div>
+        <div class="am-turnos">
+            <div class="am-turno">
+                <div class="am-turno-top"><b>{% trans "Turno de día" %}</b><span class="am-chip" id="am-chip-dia"></span></div>
+                <div class="hc-valor">
+                    <button type="button" aria-label="{% trans 'Restar 1 en turno de día' %}" onclick="amSumar('dia', -1)">−</button>
+                    <input id="am-in-dia" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="{% trans 'AGVs turno de día' %}">
+                    <button type="button" aria-label="{% trans 'Sumar 1 en turno de día' %}" onclick="amSumar('dia', 1)">+</button>
+                </div>
+                <label class="am-nota-campo">{% trans "Nota (opcional)" %}
+                    <textarea id="am-nota-dia" rows="2" maxlength="200"></textarea>
+                </label>
+            </div>
+            <div class="am-turno">
+                <div class="am-turno-top"><b>{% trans "Turno de noche" %}</b><span class="am-chip" id="am-chip-noche"></span></div>
+                <div class="hc-valor">
+                    <button type="button" aria-label="{% trans 'Restar 1 en turno de noche' %}" onclick="amSumar('noche', -1)">−</button>
+                    <input id="am-in-noche" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="{% trans 'AGVs turno de noche' %}">
+                    <button type="button" aria-label="{% trans 'Sumar 1 en turno de noche' %}" onclick="amSumar('noche', 1)">+</button>
+                </div>
+                <label class="am-nota-campo">{% trans "Nota (opcional)" %}
+                    <textarea id="am-nota-noche" rows="2" maxlength="200"></textarea>
+                </label>
+            </div>
+        </div>
+        <div class="am-cump" id="am-cump" hidden><span>{% trans "Cumplimiento del día" %}</span><b id="am-cump-val"></b></div>
+        <div class="hc-botones">
+            <button type="button" class="hc-guardar" id="am-guardar" onclick="amGuardar(false)">{% trans "Guardar" %}</button>
+            <button type="button" class="hc-seguir" id="am-seguir" onclick="amGuardar(true)">
+                <span id="am-seguir-txt"></span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Hoja: rango de cumplimiento -->
+<div id="am-sheet-rango" class="modal-backdrop movil-only am-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="am-rango-titulo">
+        <div class="hm-asa"><span></span></div>
+        <h2 class="hr-titulo" id="am-rango-titulo">{% trans "Periodo" %}</h2>
+        <div class="hr-campos" data-vista="dia">
+            <div class="hr-campo"><span>{% trans "Desde" %}</span>{% include 'menu_app/_date_picker.html' with name='am_desde' dp_id='dp-am-desde' %}</div>
+            <div class="hr-campo"><span>{% trans "Hasta" %}</span>{% include 'menu_app/_date_picker.html' with name='am_hasta' dp_id='dp-am-hasta' %}</div>
+        </div>
+        <div class="hr-campos" data-vista="mes" style="display:none;">
+            <label class="hr-campo hr-campo-full">{% trans "Año" %}
+                <input type="number" id="am-mes-anio" min="2018" max="2099" inputmode="numeric">
+            </label>
+            <label class="hr-campo">{% trans "Mes inicio" %}
+                <select id="am-mes-desde">{% for num, nombre in meses %}<option value="{{ num }}">{{ nombre }}</option>{% endfor %}</select>
+            </label>
+            <label class="hr-campo">{% trans "Mes fin" %}
+                <select id="am-mes-hasta">{% for num, nombre in meses %}<option value="{{ num }}">{{ nombre }}</option>{% endfor %}</select>
+            </label>
+        </div>
+        <div class="hr-campos" data-vista="anio" style="display:none;">
+            <label class="hr-campo">{% trans "Año inicio" %}
+                <input type="number" id="am-anio-desde" min="2018" max="2099" inputmode="numeric">
+            </label>
+            <label class="hr-campo">{% trans "Año fin" %}
+                <input type="number" id="am-anio-hasta" min="2018" max="2099" inputmode="numeric">
+            </label>
+        </div>
+        <button type="button" class="hr-aplicar" onclick="amAplicarRango()">{% trans "Aplicar" %}</button>
+    </div>
+</div>
+
 <!-- Modal edición -->
 <div id="modal-agv" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
      z-index:2000; align-items:center; justify-content:center;">
@@ -335,7 +531,7 @@
 </div>
 
 <!-- Gráfico de cumplimiento -->
-<div class="card" style="margin-top:20px; padding:0; overflow:hidden;">
+<div class="card agv-desktop-only" style="margin-top:20px; padding:0; overflow:hidden;">
     <div style="padding:14px 16px; background:var(--surface); border-bottom:1px solid var(--border);">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <div>
@@ -500,4 +696,35 @@ window.AGV_CFG = {
 };
 </script>
 <script src="{% static 'paros_app/js/bitacora_agv.js' %}"></script>
+<script>
+window.AGV_MOVIL = {
+    lang: "{{ LANGUAGE_CODE|default:'es' }}",
+    i18n: {
+        dia:             "{% trans 'día' %}",
+        noche:           "{% trans 'noche' %}",
+        sinCaptura:      "{% trans 'sin captura' %}",
+        conNota:         "{% trans 'con nota' %}",
+        ariaDia:         "{% trans '{d} de {mes}: {partes}' %}",
+        sinTarget:       "{% trans 'Sin target' %}",
+        targetPorTurno:  "{% trans 'Target {n} por turno' %}",
+        targetN:         "{% trans 'target {n}' %}",
+        agvsEn:          "{% trans 'AGVs en {area}' %}",
+        kDeN:            "{% trans '{k} de {n}' %}",
+        nDias:           "{% trans '{n} días' %}",
+        realesDe:        "{% trans '{r} de {p}' %}",
+        guardarSeguir:   "{% trans 'Guardar y seguir a {fecha}' %}",
+        guardarCerrar:   "{% trans 'Guardar y cerrar' %}",
+        deAgvs:          "{% trans '{c} de {p} AGVs' %}",
+        nAgvs:           "{% trans '{c} AGVs' %}",
+        tituloDia:       "{% trans 'Días con registro' %}",
+        tituloMes:       "{% trans 'Meses con registro' %}",
+        tituloAnio:      "{% trans 'Años con registro' %}",
+        mostrarTodos:    "{% trans 'Mostrar todos' %}",
+        soloConRegistro: "{% trans 'Solo con registro' %}",
+        escala:          "{% trans 'Escala 0 – {x}%' %}",
+        sinDatos:        "{% trans 'Sin registros en este periodo' %}",
+    },
+};
+</script>
+<script src="{% static 'paros_app/js/bitacora_agv_movil.js' %}"></script>
 {% endblock %}

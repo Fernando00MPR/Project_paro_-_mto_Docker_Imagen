@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 {% load static i18n %}
-<html lang="es">
+<html lang="{{ LANGUAGE_CODE|default:'es' }}" translate="no">
 <head>
 <meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
 <style>
     :root {
@@ -18,27 +18,27 @@
         --rf-border-input: #dcdae7;
         --rf-card-bg:      #ffffff;
         --rf-subtle-bg:    #fbfbfd;
-        --rf-primary:        #5b4bd6;
-        --rf-primary-hover:  #4c3dc4;
-        --rf-primary-tint:       #f0eefc;
-        --rf-primary-tint-border:#e0dcfa;
-        --rf-success:      #1f6f4a;
-        --rf-success-bg:   #e8f6ee;
-        --rf-success-border: #cfeadb;
-        --rf-success-dot:  #34a06a;
-        --rf-warn:         #8a6410;
-        --rf-warn-bg:      #fdf3dd;
-        --rf-warn-border:  #f3e2b6;
-        --rf-info:         #33499b;
-        --rf-info-bg:      #e9eefc;
-        --rf-info-border:  #d3ddf8;
+        --rf-primary:        #3D5BD9;
+        --rf-primary-hover:  #2C44A8;
+        --rf-primary-tint:       #EBEFFD;
+        --rf-primary-tint-border:#C9D2F5;
+        --rf-success:      #22663F;
+        --rf-success-bg:   #E3F3E9;
+        --rf-success-border: #B9E0C8;
+        --rf-success-dot:  #2E8B57;
+        --rf-warn:         #8A5A08;
+        --rf-warn-bg:      #FCEFD6;
+        --rf-warn-border:  #F2D9A6;
+        --rf-info:         #2C44A8;
+        --rf-info-bg:      #DCE4FB;
+        --rf-info-border:  #C9D2F5;
         --rf-neutral:      #a8a5b8;
         --rf-neutral-bg:   #f6f6fa;
         --rf-neutral-border: #ebeaf1;
-        --rf-danger:        #a34455;
+        --rf-danger:        #A8322A;
         --rf-danger-hover:  #7d2b3a;
-        --rf-danger-bg:     #fdeef1;
-        --rf-danger-border: #f7d9e0;
+        --rf-danger-bg:     #FBE4E2;
+        --rf-danger-border: #F0C4C0;
 
         /* Este documento es una página aparte (se carga en un <iframe>, ver
            registro_ejecucion() con @xframe_options_exempt) — no hereda las
@@ -56,82 +56,9 @@
         --surface:   var(--rf-subtle-bg);
     }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Manrope',sans-serif; font-size:14px; background:#fff; color:var(--rf-text-mid); user-select:none; -webkit-user-select:none; }
-    .rf-mono { font-family:'IBM Plex Mono',monospace; }
+    body { font-family:'Lexend','Manrope',sans-serif; font-size:14px; background:#fff; color:var(--rf-text-mid); user-select:none; -webkit-user-select:none; }
+    .rf-mono, .rf2-mono { font-family:'JetBrains Mono','IBM Plex Mono',monospace; }
 
-    /* ── Tarjeta "Registrar ejecución" ── */
-    .rf-card {
-        margin: 0 24px 20px;
-        border: 1px solid var(--rf-border);
-        border-radius: 13px;
-        overflow: hidden;
-    }
-    .rf-card-head {
-        display: flex; align-items: center; justify-content: space-between; gap: 12px;
-        padding: 14px 18px; background: var(--rf-subtle-bg); border-bottom: 1px solid var(--rf-border-div);
-    }
-    .rf-card-title { font-size: 15px; font-weight: 700; color: var(--rf-text-strong); }
-    .rf-card-subtitle { font-size: 12px; color: var(--rf-text-soft); margin-top: 2px; }
-    .rf-chip-semana-actual {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: var(--rf-success-bg); border: 1px solid var(--rf-success-border); color: var(--rf-success);
-        border-radius: 999px; padding: 4px 11px; font-size: 11.5px; font-weight: 600; white-space: nowrap;
-    }
-    .rf-chip-semana-actual .rf-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rf-success-dot); }
-
-    .rf-card-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
-    .rf-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-    .field { display:flex; flex-direction:column; gap:6px; }
-    .field label {
-        font-size: 12.5px; font-weight: 600; color: var(--rf-text-mid);
-        display: flex; align-items: baseline; justify-content: space-between;
-    }
-    .field label .rf-req { color: #d1495b; }
-    .field label .rf-opcional { font-size: 11.5px; font-weight: 400; color: var(--rf-text-faint); }
-
-    .field input, .field textarea {
-        padding: 10px 12px; border: 1px solid var(--rf-border-input); border-radius: 9px;
-        font-family: inherit; font-size: 13.5px; color: var(--rf-text-strong); outline: none;
-        box-shadow: 0 1px 1px rgba(24,20,50,.03);
-        transition: border-color .15s;
-    }
-    .field input:focus, .field textarea:focus, .rf-select:focus { border-color: var(--rf-primary); }
-    /* El selector de fecha trae 42px por defecto (compartido con el resto del
-       sitio); se achica al mismo box-model que .field input (padding 10px
-       12px, sin altura fija, radio 9px). */
-    .field-fecha .dp-control { height: auto; padding: 10px 12px; border-radius: 9px; }
-    .field textarea { resize:vertical; min-height:70px; }
-
-    .field-fecha { max-width: 260px; }
-
-    /* Selects con chevron propio (no en el shorthand background) */
-    .rf-select-wrap { position: relative; }
-    .rf-select {
-        width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none;
-        padding: 10px 34px 10px 12px; border: 1px solid var(--rf-border-input); border-radius: 9px;
-        font-family: inherit; font-size: 13.5px; color: var(--rf-text-strong); background: #fff; outline: none;
-        box-shadow: 0 1px 1px rgba(24,20,50,.03);
-        transition: border-color .15s, background .15s, color .15s;
-    }
-    .rf-select-chevron {
-        position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-        pointer-events: none; color: var(--rf-text-strong);
-        display: flex; align-items: center; justify-content: center;
-    }
-    .rf-select-chevron svg { display: block; }
-    .rf-select-wrap.is-completada .rf-select { background: #f4fbf7; border-color: var(--rf-success-border); color: var(--rf-success); font-weight: 600; }
-    .rf-select-wrap.is-completada .rf-select-chevron { color: var(--rf-success); }
-    .rf-select-wrap.is-pendiente .rf-select { background: var(--rf-warn-bg); border-color: var(--rf-warn-border); color: var(--rf-warn); font-weight: 600; }
-    .rf-select-wrap.is-pendiente .rf-select-chevron { color: var(--rf-warn); }
-    .rf-select-wrap.is-reagendada .rf-select { background: var(--rf-info-bg); border-color: var(--rf-info-border); color: var(--rf-info); font-weight: 600; }
-    .rf-select-wrap.is-reagendada .rf-select-chevron { color: var(--rf-info); }
-
-    /* ── Pie de tarjeta ── */
-    .rf-card-foot {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 14px 18px; background: var(--rf-subtle-bg); border-top: 1px solid var(--rf-border-div);
-    }
     .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px;
            border-radius:9px; font-size:13px; font-weight:600; font-family:inherit;
            cursor:pointer; border:1px solid transparent; transition:all .15s; }
@@ -139,165 +66,326 @@
     .btn-primary:hover { background:var(--rf-primary-hover); }
     .btn-ghost { background:transparent; color:var(--rf-text-soft); border-color:var(--rf-border-input); }
     .btn-ghost:hover { background:var(--rf-subtle-bg); }
-    /* Botón "Eliminar" — se conserva su apariencia actual a propósito (no se convierte a texto suelto) */
     .btn-danger { background:transparent; color:#EF4444; border-color:#FECACA; }
     .btn-danger:hover { background:#FEE2E2; }
 
-    /* ── Filas colapsables (Seguimiento) ── */
-    .rf-collapse-wrap { margin: 0 24px 20px; }
-    .rf-collapse {
-        background: #fff; border: 1px solid var(--rf-border); border-radius: 11px; overflow: hidden;
+    /* ═════════ Registrar ejecución ═════════ */
+    .rf2 { padding: 20px 26px 0; color: var(--rf-text-strong); }
+    .rf2-head { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+    .rf2-head h3 { font-size:17px; font-weight:600; }
+    .rf2-head .sub { font-size:13px; color:var(--rf-text-soft); }
+    .rf2-head .ult { margin-left:auto; font-size:12px; color:var(--rf-text-soft); }
+    .rf-chip-semana-actual {
+        display:inline-flex; align-items:center; gap:6px; background:var(--rf-success-bg); border:1px solid var(--rf-success-border);
+        color:var(--rf-success); border-radius:999px; padding:3px 10px; font-size:11.5px; font-weight:600; white-space:nowrap;
     }
-    .rf-collapse-head {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 13px 16px; cursor: pointer; transition: background .15s, border-color .15s;
-    }
-    .rf-collapse-head:hover { background: var(--rf-subtle-bg); }
-    .rf-collapse-left { display: flex; align-items: center; gap: 10px; }
-    .rf-collapse-icon {
-        width: 26px; height: 26px; border-radius: 7px; background: var(--rf-primary-tint); color: var(--rf-primary);
-        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .rf-collapse-title { font-size: 13.5px; font-weight: 600; color: var(--rf-text-strong); }
-    .rf-collapse-right { display: flex; align-items: center; gap: 10px; }
-    .rf-chip-count {
-        background: var(--rf-primary-tint); color: var(--rf-primary); padding: 2px 9px;
-        border-radius: 999px; font-size: 11px; font-weight: 600;
-    }
-    .rf-btn-seguir {
-        padding: 7px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer;
-        border: none; background: var(--rf-primary); color: #fff; font-family: inherit;
-    }
-    .rf-chevron { width: 11px; height: 11px; transition: transform .2s; }
-    .rf-chevron-btn {
-        width: 28px; height: 28px; border-radius: 7px; border: none; background: transparent;
-        color: var(--rf-text-faint); cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: background .15s, color .15s;
-    }
-    .rf-chevron-btn:hover { background: #f2f1f7; color: var(--rf-text-mid); }
+    .rf-chip-semana-actual .rf-dot { width:6px; height:6px; border-radius:50%; background:var(--rf-success-dot); }
 
-    /* ── Tarjetas de seguimiento ── */
-    .rf-seg-empty {
-        border: 1px dashed var(--rf-border); border-radius: 10px; padding: 22px;
-        text-align: center; color: var(--rf-text-faint); font-size: 12.5px;
+    .rf2-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:24px; }
+    .rf2-col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+    .rf2-lab { display:flex; align-items:baseline; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--rf-text-strong); }
+    .rf2-lab .req { color:var(--rf-danger); margin-left:3px; }
+    .rf2-lab .opc { margin-left:auto; font-weight:400; font-size:12px; color:var(--rf-text-faint); }
+    .rf2-err { margin-top:5px; font-size:12px; color:var(--rf-danger); }
+    .rf2-err[hidden] { display:none; }
+    .rf2-fila { display:grid; grid-template-columns:minmax(0,2fr) minmax(190px,1fr); gap:12px; }
+
+    /* Estado (radiogroup) */
+    .rf2-estado { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+    .rf2-est {
+        height:42px; border-radius:10px; border:1px solid var(--rf-border); background:#fff; color:var(--rf-text-strong);
+        font:inherit; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;
     }
-    .rf-seg-item {
-        border: 1px solid var(--rf-border-div); border-radius: 10px; padding: 13px 14px;
-        display: grid; gap: 10px; transition: border-color .15s, background .15s;
+    .rf2-est i { width:8px; height:8px; border-radius:4px; background:var(--pt); }
+    .rf2-est[data-val="completada"] { --pt:#2E8B57; --bg:#E3F3E9; --fg:#22663F; }
+    .rf2-est[data-val="pendiente"]  { --pt:#D9A23B; --bg:#FCEFD6; --fg:#8A5A08; }
+    .rf2-est[data-val="reagendada"] { --pt:#3D5BD9; --bg:#DCE4FB; --fg:#2C44A8; }
+    .rf2-est[data-val="cancelada"]  { --pt:#D9534F; --bg:#FBE4E2; --fg:#A8322A; }
+    .rf2-est[aria-checked="true"] { background:var(--bg); color:var(--fg); border:1.5px solid var(--pt); }
+    .rf2-est:hover { border-color:var(--pt); }
+    .rf2-est:focus-visible, .rf2-val-op:focus-visible { outline:2px solid var(--rf-primary); outline-offset:2px; }
+    .rf2-combo-in:focus, .rf2-combo-in:focus-visible { outline:none; }   /* el foco ya lo marca el borde de .rf2-combo (:focus-within) */
+    .rf2-bloque { margin-top:10px; }
+    .rf2-bloque[hidden] { display:none; }
+    .rf2-reag { display:flex; align-items:center; gap:8px; }
+    .rf2-reag .rf2-in { width:90px; }
+    .rf2-reag .rango { font-size:12.5px; color:var(--rf-text-soft); }
+
+    .rf2-in, .rf2-ta {
+        width:100%; padding:10px 12px; border:1px solid var(--rf-border); border-radius:10px; font:inherit; font-size:14px;
+        color:var(--rf-text-strong); background:#fff; outline:none; line-height:1.45; user-select:text; -webkit-user-select:text;
     }
-    .rf-seg-item:hover { border-color: var(--rf-border-input); background: var(--rf-subtle-bg); }
-    .rf-seg-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .rf-seg-badge-tipo { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 4px 8px; border: 1px solid transparent; }
-    .rf-seg-fecha { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--rf-text-faint); }
-    .rf-seg-spacer { flex: 1; }
-    .rf-seg-estado { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; font-size: 11.5px; font-weight: 600; padding: 4px 10px 4px 8px; border: 1px solid transparent; }
-    .rf-seg-estado-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .rf-seg-actions { display: flex; align-items: center; gap: 2px; border-left: 1px solid var(--rf-border-div); padding-left: 6px; margin-left: 2px; }
-    .rf-seg-action-btn { font-size: 12px; font-weight: 600; padding: 5px 9px; border-radius: 7px; border: none; background: none; cursor: pointer; font-family: inherit; }
-    .rf-seg-action-editar { color: var(--rf-text-mid); }
-    .rf-seg-action-editar:hover { background: #f2f1f7; }
-    .rf-seg-action-eliminar { color: var(--rf-danger); }
-    .rf-seg-action-eliminar:hover { background: var(--rf-danger-bg); }
-    .rf-seg-title { font-size: 14px; font-weight: 600; color: var(--rf-text-strong); }
-    .rf-seg-desc { font-size: 13px; line-height: 1.55; color: var(--rf-text-mid); }
-    .rf-seg-notas-label { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; color: var(--rf-text-faint); margin-bottom: 2px; }
-    .rf-seg-notas { font-size: 12.5px; line-height: 1.5; color: var(--rf-text-soft); }
-    .rf-seg-foot { display: flex; flex-wrap: wrap; gap: 8px 22px; padding-top: 8px; border-top: 1px solid #f2f1f7; }
-    .rf-seg-foot-label { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; color: var(--rf-text-faint); }
-    .rf-seg-foot-value { font-size: 12.5px; font-weight: 600; color: var(--rf-text-strong); margin-top: 2px; }
-    .rf-seg-nota { font-size: 11px; font-weight: 600; margin-left: 6px; }
-    
+    .rf2-in { height:44px; padding-top:0; padding-bottom:0; }
+    .rf2-in:focus, .rf2-ta:focus { border-color:var(--rf-primary); box-shadow:0 0 0 3px rgba(61,91,217,.15); }
+    .rf2-ta { resize:vertical; min-height:60px; }
+
+    /* Combobox de personas */
+    .rf2-combo { position:relative; height:44px; border:1px solid var(--rf-border); border-radius:10px; display:flex; align-items:center; gap:10px; padding:0 8px; background:#fff; }
+    .rf2-combo:focus-within { border-color:var(--rf-primary); box-shadow:0 0 0 3px rgba(61,91,217,.15); }
+    .rf2-av { width:28px; height:28px; flex:none; border-radius:14px; background:var(--rf-primary-tint); color:var(--rf-primary-hover); font-size:11px; font-weight:600; display:flex; align-items:center; justify-content:center; }
+    .rf2-av[hidden] { display:none; }
+    .rf2-combo-in { flex:1; min-width:0; border:0; outline:none; background:transparent; font:inherit; font-size:14px; color:var(--rf-text-strong); user-select:text; -webkit-user-select:text; }
+    .rf2-nomina { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--rf-text-faint); }
+    .rf2-combo-x { width:24px; height:24px; border:0; border-radius:6px; background:transparent; color:var(--rf-text-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; line-height:1; }
+    .rf2-combo-x[hidden] { display:none; }
+    .rf2-combo-x:hover { background:#EF4444; color:#fff; }
+    .rf2-lista { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:30; max-height:220px; overflow-y:auto; list-style:none; background:#fff; border:1px solid var(--rf-border); border-radius:10px; box-shadow:0 12px 32px rgba(30,32,51,.14); padding:4px; }
+    .rf2-lista[hidden] { display:none; }
+    .rf2-val-by .rf2-lista { top:auto; bottom:calc(100% + 4px); }   /* "Validado por" es el último campo: siempre abre hacia arriba */
+    .rf2-lista li { display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:8px; cursor:pointer; font-size:13.5px; }
+    .rf2-lista li .n { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rf2-lista li .nm { font-size:12px; color:var(--rf-text-faint); }
+    .rf2-lista li:hover, .rf2-lista li.on { background:var(--rf-primary-tint); }
+    .rf2-lista li.vacio { color:var(--rf-text-faint); cursor:default; }
+
+    /* Fecha */
+    .rf2-fechaw { height:44px; border:1px solid var(--rf-border); border-radius:10px; display:flex; align-items:center; background:#fff; padding-right:12px; }
+    .rf2-fechaw.tarde { border-color:var(--rf-warn-border); background:#FFFBF2; }
+    .rf2-fechaw .dp-wrap { flex:1; min-width:0; }
+    .rf2-fechaw .dp-control { height:42px; border:0; background:transparent; box-shadow:none; }
+    .rf2-fechaw .sem { font-size:12px; font-weight:600; color:var(--rf-warn); }
+    .rf2-aviso { display:flex; gap:8px; align-items:flex-start; padding:8px 10px; border-radius:10px; background:var(--rf-warn-bg); color:var(--rf-warn); font-size:12px; line-height:1.45; }
+    .rf2-aviso[hidden] { display:none; }
+    .rf2-aviso svg { flex:none; margin-top:1px; }
+
+    /* Evidencia */
+    .rf2-fotos { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; border-radius:12px; }
+    .rf2-fotos.arrastrando { outline:2px dashed var(--rf-primary); outline-offset:4px; }
+    .rf2-foto, .rf2-foto-add, .rf2-foto-libre { position:relative; aspect-ratio:1; border-radius:12px; overflow:hidden; }
+    .rf2-foto img { width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
+    .rf2-foto .rm { position:absolute; top:5px; right:5px; width:20px; height:20px; border:0; border-radius:10px; background:rgba(30,32,51,.72); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .rf2-foto .rm:hover { background:#EF4444; }
+    .rf2-foto .tag { position:absolute; left:5px; bottom:5px; padding:1px 6px; border:0; border-radius:6px; background:rgba(30,32,51,.72); color:#fff; font:inherit; font-size:10px; cursor:pointer; }
+    .rf2-foto .tag.vacia { opacity:.7; }
+    .rf2-foto-add { border:1.5px dashed #9AA6DD; background:#F7F8FE; color:var(--rf-primary); font:inherit; font-size:11px; font-weight:500; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; }
+    .rf2-foto-add:hover { background:var(--rf-primary-tint); }
+    .rf2-foto-libre { border:1px dashed var(--rf-border); background:#fff; }
+    .rf2-ayuda { font-size:11px; color:var(--rf-text-faint); margin-top:6px; }
+
+    /* Validación */
+    .rf2-val { border-radius:14px; border:1px solid var(--rf-border); background:#fff; padding:14px; }
+    .rf2-val[data-v="validado"]  { border-color:#2E8B57; background:#F6FBF8; }
+    .rf2-val[data-v="rechazado"] { border-color:#D9534F; background:#FFF7F6; }
+    .rf2-val.bloq { background:#F7F8FC; border-color:var(--rf-border); }
+    .rf2-val.bloq .rf2-val-ops { opacity:.5; }
+    .rf2-val-head { display:flex; align-items:center; gap:8px; }
+    .rf2-val-ico { width:30px; height:30px; border-radius:9px; background:#F0F1F7; color:var(--rf-text-strong); display:flex; align-items:center; justify-content:center; }
+    .rf2-val[data-v="validado"] .rf2-val-ico { background:#E3F3E9; color:#22663F; }
+    .rf2-val[data-v="rechazado"] .rf2-val-ico { background:#FBE4E2; color:#A8322A; }
+    .rf2-val-head b { font-size:14px; font-weight:600; }
+    .rf2-val-head .hint { margin-left:auto; font-size:12px; color:var(--rf-text-soft); }
+    .rf2-val-ops { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:12px; }
+    .rf2-val-op { height:38px; border-radius:10px; border:1px solid var(--rf-border); background:#fff; color:var(--rf-text-strong); font:inherit; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; }
+    .rf2-val-op[data-val="por_validar"][aria-checked="true"] { background:#F0F1F7; border:1.5px solid #C5C7D4; }
+    .rf2-val-op[data-val="validado"][aria-checked="true"]    { background:#E3F3E9; color:#22663F; border:1.5px solid #2E8B57; }
+    .rf2-val-op[data-val="rechazado"][aria-checked="true"]   { background:#FBE4E2; color:#A8322A; border:1.5px solid #D9534F; }
+    .rf2-val-op[aria-disabled="true"] { cursor:not-allowed; }
+    .rf2-val-by { display:grid; grid-template-columns:minmax(0,2fr) minmax(140px,1fr); gap:8px; margin-top:10px; }
+    .rf2-val-by[hidden], .rf2-val-rech[hidden], .rf2-reset[hidden] { display:none; }
+    .rf2-val-by .rf2-combo { height:40px; }
+    .rf2-val-fecha { height:40px; border:1px solid var(--rf-border); border-radius:10px; background:#fff; display:flex; align-items:center; gap:8px; padding:0 10px; font-size:13px; color:var(--rf-text-soft); }
+    .rf2-val-rech { margin-top:10px; }
+    .rf2-val-rech .rf2-ta { border-color:var(--rf-danger-border); min-height:60px; }
+    .rf2-reset { margin-top:10px; padding:8px 10px; border-radius:10px; background:var(--rf-warn-bg); color:var(--rf-warn); font-size:12px; }
+
+    /* Pie */
+    .rf2-pie { display:flex; align-items:center; gap:8px; padding:16px 26px; margin:18px -26px 0; border-top:1px solid var(--rf-border-div); background:#FAFBFE; }
+    .rf2-pie .atajo { margin-left:auto; font-size:12px; color:var(--rf-text-faint); }
+    .rf2-pie .btn { height:40px; border-radius:10px; font-size:14px; }
+    .rf2-pie .btn-danger { border-color:transparent; padding:0 12px; font-weight:500; color:var(--rf-danger); }
+    .rf2-pie .btn-danger:hover { background:var(--rf-danger-bg); }
+    .rf2-pie .btn-primary { padding:0 20px; }
+    .rf2-pie .btn-ghost { padding:0 16px; color:var(--rf-text-strong); font-weight:500; }
+    .rf2-pie .btn:disabled { opacity:.6; cursor:default; }
+
+    /* Registro bloqueado (sin permiso o ya llenado) */
+    .rf2-fechaw.bloq { pointer-events: none; opacity: .65; }
+    .rf2-est:disabled { cursor: not-allowed; opacity: .6; }
+    .rf2-in:disabled, .rf2-ta:disabled, .rf2-combo-in:disabled { background: #F7F8FC; color: var(--rf-text-soft); cursor: not-allowed; }
+    .rf2-combo.bloq { background: #F7F8FC; }
+    .rf2-aviso.permiso { background: var(--rf-info-bg); color: var(--rf-info); }
+
+    /* Visor de fotos */
+    .rf2-visor { position:fixed; inset:0; z-index:100000; background:rgba(30,32,51,.85); display:flex; align-items:center; justify-content:center; padding:24px; }
+    .rf2-visor[hidden] { display:none; }
+    .rf2-visor img { max-width:100%; max-height:100%; border-radius:12px; }
+    .rf2-visor button { position:absolute; top:16px; right:16px; width:36px; height:36px; border:0; border-radius:10px; background:rgba(255,255,255,.14); color:#fff; font-size:18px; cursor:pointer; }
+    .rf2-visor button:hover { background:#EF4444; }
 </style>
 </head>
 <body>
-<div style="padding:20px 0 0;">
+<div class="rf2" id="rf2">
 
-    <!-- Tarjeta "Registrar ejecución" -->
-    <div class="rf-card">
-        <div class="rf-card-head">
-            <div>
-                 <div class="rf-card-title">{% trans "Registrar ejecución" %}</div>
-                <div class="rf-card-subtitle">{% trans "Semana" %} {{ semana }} &middot; {{ lunes|date:"d M" }} &ndash; {{ domingo|date:"d M Y" }}</div>
+    <div class="rf2-head">
+        <h3>{% trans "Registrar ejecución" %}</h3>
+        <span class="sub">{% trans "Semana" %} {{ semana }} &middot; {{ lunes|date:"d M" }} &ndash; {{ domingo|date:"d M Y" }}</span>
+        {% if semana == hoy_semana and anio == hoy_anio %}
+        <span class="rf-chip-semana-actual"><span class="rf-dot"></span>{% trans "Semana actual" %}</span>
+        {% endif %}
+        {% if registro and editor_nombre %}
+        <span class="ult">{% trans "Última edición" %}: {{ editor_nombre }} &middot; {{ registro.modificado|date:"d/m/Y" }}</span>
+        {% endif %}
+    </div>
+
+    <div class="rf2-aviso permiso" id="rf-aviso-permiso" hidden style="margin-bottom:14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 8v5m0 3h.01"/><circle cx="12" cy="12" r="9"/></svg>
+        <span class="txt"></span>
+    </div>
+
+    <form id="rf-form" onsubmit="return false" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="estado" value="{{ registro.estado|default:'' }}">
+        <input type="hidden" name="responsable" value="{{ registro.responsable_id|default:'' }}">
+        <input type="hidden" name="validacion" value="{{ registro.validacion|default:'por_validar' }}">
+        <input type="hidden" name="validado_por" value="{{ registro.validado_por_id|default:'' }}">
+
+        <div class="rf2-grid">
+            <!-- ── Columna izquierda ── -->
+            <div class="rf2-col">
+                <div>
+                    <div class="rf2-lab" id="rf-lab-estado">{% trans "Estado" %} <span class="req" aria-hidden="true">*</span></div>
+                    <div class="rf2-estado" role="radiogroup" aria-labelledby="rf-lab-estado">
+                        {% for val, label in estados %}
+                        <button type="button" class="rf2-est" role="radio" data-val="{{ val }}" aria-checked="false"><i></i>{{ label }}</button>
+                        {% endfor %}
+                    </div>
+                    <div class="rf2-err" id="rf-err-estado" hidden></div>
+
+                    <div class="rf2-bloque" id="rf-blk-reag" hidden>
+                        <div class="rf2-lab">{% trans "Reagendar a la semana" %} <span class="req" aria-hidden="true">*</span></div>
+                        <div class="rf2-reag">
+                            <input class="rf2-in" type="number" name="reagendada_semana" min="1" max="53" inputmode="numeric" placeholder="{% trans 'Semana' %}" value="{{ registro.reagendada_semana|default:'' }}" aria-label="{% trans 'Semana' %}">
+                            <input class="rf2-in" type="number" name="reagendada_anio" min="2000" max="2100" inputmode="numeric" value="{{ registro.reagendada_anio|default:anio }}" aria-label="{% trans 'Año' %}" style="width:100px;">
+                            <span class="rango rf2-mono" id="rf-reag-rango"></span>
+                        </div>
+                        <div class="rf2-err" id="rf-err-reagendada_semana" hidden></div>
+                    </div>
+                    <div class="rf2-bloque" id="rf-blk-canc" hidden>
+                        <label class="rf2-lab" for="rf-motivo-canc">{% trans "Motivo de la cancelación" %} <span class="req" aria-hidden="true">*</span></label>
+                        <textarea class="rf2-ta" id="rf-motivo-canc" name="motivo_cancelacion" style="height:60px;">{{ registro.motivo_cancelacion|default:'' }}</textarea>
+                        <div class="rf2-err" id="rf-err-motivo_cancelacion" hidden></div>
+                    </div>
+                </div>
+
+                <div class="rf2-fila">
+                    <div>
+                        <div class="rf2-lab">{% trans "Responsable" %} <span class="req" aria-hidden="true">*</span></div>
+                        <div class="rf2-combo" id="rf-combo-resp">
+                            <span class="rf2-av" hidden></span>
+                            <input type="text" class="rf2-combo-in" role="combobox" autocomplete="off" aria-expanded="false" aria-controls="rf-lista-resp" aria-label="{% trans 'Responsable' %}" placeholder="{% trans 'Buscar responsable…' %}">
+                            <span class="rf2-nomina"></span>
+                            <button type="button" class="rf2-combo-x" aria-label="{% trans 'Quitar responsable' %}" hidden>&times;</button>
+                            <ul class="rf2-lista" id="rf-lista-resp" role="listbox" hidden></ul>
+                        </div>
+                        <div class="rf2-err" id="rf-err-responsable" hidden></div>
+                    </div>
+                    <div>
+                        <div class="rf2-lab">{% trans "Fecha de ejecución" %} <span class="req" aria-hidden="true">*</span></div>
+                        <div class="rf2-fechaw" id="rf-fechaw">
+                            {% include 'menu_app/_date_picker.html' with name='fecha_ejecucion' initial=registro.fecha_ejecucion|date:'Y-m-d' dp_id='dp-fecha-ejecucion' %}
+                            <span class="sem" id="rf-sem-fecha"></span>
+                        </div>
+                        <div class="rf2-err" id="rf-err-fecha_ejecucion" hidden></div>
+                    </div>
+                </div>
+
+                <div class="rf2-aviso" id="rf-aviso-atraso" hidden>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 8v5m0 3h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                    <span class="txt"></span>
+                </div>
+
+                <div>
+                    <label class="rf2-lab" for="rf-obs">{% trans "Observaciones" %} <span class="opc" id="rf-cnt-obs"></span></label>
+                    <textarea class="rf2-ta" id="rf-obs" name="observaciones" maxlength="1000" style="height:96px;"
+                              placeholder="{% trans 'Describe lo realizado, materiales usados, anomalías detectadas…' %}">{{ registro.observaciones|default:'' }}</textarea>
+                </div>
             </div>
-            {% if semana == hoy_semana and anio == hoy_anio %}
-            <span class="rf-chip-semana-actual"><span class="rf-dot"></span>Semana actual</span>
-            {% endif %}
+
+            <!-- ── Columna derecha ── -->
+            <div class="rf2-col">
+                <div>
+                    <div class="rf2-lab">{% trans "Evidencia fotográfica" %} <span class="opc" id="rf-cnt-fotos">0 / {{ max_fotos }}</span></div>
+                    <div class="rf2-fotos" id="rf-fotos"></div>
+                    <input type="file" id="rf-file" accept="image/jpeg,image/png" multiple hidden>
+                    <div class="rf2-ayuda">{% trans "Arrastra, pega (Ctrl + V) o haz clic · JPG o PNG hasta 5 MB · máximo 4" %}</div>
+                    <div class="rf2-err" id="rf-err-fotos" hidden></div>
+                </div>
+
+                <div class="rf2-val" id="rf-val" data-v="por_validar">
+                    <div class="rf2-val-head">
+                        <span class="rf2-val-ico">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+                        </span>
+                        <b id="rf-lab-val">{% trans "Validación" %}</b>
+                        <span class="hint" id="rf-val-hint"></span>
+                    </div>
+                    <div class="rf2-val-ops" role="radiogroup" aria-labelledby="rf-lab-val">
+                        {% for val, label in validaciones %}
+                        <button type="button" class="rf2-val-op" role="radio" data-val="{{ val }}" aria-checked="false" aria-disabled="false">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{% if val == 'validado' %}<path d="m5 12 5 5 9-10"/>{% elif val == 'rechazado' %}<path d="M6 6l12 12M18 6 6 18"/>{% else %}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>{% endif %}</svg>{{ label }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <div class="rf2-val-by" id="rf-val-validado" hidden>
+                        <div>
+                            <div class="rf2-combo" id="rf-combo-val">
+                                <span class="rf2-av" hidden></span>
+                                <input type="text" class="rf2-combo-in" role="combobox" autocomplete="off" aria-expanded="false" aria-controls="rf-lista-val" aria-label="{% trans 'Validado por' %}" placeholder="{% trans 'Validado por…' %}">
+                                <span class="rf2-nomina"></span>
+                                <button type="button" class="rf2-combo-x" aria-label="{% trans 'Quitar' %}" hidden>&times;</button>
+                                <ul class="rf2-lista" id="rf-lista-val" role="listbox" hidden></ul>
+                            </div>
+                            <div class="rf2-err" id="rf-err-validado_por" hidden></div>
+                        </div>
+                        <div class="rf2-val-fecha">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>
+                            <span id="rf-val-fecha"></span>
+                        </div>
+                    </div>
+                    <div class="rf2-val-rech" id="rf-val-rechazo" hidden>
+                        <textarea class="rf2-ta" name="motivo_rechazo" style="height:60px;" aria-label="{% trans 'Motivo del rechazo' %}"
+                                  placeholder="{% trans 'Motivo del rechazo (obligatorio)…' %}">{{ registro.motivo_rechazo|default:'' }}</textarea>
+                        <div class="rf2-err" id="rf-err-motivo_rechazo" hidden></div>
+                    </div>
+                    <div class="rf2-reset" id="rf-val-reset" hidden>{% trans "Al guardar, la validación se reiniciará" %}</div>
+                </div>
+            </div>
         </div>
 
-        <form method="post">
-            {% csrf_token %}
-            <div class="rf-card-body">
-                <div class="rf-row-2">
-                    <div class="field">
-                        <label>{% trans "Responsable" %}</label>
-                        <div class="rf-select-wrap">
-                            <select name="responsable" id="responsable" class="rf-select">
-                                <option value="">-- {% trans "Sin asignar" %} --</option>
-                                {% for r in responsables %}
-                                <option value="{{ r.pk }}" {% if registro and registro.responsable_id == r.pk %}selected{% endif %}>
-                                    {{ r.numero_nomina }} — {{ r.nombre }} {{ r.apellidos }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <span class="rf-select-chevron">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label>{% trans "Estado" %} <span class="rf-req">*</span></label>
-                        <div class="rf-select-wrap" id="wrap-estado">
-                            <select name="estado" id="select-estado" class="rf-select" required onchange="rfActualizarTintaEstado(this)">
-                                <option value="">-- {% trans "Seleccionar estado" %} --</option>
-                                {% for val, label in estados %}
-                                <option value="{{ val }}" {% if registro and registro.estado == val %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                            <span class="rf-select-chevron">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
-                            </span>
-                        </div>
-                    </div>
-                </div>
+        <div class="rf2-err" id="rf-err-general" hidden style="margin-top:12px;"></div>
 
-                <div class="field field-fecha">
-                    <label>{% trans "Fecha de ejecución" %}</label>
-                    {% include 'menu_app/_date_picker.html' with name='fecha_ejecucion' initial=registro.fecha_ejecucion|date:'Y-m-d' dp_id='dp-fecha-ejecucion' %}
-                </div>
+        <div class="rf2-pie">
+            {% if registro and rf_cfg.puedeEliminar %}
+            <button type="button" class="btn btn-danger" onclick="document.getElementById('modal-confirm').style.display='flex'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                {% trans "Eliminar registro" %}
+            </button>
+            {% endif %}
+            <span class="atajo">{% trans "Ctrl + Enter para guardar" %}</span>
+            <button type="button" class="btn btn-ghost" id="rf-btn-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="btn btn-primary" id="rf-btn-guardar">{% trans "Guardar ejecución" %}</button>
+        </div>
+    </form>
+</div>
 
-                <div class="field">
-                    <label>{% trans "Observaciones" %} <span class="rf-opcional">{% trans "Opcional" %}</span></label>
-                    <textarea name="observaciones" placeholder="Describe lo realizado, materiales usados, anomal&iacute;as detectadas&hellip;">{{ registro.observaciones|default:'' }}</textarea>
-                </div>
-            </div>
+<div class="rf2-visor" id="rf-visor" hidden role="dialog" aria-modal="true" aria-label="{% trans 'Foto' %}">
+    <img alt="">
+    <button type="button" aria-label="{% trans 'Cerrar' %}">&times;</button>
+</div>
 
-            <div class="rf-card-foot">
-                {% if registro %}
-                <button type="button" class="btn btn-danger"
-                        onclick="document.getElementById('modal-confirm').style.display='flex'">{% trans "Eliminar" %}</button>
-                {% else %}
-                <span></span>
-                {% endif %}
-                <div style="display:flex; gap:8px;">
-                    <button type="button" class="btn btn-ghost"
-                            onclick="window.parent.postMessage('cerrar_form_registro', '*')">{% trans "Cancelar" %}</button>
-                    <button type="button" id="btn-guardar" onclick="guardarRegistro()" class="btn btn-primary">{% trans "Guardar" %}</button>
-                </div>
-            </div>
-        </form>
+<!-- ¿Descartar cambios? -->
+<div id="rf-descartar" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:99999; align-items:center; justify-content:center;">
+    <div role="alertdialog" aria-modal="true" aria-labelledby="rf-d-tt" style="background:#fff; border-radius:12px; padding:24px 28px; max-width:360px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div id="rf-d-tt" style="font-size:15px; font-weight:600; color:var(--rf-text-strong); margin-bottom:8px;">{% trans "¿Descartar cambios?" %}</div>
+        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">{% blocktrans %}Tienes cambios sin guardar en la semana {{ semana }}.{% endblocktrans %}</div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button type="button" id="rf-d-seguir" class="btn btn-ghost">{% trans "Seguir editando" %}</button>
+            <button type="button" id="rf-d-descartar" class="btn btn-primary" style="background:#EF4444; border-color:#EF4444;">{% trans "Descartar" %}</button>
+        </div>
     </div>
 </div>
 
 <script>
-    function rfActualizarTintaEstado(sel) {
-        const wrap = document.getElementById('wrap-estado');
-        wrap.classList.remove('is-completada', 'is-pendiente', 'is-reagendada');
-        if (sel.value === 'completada') wrap.classList.add('is-completada');
-        else if (sel.value === 'pendiente') wrap.classList.add('is-pendiente');
-        else if (sel.value === 'reagendada') wrap.classList.add('is-reagendada');
-    }
-    rfActualizarTintaEstado(document.getElementById('select-estado'));
-
     // Avisa al padre (modal_calendario.html) el alto real cada vez que cambia,
     // en vez de medir una sola vez con un temporizador fijo — así el iframe
     // siempre se ajusta aunque el contenido crezca (Seguimiento desplegado,
@@ -312,118 +400,18 @@
             window.addEventListener('load', rfEnviarAltura);
         }
     })();
-
 </script>
-
-{% if registro and registro.estado == 'completada' %}
-<div class="rf-collapse-wrap">
-    <div class="rf-collapse">
-
-        <!-- Header colapsable -->
-        <div class="rf-collapse-head" onclick="toggleSeguimiento()">
-            <div class="rf-collapse-left">
-                <div class="rf-collapse-icon">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="9" stroke-width="2"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3.5 2"/>
-                    </svg>
-                </div>
-                <span class="rf-collapse-title">{% trans "Seguimiento" %}</span>
-                <span id="badge-seguimientos" class="rf-chip-count" style="display:none;"></span>
-            </div>
-            <div class="rf-collapse-right">
-                <button type="button" class="rf-btn-seguir" onclick="event.stopPropagation(); abrirModalSeguimiento()">
-                    + {% trans "Dar seguimiento" %}
-                </button>
-                <span class="rf-chevron-btn" aria-hidden="true">
-                    <svg id="chevron-seg" class="rf-chevron" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </span>
-            </div>
-        </div>
-
-        <!-- Contenido -->
-        <div id="seg-content" style="display:none; padding:0 14px 14px;">
-            <div id="lista-seguimientos" style="display:grid; gap:8px;">
-                {% for seg in registro.seguimientos.all %}
-                <div class="seg-item rf-seg-item" data-id="{{ seg.id }}">
-                    <div class="rf-seg-top">
-                        <span class="rf-seg-badge-tipo" style="
-                            {% if seg.tipo == 'preventiva' %}background:var(--rf-info-bg); border-color:var(--rf-info-border); color:var(--rf-info);
-                            {% elif seg.tipo == 'mejora' %}background:var(--rf-success-bg); border-color:var(--rf-success-border); color:var(--rf-success);
-                            {% else %}background:var(--rf-danger-bg); border-color:var(--rf-danger-border); color:var(--rf-danger);{% endif %}">{{ seg.get_tipo_display }}</span>
-                        <span class="rf-seg-fecha">{{ seg.fecha_creacion|date:"d/m/Y" }}</span>
-                        <span class="rf-seg-spacer"></span>
-                        <span class="badge-estatus rf-seg-estado" data-estatus="{{ seg.estatus }}" style="
-                            {% if seg.estatus == 'pendiente' %}background:var(--rf-warn-bg); border-color:var(--rf-warn-border); color:var(--rf-warn);
-                            {% elif seg.estatus == 'en_proceso' %}background:var(--rf-info-bg); border-color:var(--rf-info-border); color:var(--rf-info);
-                            {% else %}background:var(--rf-success-bg); border-color:var(--rf-success-border); color:var(--rf-success);{% endif %}">
-                            <span class="rf-seg-estado-dot" style="background:currentColor;"></span>{{ seg.get_estatus_display }}
-                        </span>
-                        <span class="rf-seg-actions">
-                            <button type="button" class="rf-seg-action-btn rf-seg-action-editar"
-                                onclick="editarSeguimiento({{ seg.id }}, '{{ seg.problema|escapejs }}', '{{ seg.accion|escapejs }}', '{{ seg.responsable|escapejs }}', '{{ seg.fecha_compromiso|date:"Y-m-d"|default:"" }}', '{{ seg.estatus }}', '{{ seg.notas|escapejs }}')">Editar</button>
-                            <button type="button" class="rf-seg-action-btn rf-seg-action-eliminar" onclick="confirmarEliminarSeg({{ seg.id }})">{% trans "Eliminar" %}</button>
-                        </span>
-                    </div>
-                    <div class="rf-seg-title">{{ seg.problema }}</div>
-                    {% if seg.accion %}<div class="rf-seg-desc">{{ seg.accion }}</div>{% endif %}
-                    {% if seg.notas %}
-                    <div>
-                        <div class="rf-seg-notas-label">{% trans "NOTAS" %}</div>
-                        <div class="rf-seg-notas">{{ seg.notas }}</div>
-                    </div>
-                    {% endif %}
-                    <div class="rf-seg-foot">
-                        {% if seg.fecha_compromiso %}
-                        <div data-compromiso="{{ seg.fecha_compromiso|date:'d/m/Y' }}">
-                            <div class="rf-seg-foot-label">{% trans "COMPROMISO" %}</div>
-                            <div class="rf-seg-foot-value">{{ seg.fecha_compromiso|date:"d/m/Y" }}<span class="rf-seg-nota"></span></div>
-                        </div>
-                        {% endif %}
-                        {% if seg.responsable %}
-                        <div>
-                            <div class="rf-seg-foot-label">{% trans "RESPONSABLE" %}</div>
-                            <div class="rf-seg-foot-value">{{ seg.responsable }}</div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% empty %}
-                <div id="empty-seg" class="rf-seg-empty">{% trans "Sin seguimientos registrados." %}</div>
-                {% endfor %}
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<!-- Modal eliminar seguimiento -->
-<div id="modal-confirm-seg"
-     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
-            z-index:99999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; padding:24px 28px; min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:15px; font-weight:600; color:var(--rf-text-strong); margin-bottom:8px;">{% trans "Eliminar seguimiento" %}</div>
-        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">{% trans "Esta acción no se puede deshacer." %}</div>
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button onclick="document.getElementById('modal-confirm-seg').style.display='none'" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-            <button onclick="eliminarSeguimientoConfirmado()" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
-        </div>
-    </div>
-</div>
-{% endif %}
 
 <!-- Modal confirmar eliminar registro -->
 <div id="modal-confirm"
     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
             z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; padding:24px 28px; min-width:280px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+    <div style="background:#fff; border-radius:12px; padding:24px 28px; max-width:360px; box-shadow:0 8px 32px rgba(0,0,0,.2);">
         <div style="font-size:15px; font-weight:600; color:var(--rf-text-strong); margin-bottom:8px;">{% trans "Eliminar registro" %}</div>
-        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">{% trans "Esta accion no se puede deshacer." %}</div>
+        <div style="font-size:13px; color:var(--rf-text-soft); margin-bottom:20px;">{% blocktrans %}¿Eliminar el registro de la S{{ semana }}? Se borrarán también sus fotos.{% endblocktrans %}</div>
         <div style="display:flex; gap:8px; justify-content:flex-end;">
             <button onclick="document.getElementById('modal-confirm').style.display='none'" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-            <button onclick="confirmarEliminar()" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Si, eliminar" %}</button>
+            <button onclick="confirmarEliminar()" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
         </div>
     </div>
 </div>
@@ -434,31 +422,49 @@
             background:#065F46; color:#fff; padding:10px 20px; border-radius:8px;
             font-size:13px; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.2);
             align-items:center; gap:8px; z-index:9999; white-space:nowrap;">
-    ✓ {% trans "Registro guardado" %}
+    ✓ {% blocktrans %}Ejecución de S{{ semana }} guardada{% endblocktrans %}
 </div>
 
-<!-- Variables Django para JS -->
+{{ rf_cfg|json_script:"rf-cfg" }}
+{{ personas|json_script:"rf-personas" }}
 <script>
-window.REGISTRO_CONFIG = {
-    plan_pk: {{ plan.pk }},
-    anio:    {{ anio }},
-    semana:  {{ semana }},
+window.RF_I18N = {
+    sinResultados:     "{% trans 'Sin resultados' %}",
+    fechaFutura:       "{% trans 'La fecha de ejecución no puede ser futura' %}",
+    atrasoUna:         "{% trans 'La fecha de ejecución (S{x}) es posterior a la semana programada (S{y}). Se registrará como ejecutada con {n} semana de atraso.' %}",
+    atrasoN:           "{% trans 'La fecha de ejecución (S{x}) es posterior a la semana programada (S{y}). Se registrará como ejecutada con {n} semanas de atraso.' %}",
+    opcionalCnt:       "{% trans 'opcional · {n} / 1000' %}",
+    quitarFoto:        "{% trans 'Quitar foto' %}",
+    verFoto:           "{% trans 'Ver foto {n}' %}",
+    antes:             "{% trans 'Antes' %}",
+    despues:           "{% trans 'Después' %}",
+    sinEtiqueta:       "{% trans 'Sin etiqueta' %}",
+    agregarFoto:       "{% trans 'Agregar foto' %}",
+    agregar:           "{% trans 'Agregar' %}",
+    maxFotos:          "{% trans 'Máximo 4 fotos por registro' %}",
+    soloImagenes:      "{% trans 'Solo JPG o PNG de hasta 5 MB' %}",
+    valHintNo:         "{% trans 'Disponible al marcar como Completada' %}",
+    valHintSi:         "{% trans 'Revisa la evidencia antes de validar' %}",
+    valHintSolo:       "{% trans 'No tienes permiso para validar' %}",
+    elegirEstado:      "{% trans 'Elige un estado' %}",
+    elegirResponsable: "{% trans 'Elige un responsable de la lista' %}",
+    pedirResponsable: "{% trans 'Esta semana aún no tiene responsable. Pide a un supervisor que lo asigne.' %}",
+    fechaObligatoria:  "{% trans 'La fecha de ejecución es obligatoria' %}",
+    motivoCancelacion: "{% trans 'Indica el motivo de la cancelación' %}",
+    semanaDestino:     "{% trans 'Elige la semana a la que se reagenda' %}",
+    elegirValidador:   "{% trans 'Elige quién valida' %}",
+    motivoRechazo:     "{% trans 'Indica el motivo del rechazo' %}",
+    guardando:         "{% trans 'Guardando…' %}",
+    errorGuardar:      "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
+    errorRed:          "{% trans 'Error de red. Intenta de nuevo.' %}",
+    avisoLectura:      "{% trans 'No tienes permiso para registrar ejecuciones.' %}",
+    avisoYaLlenado:    "{% trans 'Este registro ya fue llenado. Para modificarlo necesitas permiso de edición.' %}",
+    avisoSoloValidar:  "{% trans 'Solo puedes cambiar la validación de este registro.' %}"
 };
 </script>
 <script src="{% static 'menu_app/js/date_picker.js' %}"></script>
-<script src="{% static 'mto_app/js/registro_form.js' %}"></script>
+<script src="{% static 'mto_app/js/registro_form.js' %}?v=5"></script>
 
-{% if registro and registro.estado == 'completada' %}
-<script>
-const CSRF_SEG    = document.cookie.split(';').find(s => s.trim().startsWith('csrftoken='))?.trim().split('=')[1] || '';
-const REGISTRO_PK = {{ registro.pk }};
-const URL_AGREGAR = "{% url 'mto:agregar_seguimiento' registro.pk %}";
-const URL_EDITAR  = "/mto/seguimiento/editar/";
-const URL_ELIMINAR = "/mto/seguimiento/eliminar/";
-const SEG_SUBTITULO = '{{ plan.rutina }} · S{{ semana }}/{{ anio }}';
-</script>
-<script src="{% static 'mto_app/js/registro_form_seg.js' %}"></script>
-{% endif %}
 
 </body>
 </html>

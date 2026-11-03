@@ -1,0 +1,236 @@
+/* documentos_movil.css — Vista de celular (≤767px) de Documentos Generales
+   (categorías y dentro de una carpeta). El escritorio no se toca: solo se
+   oculta (.dcm-desktop-only); los modales de escritorio se acomodan como hojas. */
+
+.movil-only { display: none; }
+@media (min-width: 768px) { .movil-only { display: none !important; } }
+
+@media (max-width: 767px) {
+    .dcm-desktop-only { display: none !important; }
+    .movil-only { display: block; }
+    #dcm-movil [hidden], .dcm-hoja [hidden] { display: none !important; }
+
+    /* Dentro de una carpeta, la barra lleva "‹ atrás" en lugar del menú */
+    .topbar-movil:has(.dcm-volver) .btn-sidebar-mobile { display: none !important; }
+    .topbar-movil .dcm-volver { display: flex; }
+    #dcm-movil > .dcm-volver { display: none; }
+    .dcm-titulos .dcm-mono, .dcm-mono { font-family: 'DM Mono', ui-monospace, monospace; }
+
+    /* ── Ruta ── */
+    .dcm-ruta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 0 4px 10px; font-size: 12px; color: var(--text-3); }
+    .dcm-ruta a { color: var(--indigo-dk); text-decoration: none; min-height: 28px; display: inline-flex; align-items: center; }
+    .dcm-ruta span[aria-current] { color: var(--text); font-weight: 500; overflow-wrap: anywhere; }
+    .dcm-ruta svg { flex: none; }
+    .dcm-ruta-mas {
+        min-width: 32px; height: 28px; border: 0; border-radius: 8px; background: var(--surface);
+        font: inherit; font-size: 13px; color: var(--indigo-dk); cursor: pointer;
+    }
+
+    /* ── Búsqueda + ordenar ── */
+    .dcm-buscar-fila { display: flex; gap: 8px; margin-bottom: 12px; }
+    .dcm-buscar {
+        flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; box-sizing: border-box;
+        background: var(--white); border: 1px solid var(--border); border-radius: 12px; color: var(--text-3);
+    }
+    .dcm-buscar:focus-within { border-color: var(--indigo); }
+    .dcm-buscar input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 16px; color: var(--text); }
+    .dcm-btn-icono {
+        width: 44px; height: 44px; flex: none; border-radius: 12px; border: 1px solid var(--border); padding: 0;
+        background: var(--white); color: var(--text); display: flex; align-items: center; justify-content: center;
+        cursor: pointer; text-decoration: none; box-sizing: border-box;
+    }
+
+    /* ── Control segmentado ── */
+    .dcm-seg {
+        display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; margin-bottom: 14px;
+        background: var(--surface); border-radius: 14px;
+    }
+    .dcm-seg button {
+        height: 36px; border: 0; border-radius: 10px; background: transparent; font: inherit; font-size: 13px;
+        color: var(--text-3); cursor: pointer; padding: 0 4px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dcm-seg button[aria-pressed="true"] { background: var(--white); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(30,32,51,.12); }
+
+    /* ── Secciones y filas ── */
+    .dcm-etiqueta {
+        display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+        margin: 0 4px 8px; font-size: 12px; font-weight: 600; letter-spacing: .06em; color: var(--text-3);
+    }
+    .dcm-etiqueta small { font-size: 12px; font-weight: 400; letter-spacing: 0; }
+    .dcm-seccion + .dcm-seccion { margin-top: 18px; }
+    .dcm-lista { background: var(--white); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .dcm-lista > * + * { border-top: 1px solid var(--border); }
+    .dcm-fila {
+        display: flex; align-items: center; gap: 12px; padding: 12px 14px; color: var(--text); text-decoration: none;
+        background: transparent; border: 0; font: inherit; text-align: left; width: 100%; box-sizing: border-box; cursor: pointer; min-width: 0;
+    }
+    .dcm-fila:active { background: var(--surface); }
+    .dcm-fila-arch { display: flex; align-items: center; padding-right: 4px; }
+    .dcm-fila-arch .dcm-fila { flex: 1; padding-right: 6px; }
+    .dcm-txt { flex: 1; min-width: 0; }
+    .dcm-nombre { display: block; font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dcm-meta, .dcm-desc, .dcm-ruta-item { display: block; font-size: 12px; color: var(--text-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Modo oscuro: los colores por tipo (PNG morado, DOCX azul…) se aclaran para leerse. */
+    [data-theme="dark"] .dcm-meta b, [data-theme="dark"] .dcm-arch-meta b { filter: brightness(1.9); }
+    .dcm-ruta-item { font-size: 11px; }
+    .dcm-chev { flex: none; color: var(--text-3); }
+    .dcm-mas {
+        width: 44px; height: 44px; flex: none; border: 0; border-radius: 12px; background: transparent; color: var(--text-3);
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    /* Íconos por tipo */
+    .dcm-tipo {
+        width: 40px; height: 40px; flex: none; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    }
+    .dcm-tipo.chico { width: 36px; height: 36px; border-radius: 10px; }
+    .dcm-tipo.cat { width: 48px; height: 48px; border-radius: 14px; }
+    .dcm-tipo.grande { width: 56px; height: 56px; border-radius: 16px; }
+
+    /* Categorías (tarjetas) */
+    .dcm-cats { display: flex; flex-direction: column; gap: 8px; }
+    .dcm-cat {
+        display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--white); border: 1px solid var(--border);
+        border-radius: 16px; text-decoration: none; color: var(--text);
+    }
+    .dcm-cat:active { background: var(--surface); }
+    .dcm-cat .dcm-nombre { font-size: 16px; font-weight: 600; line-height: 1.3; white-space: normal; overflow-wrap: anywhere; }
+    .dcm-cat .dcm-meta { margin-top: 3px; }
+    .dcm-cat small { display: block; font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .dcm-recientes .dcm-fila { padding: 10px 14px; }
+    .dcm-recientes .dcm-nombre { font-size: 14px; }
+    .dcm-recientes .dcm-meta { font-size: 11px; }
+
+    .dcm-vacio { text-align: center; padding: 40px 16px; color: var(--text-3); background: var(--white); border: 1px solid var(--border); border-radius: 16px; }
+    .dcm-vacio b { display: block; font-size: 15px; color: var(--text); margin-bottom: 4px; }
+
+    /* ── Subidas en curso ── */
+    #dcm-subidas { margin-bottom: 18px; }
+    .dcm-subida { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+    .dcm-subida .dcm-txt { min-width: 0; }
+    .dcm-subida-barra { display: block; height: 6px; margin-top: 6px; border-radius: 3px; background: var(--surface); overflow: hidden; }
+    .dcm-subida-barra i { display: block; height: 100%; width: 0; background: #3D5BD9; transition: width .15s; }
+    .dcm-subida.ok .dcm-subida-barra i { background: #2E8B57; }
+    .dcm-subida.error .dcm-subida-barra { display: none; }
+    .dcm-subida.error .dcm-meta { color: #A8322A; white-space: normal; }
+    .dcm-subida-estado { flex: none; width: 24px; text-align: center; font-weight: 700; }
+    .dcm-subida.ok .dcm-subida-estado { color: #22663F; }
+    .dcm-subida.error .dcm-subida-estado { color: #A8322A; }
+
+    /* ── Botón flotante ── */
+    .dcm-espacio-fab { height: 110px; }
+    .dcm-fab {
+        position: fixed; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 30;
+        height: 56px; padding: 0 20px 0 16px; border-radius: 28px; border: 0; background: #3D5BD9; color: #fff;
+        font: inherit; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer;
+        box-shadow: 0 6px 18px rgba(61,91,217,.35);
+    }
+
+    /* ── Hojas inferiores ── */
+    .dcm-hoja { z-index: 1500 !important; }
+    .modal-box.sheet-movil {
+        position: fixed; inset: auto 0 0 0; width: 100%; max-width: none; min-width: 0; box-sizing: border-box;
+        margin: 0; border-radius: 24px 24px 0 0; overflow-y: auto; text-align: left;
+        max-height: 88vh; padding: 10px 16px calc(20px + env(safe-area-inset-bottom));
+    }
+    .dcm-asa { display: flex; justify-content: center; padding-bottom: 8px; }
+    .dcm-asa span { width: 40px; height: 5px; border-radius: 3px; background: var(--border); }
+    @keyframes sheet-movil-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-backdrop .modal-box.sheet-movil { animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both; transform-origin: initial; }
+    .modal-backdrop[data-closing] .modal-box.sheet-movil { animation: none; opacity: 1; transform: translateY(100%); transition: transform 160ms ease-out; }
+    .dcm-sheet-titulo { margin: 0 4px 10px; font-size: 19px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+    .dcm-opcion {
+        display: flex; align-items: center; width: 100%; min-height: 52px; padding: 8px 12px; box-sizing: border-box;
+        border: 0; border-radius: 12px; background: transparent; font: inherit; font-size: 15px; color: var(--text);
+        text-align: left; text-decoration: none; cursor: pointer;
+    }
+    .dcm-opcion[aria-checked="true"], .dcm-opcion[aria-current] { background: #EBEFFD; color: #2C44A8; font-weight: 600; }
+    [data-theme="dark"] .dcm-opcion[aria-checked="true"], [data-theme="dark"] .dcm-opcion[aria-current] { background: var(--indigo-lt); color: var(--indigo); }
+    .dcm-acciones { display: flex; flex-direction: column; }
+    .dcm-accion {
+        display: flex; align-items: center; gap: 14px; width: 100%; min-height: 52px; padding: 0 12px; box-sizing: border-box;
+        border: 0; border-radius: 12px; background: transparent; font: inherit; font-size: 15px; color: var(--text);
+        text-align: left; cursor: pointer; position: relative;
+    }
+    .dcm-accion svg { flex: none; color: var(--text-3); }
+    .dcm-accion:active { background: var(--surface); }
+    .dcm-accion.peligro, .dcm-accion.peligro svg { color: #A8322A; }
+    .dcm-divisor { height: 1px; background: var(--border); margin: 4px 12px; }
+    .dcm-oculto { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+    .dcm-accion:focus-within { outline: 2px solid var(--indigo); outline-offset: -2px; }
+
+    /* Hoja de archivo */
+    .dcm-arch-head { display: flex; gap: 14px; padding: 6px 4px 0; }
+    .dcm-arch-titulos { flex: 1; min-width: 0; }
+    .dcm-arch-titulos h2 { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.3; color: var(--text); overflow-wrap: anywhere; }
+    .dcm-arch-meta { font-size: 13px; color: var(--text-3); margin-top: 3px; }
+    .dcm-arch-meta b { font-weight: 600; }
+    .dcm-arch-desc { margin: 14px 4px 0; font-size: 14px; line-height: 1.5; color: var(--text); overflow-wrap: anywhere; }
+    .dcm-arch-datos { margin: 14px 4px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .dcm-arch-datos div { background: var(--surface); border-radius: 12px; padding: 8px 12px; min-width: 0; }
+    .dcm-arch-datos dt { font-size: 11px; color: var(--text-3); }
+    .dcm-arch-datos dd { margin: 2px 0 0; font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dcm-arch-botones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 18px 4px 6px; }
+    .dcm-arch-botones.solo { grid-template-columns: 1fr; }
+    .dcm-btn-ver, .dcm-btn-descargar {
+        height: 52px; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; box-sizing: border-box;
+    }
+    .dcm-btn-ver { border: 0; background: #3D5BD9; color: #fff; }
+    .dcm-btn-descargar { border: 1px solid #C9D2F5; background: #EBEFFD; color: #2C44A8; }
+    [data-theme="dark"] .dcm-btn-descargar { background: var(--indigo-lt); border-color: var(--indigo-lt); color: var(--indigo); }
+
+    /* Renombrar */
+    .dcm-form { display: flex; flex-direction: column; gap: 12px; padding: 0 4px; }
+    .dcm-campo { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text); }
+    .dcm-campo input {
+        height: 48px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px;
+        background: var(--white); font: inherit; font-size: 16px; color: var(--text);
+    }
+    .dcm-campo input:focus { outline: none; border: 2px solid #3D5BD9; padding: 0 11px; }
+    .dcm-error { font-size: 12px; color: #A8322A; }
+    .dcm-form-pie { display: flex; gap: 8px; margin-top: 4px; }
+    .dcm-btn-sec, .dcm-btn-principal { height: 52px; border-radius: 14px; font: inherit; font-size: 15px; cursor: pointer; }
+    .dcm-btn-sec { padding: 0 18px; border: 1px solid var(--border); background: var(--white); color: var(--text); font-weight: 500; }
+    .dcm-btn-principal { flex: 1; border: 0; background: #3D5BD9; color: #fff; font-weight: 600; }
+    .dcm-btn-principal:disabled { opacity: .6; }
+
+    /* ── Modales de escritorio en celular: hojas inferiores ── */
+    #modal-categoria, #modal-subcarpeta, #modal-editar-carpeta { align-items: flex-end !important; }
+    #modal-categoria .mf-box, #modal-subcarpeta .mf-box, #modal-editar-carpeta .mf-box {
+        max-width: none !important; width: 100% !important; box-sizing: border-box;
+        border-radius: 24px 24px 0 0 !important; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)) !important;
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both !important;
+    }
+    #modal-categoria .form-field input, #modal-subcarpeta .form-field input, #modal-editar-carpeta .form-field input {
+        height: 48px; font-size: 16px; border-radius: 12px; box-sizing: border-box; width: 100%;
+    }
+    #modal-categoria .form-actions, #modal-subcarpeta .form-actions, #modal-editar-carpeta .form-actions { display: flex; gap: 8px; }
+    #modal-categoria .form-actions .btn, #modal-subcarpeta .form-actions .btn, #modal-editar-carpeta .form-actions .btn {
+        height: 52px; border-radius: 14px; font-size: 15px; justify-content: center;
+    }
+    #modal-categoria .form-actions .btn-primary, #modal-subcarpeta .form-actions .btn-primary,
+    #modal-editar-carpeta .form-actions .btn-primary { flex: 1; }
+    #modal-categoria .mf-box > div:first-child button, #modal-subcarpeta .mf-box > div:first-child button,
+    #modal-editar-carpeta .mf-box > div:first-child button { width: 44px !important; height: 44px !important; border-radius: 12px !important; }
+
+    #modal-eliminar-doc .modal-box {
+        position: fixed !important; inset: auto 0 0 0 !important; max-width: none !important; min-width: 0 !important;
+        width: 100% !important; box-sizing: border-box; border-radius: 24px 24px 0 0 !important;
+        padding: 24px 20px calc(20px + env(safe-area-inset-bottom)) !important;
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both !important; transform-origin: initial !important;
+    }
+    #modal-eliminar-doc #titulo-eliminar-doc { font-size: 19px !important; }
+    #modal-eliminar-doc #texto-eliminar-doc { font-size: 15px !important; line-height: 1.5; }
+    #modal-eliminar-doc .modal-box > div:last-child { flex-direction: column-reverse; align-items: stretch; gap: 10px !important; }
+    #modal-eliminar-doc .modal-box > div:last-child form, #modal-eliminar-doc .btn { width: 100%; }
+    #modal-eliminar-doc .btn { height: 52px; border-radius: 14px; justify-content: center; font-size: 15px; }
+
+    #modal-imagen .modal-box { width: calc(100% - 24px) !important; padding: 14px !important; box-sizing: border-box; }
+    #modal-imagen .modal-box > div:first-child a, #modal-imagen .modal-box > div:first-child button {
+        width: 44px !important; height: 44px !important; justify-content: center; border-radius: 12px !important;
+    }
+    #modal-imagen .modal-box > div:first-child button:active { background: #EF4444 !important; color: #fff !important; }
+
+    @media (prefers-reduced-motion: reduce) { .modal-box.sheet-movil { animation: none !important; } }
+}

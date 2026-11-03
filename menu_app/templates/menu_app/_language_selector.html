@@ -1,27 +1,20 @@
 {% load i18n %}
-<div style="display:flex; align-items:flex-end;">
-    <form action="{% url 'set_language' %}" method="post" style="display:flex; align-items:center; gap:6px;">
-        {% csrf_token %}
-        <input name="next" type="hidden" value="{{ request.get_full_path }}">
-        <button type="submit" name="language" value="es"
-                 style="display:flex; align-items:center; gap:5px; height:38px; padding:0 16px;
-                       border-radius:10px; border:0.5px solid var(--border); background:transparent;
-                       cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:500;
-                       color:var(--text);
-                       {% if request.LANGUAGE_CODE == 'es' %}
-                           border-color:var(--indigo); color:var(--indigo); background:var(--indigo-lt);
-                       {% endif %}">
-            <span>{% trans "Español" %}</span>
-        </button>
-        <button type="submit" name="language" value="en"
-                style="display:flex; align-items:center; gap:5px; height:38px; padding:0 16px;
-                       border-radius:10px; border:0.5px solid var(--border); background:transparent;
-                       cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:500;
-                       color:var(--text);
-                       {% if request.LANGUAGE_CODE == 'en' %}
-                           border-color:var(--indigo); color:var(--indigo); background:var(--indigo-lt);
-                       {% endif %}">
-            <span>{% trans "Inglés" %}</span>
-        </button>
-    </form>
-</div>
+{% comment %}
+    LanguageSelector — píldora deslizante Español | English con ícono de mundo.
+    Estilos: menu_app/css/language_selector.css · animación: menu_app/js/language_selector.js.
+    Altura: la fija la página con --ls-h (por defecto 38px). El cambio de idioma es el POST de siempre a set_language.
+{% endcomment %}
+<form action="{% url 'set_language' %}" method="post" class="ls" data-lang="{% if request.LANGUAGE_CODE == 'en' %}en{% else %}es{% endif %}">
+    {% csrf_token %}
+    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+    <div class="ls-grupo" role="radiogroup" aria-label="{% trans 'Idioma' %}">
+        <span class="ls-globo" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>
+        </span>
+        <div class="ls-pista">
+            <span class="ls-pastilla" aria-hidden="true"></span>
+            <button type="submit" name="language" value="es" lang="es" role="radio" class="ls-op" aria-checked="{% if request.LANGUAGE_CODE != 'en' %}true{% else %}false{% endif %}">Español</button>
+            <button type="submit" name="language" value="en" lang="en" role="radio" class="ls-op" aria-checked="{% if request.LANGUAGE_CODE == 'en' %}true{% else %}false{% endif %}">English</button>
+        </div>
+    </div>
+</form>

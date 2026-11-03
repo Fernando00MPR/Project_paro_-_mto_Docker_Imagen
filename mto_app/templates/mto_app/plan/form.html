@@ -62,7 +62,7 @@
                 </select>
             </div>
             <div class="form-field full">
-                <label>{% trans "Actividad" %}</label>
+                <label>{% trans "Actividad" %} *</label>
                 <input type="text" name="actividad" value="{{ plan.actividad|default:'' }}" required
                        placeholder="Descriptivo de la actividad del equipo">
             </div>
@@ -84,9 +84,9 @@
                     placeholder="Nombre corto del equipo">
             </div>
             <div class="form-field">
-                <label>{% trans "Locación" %}</label>
+                <label>{% trans "Locación" %} *</label>
                 <input type="text" name="locacion"
-                    value="{{ plan.locacion|default:'' }}"
+                    value="{{ plan.locacion|default:'' }}" required
                     placeholder="Ej: Automatic Warehouse">
             </div>
             <div class="form-field">

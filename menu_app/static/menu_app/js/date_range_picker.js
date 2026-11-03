@@ -47,6 +47,9 @@
     }
 
     function initOne(wrap) {
+        if (wrap.dataset.dprListo) return;
+        wrap.dataset.dprListo = '1';
+
         var hiddenDesde = wrap.querySelector('.dpr-desde-value');
         var hiddenHasta = wrap.querySelector('.dpr-hasta-value');
         var control     = wrap.querySelector('.dpr-control');
@@ -276,4 +279,5 @@
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.dpr-wrap').forEach(initOne);
     });
+    window.dprIniciar = function (cont) { (cont || document).querySelectorAll('.dpr-wrap').forEach(initOne); };
 })();

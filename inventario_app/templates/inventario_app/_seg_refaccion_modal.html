@@ -1,0 +1,152 @@
+{% load i18n %}
+{% comment %}
+    Modal "Nuevo seguimiento de compra" / "Editar seguimiento" de escritorio (34D-a). Lo maneja
+    seg_refacciones_escritorio.js; usa el modal de Inventario (.ive-ed-*) y los estilos .srd-m-*.
+    Guarda por AJAX en guardar_seguimiento_refaccion.
+{% endcomment %}
+<div class="ive-ed-fondo" id="srd-m" hidden>
+    <form class="ive-ed srd-m" id="srd-m-form" role="dialog" aria-modal="true" aria-labelledby="srd-m-t" aria-describedby="srd-m-sub" novalidate
+          data-url-nuevo="{% url 'inventario:nuevo_seguimiento_refaccion' %}">
+        {% csrf_token %}
+        <input type="hidden" name="refaccion" id="srd-m-ref">
+
+        <header class="ive-ed-head">
+            <span class="ive-ed-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM18 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
+            </span>
+            <div class="ive-ed-tit">
+                <div><h2 id="srd-m-t"></h2></div>
+                <p class="ive-ed-sub" id="srd-m-sub">{% trans "Registra la PR y completa PO y SR conforme avance la compra" %}</p>
+            </div>
+            <button type="button" class="ive-ed-x" data-cerrar aria-label="{% trans 'Cerrar' %}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+        </header>
+
+        <div class="ive-ed-cuerpo srd-m-cuerpo">
+            {% comment %} ── Columna izquierda: refacción, cantidad y comentarios ── {% endcomment %}
+            <div class="ive-ed-col">
+                <div>
+                    <label class="ive-ed-lab" for="srd-m-buscar">{% trans "Refacción" %} <span class="req" aria-hidden="true">*</span></label>
+                    <div class="srd-m-tarjeta" id="srd-m-tarjeta" hidden>
+                        <span class="srd-m-foto" id="srd-m-foto"></span>
+                        <div class="srd-m-tarjeta-txt">
+                            <b id="srd-m-nombre"></b>
+                            <span><span class="srd-cod" id="srd-m-item"></span><span id="srd-m-ubic"></span></span>
+                            <span class="srd-m-chips"><span class="srd-m-chip" id="srd-m-stock"></span><span class="srd-m-chip pen" id="srd-m-abiertas" hidden></span></span>
+                        </div>
+                        <button type="button" class="ive-ed-mini-btn srd-m-cambiar" id="srd-m-cambiar" aria-label="{% trans 'Cambiar refacción' %}">{% trans "Cambiar" %}</button>
+                    </div>
+                    <div class="srd-m-combo" id="srd-m-combo">
+                        <div class="srd-m-buscar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                            <input id="srd-m-buscar" role="combobox" aria-expanded="false" aria-controls="srd-m-lista" aria-autocomplete="list"
+                                   autocomplete="off" placeholder="{% trans 'Escribe el No. item o el nombre' %}">
+                        </div>
+                        <div class="srd-m-lista" id="srd-m-lista" role="listbox" aria-label="{% trans 'Refacciones' %}" hidden></div>
+                    </div>
+                    <div class="srd-m-ayuda">{% trans "Busca por No. item o nombre. Solo refacciones del inventario." %}</div>
+                    <div class="ive-ed-err" data-err="refaccion" hidden></div>
+                </div>
+
+                <div>
+                    <label class="ive-ed-lab" for="srd-m-cantidad">{% trans "Cantidad pedida" %} <span class="req" aria-hidden="true">*</span></label>
+                    <div class="srd-m-cant">
+                        <button type="button" data-paso="-1" aria-label="{% trans 'Restar 1' %}">−</button>
+                        <input class="ive-ed-in" id="srd-m-cantidad" name="cantidad" inputmode="numeric" autocomplete="off">
+                        <button type="button" data-paso="1" aria-label="{% trans 'Sumar 1' %}">+</button>
+                        <span id="srd-m-unidad">pza</span>
+                    </div>
+                    <div class="srd-m-ayuda" id="srd-m-min" hidden></div>
+                    <div class="ive-ed-err" data-err="cantidad" hidden></div>
+                </div>
+
+                <div>
+                    <label class="ive-ed-lab" for="srd-m-comentarios">{% trans "Comentarios" %} <span class="srd-m-opc">{% trans "opcional" %}</span> <span class="ive-ed-cont" id="srd-m-cont">0 / 300</span></label>
+                    <textarea class="ive-ed-in ive-ed-ta" id="srd-m-comentarios" name="comentarios" rows="3" maxlength="300"
+                              placeholder="{% trans 'Urgencia, proveedor sugerido, equipo donde se usará…' %}"></textarea>
+                    <div class="ive-ed-err" data-err="comentarios" hidden></div>
+                </div>
+            </div>
+
+            {% comment %} ── Columna derecha: avance de la compra (PR → PO → SR) ── {% endcomment %}
+            <div class="ive-ed-col">
+                <div class="srd-m-av-head">
+                    <span>{% trans "Avance de la compra" %}</span>
+                    <span class="srd-estado rojo" id="srd-m-estado"><i aria-hidden="true"></i><b></b></span>
+                </div>
+                <div class="srd-m-pasos">
+                    <div class="srd-m-paso" data-paso="pr">
+                        <span class="srd-m-circ" aria-hidden="true">PR</span>
+                        <div class="srd-m-paso-c">
+                            <div class="srd-m-paso-t">{% trans "Solicitud de compra (PR)" %} <span class="req" aria-hidden="true">*</span><span class="srd-m-paso-h"></span></div>
+                            <div class="srd-m-paso-g">
+                                <input class="ive-ed-in srd-cod" id="srd-m-numero_pr" name="numero_pr" maxlength="50" autocomplete="off"
+                                       placeholder="{% trans 'Ej. 24-SPR-26060090' %}" aria-label="{% trans 'No. de PR' %}">
+                                {% include 'menu_app/_date_picker.html' with name='fecha_pr' dp_id='dp-srd-m-pr' %}
+                            </div>
+                            <div class="ive-ed-err" data-err="numero_pr" hidden></div>
+                            <div class="ive-ed-err" data-err="fecha_pr" hidden></div>
+                        </div>
+                    </div>
+                    <div class="srd-m-paso" data-paso="po">
+                        <span class="srd-m-circ" aria-hidden="true">PO</span>
+                        <div class="srd-m-paso-c">
+                            <div class="srd-m-paso-t">{% trans "Orden de compra (PO)" %}<span class="srd-m-paso-h"></span></div>
+                            <div class="srd-m-paso-g">
+                                <input class="ive-ed-in srd-cod" id="srd-m-numero_po" name="numero_po" maxlength="50" autocomplete="off"
+                                       placeholder="{% trans 'No. de PO' %}" aria-label="{% trans 'No. de PO' %}">
+                                {% include 'menu_app/_date_picker.html' with name='fecha_po' dp_id='dp-srd-m-po' %}
+                            </div>
+                            <div class="srd-m-aviso" hidden></div>
+                            <div class="ive-ed-err" data-err="numero_po" hidden></div>
+                            <div class="ive-ed-err" data-err="fecha_po" hidden></div>
+                        </div>
+                    </div>
+                    <div class="srd-m-paso" data-paso="sr">
+                        <span class="srd-m-circ" aria-hidden="true">SR</span>
+                        <div class="srd-m-paso-c">
+                            <div class="srd-m-paso-t">{% trans "Recepción (SR)" %}<span class="srd-m-paso-h"></span></div>
+                            <div class="srd-m-paso-g">
+                                <input class="ive-ed-in srd-cod" id="srd-m-numero_sr" name="numero_sr" maxlength="50" autocomplete="off"
+                                       placeholder="{% trans 'No. de SR' %}" aria-label="{% trans 'No. de SR' %}">
+                                {% include 'menu_app/_date_picker.html' with name='fecha_sr' dp_id='dp-srd-m-sr' %}
+                            </div>
+                            <div class="srd-m-aviso" hidden></div>
+                            <div class="ive-ed-err" data-err="numero_sr" hidden></div>
+                            <div class="ive-ed-err" data-err="fecha_sr" hidden></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="srd-m-nota">{% trans "El estatus se calcula solo:" %} <b class="rojo">{% trans "sin PO" %}</b> → <b class="amarillo">{% trans "pendiente de recibir" %}</b> → <b class="verde">{% trans "recibido" %}</b>.</p>
+            </div>
+        </div>
+
+        <footer class="ive-ed-pie">
+            {% if puede_eliminar_seg_refaccion %}
+            <button type="button" class="ive-ed-elim" id="srd-m-elim">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                {% trans "Eliminar" %}
+            </button>
+            {% endif %}
+            <span class="ive-ed-atajo">{% trans "Ctrl + Enter para guardar" %}</span>
+            <button type="button" class="ive-btn" data-cerrar>{% trans "Cancelar" %}</button>
+            <button type="submit" class="ive-btn ive-btn-pri" id="srd-m-guardar">{% trans "Guardar seguimiento" %}</button>
+        </footer>
+
+        {% comment %} Confirmaciones dentro del modal: descartar cambios / duplicado / eliminar {% endcomment %}
+        <div class="ive-ed-conf" id="srd-m-conf" hidden>
+            <div class="ive-ed-conf-caja" role="alertdialog" aria-modal="true" aria-labelledby="srd-m-conf-t" aria-describedby="srd-m-conf-d">
+                <h3 id="srd-m-conf-t"></h3>
+                <p id="srd-m-conf-d"></p>
+                <div class="ive-dialogo-pie">
+                    <button type="button" class="ive-btn" id="srd-m-conf-no"></button>
+                    <button type="button" class="ive-btn ive-btn-pri" id="srd-m-conf-si"></button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% comment %} Eliminar desde el modal: POST normal (la vista vuelve a la lista con su mensaje) {% endcomment %}
+<form method="post" id="srd-m-elim-form" hidden>{% csrf_token %}<input type="hidden" name="volver" id="srd-m-elim-volver"></form>
+{{ editor_seguimientos|json_script:"srd-datos" }}

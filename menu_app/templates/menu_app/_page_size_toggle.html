@@ -1,0 +1,22 @@
+{% load i18n %}
+{% comment %}
+    PageSizeToggle — "Filas por página" como control segmentado (reemplaza un <select>).
+    Un clic recarga con ?{param}=N (vuelve a la página 1) y recuerda la elección en localStorage.
+    Lo maneja menu_app/js/page_size_toggle.js; estilos en menu_app/css/page_size_toggle.css.
+
+    Parámetros del include:
+      ps_id        id único del componente (si hay dos en la página)
+      label        etiqueta ("Filas por página")
+      options      lista de tamaños, p. ej. [10, 25, 50] (la pasa la vista)
+      value        tamaño actual (el que ya usa la vista)
+      param        parámetro GET (opcional, por defecto "per_page")
+      storage_key  clave de localStorage por tabla (opcional), p. ej. "pageSize:seguimientos"
+{% endcomment %}
+<div class="pst" id="{{ ps_id }}-root" data-pst data-param="{{ param|default:'per_page' }}" data-storage="{{ storage_key }}">
+    <span class="pst-label" id="{{ ps_id }}-lab">{{ label }}</span>
+    <div class="pst-riel" id="{{ ps_id }}" role="radiogroup" aria-labelledby="{{ ps_id }}-lab">
+        {% for o in options %}<button type="button" class="pst-op" role="radio" data-value="{{ o }}"
+            aria-checked="{% if o|stringformat:'s' == value|stringformat:'s' %}true{% else %}false{% endif %}"
+            tabindex="{% if o|stringformat:'s' == value|stringformat:'s' %}0{% else %}-1{% endif %}">{{ o }}</button>{% endfor %}
+    </div>
+</div>

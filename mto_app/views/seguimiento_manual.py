@@ -6,11 +6,14 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
 
+from login_app.permisos import puede_mto
+from .utils import requiere_permiso_json
 from ..models import SeguimientoManual
 
 
 @login_required
 @require_POST
+@requiere_permiso_json('llenar_seguimiento', 'editar_seguimiento')
 def agregar_seguimiento_manual(request):
     try:
         data             = json.loads(request.body)
@@ -68,6 +71,7 @@ def agregar_seguimiento_manual(request):
 
 @login_required
 @require_POST
+@requiere_permiso_json('editar_seguimiento')
 def editar_seguimiento_manual(request, seg_pk):
     seg = get_object_or_404(SeguimientoManual, pk=seg_pk)
     try:
@@ -81,6 +85,8 @@ def editar_seguimiento_manual(request, seg_pk):
         seg.responsable      = data.get('responsable', '').strip()
         seg.notas            = data.get('notas', '').strip()
         seg.estatus          = data.get('estatus', 'pendiente')
+        if seg.estatus != 'completado':
+            seg.validado     = False      # solo se valida lo completado: si se reabre, la validación se reinicia
         fecha_str            = data.get('fecha_compromiso', '')
         try:
             seg.fecha_compromiso = date.fromisoformat(fecha_str) if fecha_str else None
@@ -108,6 +114,7 @@ def editar_seguimiento_manual(request, seg_pk):
 
 @login_required
 @require_POST
+@requiere_permiso_json('eliminar_seguimiento')
 def eliminar_seguimiento_manual(request, seg_pk):
     seg = get_object_or_404(SeguimientoManual, pk=seg_pk)
     seg.delete()
@@ -117,7 +124,13 @@ def eliminar_seguimiento_manual(request, seg_pk):
 @login_required
 @require_POST
 def toggle_validado_manual(request, seg_pk):
+    if not puede_mto(request.user, 'validar_seguimiento'):
+        return JsonResponse({'ok': False, 'error': 'No tienes permiso para validar seguimientos.'}, status=403)
+    
     seg = get_object_or_404(SeguimientoManual, pk=seg_pk)
+
+    if not seg.validado and seg.estatus != 'completado':
+        return JsonResponse({'ok': False, 'error': 'No se puede validar: la actividad aún no está completada.'}, status=400)
     seg.validado = not seg.validado
     seg.save()
     return JsonResponse({'ok': True, 'validado': seg.validado})

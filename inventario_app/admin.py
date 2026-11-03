@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import CategoriaRefaccion, Refaccion, ImagenRefaccion, SeguimientoRefaccion
-from .models import TipoServicio, SeguimientoServicio
+from .models import TipoServicio, ServicioCatalogo, SeguimientoServicio
 
 
 class ImagenRefaccionInline(admin.TabularInline):
@@ -64,6 +64,13 @@ class TipoServicioAdmin(admin.ModelAdmin):
     list_display = ['nombre']
     search_fields = ['nombre']
     ordering = ['nombre']
+
+
+@admin.register(ServicioCatalogo)
+class ServicioCatalogoAdmin(admin.ModelAdmin):
+    list_display = ['no_item', 'nombre', 'tipo_servicio']
+    list_filter = ['tipo_servicio']
+    search_fields = ['no_item', 'nombre']
 
 
 @admin.register(SeguimientoServicio)

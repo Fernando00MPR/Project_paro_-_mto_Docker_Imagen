@@ -153,6 +153,24 @@ class TipoServicio(models.Model):
         ordering = ['nombre']
 
 
+class ServicioCatalogo(models.Model):
+    """Catálogo de servicios contratables (uno para toda la planta). El seguimiento
+    copia no_item, nombre y tipo al guardarse, para el historial y el Excel."""
+
+    no_item       = models.CharField(max_length=10, verbose_name=_("No. Item"))
+    nombre        = models.CharField(max_length=100, verbose_name=_("Nombre"))
+    tipo_servicio = models.ForeignKey(TipoServicio, on_delete=models.PROTECT, related_name='servicios', verbose_name=_("Tipo de servicio"))
+    creado_en     = models.DateTimeField(auto_now_add=True, verbose_name=_("Creado en"))
+
+    def __str__(self):
+        return f"{self.no_item} - {self.nombre}"
+    
+    class Meta:
+        verbose_name = _("Servicio del catálogo")
+        verbose_name_plural = _("Catálogo de servicios")
+        ordering = ['nombre']
+
+
 class SeguimientoServicio(models.Model):
     area             = models.ForeignKey(Area, on_delete=models.PROTECT, verbose_name=_("Área"))
     no_item          = models.CharField(max_length=10, verbose_name=_("No. Item"))
@@ -160,6 +178,10 @@ class SeguimientoServicio(models.Model):
     cantidad         = models.PositiveIntegerField(verbose_name=_("Cantidad"))
     motivo_servicio  = models.CharField(max_length=200, verbose_name=_("Motivo del servicio"))
     tipo_servicio    = models.ForeignKey(TipoServicio, on_delete=models.PROTECT, verbose_name=_("Tipo de servicio"))
+
+    # Servicio del catálogo; no_item, nombre y tipo_servicio se copian de él al guardar
+    servicio         = models.ForeignKey(ServicioCatalogo, on_delete=models.PROTECT, null=True, blank=True,
+                        related_name='seguimientos', verbose_name=_("Servicio"))
 
     numero_pr        = models.CharField(max_length=50, verbose_name=_("No. PR"))
     fecha_pr         = models.DateField(null=True, blank=True, verbose_name=_("Fecha PR"))

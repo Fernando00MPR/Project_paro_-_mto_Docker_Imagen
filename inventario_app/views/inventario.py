@@ -6,7 +6,12 @@ from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
 from django.db import transaction
 from django.db.models import Count, Q
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from collections import Counter
+from decimal import Decimal, InvalidOperation
+from django.utils.timesince import timesince
+from django.utils import timezone
 import openpyxl
 from paros_app.views.utils import _excel_response, _estilo_cabecera
 from django.views.decorators.http import require_POST
@@ -31,7 +36,31 @@ def _redirect_lista_refacciones(request, area_fallback=''):
     volver = request.POST.get('volver', '').strip()
     if volver.startswith('?'):
         return redirect(f"{base}{volver}")
+    # Celular: editar desde el detalle de la refacción vuelve a ese detalle.
+    if volver.startswith(base) and url_has_allowed_host_and_scheme(volver, allowed_hosts={request.get_host()}):
+        return redirect(volver)
     return redirect(f"{base}?area={area_fallback}")
+
+
+def _estado_stock(r):
+    """Estado de stock de celular con la MISMA regla que colorea escritorio
+    (bajo_minimo = stock <= mínimo): sin stock, bajo mínimo, sobre máximo o
+    en rango. "Requieren reabasto" (bajo_minimo) = sin stock + bajo mínimo."""
+    if r.stock_actual == 0:
+        return 'sin'
+    if r.bajo_minimo:
+        return 'bajo'
+    if r.sobre_maximo:
+        return 'sobre'
+    return 'ok'
+
+
+def _barra_stock(r):
+    """Ancho de la barra y posición de la marca del mínimo (en %), con
+    escala = máx(máximo, mínimo, stock) × 1.1."""
+    escala = max(r.stock_maximo, r.stock_minimo, r.stock_actual, 1) * 1.1
+    r.barra_pct = round(r.stock_actual * 100 / escala, 1)
+    r.min_pct = round(r.stock_minimo * 100 / escala, 1)
 
 
 @login_required
@@ -46,7 +75,7 @@ def lista_refacciones(request):
     estatus_stock = request.GET.get('estatus_stock', '')
     criticidad_id = request.GET.get('criticidad', '')
 
-    refacciones_qs = Refaccion.objects.select_related('area', 'categoria').annotate(
+    refacciones_qs = Refaccion.objects.select_related('area', 'categoria').prefetch_related('imagenes').annotate(
         num_imagenes=Count('imagenes')
     ).filter(activo=True)
 
@@ -64,7 +93,14 @@ def lista_refacciones(request):
     refacciones_lista = list(refacciones_qs)
     total_bajo_minimo = sum(1 for r in refacciones_lista if r.bajo_minimo)
 
-    if estatus_stock == 'bajo_minimo':
+    for r in refacciones_lista:
+        r.estado_movil = _estado_stock(r)
+    conteo_estados = Counter(r.estado_movil for r in refacciones_lista)
+
+    if estatus_stock in ('bajo', 'sobre'):
+        # Chips de celular (excluyentes entre sí y con "Sin stock").
+        refacciones = [r for r in refacciones_lista if r.estado_movil == estatus_stock]
+    elif estatus_stock == 'bajo_minimo':
         refacciones = [r for r in refacciones_lista if r.bajo_minimo]
     elif estatus_stock == 'sobre_maximo':
         refacciones = [r for r in refacciones_lista if r.sobre_maximo]
@@ -75,10 +111,77 @@ def lista_refacciones(request):
     else:
         refacciones = refacciones_lista
 
-    per_page = request.GET.get('per_page', '10')
-    paginator = Paginator(refacciones, int(per_page) if per_page.isdigit() else 10)
+    # Escritorio: por defecto, urgencia de reabasto (sin stock → bajo mínimo, el más
+    # lejos de su mínimo primero → sobre máximo → en rango). ?orden=criticidad pone
+    # las críticas primero (con la misma urgencia dentro de cada grupo).
+    prioridad = {'sin': 0, 'bajo': 1, 'sobre': 2, 'ok': 3}
+    def _urgencia(r):
+        return (prioridad[r.estado_movil],
+                r.stock_actual / r.stock_minimo if r.stock_minimo else 0,
+                r.no_item)
+    orden = request.GET.get('orden', '')
+    if orden == 'criticidad':
+        refacciones = sorted(refacciones, key=lambda r: (r.criticidad != 'critico',) + _urgencia(r))
+    else:
+        refacciones = sorted(refacciones, key=_urgencia)
+
+    # Sin ?per_page= se usa la última elección (cookie de page_size_toggle.js).
+    per_page = request.GET.get('per_page') or request.COOKIES.get('pst_pageSize_inventario', '25')
+    per_page = per_page if per_page in ('10', '25', '50') else '25'
+    paginator = Paginator(refacciones, int(per_page))
     page_num = request.GET.get('page', 1)
     refacciones_page = paginator.get_page(page_num)
+
+    # Hoja de filtros (celular): "Ver {n} refacciones" pide el conteo en vivo.
+    if request.GET.get('conteo') == '1':
+        return JsonResponse({'n': len(refacciones)})
+
+    editor = {}   # Escritorio: datos de cada fila para el modal "Editar refacción" (json_script)
+    for r in refacciones_page:
+        _barra_stock(r)
+        imagenes = list(r.imagenes.all())
+        r.miniatura = imagenes[0].imagen.url if imagenes else ''
+        editor[r.pk] = {
+            'pk': r.pk, 'no_item': r.no_item, 'nombre': r.nombre, 'area': r.area_id,
+            'categoria': r.categoria_id or '', 'unidad': r.unidad, 'criticidad': r.criticidad,
+            'stock_actual': r.stock_actual, 'stock_minimo': r.stock_minimo, 'stock_maximo': r.stock_maximo,
+            'ubicacion': r.ubicacion, 'proveedor': r.proveedor, 'descripcion': r.descripcion,
+            'costo': f"{r.costo_unitario:.2f}" if r.costo_unitario is not None else '',
+            'creado': timezone.localtime(r.creado_en).strftime('%d/%m/%Y'),
+            # "modificada hace 3 días"; recién guardada: "hace un momento" (no "hace 0 minutos")
+            'modificado_hace': (timesince(r.modificado_en, depth=1)
+                                if (timezone.now() - r.modificado_en).total_seconds() >= 60 else _("un momento")),
+            'fotos': [{'id': i.pk, 'url': i.imagen.url} for i in imagenes],
+            'url_guardar': reverse('inventario:editar_refaccion', args=[r.pk]),
+            'url_eliminar': reverse('inventario:eliminar_refaccion', args=[r.pk]),
+        }
+
+    area_nombre = ''
+    if area_id:
+        area_obj = Area.objects.filter(pk=area_id).first()
+        area_nombre = area_obj.nombre if area_obj else ''
+
+    # Escritorio (28D): indicadores del área (sin los demás filtros), con las reglas
+    # actuales de mínimo y máximo (bajo_minimo / sobre_maximo del modelo).
+    base = Refaccion.objects.filter(activo=True)
+    if area_id:
+        base = base.filter(area_id=area_id)
+    base = list(base.only('stock_actual', 'stock_minimo', 'stock_maximo', 'criticidad', 'categoria_id'))
+    estados_area = Counter(_estado_stock(r) for r in base)
+    criticas = [r for r in base if r.criticidad == 'critico']
+    indicadores = {
+        'total':           len(base),
+        'categorias':      len({r.categoria_id for r in base if r.categoria_id}),
+        'bajo':            estados_area['bajo'],
+        'sin':             estados_area['sin'],
+        'reabasto':        estados_area['bajo'] + estados_area['sin'],
+        'criticas':        len(criticas),
+        'criticas_riesgo': sum(1 for r in criticas if r.bajo_minimo),
+        'sobre':           estados_area['sobre'],
+    }
+    categorias_filtro = [{'value': str(c.pk), 'label': c.nombre} for c in CategoriaRefaccion.objects.all()]
+    criticidad_filtro = [{'value': 'critico',    'label': _("Crítico"),    'color': '#D9534F'},
+                         {'value': 'no_critico', 'label': _("No crítico"), 'color': '#9A9CAE'}]
 
     ctx = {
         'refacciones':                       refacciones_page,
@@ -99,17 +202,213 @@ def lista_refacciones(request):
             request.user.is_superuser or (get_perfil(request.user) and get_perfil(request.user).es_admin)
         ),
         'total_refacciones_area':            Refaccion.objects.filter(area_id=area_id).count() if area_id else 0,
+        # Vista de celular
+        'area_nombre':                       area_nombre,
+        'total_lista':                       len(refacciones_lista),
+        'conteo_estados':                    conteo_estados,
+        'filtros_activos':                   int(bool(categoria_id)) + int(bool(criticidad_id)),
+        'categorias_movil':                  _categorias_movil(),
+        # Vista de escritorio
+        'indicadores':                       indicadores,
+        'orden':                             orden,
+        'perpage_opts':                      [10, 25, 50],
+        'categorias_filtro':                 categorias_filtro,
+        'criticidad_filtro':                 criticidad_filtro,
+        'categoria_label':                   next((c['label'] for c in categorias_filtro if c['value'] == categoria_id), ''),
+        'criticidad_label':                  next((c['label'] for c in criticidad_filtro if c['value'] == criticidad_id), ''),
+        # Paginación "‹ 1 … 4 5 6 … 12 ›": los enlaces conservan todos los filtros menos la página.
+        'paginas':                           list(paginator.get_elided_page_range(refacciones_page.number, on_each_side=1, on_ends=1)),
+        'paginas_elipsis':                   paginator.ELLIPSIS,
+        'qs_pag':                            _sin_pagina(request),
+        'editor_refacciones':                editor,
     }
     return render(request, 'inventario_app/lista_refacciones.html', ctx)
 
 
+def _sin_pagina(request):
+    """Querystring actual sin ?page= (para los enlaces de la paginación)."""
+    params = request.GET.copy()
+    params.pop('page', None)
+    return params.urlencode()
+
+
+def _categorias_movil():
+    return [
+        {'id': c.pk, 'es': c.nombre_es or c.nombre, 'en': c.nombre_en or '', 'n': c.n}
+        for c in CategoriaRefaccion.objects.annotate(n=Count('refaccion'))
+    ]
+
+
+@login_required
+def detalle_refaccion(request, pk):
+    """Celular: detalle de una refacción (ruta propia para que el "atrás" del
+    teléfono regrese a la lista). ?lista= trae los filtros de la lista."""
+    if not puede_mto(request.user, 'ver_inventario'):
+        messages.error(request, _("No tienes permiso para ver esta sección."))
+        return redirect('mto:dashboard')
+
+    r = get_object_or_404(Refaccion.objects.select_related('area', 'categoria').prefetch_related('imagenes'), pk=pk)
+    r.estado_movil = _estado_stock(r)
+    _barra_stock(r)
+    imagenes = list(r.imagenes.all())
+    lista_qs = request.GET.get('lista', '')
+    return render(request, 'inventario_app/detalle_refaccion.html', {
+        'r':                         r,
+        'miniatura':                 imagenes[0].imagen.url if imagenes else '',
+        'num_imagenes':              len(imagenes),
+        'lista_qs':                  lista_qs,
+        'url_lista':                 reverse('inventario:lista_refacciones') + ('?' + lista_qs if lista_qs else f'?area={r.area_id}'),
+        # Lo que piden los modales compartidos (_modales_refacciones.html)
+        'areas':                     Area.objects.filter(activa=True),
+        'categorias':                CategoriaRefaccion.objects.all(),
+        'unidades':                  Refaccion.UNIDAD_CHOICES,
+        'criticidades':              Refaccion.CRITICIDAD_CHOICES,
+        'filtro_area':               str(r.area_id),
+        'puede_editar_inventario':   puede_mto(request.user, 'editar_inventario'),
+        'puede_eliminar_inventario': puede_mto(request.user, 'eliminar_inventario'),
+    })
+
+
+@login_required
+@require_POST
+def ajustar_stock_refaccion(request, pk):
+    """Celular, "Ajustar stock" en modo Conteo: fija el stock contado. (No hay
+    historial de movimientos, así que Entrada/Salida no se ofrecen.)"""
+    if not puede_mto(request.user, 'editar_inventario'):
+        return JsonResponse({'ok': False, 'error': _("No tienes permiso para editar el inventario.")}, status=403)
+    r = get_object_or_404(Refaccion, pk=pk)
+    try:
+        stock = int(request.POST.get('stock', ''))
+        if stock < 0:
+            raise ValueError
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': _("Escribe una cantidad entera de 0 o más.")}, status=400)
+    r.stock_actual = stock
+    r.save(update_fields=['stock_actual', 'modificado_en'])
+    return JsonResponse({'ok': True, 'stock': r.stock_actual, 'estado': _estado_stock(r)})
+
+
+def _guardar_refaccion_ajax(request, refaccion):
+    """Escritorio (modal "Editar / Nueva refacción"): valida y guarda; responde JSON
+    con los errores por campo. Fotos: 'imagenes' (nuevas) e 'imagenes_quitar' (ids)."""
+    P = request.POST
+    errores = {}
+
+    def entero(campo):
+        v = P.get(campo, '').strip()
+        if not v:
+            return 0
+        try:
+            n = int(v)
+            if n < 0:
+                raise ValueError
+            return n
+        except ValueError:
+            errores[campo] = _("Escribe un número entero de 0 o más.")
+            return 0
+
+    nombre  = P.get('nombre', '').strip()
+    no_item = P.get('no_item', '').strip()
+    if not nombre:
+        errores['nombre'] = _("El nombre es obligatorio.")
+    elif len(nombre) > 200:
+        errores['nombre'] = _("Máximo {n} caracteres.").format(n=200)
+    if not no_item:
+        errores['no_item'] = _("El No. item es obligatorio.")
+    elif len(no_item) > 10:
+        errores['no_item'] = _("Máximo {n} caracteres.").format(n=10)
+
+    area = Area.objects.filter(pk=P.get('area')).first() if P.get('area', '').isdigit() else None
+    if not area:
+        errores['area'] = _("Elige un área.")
+
+    stock_actual = entero('stock_actual')
+    stock_minimo = entero('stock_minimo')
+    stock_maximo = entero('stock_maximo')   # 0 = sin máximo
+    if stock_maximo and stock_maximo < stock_minimo:
+        errores['stock_maximo'] = _("El máximo debe ser mayor o igual al mínimo.")
+
+    ubicacion   = P.get('ubicacion', '').strip()
+    proveedor   = P.get('proveedor', '').strip()
+    descripcion = P.get('descripcion', '').strip()
+    if len(ubicacion) > 4:
+        errores['ubicacion'] = _("Máximo {n} caracteres.").format(n=4)
+    if len(proveedor) > 50:
+        errores['proveedor'] = _("Máximo {n} caracteres.").format(n=50)
+    if len(descripcion) > 300:
+        errores['descripcion'] = _("Máximo {n} caracteres.").format(n=300)
+
+    costo_txt = P.get('costo_unitario', '').strip().replace('$', '').replace(',', '')
+    costo = None
+    if costo_txt:
+        try:
+            costo = Decimal(costo_txt).quantize(Decimal('0.01'))
+            if costo < 0 or costo >= Decimal('100000000'):
+                raise InvalidOperation
+        except (InvalidOperation, ValueError):
+            errores['costo_unitario'] = _("Escribe un costo válido, p. ej. 120.50.")
+
+    criticidad = P.get('criticidad', 'no_critico')
+    if criticidad not in dict(Refaccion.CRITICIDAD_CHOICES):
+        criticidad = 'no_critico'
+    unidad = P.get('unidad', 'pza')
+    if unidad not in dict(Refaccion.UNIDAD_CHOICES):
+        unidad = 'pza'
+    categoria_id = P.get('categoria', '')
+    categoria_id = int(categoria_id) if categoria_id.isdigit() and CategoriaRefaccion.objects.filter(pk=categoria_id).exists() else None
+
+    if area and no_item and 'no_item' not in errores:
+        repetida = Refaccion.objects.filter(area=area, no_item=no_item)
+        if refaccion:
+            repetida = repetida.exclude(pk=refaccion.pk)
+        if repetida.exists():
+            errores['no_item'] = _("Ya existe una refacción con ese No. item.")
+
+    quitar = {int(i) for i in P.getlist('imagenes_quitar') if i.isdigit()}
+    nuevas = request.FILES.getlist('imagenes')
+    if any(f.content_type not in ('image/jpeg', 'image/png') or f.size > 5 * 1024 * 1024 for f in nuevas):
+        errores['imagenes'] = _("Solo fotos JPG o PNG de hasta 5 MB.")
+    actuales = refaccion.imagenes.exclude(pk__in=quitar).count() if refaccion else 0
+    if actuales + len(nuevas) > 2:
+        errores['imagenes'] = _("Máximo 2 fotos por refacción.")
+
+    if errores:
+        return JsonResponse({'ok': False, 'errores': errores}, status=400)
+
+    datos = {
+        'no_item': no_item, 'nombre': nombre, 'descripcion': descripcion, 'area': area,
+        'criticidad': criticidad, 'categoria_id': categoria_id, 'unidad': unidad,
+        'stock_actual': stock_actual, 'stock_minimo': stock_minimo, 'stock_maximo': stock_maximo,
+        'ubicacion': ubicacion, 'proveedor': proveedor, 'costo_unitario': costo,
+    }
+    with transaction.atomic():
+        if refaccion:
+            for k, v in datos.items():
+                setattr(refaccion, k, v)
+            refaccion.save()
+        else:
+            refaccion = Refaccion.objects.create(activo=True, **datos)
+        if quitar:
+            refaccion.imagenes.filter(pk__in=quitar).delete()   # el archivo lo borra la señal post_delete
+        for f in nuevas:
+            ImagenRefaccion.objects.create(refaccion=refaccion, imagen=f)
+    return JsonResponse({'ok': True, 'pk': refaccion.pk})
+
+
 @login_required
 def form_refaccion(request, pk=None):
+    es_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
     if not puede_mto(request.user, 'editar_inventario'):
+        if es_ajax:
+            return JsonResponse({'ok': False, 'errores': {'general': _("No tienes permiso para editar el inventario.")}}, status=403)
         messages.error(request, _("No tienes permiso para editar el inventario."))
         return redirect('inventario:lista_refacciones')
 
     refaccion = get_object_or_404(Refaccion, pk=pk) if pk else None
+
+    # Escritorio: el modal nuevo guarda por AJAX. Celular sigue con el formulario normal de abajo.
+    if request.method == 'POST' and es_ajax:
+        return _guardar_refaccion_ajax(request, refaccion)
 
     if request.method == 'POST':
         try:
@@ -226,7 +525,11 @@ def eliminar_todas_refacciones_area(request):
 @login_required
 @require_POST
 def crear_categoria_refaccion(request):
+    # La hoja de Categorías de celular guarda en segundo plano: responde JSON.
+    es_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
     if not puede_mto(request.user, 'editar_inventario'):
+        if es_ajax:
+            return JsonResponse({'ok': False, 'error': _("No tienes permiso para gestionar categorías.")}, status=403)
         messages.error(request, _("No tienes permiso para gestionar categorías."))
         return redirect('inventario:lista_refacciones')
 
@@ -235,7 +538,10 @@ def crear_categoria_refaccion(request):
     area_id = request.POST.get('area', '')
 
     if not nombre_es:
-        messages.error(request, _("El nombre en español es obligatorio."))
+        error = _("El nombre en español es obligatorio.")
+        if es_ajax:
+            return JsonResponse({'ok': False, 'error': error}, status=400)
+        messages.error(request, error)
     else:
         nombre_en = nombre_en or nombre_es
         existe = CategoriaRefaccion.objects.filter(
@@ -243,9 +549,14 @@ def crear_categoria_refaccion(request):
             Q(nombre_es__iexact=nombre_en) | Q(nombre_en__iexact=nombre_en)
         ).exists()
         if existe:
-            messages.error(request, _("Ya existe una categoría llamada '{nombre}'.").format(nombre=nombre_es))
+            error = _("Ya existe una categoría llamada '{nombre}'.").format(nombre=nombre_es)
+            if es_ajax:
+                return JsonResponse({'ok': False, 'error': error}, status=400)
+            messages.error(request, error)
         else:
-            CategoriaRefaccion.objects.create(nombre_es=nombre_es, nombre_en=nombre_en)
+            cat = CategoriaRefaccion.objects.create(nombre_es=nombre_es, nombre_en=nombre_en)
+            if es_ajax:
+                return JsonResponse({'ok': True, 'id': cat.pk, 'es': cat.nombre_es, 'en': cat.nombre_en})
             messages.success(request, _("Categoría '{nombre}' creada.").format(nombre=nombre_es))
 
     return _redirect_lista_refacciones(request, area_id)
@@ -254,6 +565,11 @@ def crear_categoria_refaccion(request):
 @login_required
 @require_POST
 def editar_categoria_refaccion(request, pk):
+    # La hoja de Categorías de celular guarda en segundo plano: responde JSON.
+    es_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    if not puede_mto(request.user, 'editar_inventario'):
+        if es_ajax:
+            return JsonResponse({'ok': False, 'error': _("No tienes permiso para gestionar categorías.")}, status=403)
     if not puede_mto(request.user, 'editar_inventario'):
         messages.error(request, _("No tienes permiso para gestionar categorías."))
         return redirect('inventario:lista_refacciones')
@@ -264,7 +580,10 @@ def editar_categoria_refaccion(request, pk):
     area_id = request.POST.get('area', '')
 
     if not nombre_es:
-        messages.error(request, _("El nombre en español es obligatorio."))
+        error = _("El nombre en español es obligatorio.")
+        if es_ajax:
+            return JsonResponse({'ok': False, 'error': error}, status=400)
+        messages.error(request, error)
     else:
         nombre_en = nombre_en or nombre_es
         existe = CategoriaRefaccion.objects.exclude(pk=categoria.pk).filter(
@@ -272,16 +591,35 @@ def editar_categoria_refaccion(request, pk):
             Q(nombre_es__iexact=nombre_en) | Q(nombre_en__iexact=nombre_en)
         ).exists()
         if existe:
-            messages.error(request, _("Ya existe otra categoría llamada '{nombre}'.").format(nombre=nombre_es))
+            error = _("Ya existe otra categoría llamada '{nombre}'.").format(nombre=nombre_es)
+            if es_ajax:
+                return JsonResponse({'ok': False, 'error': error}, status=400)
+            messages.error(request, error)
         else:
             # Sin update_fields: modeltranslation sincroniza 'nombre' (idioma por
             # defecto) al guardar y con update_fields esa columna se quedaría fuera.
             categoria.nombre_es = nombre_es
             categoria.nombre_en = nombre_en
             categoria.save()
+            if es_ajax:
+                return JsonResponse({'ok': True, 'id': categoria.pk, 'es': categoria.nombre_es, 'en': categoria.nombre_en})
             messages.success(request, _("Categoría '{nombre}' actualizada.").format(nombre=nombre_es))
 
     return _redirect_lista_refacciones(request, area_id)   
+
+
+@login_required
+@require_POST
+def eliminar_categoria_refaccion(request, pk):
+    # Modal de Categorías de escritorio: responde JSON. Solo se borra si nadie la usa.
+    if not puede_mto(request.user, 'editar_inventario'):
+        return JsonResponse({'ok': False, 'error': _("No tienes permiso para gestionar categorías.")}, status=403)
+
+    categoria = get_object_or_404(CategoriaRefaccion, pk=pk)
+    if categoria.refaccion_set.exists():
+        return JsonResponse({'ok': False, 'error': _("Tiene refacciones asignadas")}, status=400)
+    categoria.delete()
+    return JsonResponse({'ok': True})
 
 
 @login_required
@@ -333,10 +671,22 @@ def buscar_refacciones(request):
     if q:
         qs = (qs.filter(no_item__icontains=q) | qs.filter(nombre__icontains=q))
 
-    resultados = [
-        {'id': r.id, 'no_item': r.no_item, 'nombre': r.nombre}
-        for r in qs[:15]
-    ]
+    # Stock, foto y PR abiertas: la tarjeta de la refacción del modal de Seguimiento
+    qs = qs.annotate(abiertas=Count('seguimientos', filter=Q(seguimientos__numero_sr=''))).prefetch_related('imagenes')
+    resultados = []
+    for r in qs[:15]:
+        img = next(iter(r.imagenes.all()), None)
+        resultados.append({
+            'id' :       r.id,
+            'no_item':   r.no_item,
+            'nombre':    r.nombre,
+            'unidad':    r.unidad,
+            'ubicacion': r.ubicacion,
+            'stock':     r.stock_actual,
+            'minimo':    r.stock_minimo,
+            'foto':      img.imagen.url if img else '',
+            'abiertas':  r.abiertas,
+        })
     return JsonResponse(resultados, safe=False)
 
 

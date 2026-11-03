@@ -1,0 +1,28 @@
+/* row_action_button.css — RowActionButton (menu_app/_row_action_button.html).
+   Botones de solo ícono para la columna ACCIONES: Fotos / Editar / Eliminar.
+   "Editar" usa el acento elegido por el usuario (var(--indigo)), no un azul fijo. */
+.row-acts { display: inline-flex; gap: 6px; align-items: center; justify-content: flex-end; }
+.row-act {
+    --ra-bg: #F0F1F7; --ra-fg: #1E2033; --ra-bg-h: #E2E3EE; --ra-fg-h: #1E2033; --ra-borde-badge: #fff;
+    position: relative; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    background: var(--ra-bg); color: var(--ra-fg);
+    transition: background .12s, color .12s, transform .12s;
+}
+.row-act:hover { background: var(--ra-bg-h); color: var(--ra-fg-h); transform: translateY(-1px); }
+.row-act:active { transform: translateY(0); }
+.row-act:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+.row-act--edit { --ra-bg: var(--indigo-lt); --ra-fg: var(--indigo-dk); --ra-bg-h: var(--indigo); --ra-fg-h: #fff; }
+.row-act--del  { --ra-bg: #FBE4E2; --ra-fg: #A8322A; --ra-bg-h: #D9534F; --ra-fg-h: #fff; }
+[data-theme="dark"] .row-act { --ra-bg: var(--surface); --ra-fg: var(--text); --ra-bg-h: var(--border); --ra-fg-h: var(--text); --ra-borde-badge: var(--white); }
+[data-theme="dark"] .row-act--edit { --ra-bg: var(--indigo-lt); --ra-fg: var(--indigo-dk); --ra-bg-h: var(--indigo); --ra-fg-h: #fff; }
+[data-theme="dark"] .row-act--del  { --ra-bg: rgba(217,83,79,.22); --ra-fg: #F2A19C; --ra-bg-h: #D9534F; --ra-fg-h: #fff; }
+/* Sin fotos: no se ve ni se enfoca, pero conserva su espacio (Editar/Eliminar quedan alineados). */
+.row-act--oculto { visibility: hidden; }
+.row-act__badge {
+    position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box;
+    border-radius: 9px; border: 2px solid var(--ra-borde-badge); background: #1E2033; color: #fff;
+    font-size: 10px; font-weight: 700; line-height: 14px; text-align: center;
+}
+[data-theme="dark"] .row-act__badge { background: var(--indigo); }
+@media (prefers-reduced-motion: reduce) { .row-act, .row-act:hover { transition: none; transform: none; } }

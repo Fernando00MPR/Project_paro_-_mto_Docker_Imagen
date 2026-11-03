@@ -1,0 +1,269 @@
+/* hora_hora_movil.css — Vista de celular (≤767px) de Hora x hora.
+   El escritorio no se toca: solo se oculta (.hxh-desktop-only) en el @media. */
+
+.movil-only { display: none; }
+
+@media (min-width: 768px) {
+    .movil-only { display: none !important; }
+}
+
+@media (max-width: 767px) {
+    .hxh-desktop-only { display: none !important; }
+    .movil-only { display: block; }
+
+    #hxh-movil { padding-bottom: 96px; }
+    #hxh-movil .hm-card {
+        background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+        margin-bottom: 12px;
+    }
+
+    /* ── Encabezado ── */
+    .hm-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .hm-titulos { flex: 1; min-width: 0; }
+    .hm-titulo { font-size: 19px; font-weight: 600; line-height: 1.2; color: var(--text); }
+    .hm-subtitulo { font-size: 12px; color: var(--text-3); }
+    .hm-btn-icono {
+        width: 44px; height: 44px; min-width: 44px; border-radius: 12px;
+        border: 1px solid var(--border); background: var(--white); color: var(--text);
+        display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+    }
+
+    /* ── Mes + área ── */
+    .hm-fila-mes { display: flex; gap: 8px; margin-bottom: 12px; }
+    /* El mes nunca se encoge por debajo de su contenido (‹ texto ›); el que
+       cede espacio es el chip del área, que se corta con "…". */
+    .hm-mes {
+        flex: 1 0 auto; display: flex; align-items: center; height: 44px;
+        background: var(--white); border: 1px solid var(--border); border-radius: 12px;
+    }
+    .hm-mes button {
+        width: 44px; height: 44px; min-width: 44px; border: 0; background: transparent;
+        color: var(--text-3); display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .hm-mes span { flex: 1; text-align: center; font-size: 15px; font-weight: 600; color: var(--text); white-space: nowrap; }
+    .hm-area-chip {
+        flex: 0 1 auto; min-width: 0; max-width: 45%;
+        height: 44px; line-height: 42px; padding: 0 12px; border-radius: 12px; box-sizing: border-box;
+        border: 1px solid var(--indigo-lt); background: var(--indigo-lt); color: var(--indigo-dk);
+        font-size: 13px; font-weight: 500; display: block;   /* block (no flex) para que funcione el "…" */
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* ── Calendario ── */
+    .hm-cal-card { padding: 14px 12px 12px; }
+    .hm-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 0 4px; }
+    .hm-card-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+    .hm-muted { font-size: 12px; color: var(--text-3); }
+    .hm-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 12px; }
+    .hm-dow { text-align: center; font-size: 11px; color: var(--text-3); padding-bottom: 2px; text-transform: uppercase; }
+    .hm-dia {
+        height: 48px; border-radius: 10px; border: 2px solid transparent; padding: 0; font: inherit;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+        background: #F5F5FA; color: #5E6175; cursor: pointer; min-width: 0;
+    }
+    .hm-dia .hm-dia-num { font-size: 13px; }
+    .hm-dia .hm-dia-ef { font-size: 9px; font-weight: 600; white-space: nowrap; }
+    .hm-dia.ok   { background: #CDEBD8; color: #1B5E36; }
+    .hm-dia.bajo { background: #F6CFCB; color: #8E2A23; }
+    .hm-dia.ok .hm-dia-num, .hm-dia.bajo .hm-dia-num { font-weight: 600; }
+    /* var(--text): oscuro en modo claro, claro en modo oscuro — siempre contrasta. */
+    .hm-dia[aria-pressed="true"] { border-color: var(--text); }
+    /* Modo oscuro: ámbar (mismo tono de la línea de meta) en vez del texto claro. */
+    [data-theme="dark"] .hm-dia[aria-pressed="true"] { border-color: #F59E0B; }
+    .hm-dia-vacio { visibility: hidden; }
+    .hm-leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; padding: 0 4px; font-size: 11px; color: var(--text-3); }
+    .hm-leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+    .hm-leyenda i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+    /* ── Día seleccionado ── */
+    .hm-dia-card { overflow: hidden; }
+    .hm-dia-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px 0; }
+    .hm-dia-head > div { flex: 1; min-width: 0; }
+    .hm-dia-head h2 { margin: 2px 0 0; font-size: 18px; font-weight: 600; color: var(--text); }
+    .hm-chip-ef { padding: 4px 10px; border-radius: 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .hm-chip-ef.ok   { background: #E3F3E9; color: #22663F; }
+    .hm-chip-ef.bajo { background: #FBE4E2; color: #A8322A; }
+    .hm-chip-ef.nada { background: var(--surface); color: var(--text-3); }
+    .hm-kpis { display: grid; gap: 8px; padding: 12px 16px 0; }
+    .hm-kpis-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hm-kpis-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 14px 0 0; }
+    .hm-kpi { background: var(--surface); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+    .hm-kpi-label { font-size: 11px; color: var(--text-3); }
+    .hm-kpi-num { font-size: 20px; font-weight: 600; color: var(--text); white-space: nowrap; }
+    .hm-kpi-num.ok { color: #22663F; }
+    .hm-kpi-num.bajo { color: #A8322A; }
+
+    .hm-seg {
+        display: grid; gap: 4px; padding: 4px; background: var(--surface); border-radius: 14px;
+    }
+    .hm-seg button {
+        border: 0; border-radius: 10px; background: transparent; font: inherit; color: var(--text-3);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+    }
+    .hm-seg button[aria-selected="true"], .hm-seg button[aria-pressed="true"] {
+        background: var(--white); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(30,32,51,.12);
+    }
+    .hm-turnos { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 14px 16px 0; }
+    .hm-turnos button { height: 52px; }
+    .hm-turnos .hm-t1 { font-size: 14px; }
+    .hm-turnos .hm-t2 { font-size: 11px; color: var(--text-3); font-weight: 400; }
+
+    .hm-horas { list-style: none; margin: 10px 0 0; padding: 0; }
+    .hm-horas li { border-top: 1px solid var(--surface); }
+    .hm-hora {
+        width: 100%; display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px 0 16px;
+        border: 0; background: transparent; font: inherit; color: var(--text); cursor: pointer;
+    }
+    .hm-hora:active { background: var(--surface); }
+    .hm-hora-t { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text-3); width: 44px; text-align: left; }
+    .hm-barra { flex: 1; height: 10px; background: var(--surface); border-radius: 5px; overflow: hidden; }
+    .hm-barra i { display: block; height: 10px; border-radius: 5px; background: #3D5BD9; }
+    .hm-barra i.cero { background: #F6CFCB; }
+    .hm-hora-v { width: 64px; text-align: right; font-size: 14px; font-weight: 600; }
+    .hm-hora-v.cero { color: #A8322A; }
+    .hm-hora-v.vacio { font-size: 12px; font-weight: 500; color: var(--indigo-dk); }
+    .hm-lapiz { color: var(--text-3); flex-shrink: 0; }
+    .hm-pie {
+        display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+        background: var(--indigo-lt); color: var(--indigo-dk);
+    }
+    .hm-pie b { flex: 1; font-size: 14px; font-weight: 600; }
+    .hm-pie small { font-size: 12px; }
+    .hm-pie strong { font-size: 16px; font-weight: 700; }
+
+    /* ── Botón fijo ── */
+    .hm-fab {
+        position: fixed; left: 16px; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 30;
+        height: 56px; border-radius: 16px; border: 0; background: var(--indigo); color: #fff;
+        font: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        box-shadow: 0 6px 18px rgba(61,91,217,.35);
+    }
+    .hm-fab[hidden] { display: none; }
+
+    /* ── Eficiencia de producción ── */
+    .hm-ef-card { padding: 16px; }
+    .hm-ef-head { display: flex; align-items: flex-start; gap: 8px; }
+    .hm-ef-head > div { flex: 1; min-width: 0; }
+    .hm-ef-head h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text); }
+    .hm-vista { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; }
+    .hm-vista button { height: 38px; font-size: 14px; }
+    .hm-rango {
+        margin-top: 10px; width: 100%; height: 44px; border-radius: 12px; border: 1px solid var(--border);
+        background: var(--white); font: inherit; font-size: 14px; color: var(--text);
+        display: flex; align-items: center; gap: 10px; padding: 0 12px; cursor: pointer;
+    }
+    .hm-rango span { flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hm-frase { font-size: 12px; color: var(--text-3); margin-top: 8px; }
+
+    .hm-periodos-card { padding: 16px 0 8px; }
+    .hm-periodos-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 16px; }
+    .hm-periodos-head h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+    .hm-link { height: 36px; border: 0; background: transparent; font: inherit; font-size: 13px; color: var(--indigo-dk); padding: 0; cursor: pointer; }
+    .hm-periodos { list-style: none; margin: 8px 0 0; padding: 0; }
+    .hm-periodos li { padding: 12px 16px; border-top: 1px solid var(--surface); display: flex; flex-direction: column; gap: 8px; }
+    .hm-per-l1 { display: flex; align-items: center; gap: 10px; }
+    .hm-per-fecha { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text-3); min-width: 48px; }
+    .hm-per-txt { flex: 1; min-width: 0; font-size: 13px; color: var(--text-3); }
+    .hm-per-barra { position: relative; height: 12px; background: var(--surface); border-radius: 6px; }
+    .hm-per-barra > i { display: block; height: 12px; border-radius: 6px; }
+    .hm-per-barra > i.ok { background: #2E8B57; }
+    .hm-per-barra > i.bajo { background: #D9534F; }
+    .hm-per-meta { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #B7791F; }
+    .hm-periodos li.sin .hm-per-fecha, .hm-periodos li.sin .hm-per-txt { opacity: .6; }
+    .hm-ef-leyenda { display: flex; gap: 14px; padding: 8px 16px 6px; font-size: 11px; color: var(--text-3); }
+    .hm-ef-leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+    .hm-vacio-lista { padding: 16px; text-align: center; font-size: 13px; color: var(--text-3); }
+
+    /* ── Hojas inferiores ── */
+    .modal-box.sheet-movil {
+        position: fixed; inset: auto 0 0 0; width: 100%; max-width: none; min-width: 0;
+        margin: 0; border-radius: 24px 24px 0 0; overflow-y: auto; text-align: left;
+        max-height: 92vh; padding: 10px 20px calc(20px + env(safe-area-inset-bottom)); box-sizing: border-box;
+    }
+    .sheet-movil .hm-asa { display: flex; justify-content: center; padding-bottom: 6px; touch-action: none; }
+    .sheet-movil .hm-asa span { width: 40px; height: 5px; border-radius: 3px; background: var(--border); }
+    @keyframes sheet-movil-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-backdrop .modal-box.sheet-movil {
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both; transform-origin: initial;
+    }
+    .modal-backdrop[data-closing] .modal-box.sheet-movil {
+        animation: none; opacity: 1; transform: translateY(100%); transition: transform 160ms ease-out;
+    }
+
+    .hc-head { display: flex; align-items: center; gap: 8px; }
+    .hc-head > div { flex: 1; min-width: 0; }
+    .hc-fecha { font-size: 15px; font-weight: 600; margin-top: 2px; color: var(--text); }
+    .hc-cerrar { background: var(--surface) !important; border: 0 !important; color: var(--text-3) !important; }
+    .hc-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; }
+    .hc-nav button {
+        width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--border); background: var(--white);
+        color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+    }
+    .hc-nav button:disabled { opacity: .35; cursor: default; }
+    .hc-hora { text-align: center; min-width: 140px; }
+    .hc-hora b { display: block; font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; color: var(--text); }
+    .hc-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em; color: var(--text-3); margin: 18px 0 6px; text-transform: uppercase; }
+    .hc-valor { display: flex; align-items: center; gap: 8px; }
+    .hc-valor button {
+        width: 56px; height: 64px; min-width: 56px; border-radius: 14px; border: 1px solid var(--border);
+        background: var(--white); color: var(--text); font: inherit; font-size: 26px; cursor: pointer;
+    }
+    .hc-valor input {
+        flex: 1; min-width: 0; height: 64px; box-sizing: border-box; border: 2px solid var(--indigo); border-radius: 14px;
+        text-align: center; font: inherit; font-size: 32px; font-weight: 600; color: var(--text); background: var(--white); outline: none;
+    }
+    .hc-atajos { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .hc-atajos button {
+        height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--border); background: var(--white);
+        font: inherit; font-size: 13px; color: var(--text); cursor: pointer;
+    }
+    .hc-atajos button.prev { border-color: var(--indigo-lt); background: var(--indigo-lt); color: var(--indigo-dk); }
+    .hc-atajos button[hidden] { display: none; }
+    .hc-total {
+        margin-top: 16px; padding: 10px 12px; background: var(--surface); border-radius: 12px;
+        display: flex; justify-content: space-between; font-size: 13px; color: var(--text-3);
+    }
+    .hc-total b { color: var(--text); }
+    .hc-botones { display: flex; gap: 8px; margin-top: 16px; }
+    .hc-botones button { height: 52px; border-radius: 14px; font: inherit; font-size: 15px; cursor: pointer; }
+    .hc-guardar { padding: 0 18px; border: 1px solid var(--border); background: var(--white); color: var(--text); font-weight: 500; }
+    .hc-seguir {
+        flex: 1; min-width: 0; border: 0; background: var(--indigo); color: #fff; font-weight: 600;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .hc-botones button:disabled { opacity: .6; }
+    .hc-borrar { height: 40px; margin-top: 10px; padding: 0; border: 0; background: transparent; font: inherit; font-size: 13px; color: #A8322A; cursor: pointer; }
+    .hc-borrar[hidden] { display: none; }
+
+    .hr-titulo { margin: 0 0 12px; font-size: 18px; font-weight: 600; color: var(--text); }
+    .hr-campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .hr-campo { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-3); min-width: 0; }
+    .hr-campo input, .hr-campo select {
+        height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px;
+        font: inherit; font-size: 16px; color: var(--text); background: var(--white); width: 100%;
+    }
+    .hr-campo-full { grid-column: 1 / -1; }
+    .hr-aplicar {
+        width: 100%; height: 48px; margin-top: 16px; border-radius: 12px; border: 0;
+        background: var(--indigo); color: #fff; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+
+    /* ── Modal de Target existente como hoja ── */
+    #modal-target-hxh .modal-box {
+        position: fixed !important; inset: auto 0 0 0 !important; width: 100% !important; min-width: 0 !important;
+        margin: 0 !important; border-radius: 24px 24px 0 0 !important; box-sizing: border-box;
+        max-height: 92vh; overflow-y: auto; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)) !important;
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both !important; transform-origin: initial !important;
+    }
+    .modal-backdrop[data-closing]#modal-target-hxh .modal-box {
+        animation: none !important; opacity: 1 !important; transform: translateY(100%) !important;
+        transition: transform 160ms ease-out !important;
+    }
+    #modal-target-hxh input { height: 44px; font-size: 16px !important; box-sizing: border-box; }
+    #modal-target-hxh .btn { height: 48px; flex: 1; justify-content: center; font-size: 15px; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .modal-box.sheet-movil, #modal-target-hxh .modal-box { animation: none !important; }
+    }
+}

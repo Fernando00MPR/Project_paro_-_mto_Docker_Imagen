@@ -3,12 +3,13 @@
 {% block extra_css %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'paros_app/css/paros.css' %}">
+<link rel="stylesheet" href="{% static 'paros_app/css/catalogos_movil.css' %}">
 {% endblock %}
 
 {% block title %}{% trans "Catálogo de responsables" %}{% endblock %}
 {% block content %}
 
-<div class="card-header" style="margin-bottom:16px;">
+<div class="card-header cat-desktop-only" style="margin-bottom:16px;">
     <div>
         <div class="card-title">{% trans "Catálogo de responsables" %}</div>
         <div class="card-subtitle">{% trans "Responsables registrados por área" %}</div>
@@ -40,7 +41,7 @@
 {% endif %}
 
 {% for area in areas %}
-<div class="card" style="margin-bottom:12px; padding:0; overflow:hidden;">
+<div class="card cat-desktop-only" style="margin-bottom:12px; padding:0; overflow:hidden;">
     <div style="padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--border);
                 display:flex; align-items:center; gap:10px;">
         <span style="font-weight:600; font-size:14px; color:var(--text); white-space:nowrap; cursor:pointer;"
@@ -132,14 +133,156 @@
             </table>
         </div>
         {% else %}
-        <p style="padding:20px; color:var(--text-3); font-size:13px;">{% trans "Sin responsables registrados." %}</p>
+            <p style="padding:20px; color:var(--text-3); font-size:13px;">{% trans "Sin responsables registrados." %}</p>
         {% endif %}
     </div>
 </div>
 {% empty %}
-<div class="card"><p style="color:var(--text-3);">{% trans "No hay áreas registradas." %}</p></div>
+    <div class="card cat-desktop-only"><p style="color:var(--text-3);">{% trans "No hay áreas registradas." %}</p></div>
 {% endfor %}
 
+<!-- ═══ Vista de celular (≤767px) — ver catalogos_movil.css / .js ═══ -->
+<div class="cm-header movil-only">
+    <div class="cm-titulos">
+        <div class="cm-titulo">{% trans "Catálogo de responsables" %}</div>
+        <div class="cm-subtitulo" id="cm-subtitulo"></div>
+    </div>
+    <button type="button" class="cm-btn-mas" aria-label="{% trans 'Más acciones' %}" onclick="cmAbrirMas(event)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+    </button>
+</div>
+
+<label class="cm-buscar movil-only">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input type="search" id="cm-buscar" placeholder="{% trans 'Buscar código o responsable en todas las áreas' %}" aria-label="{% trans 'Buscar' %}">
+</label>
+<p id="cm-sin-resultados" class="cm-sin-resultados movil-only" hidden></p>
+
+<div id="cm-areas" class="movil-only">
+    {% for area in areas %}{% if area.num_responsables > 0 %}
+    <section class="cm-area" data-area-id="{{ area.id }}" data-area-nombre="{{ area.nombre }}" data-total="{{ area.num_responsables }}"
+             data-url-exportar="{% url 'paros:exportar_responsables_area' area.id %}"
+             data-puede-limpiar="{% if puede_gestionar %}1{% else %}0{% endif %}">
+        <div class="cm-area-head">
+            <button type="button" class="cm-area-toggle" aria-expanded="false" aria-controls="cm-body-{{ area.id }}" onclick="cmToggleArea(this)">
+                <span class="cm-area-nombre">{{ area.nombre }}</span>
+                <span class="cm-badge">{{ area.num_responsables }}</span>
+                <svg class="cm-chev" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <button type="button" class="cm-area-mas" aria-label="{% trans 'Acciones del área' %} {{ area.nombre }}" onclick="cmAbrirAccionesArea(this, event)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+            </button>
+        </div>
+        <div class="cm-area-body" id="cm-body-{{ area.id }}" hidden>
+            <ul class="cm-lista">
+                {% for resp in area.catalogo_responsables.all %}
+                <li class="cm-item" data-busqueda="{{ resp.codigo }} {{ resp.responsable }}">
+                    <div class="cm-item-main" {% if puede_editar %}role="button" tabindex="0" onclick="cmEditarFila(this)" onkeydown="if(event.key==='Enter'){cmEditarFila(this)}"{% endif %}>
+                        <span class="cm-codigo">{{ resp.codigo }}</span>
+                        <span class="cm-nombre">{{ resp.responsable }}</span>
+                    </div>
+                    {% if puede_editar or puede_eliminar %}
+                    <button type="button" class="cm-item-mas" aria-label="{% trans 'Editar o eliminar' %}" onclick="cmAbrirAccionesItem(this, event)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+                    </button>
+                    {% endif %}
+                    {% if puede_editar %}
+                    <button type="button" class="cm-accion-editar" hidden
+                            onclick="abrirModalEditar(event, '{{ resp.id }}', '{{ resp.codigo }}', '{{ resp.responsable|escapejs }}', '/catalogos/responsables/editar/{{ resp.id }}/', '', '{{ resp.responsable_es|escapejs }}', '{{ resp.responsable_en|escapejs }}')"></button>
+                    {% endif %}
+                    {% if puede_eliminar %}
+                    <button type="button" class="cm-accion-eliminar" hidden
+                            onclick="confirmarEliminar(event, '{{ resp.id }}', '{{ resp.responsable|escapejs }}', '/catalogos/responsables/eliminar/{{ resp.id }}/')"></button>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% if puede_agregar %}
+            <button type="button" class="cm-agregar"
+                    onclick="abrirModalAgregar(event, '{{ area.id }}', '{{ area.nombre|escapejs }}', '/catalogos/responsables/agregar/{{ area.id }}/')">
+                + {% trans "Agregar responsable" %}
+            </button>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}{% endfor %}
+
+    {% for area in areas %}{% if area.num_responsables == 0 %}
+    <section class="cm-area cm-area-vacia" data-area-id="{{ area.id }}">
+        <div class="cm-vacia-textos">
+            <span class="cm-area-nombre">{{ area.nombre }}</span>
+            <span class="cm-vacia-txt">{% trans "Sin responsables registrados." %}</span>
+        </div>
+        {% if puede_agregar %}
+        <button type="button" class="cm-vacia-agregar" aria-label="{% trans 'Agregar responsable' %} — {{ area.nombre }}"
+                onclick="abrirModalAgregar(event, '{{ area.id }}', '{{ area.nombre|escapejs }}', '/catalogos/responsables/agregar/{{ area.id }}/')">+</button>
+        {% endif %}
+    </section>
+    {% endif %}{% empty %}
+    <p class="cm-vacio">{% trans "No hay áreas registradas." %}</p>
+    {% endfor %}
+</div>
+
+<!-- Hoja "⋯" del encabezado -->
+<div id="cm-sheet-mas" class="modal-backdrop movil-only cm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-label="{% trans 'Más acciones' %}">
+        <h2 class="cm-sheet-titulo">{% trans "Más acciones" %}</h2>
+        <div class="cm-acciones" style="margin-top:8px;">
+            <a href="{% url 'paros:exportar_responsables' %}" class="cm-accion">
+                <span class="cm-accion-icono">↓</span>
+                <span class="cm-accion-textos"><span class="cm-accion-label">{% trans "Exportar todo" %}</span><span class="cm-accion-desc">{% trans "Todas las áreas en Excel" %}</span></span>
+            </a>
+        </div>
+        <div class="cm-idioma">
+            <span class="cm-idioma-label">{% trans "Idioma" %}</span>
+            {% include 'menu_app/_language_selector.html' %}
+        </div>
+        <button type="button" class="cm-cancelar" onclick="cmCerrarHoja('cm-sheet-mas')">{% trans "Cancelar" %}</button>
+    </div>
+</div>
+
+<!-- Hoja de acciones del área -->
+<div id="cm-sheet-area" class="modal-backdrop movil-only cm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="cm-area-titulo">
+        <h2 class="cm-sheet-titulo" id="cm-area-titulo"></h2>
+        <p class="cm-sheet-sub" id="cm-area-sub"></p>
+        <div class="cm-acciones">
+            <button type="button" class="cm-accion" id="cm-area-agregar" onclick="cmAreaAgregar()">
+                <span class="cm-accion-icono">+</span>
+                <span class="cm-accion-textos"><span class="cm-accion-label">{% trans "Agregar responsable" %}</span></span>
+            </button>
+            <a href="#" class="cm-accion" id="cm-area-exportar">
+                <span class="cm-accion-icono">↓</span>
+                <span class="cm-accion-textos"><span class="cm-accion-label">{% trans "Exportar" %}</span><span class="cm-accion-desc">{% trans "Responsables de esta área en Excel" %}</span></span>
+            </a>
+            <div class="cm-separador" id="cm-area-sep"></div>
+            <button type="button" class="cm-accion cm-accion-peligro" id="cm-area-limpiar" onclick="cmAreaLimpiar(event)">
+                <span class="cm-accion-icono">🗑</span>
+                <span class="cm-accion-textos"><span class="cm-accion-label">{% trans "Limpiar área" %}</span><span class="cm-accion-desc" id="cm-area-limpiar-desc"></span></span>
+            </button>
+        </div>
+        <button type="button" class="cm-cancelar" onclick="cmCerrarHoja('cm-sheet-area')">{% trans "Cancelar" %}</button>
+    </div>
+</div>
+
+<!-- Hoja "⋮" de la fila -->
+<div id="cm-sheet-item" class="modal-backdrop movil-only cm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="cm-item-titulo">
+        <h2 class="cm-sheet-titulo" id="cm-item-titulo"></h2>
+        <p class="cm-sheet-sub cm-codigo" id="cm-item-sub"></p>
+        <div class="cm-acciones">
+            <button type="button" class="cm-accion" id="cm-item-editar" onclick="cmItemEditar()">
+                <span class="cm-accion-icono">✏️</span>
+                <span class="cm-accion-textos"><span class="cm-accion-label">{% trans "Editar" %}</span></span>
+            </button>
+            <button type="button" class="cm-accion cm-accion-peligro" id="cm-item-eliminar" onclick="cmItemEliminar()">
+                <span class="cm-accion-icono">🗑</span>
+                <span class="cm-accion-textos"><span class="cm-accion-label">{% trans "Eliminar" %}</span></span>
+            </button>
+        </div>
+        <button type="button" class="cm-cancelar" onclick="cmCerrarHoja('cm-sheet-item')">{% trans "Cancelar" %}</button>
+    </div>
+</div>
 
 <!-- Modal confirmación limpiar -->
 <div id="modal-limpiar" class="modal-backdrop" style="display:none;">
@@ -374,4 +517,18 @@
     };
 </script>
 <script src="{% static 'paros_app/js/catalogos.js' %}"></script>
+<script>
+    window.CM_CFG = {
+        tipo:           'responsables',
+        singular:       "{% trans 'responsable' %}",
+        plural:         "{% trans 'responsables' %}",
+        area:           "{% trans 'área' %}",
+        areas:          "{% trans 'áreas' %}",
+        de:             "{% trans 'de' %}",
+        sinResultados:  "{% trans 'Sin resultados para' %}",
+        limpiarDesc:    "{% trans 'Borra los {n} responsables · pide confirmación' %}",
+        limpiarConfirm: "{% trans '¿Eliminar los {n} responsables del área “{area}”?' %}",
+    };
+</script>
+<script src="{% static 'paros_app/js/catalogos_movil.js' %}"></script>
 {% endblock %}

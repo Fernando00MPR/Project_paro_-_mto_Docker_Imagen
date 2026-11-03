@@ -1,6 +1,7 @@
 {% load i18n %}
+{% load static %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE|default:'es' }}">
+<html lang="{{ LANGUAGE_CODE|default:'es' }}" translate="no">
 <head>
 <script>
 // Aplicar tema ANTES de que el navegador pinte — evita flash blanco
@@ -16,10 +17,17 @@
     if (accent) {
         document.documentElement.setAttribute('data-accent', accent);
     }
+    // Módulo del menú lateral (mismo criterio que aplicarModulo, más abajo): se decide antes de
+    // pintar para que en Gestión de Mantenimiento no aparezca primero el menú de Paros.
+    var p = location.pathname;
+    var modulo = p.indexOf('/mto/') === 0 ? 'mto' : p.indexOf('/paros/') === 0 ? 'paros'
+                : (localStorage.getItem('app_modulo') || 'paros');
+    document.documentElement.classList.add('modulo-' + modulo);
 })();
 </script>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{% block title %}Gestión de Paros{% endblock %}</title>
     {% block favicon %}
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='14' width='8' height='16' rx='2' fill='%234F46E5'/><rect x='12' y='8' width='8' height='22' rx='2' fill='%234F46E5' opacity='.7'/><rect x='22' y='2' width='8' height='28' rx='2' fill='%234F46E5' opacity='.4'/></svg>">
@@ -107,6 +115,7 @@
             height: 100vh;
             overflow: hidden;
             flex-shrink: 0;
+            z-index: 50;   /* por encima del contenido (tablas con celdas sticky, fotos, chips) para que sus tooltips se vean */
             transition: width var(--tr), background var(--tr), border-color var(--tr);
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed-w); }
@@ -137,28 +146,10 @@
             flex-shrink: 0;
             transition: border-color var(--tr);
         }
-        /* Auto-colapsar en pantallas angostas — solo rango tablet.
-           Por debajo de 640px el sidebar es un cajón (ver bloque siguiente),
-           no una tira de iconos: si este bloque siguiera aplicando ahí, el
-           cajón se abriría con 56px de ancho y sin etiquetas. */
-        @media (min-width: 641px) and (max-width: 768px) {
-            .sidebar:not(.collapsed) {
-                width: var(--sidebar-collapsed-w) !important;
-            }
-            .sidebar:not(.collapsed) .brand-text,
-            .sidebar:not(.collapsed) .nav-label,
-            .sidebar:not(.collapsed) .sidebar-section,
-            .sidebar:not(.collapsed) .brand-label,
-            .sidebar:not(.collapsed) .logout-label,
-            .sidebar:not(.collapsed) .theme-label { display: none !important; }
-            .sidebar:not(.collapsed) .brand-icon { margin: 0 auto; }
-            .sidebar:not(.collapsed) .user-menu-btn { justify-content: center; }
-            .sidebar:not(.collapsed) .btn-collapse svg { transform: rotate(180deg); }
-        }
 
         /* ── Sidebar como cajón (off-canvas) en celular ── */
         .btn-sidebar-mobile, .sidebar-backdrop { display: none; }
-        @media (max-width: 640px) {
+        @media (max-width: 767px) {
             .sidebar {
                 position: fixed; inset: 0 auto 0 0;
                 width: var(--sidebar-w) !important;   /* gana al .collapsed persistido en localStorage */
@@ -195,16 +186,15 @@
                clic en vez de ocultar el botón completo. */
             #btn-collapse { pointer-events: none; cursor: default; }
 
-            .main { padding: 16px !important; padding-top: 62px !important; }  /* deja el carril del botón hamburguesa */
+            .main { padding: 16px !important; padding-top: 0 !important; }  /* el encabezado sticky (.topbar-movil) ocupa el inicio */
 
+            /* Botón del menú: ya no flota, vive dentro de .topbar-movil */
             .btn-sidebar-mobile {
-                display: flex; align-items: center; justify-content: center;
-                position: fixed; top: 12px; left: 12px; z-index: 41;
-                width: 38px; height: 38px; border-radius: 8px;
+                display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+                width: 44px; height: 44px; border-radius: 12px; padding: 0;
                 background: var(--white); border: 1px solid var(--border);
-                color: var(--text); cursor: pointer; box-shadow: var(--shadow);
+                color: var(--text); cursor: pointer;
             }
-            .sidebar.is-open ~ .btn-sidebar-mobile { display: none; }
 
             .sidebar-backdrop {
                 display: none;
@@ -212,6 +202,37 @@
                 background: rgba(30,27,75,.45);
             }
             .sidebar-backdrop.is-open { display: block; }
+        }
+
+        /* ── Encabezado sticky de página en celular (≤767px) ──
+           Una sola fila: menú (el sidebar es cajón) ·
+           título/subtítulo de la pestaña · acciones de la pestaña. Los títulos y
+           botones los mueve aquí el script "topbar" del final desde el
+           encabezado móvil de cada pestaña; sin él, usa el <title>. */
+        .topbar-movil { display: none; }
+        @media (max-width: 767px) {
+            .main { padding-top: 0 !important; }
+            .topbar-movil {
+                display: flex; align-items: center; gap: 8px;
+                position: sticky; top: 0; z-index: 30;
+                margin: 0 -16px 12px; padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+                background: #F5F5FA; transition: box-shadow .15s;
+            }
+            [data-theme="dark"] .topbar-movil { background: var(--surface); }
+            .topbar-movil.con-sombra { box-shadow: 0 1px 0 #E2E3EE; }
+            [data-theme="dark"] .topbar-movil.con-sombra { box-shadow: 0 1px 0 var(--border); }
+            .tb-titulos { flex: 1; min-width: 0; }
+            .tb-titulos > * { flex: none; min-width: 0; margin: 0; }
+            .tb-titulos > div > :first-child, .tb-titulo {
+                font-size: 17px; font-weight: 600; line-height: 1.25; color: var(--text);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+            .tb-titulos > div > :nth-child(2) {
+                font-size: 12px; line-height: 1.35; color: var(--text-3);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+            .tb-acciones { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+            .tb-acciones:empty { display: none; }
         }
 
         .brand-text {
@@ -662,7 +683,7 @@
 
         /* ── Toast ── */
         #toast-container {
-            position: fixed; bottom: 24px; right: 24px; z-index: 2000;
+            position: fixed; bottom: 24px; right: 24px; z-index: 100100;
             display: flex; flex-direction: column; gap: 8px;
         }
         .toast {
@@ -700,6 +721,59 @@
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-repeat: no-repeat; background-position: right 10px center; background-size: 14px;
         }
+                /* ── AreaSwitcher (selector de "Área actual" del menú) ── */
+        .as { padding: 10px 12px; margin-bottom: 4px; }
+        .as-etq { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+        .as-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--white); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+        /* El botón lo crea el JS al terminar de cargar: se reserva su alto desde el principio para que
+        el menú no "salte" (34px del cuadro + 16 de relleno + 2 de borde; 34px con el menú colapsado). */
+        .as-reserva { min-height: 52px; }
+        .sidebar.collapsed .as-reserva, .sidebar-pre-collapsed .sidebar .as-reserva { min-height: 34px; }
+        .as-btn:hover { border-color: color-mix(in srgb, var(--indigo) 45%, var(--border)); }
+        .as-btn:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+        .as-btn.as-abierto { border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-lt); }
+        .as-btn.as-uno { cursor: default; }
+        .as-sig { width: 34px; height: 34px; flex: none; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+        .as-sig-s { width: 30px; height: 30px; border-radius: 9px; font-size: 10px; }
+        .as-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+        .as-pref { font-size: 11px; color: var(--text-3); }
+        .as-nom { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .as-chev { width: 16px; height: 16px; flex: none; color: var(--text-3); }
+        .as-abierto .as-chev { color: var(--indigo); }
+        .as-lista { position: fixed; z-index: 4000; padding: 6px; border-radius: 14px; border: 1px solid var(--border); background: var(--white); box-shadow: 0 12px 28px rgba(30,32,51,.14); box-sizing: border-box; max-height: 70vh; overflow-y: auto; }
+        .as-lista[hidden] { display: none; }
+        .as-cab { padding: 6px 8px 4px; font-size: 11px; color: var(--text-3); }
+        .as-op { min-height: 46px; padding: 8px; border-radius: 10px; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); cursor: pointer; outline: none; }
+        .as-op:hover, .as-op:focus-visible { background: var(--surface); }
+        .as-op.as-act { background: var(--indigo-lt); font-weight: 600; }
+        .as-op-n { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+        .as-op svg { width: 16px; height: 16px; flex: none; color: var(--indigo); }
+        .as-c0 { background: #E3F5EC; color: #0E7A4C; } .as-c1 { background: #EBEFFD; color: #2C44A8; } .as-c2 { background: #FCEFD6; color: #8A5A08; }
+        .as-c3 { background: #F1E8FB; color: #6B3FA0; } .as-c4 { background: #FBE4E2; color: #A8322A; } .as-c5 { background: #F0F1F7; color: #5E6175; }
+        .as-fondo { position: fixed; inset: 0; z-index: 3999; background: rgba(30,32,51,.45); }
+        .as-fondo[hidden] { display: none; }
+        @keyframes as-sube { from { transform: translateY(100%); } }
+        @media (max-width: 767px) {
+            /* Celular: la lista pasa a ser una hoja inferior */
+            .as-lista { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: auto !important; max-height: 75vh; border-width: 1px 0 0; border-radius: 20px 20px 0 0; padding: 8px 12px calc(16px + env(safe-area-inset-bottom)); animation: as-sube .22s ease-out; }
+            .as-lista::before { content: ''; display: block; width: 40px; height: 4px; margin: 4px auto 10px; border-radius: 2px; background: var(--border); }
+            .as-cab { padding: 0 8px 8px; font-size: 14px; font-weight: 600; color: var(--text); }
+            .as-op { min-height: 56px; font-size: 15px; }
+            .as-sig-s { width: 36px; height: 36px; border-radius: 10px; font-size: 11px; }
+        }
+        @media (prefers-reduced-motion: reduce) { .as-lista { animation: none; } }
+        [data-theme="dark"] .as-c0 { background: rgba(46,139,87,.24); color: #7FD4A0; } [data-theme="dark"] .as-c1 { background: rgba(61,91,217,.26); color: #AEBDF5; }
+        [data-theme="dark"] .as-c2 { background: rgba(217,162,59,.22); color: #F0CF8E; } [data-theme="dark"] .as-c3 { background: rgba(142,91,208,.24); color: #D3B8F2; }
+        [data-theme="dark"] .as-c4 { background: rgba(217,83,79,.24); color: #F2A19C; } [data-theme="dark"] .as-c5 { background: var(--surface); color: var(--text-2); }
+        /* Menú contraído: solo la sigla (en celular el cajón siempre va completo) */
+        @media (min-width: 768px) {
+            .sidebar.collapsed .as-etq, .sidebar.collapsed .as-txt, .sidebar.collapsed .as-chev,
+            .sidebar-pre-collapsed .sidebar .as-etq, .sidebar-pre-collapsed .sidebar .as-txt, .sidebar-pre-collapsed .sidebar .as-chev { display: none; }
+            .sidebar.collapsed .as, .sidebar-pre-collapsed .sidebar .as { padding: 10px 0; }
+            .sidebar.collapsed .as-btn, .sidebar-pre-collapsed .sidebar .as-btn { width: 34px; height: 34px; padding: 0; margin: 0 auto; border: 0; justify-content: center; background: transparent; }
+        }
+        @media (prefers-reduced-motion: reduce) { .as-btn { transition: none; } }
+
         [data-theme="dark"] .form-field select {
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
         }
@@ -708,7 +782,7 @@
         .form-actions { display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 
         /* ── Responsive ── */
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
             .main { padding: 16px; }
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -720,6 +794,23 @@
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
+        }
+
+        /* Algunos Chromium (Windows) solo obedecen si se pisan también los
+           pseudo-estados de dirección, no solo el genérico ::-webkit-scrollbar-button. */
+        ::-webkit-scrollbar-button,
+        ::-webkit-scrollbar-button:single-button,
+        ::-webkit-scrollbar-button:vertical:start,
+        ::-webkit-scrollbar-button:vertical:end,
+        ::-webkit-scrollbar-button:vertical:start:increment,
+        ::-webkit-scrollbar-button:vertical:start:decrement,
+        ::-webkit-scrollbar-button:vertical:end:increment,
+        ::-webkit-scrollbar-button:vertical:end:decrement,
+        ::-webkit-scrollbar-button:horizontal:start,
+        ::-webkit-scrollbar-button:horizontal:end {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
         }
 
         ::-webkit-scrollbar-track {
@@ -755,12 +846,17 @@
         #mod-mto:hover, #mod-paros:hover {
             background: var(--indigo-lt);
         }
-        #mod-mto.active-modulo, #mod-paros.active-modulo {
-            background: var(--indigo-lt);
-            border-left-color: var(--indigo) !important;
-            color: var(--indigo);
-            font-weight: 600;
-        }
+        #mod-mto.active-modulo, #mod-paros.active-modulo,
+        .modulo-mto #mod-mto, .modulo-paros #mod-paros {
+             background: var(--indigo-lt);
+             border-left-color: var(--indigo) !important;
+             color: var(--indigo);
+             font-weight: 600;
+         }
+        /* Menú del módulo: lo decide el <head> con la clase modulo-mto / modulo-paros en <html>
+           (gana al style="display:none" del marcado, así no se pinta primero el menú equivocado). */
+        .modulo-mto #nav-mto, .modulo-paros #nav-paros { display: block !important; }
+        .modulo-mto #nav-paros, .modulo-paros #nav-mto { display: none !important; }
 
         /* Tooltips en modo colapsado para los botones de módulo */
         .sidebar.collapsed #mod-mto::after,
@@ -804,6 +900,7 @@
         input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidden; }
 
 </style>
+<link rel="stylesheet" href="{% static 'menu_app/css/language_selector.css' %}">
 {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -905,17 +1002,23 @@
             {% endif %}
 
             
-            <div class="nav-label" style="padding:10px 12px; margin-bottom:4px;">
-                <label style="font-size:10px; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px;">
-                    {% trans "Área actual" %}
-                </label>
-                <select id="selector-area-mto" onchange="cambiarAreaMto(this.value)"
-                        style="width:100%; padding:7px 10px; border-radius:7px; border:1px solid var(--border);
-                            background:var(--surface); color:var(--text); font-size:13px; font-family:inherit; cursor:pointer;">
+            <div class="as" id="area-switcher">
+                <span class="as-etq">{% trans "Área actual" %}</span>
+                <select id="selector-area-mto" onchange="cambiarAreaMto(this.value)" hidden tabindex="-1" aria-hidden="true">
                     {% for area in areas_menu %}
-                    <option value="{{ area.pk }}">{{ area.nombre }}</option>
+                        <option value="{{ area.pk }}"{% if area.pk|stringformat:'s' == area_menu_actual.id %} selected{% endif %}>{{ area.nombre }}</option>
                     {% endfor %}
                 </select>
+                <div class="as-slot{% if areas_menu %} as-reserva{% endif %}">                    
+                    {% if area_menu_actual %}
+                    {% with a=area_menu_actual %}
+                        <button type="button" class="as-btn{% if areas_menu|length < 2 %} as-uno{% endif %}" aria-expanded="false"{% if areas_menu|length > 1 %} aria-haspopup="listbox"{% endif %}
+                                title="{{ a.nombre }}" aria-label="{% trans 'Área actual' %}: {{ a.nombre }}{% if areas_menu|length > 1 %}. {% trans 'Cambiar de área' %}{% endif %}">
+                            <span class="as-sig as-c{{ a.color }}">{{ a.sigla }}</span><span class="as-txt">{% if a.con_pref %}<span class="as-pref">{% trans "Mantenimiento" %}</span>{% endif %}<span class="as-nom">{{ a.corto }}</span></span>{% if areas_menu|length > 1 %}<svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 9 5-5 5 5M7 15l5 5 5-5"/></svg>{% endif %}
+                        </button>
+                        {% endwith %}
+                    {% endif %}
+                </div>
             </div>
 
             <!-- ── Sidebar - Plan de Mantenimiento ── -->
@@ -930,28 +1033,6 @@
             </a>
             {% endif %}
 
-            <!-- ── Sidebar - Pasos rutinas ── -->
-            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_rutinas %}
-            <a href="#" id="link-rutinas" data-tooltip="{% trans 'Rutinas de Mantenimiento' %}" data-base-url="{% url 'mto:lista_pasos' %}" 
-                class="link-area-dinamico {% if 'paso' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
-                </svg>
-                <span class="nav-label">{% trans "Rutinas de Mantenimiento" %}</span>
-            </a>
-            
-            <!-- ── Sidebar - Pasos rutinas Historial ── -->
-            <a href="{% url 'mto:historial_rutinas' %}" data-tooltip="{% trans 'Historial de rutinas' %}"
-                class="{% if request.resolver_match.url_name == 'historial_rutinas' %}active{% endif %}">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span class="nav-label">{% trans "Historial de rutinas" %}</span>
-            </a>
-            {% endif %}
-
             <!-- ── Sidebar - Seguimiento ── -->
             {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_seguimiento %}
             <a href="#" id="link-seguimientos" data-tooltip="{% trans 'Seguimientos' %}" data-base-url="{% url 'mto:lista_seguimientos' %}" 
@@ -961,18 +1042,6 @@
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
                 <span class="nav-label">{% trans "Seguimientos" %}</span>
-            </a>
-            {% endif %}
-
-            <!-- ── Sidebar - Responsables ── -->
-            {% if request.user.is_superuser or perfil.es_admin or request.user.acceso_mto.ver_responsables %}
-            <a href="#" id="link-responsables" data-tooltip="{% trans 'Responsables' %}" data-base-url="{% url 'mto:lista_responsables' %}" 
-                class="link-area-dinamico {% if 'responsable' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <span class="nav-label">{% trans "Responsables" %}</span>
             </a>
             {% endif %}
 
@@ -1301,13 +1370,7 @@
         </div>
     </aside>
 
-    <!-- Sidebar en celular: botón hamburguesa + fondo para cerrar tocando afuera -->
-    <button type="button" id="btn-sidebar-mobile" class="btn-sidebar-mobile"
-            aria-label="{% trans 'Abrir menú' %}" aria-expanded="false" aria-controls="sidebar">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-    </button>
+    <!-- Sidebar en celular: fondo para cerrar tocando afuera (el botón vive en .topbar-movil) -->
     <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
 
     <!-- Modal de usuario: cambiar contraseña / cerrar sesión -->
@@ -1463,6 +1526,18 @@
 
     <!-- Contenido -->
     <main class="main">
+        <!-- Encabezado sticky en celular (ver .topbar-movil y el script "topbar") -->
+        <div id="topbar-centinela" aria-hidden="true" style="height:1px; margin-bottom:-1px;"></div>
+        <header class="topbar-movil" id="topbar-movil">
+            <button type="button" id="btn-sidebar-mobile" class="btn-sidebar-mobile"
+                    aria-label="{% trans 'Abrir menú' %}" aria-expanded="false" aria-controls="sidebar">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <div class="tb-titulos" id="tb-titulos"></div>
+            <div class="tb-acciones" id="tb-acciones"></div>
+        </header>
         {% block content %}{% endblock %}
     </main>
 </div>
@@ -1533,7 +1608,7 @@ if (btnSidebarMobile && sidebarBackdrop) {
     // salvo los controles que no navegan a otra página (tema, usuario, los
     // botones de módulo que solo cambian qué nav se muestra).
     sidebar.addEventListener('click', (e) => {
-        if (window.innerWidth > 640) return;
+        if (window.innerWidth > 767) return;
         if (!e.target.closest('a, button')) return;
         if (e.target.closest('#btn-collapse, #btn-theme, .user-menu-btn, #mod-mto, #mod-paros')) return;
         cerrarSidebarMobile();
@@ -1542,9 +1617,46 @@ if (btnSidebarMobile && sidebarBackdrop) {
         if (e.key === 'Escape') cerrarSidebarMobile();
     });
     window.addEventListener('resize', () => {
-        if (window.innerWidth > 640) cerrarSidebarMobile();
+        if (window.innerWidth > 767) cerrarSidebarMobile();
     });
 }
+
+/* ── Encabezado sticky en celular ("topbar") ──
+   Mueve a .topbar-movil el título/subtítulo y los botones del encabezado
+   móvil de la pestaña (se mueven los nodos: conservan ids y eventos). Si la
+   pestaña no tiene encabezado móvil, usa el <title> de la página. */
+(function () {
+    const barra = document.getElementById('topbar-movil');
+    if (!barra) return;
+    const slotTitulos  = document.getElementById('tb-titulos');
+    const slotAcciones = document.getElementById('tb-acciones');
+    const cab = document.querySelector(
+        '.main [data-topbar-movil], .main .movil-header, .main .hm-header, .main .bm-header, .main .cm-header, .main .dm-header');
+    if (cab) {
+        const titulos = cab.querySelector(':scope > [class$="titulos"]') || cab.firstElementChild;
+        if (titulos) slotTitulos.appendChild(titulos);
+        Array.from(cab.children).forEach(el => slotAcciones.appendChild(el));
+        cab.remove();
+    } else {
+        const caja = document.createElement('div');
+        const titulo = document.createElement('div');
+        titulo.className = 'tb-titulo';
+        titulo.textContent = document.title.trim();
+        caja.appendChild(titulo);
+        slotTitulos.appendChild(caja);
+    }
+
+    // Sombra de 1px solo cuando la página ya se desplazó.
+    const centinela = document.getElementById('topbar-centinela');
+    if ('IntersectionObserver' in window && centinela) {
+        new IntersectionObserver(([e]) => barra.classList.toggle('con-sombra', !e.isIntersecting))
+            .observe(centinela);
+    } else {
+        const revisar = () => barra.classList.toggle('con-sombra', window.scrollY > 0);
+        window.addEventListener('scroll', revisar, { passive: true });
+        revisar();
+    }
+})();
 
 /* ── Dark mode ── */
 const html       = document.documentElement;
@@ -1619,6 +1731,10 @@ function setModulo(modulo) {
 
 function aplicarModulo(modulo) {
     const esMto = modulo === 'mto';
+
+    document.documentElement.classList.toggle('modulo-mto', esMto);
+    document.documentElement.classList.toggle('modulo-paros', !esMto);
+
     document.getElementById('nav-mto').style.display        = esMto ? 'block' : 'none';
     document.getElementById('nav-paros').style.display      = esMto ? 'none'  : 'block';
     document.getElementById('brand-label-text').textContent = esMto ? '{% trans "Gestión de Mantenimiento" %}' : '{% trans "Paros de Producción" %}';
@@ -1643,6 +1759,7 @@ const AREA_MTO_KEY = 'mto_area_actual';
 
 function cambiarAreaMto(areaId) {
     localStorage.setItem(AREA_MTO_KEY, areaId);
+    document.cookie = 'mto_area_actual=' + encodeURIComponent(areaId) + '; path=/; max-age=31536000; SameSite=Lax';
     actualizarLinksArea(areaId);
 
     // Si la página actual corresponde a una de las 6 vistas dinámicas, navega automáticamente
@@ -1673,9 +1790,114 @@ document.addEventListener('DOMContentLoaded', function() {
     if (areaInicial) {
         selector.value = areaInicial;
         localStorage.setItem(AREA_MTO_KEY, areaInicial);
+        document.cookie = 'mto_area_actual=' + encodeURIComponent(areaInicial) + '; path=/; max-age=31536000; SameSite=Lax';
         actualizarLinksArea(areaInicial);
     }
 });
+
+/* ── AreaSwitcher: reemplaza el select nativo; el select queda oculto como fuente del valor ── */
+{% trans "Área actual" as as_actual %}{% trans "Mantenimiento" as as_pref %}{% trans "Cambiar a…" as as_cambiar_a %}{% trans "Cambiar de área" as as_cambiar %}
+document.addEventListener('DOMContentLoaded', function () {
+    const raiz = document.getElementById('area-switcher'), sel = document.getElementById('selector-area-mto');
+    if (!raiz || !sel || !sel.options.length) return;
+    const T = { actual: "{{ as_actual|escapejs }}", pref: "{{ as_pref|escapejs }}", cambiarA: "{{ as_cambiar_a|escapejs }}", cambiar: "{{ as_cambiar|escapejs }}" };
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    
+    const PREF = /^mantenimiento\s+/i;   // color según el id del área (igual que context_processors.py)
+    const opciones = Array.from(sel.options).map(o => {
+        const nombre = o.textContent.trim(), corto = nombre.replace(PREF, '');
+        return { id: o.value, nombre, corto, conPref: PREF.test(nombre), sigla: corto.replace(/\s+/g, '').slice(0, 3).toUpperCase(),
+                 color: Number(o.value) % 6 };
+    });
+    const varios = opciones.length > 1;
+    const SV_CHEV = '<svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 9 5-5 5 5M7 15l5 5 5-5"/></svg>';
+    const SV_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
+    
+    // El servidor ya pinta el botón (sin parpadeo); si por algo no viene, se crea como antes.
+    let btn = raiz.querySelector('.as-btn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'as-btn'; btn.setAttribute('aria-expanded', 'false');
+        if (varios) btn.setAttribute('aria-haspopup', 'listbox'); else btn.classList.add('as-uno');
+        raiz.querySelector('.as-slot').appendChild(btn);
+    }
+    
+    const lista = document.createElement('div');
+    lista.className = 'as-lista'; lista.setAttribute('role', 'listbox'); lista.setAttribute('aria-label', T.cambiar); lista.hidden = true;
+    document.body.appendChild(lista);
+
+    const fondo = document.createElement('div');
+    fondo.className = 'as-fondo'; fondo.hidden = true;
+    document.body.appendChild(fondo);
+    fondo.addEventListener('click', () => cerrar(true));
+    const movil = () => window.matchMedia('(max-width: 767px)').matches;
+
+    const actual = () => opciones.find(o => o.id === sel.value) || opciones[0];
+
+    function pintarBoton() {
+        const a = actual();
+        btn.innerHTML = '<span class="as-sig as-c' + a.color + '">' + esc(a.sigla) + '</span><span class="as-txt">' +
+            (a.conPref ? '<span class="as-pref">' + esc(T.pref) + '</span>' : '') + '<span class="as-nom">' + esc(a.corto) + '</span></span>' + (varios ? SV_CHEV : '');
+        btn.title = a.nombre;
+        btn.setAttribute('aria-label', T.actual + ': ' + a.nombre + (varios ? '. ' + T.cambiar : ''));
+    }
+    function pintarLista() {
+         lista.innerHTML = '<div class="as-cab">' + esc(movil() ? T.cambiar : T.cambiarA) + '</div>' + opciones.map(o => {
+            const act = o.id === actual().id;
+            return '<div class="as-op' + (act ? ' as-act' : '') + '" role="option" tabindex="-1" data-id="' + esc(o.id) + '" aria-selected="' + act + '">' +
+                '<span class="as-sig as-sig-s as-c' + o.color + '">' + esc(o.sigla) + '</span><span class="as-op-n">' + esc(o.nombre) + '</span>' + (act ? SV_OK : '') + '</div>';
+        }).join('');
+    }
+    function posicionar() {
+        const r = btn.getBoundingClientRect(), mini = r.width < 100;
+        lista.style.width = (mini ? 240 : r.width) + 'px';
+        const h = lista.offsetHeight;
+        let top = r.bottom + 6, left = mini ? r.right + 8 : r.left;
+        if (mini) top = Math.max(8, Math.min(r.top, window.innerHeight - h - 8));
+        else if (top + h > window.innerHeight - 8 && r.top - 6 - h > 8) top = r.top - 6 - h;   // sin espacio abajo: se abre hacia arriba
+        lista.style.left = left + 'px'; lista.style.top = top + 'px';
+    }
+    const ops = () => Array.from(lista.querySelectorAll('.as-op'));
+    function abrir() {
+        if (!varios || !lista.hidden) return;
+        pintarLista(); lista.hidden = false; posicionar();
+        fondo.hidden = !movil();
+        btn.setAttribute('aria-expanded', 'true'); btn.classList.add('as-abierto');
+        (lista.querySelector('.as-act') || ops()[0]).focus();
+    }
+    function cerrar(foco) {
+        if (lista.hidden) return;
+        lista.hidden = true; btn.setAttribute('aria-expanded', 'false'); btn.classList.remove('as-abierto');
+        fondo.hidden = true;
+        if (foco) btn.focus();
+    }
+    function elegir(id) {
+        if (id !== actual().id) { sel.value = id; pintarBoton(); if (typeof cambiarAreaMto === 'function') cambiarAreaMto(id); }
+        cerrar(true);
+    }
+    btn.addEventListener('click', () => (lista.hidden ? abrir() : cerrar(true)));
+    btn.addEventListener('keydown', e => { if (e.key === 'ArrowDown') { e.preventDefault(); abrir(); } });
+    lista.addEventListener('click', e => { const o = e.target.closest('.as-op'); if (o) elegir(o.dataset.id); });
+    lista.addEventListener('keydown', e => {
+        const o = ops(), i = o.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown') { e.preventDefault(); o[Math.min(i + 1, o.length - 1)].focus(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); o[Math.max(i - 1, 0)].focus(); }
+        else if (e.key === 'Home') { e.preventDefault(); o[0].focus(); }
+        else if (e.key === 'End') { e.preventDefault(); o[o.length - 1].focus(); }
+        else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (i >= 0) elegir(o[i].dataset.id); }
+        else if (e.key === 'Escape') { e.preventDefault(); cerrar(true); }
+        else if (e.key === 'Tab') { cerrar(false); }
+        else if (e.key.length === 1 && /\S/.test(e.key)) {
+            const L = e.key.toLowerCase(), m = opciones.findIndex(x => x.nombre.toLowerCase().startsWith(L) || x.corto.toLowerCase().startsWith(L));
+            if (m >= 0) o[m].focus();
+        }
+    });
+    document.addEventListener('mousedown', e => { if (!lista.hidden && !lista.contains(e.target) && !btn.contains(e.target)) cerrar(false); });
+    window.addEventListener('resize', () => cerrar(false));
+    document.addEventListener('scroll', e => { if (!lista.hidden && !lista.contains(e.target)) cerrar(false); }, true);
+    pintarBoton();
+});
+
 </script>
 
 <!-- Cambiar Constraseña -->
@@ -1839,5 +2061,6 @@ document.addEventListener('animationend', function (e) {
     }
 }, true);
 </script>
+<script src="{% static 'menu_app/js/language_selector.js' %}"></script>
 </body>
 </html>

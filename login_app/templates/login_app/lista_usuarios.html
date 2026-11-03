@@ -2,6 +2,7 @@
 {% load i18n %}
 {% block title %}Gestión de usuarios{% endblock %}
 {% block content %}
+{% include 'menu_app/_no_disponible_movil.html' %}
 
 <div class="card-header" style="margin-bottom:16px;">
     <div>
@@ -275,7 +276,7 @@ document.addEventListener('click', function (e) {
 .usr-kpi-value { font-size: 24px; font-weight: 700; color: var(--text); }
 .usr-kpi-value--full  { color: var(--green); }
 .usr-kpi-value--scope { color: var(--indigo); }
-@media (max-width: 720px) { .usr-kpis { grid-template-columns: 1fr; } }
+@media (max-width: 767px) { .usr-kpis { grid-template-columns: 1fr; } }
 
 /* Restaurar el ocultamiento nativo (nuestras reglas de .usr-menu/.usr-detalle
    con display:flex/block le ganarían al atributo [hidden]). */
@@ -454,7 +455,7 @@ document.addEventListener('click', function (e) {
 }
 .usr-pag--current { background: var(--indigo); color: #fff; border-color: var(--indigo); font-weight: 600; }
 
-@media (max-width: 720px) {
+@media (max-width: 767px) {
     .usr-thead { display: none; }
     .usr-row {
         grid-template-columns: 1fr 44px;

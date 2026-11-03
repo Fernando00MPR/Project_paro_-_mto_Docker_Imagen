@@ -2,7 +2,9 @@
 {% load i18n static %}
 
 {% block title %}{{ carpeta.nombre }} — {% trans "Documentos Generales" %}{% endblock %}
-
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'mto_app/css/documentos_movil.css' %}">
+{% endblock %}
 {% block content %}
 
 {% if messages %}
@@ -18,7 +20,7 @@
 </div>
 {% endif %}
 
-<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12.5px; color:var(--text-3); margin-bottom:10px;">
+<div class="dcm-desktop-only" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12.5px; color:var(--text-3); margin-bottom:10px;">
     <a href="{% url 'mto:documentos_generales' %}" style="color:var(--text-3); text-decoration:none;"
        onmouseover="this.style.color='var(--indigo)'" onmouseout="this.style.color='var(--text-3)'">{% trans "Documentos Generales" %}</a>
     {% for ancestro in ancestros %}
@@ -30,7 +32,7 @@
     <span style="color:var(--text-2); font-weight:500;">{{ carpeta.nombre }}</span>
 </div>
 
-<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+<div class="dcm-desktop-only" style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
     <div style="display:flex; align-items:center; gap:14px; min-width:0;">
         <button onclick="window.location.href='{% if carpeta.parent_id %}{% url 'mto:carpeta_detalle' carpeta.parent_id %}{% else %}{% url 'mto:documentos_generales' %}{% endif %}'" title="{% trans 'Volver' %}"
                 style="width:36px; height:36px; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:10px; background:var(--white); color:var(--text-2); cursor:pointer;"
@@ -63,9 +65,9 @@
             </div>
         </div>
     </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         {% if puede_eliminar %}
-        <button onclick="confirmarEliminarCarpeta(event, {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}', {{ total_documentos_carpeta }})" class="btn btn-ghost" style="color:var(--red); height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;"
+        <button onclick="confirmarEliminarCarpeta(event, {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}', {{ total_documentos_carpeta }})" class="btn btn-ghost" style="color:var(--red); height:44px; padding:0 16px; border-radius:10px; font-size:13.5px;"
                 onmouseover="this.style.background='var(--red-lt)';"
                 onmouseout="this.style.background='';">
             {% trans "Eliminar esta carpeta" %}
@@ -73,21 +75,22 @@
         {% endif %}
         {% if puede_editar %}
         {% if puede_crear_subcarpeta %}
-        <button onclick="abrirModalSubcarpeta(event)" class="btn btn-ghost" style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+        <button onclick="abrirModalSubcarpeta(event)" class="btn btn-ghost" style="height:44px; padding:0 16px; border-radius:10px; font-size:13.5px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
             {% trans "Nueva subcarpeta" %}
         </button>
         {% endif %}
-        <button onclick="abrirModalSubir(event, {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}')" class="btn btn-primary" style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
+         <button onclick="abrirModalSubir(event, {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}')" class="btn btn-primary" style="height:44px; padding:0 16px; border-radius:10px; font-size:13.5px;">
             + {% trans "Subir documento" %}
         </button>
         {% endif %}
+        <div style="display:flex; align-items:center; --ls-h:44px;">{% include 'menu_app/_language_selector.html' %}</div>
     </div>
 </div>
 
 {% if not subcarpetas and not documentos %}
-<div class="card" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:56px 24px;">
+<div class="card dcm-desktop-only" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:56px 24px;">
     <div style="width:46px; height:46px; border-radius:12px; background:var(--indigo-lt); display:flex; align-items:center; justify-content:center;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.8" stroke-linejoin="round">
             <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.5h7A1.5 1.5 0 0 1 19 10v7.5A1.5 1.5 0 0 1 17.5 19h-13A1.5 1.5 0 0 1 3 17.5z"/>
@@ -133,7 +136,7 @@
     }
     .doc-btn-more svg { fill: currentColor; }
 </style>
-<div class="card" style="padding:0;">
+<div class="card dcm-desktop-only" style="padding:0;">
     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:12px 24px; border-bottom:1px solid var(--border); background:var(--surface);">
         <div style="display:flex; align-items:center; gap:4px; background:var(--white); border:1px solid var(--border); border-radius:10px; padding:3px;">
             <button type="button" class="doc-filtro-tipo-btn doc-filtro-tipo-activo" data-tipo="todo" onclick="aplicarFiltroTipoDoc('todo', this)">{% trans "Todo" %}</button>
@@ -197,6 +200,78 @@
     </div>
 </div>
 {% endif %}
+
+<!-- ═══ Vista de celular (≤767px) — ver documentos_movil.css / .js ═══ -->
+<div id="dcm-movil" class="movil-only" data-carpeta="{{ carpeta.pk }}">
+    <!-- Encabezado: el script "topbar" de base_menu lo pasa a la barra sticky -->
+    <div class="movil-only" data-topbar-movil>
+        <div class="dcm-titulos">
+            <div>{{ carpeta.nombre }}</div>
+            <div>{% if carpeta.codigo %}<span class="dcm-mono">{{ carpeta.codigo }}</span> · {% endif %}{% if total_subcarpetas or total_documentos_carpeta %}{% if total_subcarpetas %}{% blocktrans count n=total_subcarpetas %}{{ n }} carpeta{% plural %}{{ n }} carpetas{% endblocktrans %}{% if total_documentos_carpeta %} · {% endif %}{% endif %}{% if total_documentos_carpeta %}{% blocktrans count n=total_documentos_carpeta %}{{ n }} archivo{% plural %}{{ n }} archivos{% endblocktrans %}{% endif %}{% else %}{% trans "Vacía" %}{% endif %}</div>
+        </div>
+        {% if puede_editar or puede_eliminar %}
+        <button type="button" class="dcm-btn-icono" id="dcm-mas-btn" aria-label="{% trans 'Editar o eliminar carpeta' %}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+        {% endif %}
+    </div>
+    {% comment %}Botón atrás: documentos_movil.js lo pone en la barra, en lugar del menú.{% endcomment %}
+    {% with padre=ancestros|last %}
+    <a class="dcm-btn-icono dcm-volver" id="dcm-volver"
+       href="{% if carpeta.parent_id %}{% url 'mto:carpeta_detalle' carpeta.parent_id %}{% else %}{% url 'mto:documentos_generales' %}{% endif %}"
+       aria-label="{% if padre %}{% blocktrans with nombre=padre.nombre %}Volver a {{ nombre }}{% endblocktrans %}{% else %}{% trans 'Volver a Documentos' %}{% endif %}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    {% endwith %}
+
+    <nav class="dcm-ruta" aria-label="{% trans 'Ruta' %}">
+        <a href="{% url 'mto:documentos_generales' %}">{% trans "Documentos" %}</a>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        {% if ancestros|length >= 3 %}
+        <button type="button" class="dcm-ruta-mas" id="dcm-ruta-mas" aria-label="{% trans 'Ver la ruta completa' %}">…</button>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        {% with a=ancestros|last %}<a href="{% url 'mto:carpeta_detalle' a.pk %}">{{ a.nombre }}</a>{% endwith %}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        {% else %}
+        {% for a in ancestros %}
+        <a href="{% url 'mto:carpeta_detalle' a.pk %}">{{ a.nombre }}</a>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        {% endfor %}
+        {% endif %}
+        <span aria-current="page">{{ carpeta.nombre }}</span>
+    </nav>
+
+    <div class="dcm-buscar-fila">
+        <label class="dcm-buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="dcm-buscar" enterkeyhint="search" autocomplete="off"
+                   placeholder="{% trans 'Buscar en esta carpeta' %}" aria-label="{% trans 'Buscar en esta carpeta' %}">
+        </label>
+        <button type="button" class="dcm-btn-icono" id="dcm-orden-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M14 6h7M14 11h5M14 16h3"/></svg>
+        </button>
+    </div>
+
+    <div class="dcm-seg" role="group" aria-label="{% trans 'Mostrar' %}" id="dcm-seg">
+        <button type="button" data-ver="todo" aria-pressed="true">{% trans "Todo" %}</button>
+        <button type="button" data-ver="carpetas" aria-pressed="false">{% trans "Carpetas" %} · {{ subcarpetas|length }}</button>
+        <button type="button" data-ver="archivos" aria-pressed="false">{% trans "Archivos" %} · {{ documentos|length }}</button>
+    </div>
+
+    <div id="dcm-subidas" hidden></div>
+    <div id="dcm-contenido"></div>
+    <div id="dcm-resultados" hidden></div>
+    <div class="dcm-espacio-fab"></div>
+</div>
+
+{% if puede_editar %}
+<button type="button" class="dcm-fab movil-only" id="dcm-fab-agregar">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    {% trans "Agregar" %}
+</button>
+{% endif %}
+
+{% include "mto_app/documentacion/_movil_hojas.html" %}
 
 <!-- ── Modal subir documento ── -->
 <style>
@@ -536,4 +611,5 @@ window.DOC_CFG = {
 </script>
 {% load static %}
 <script src="{% static 'mto_app/js/documentacion.js' %}"></script>
+{% include "mto_app/documentacion/_movil_config.html" %}
 {% endblock %}

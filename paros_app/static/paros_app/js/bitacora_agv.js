@@ -128,7 +128,10 @@ function enviarValorAgv(td, valor, comentario) {
     const anio    = td.dataset.anio;
     const fecha   = `${anio}-${mes}-${dia.toString().padStart(2, '0')}`;
 
-    fetch(cfgAgv.urlGuardar, {
+    // Devuelve una promesa con true/false (la usa la hoja de captura móvil
+    // para no avanzar de día si falla); en escritorio se ignora.
+
+    return fetch(cfgAgv.urlGuardar, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_AGV },
         body: JSON.stringify({ area_interna: interna, fecha, turno, cantidad: valor === '' ? null : parseInt(valor), comentario: comentario || '' })
@@ -164,11 +167,13 @@ function enviarValorAgv(td, valor, comentario) {
                 mostrarFlagComentario(td, data.comentario);
             }
             if (document.getElementById('chartCumplimiento')) cargarCumplimiento();
+            return true;
         } else {
             alert('Error: ' + (data.error || 'No se pudo guardar'));
+            return false;
         }
     })
-    .catch(() => alert('Error de conexión'));
+    .catch(() => { alert('Error de conexión'); return false; });
 }
 
 // ── Gráfico de cumplimiento ─────────────────────────────────────────────────────
@@ -265,6 +270,10 @@ function descargarGraficaCumplimiento() {
 }
 
 function renderizarCumplimiento(datos) {
+    // La tarjeta móvil (bitacora_agv_movil.js) pinta su lista con estos mismos datos.
+    document.dispatchEvent(new CustomEvent('agv:cumplimiento', {
+        detail: { datos, vista: vistaEfAgv, interna: document.getElementById('ef-interna').value }
+    }));
     const labels       = datos.map(d => d.label);
     const cantidades   = datos.map(d => d.cantidad);
     const targets      = datos.map(d => d.target);

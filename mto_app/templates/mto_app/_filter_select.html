@@ -1,0 +1,84 @@
+{% load i18n %}
+{% comment %}
+    FilterSelect — selector de filtro propio (reemplaza un <select> nativo).
+    Escritorio: menú desplegable (patrón ARIA listbox). Celular (≤767px): hoja inferior.
+    Lo maneja menu_app/js/filter_select.js; estilos en menu_app/css/filter_select.css.
+
+    Parámetros del include:
+      fs_id        id único del componente (si hay dos en la página, uno por vista)
+      name         parámetro GET que filtra (al elegir se recarga con ?name=valor)
+      label        etiqueta pequeña del botón ("Área")
+      icono        ícono del cuadro: "edificio" | "calendario" | "persona" | "check" | "etiqueta" | "alerta" | "llave"
+      valor        valor elegido ("" = todas)
+      valor_label  texto del valor elegido (vacío → todas_label)
+      todas_label  texto de la opción "todas" ("Todas las áreas")
+      todas_meta   texto a la derecha de "todas" (p. ej. "10 vencidas")
+      opciones     lista de {value, label, color, meta}
+{% endcomment %}
+<div class="fs{% if valor %} fs-activo{% endif %}" id="{{ fs_id }}" data-fs data-param="{{ name }}">
+    <input type="hidden" name="{{ name }}" value="{{ valor }}">
+    <div class="fs-ctl">
+        <button type="button" class="fs-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="{{ fs_id }}-lista"
+                aria-label="{{ label }}: {% firstof valor_label todas_label %}">
+            <span class="fs-ico" aria-hidden="true">
+                {% if icono == "calendario" %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                {% elif icono == "persona" %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 19a4 4 0 0 0-8 0M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+                {% elif icono == "etiqueta" %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8" r="1.2"/></svg>
+                {% elif icono == "alerta" %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5m0 3h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+                {% elif icono == "llave" %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>
+                {% elif icono == "check" %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>
+                {% else %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M3 21h18M8 7h4M8 11h4M8 15h4"/></svg>
+                {% endif %}
+            </span>
+            <span class="fs-txt">
+                <span class="fs-label">{{ label }}</span>
+                <span class="fs-valor">{% firstof valor_label todas_label %}</span>
+            </span>
+            <svg class="fs-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        {% if valor %}
+        <button type="button" class="fs-x" aria-label="{% blocktrans with l=label|lower %}Quitar filtro de {{ l }}{% endblocktrans %}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="fs-capa" hidden>
+        <div class="fs-menu" aria-labelledby="{{ fs_id }}-titulo">
+            <div class="fs-asa" aria-hidden="true"><span></span></div>
+            <h2 class="fs-titulo" id="{{ fs_id }}-titulo">{{ label }}</h2>
+            {% if opciones|length > 8 %}
+            <input type="search" class="fs-buscar" autocomplete="off" aria-controls="{{ fs_id }}-lista"
+                   placeholder="{% blocktrans with l=label|lower %}Buscar {{ l }}…{% endblocktrans %}"
+                   aria-label="{% blocktrans with l=label|lower %}Buscar {{ l }}…{% endblocktrans %}">
+            {% endif %}
+            <ul class="fs-lista" id="{{ fs_id }}-lista" role="listbox" tabindex="-1" aria-label="{{ label }}">
+                <li class="fs-op fs-todas" role="option" id="{{ fs_id }}-op-todas" data-value=""
+                    aria-selected="{% if valor %}false{% else %}true{% endif %}">
+                    <i class="fs-punto" aria-hidden="true"></i>
+                    <span class="fs-nombre">{{ todas_label }}</span>
+                    {% if todas_meta %}<span class="fs-meta">{{ todas_meta }}</span>{% endif %}
+                    <svg class="fs-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+                </li>
+                <li class="fs-sep" role="presentation"></li>
+                {% for o in opciones %}
+                <li class="fs-op" role="option" id="{{ fs_id }}-op-{{ forloop.counter }}" data-value="{{ o.value }}"
+                    aria-selected="{% if o.value == valor %}true{% else %}false{% endif %}">
+                    <i class="fs-punto" style="background:{{ o.color|default:'#9CA3AF' }};" aria-hidden="true"></i>
+                    <span class="fs-nombre">{{ o.label }}</span>
+                    {% if o.meta %}<span class="fs-meta">{{ o.meta }}</span>{% endif %}
+                    <svg class="fs-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="fs-vacio" hidden>{% trans "Sin coincidencias" %}</p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,46 @@
+/* seg_servicios_escritorio.css — Seguimiento de servicios, escritorio (35D / 35D-a).
+   Usa seg_refacciones_escritorio.css (.srd-*: tarjetas, filtros, cajitas de paso, modal) y
+   los componentes de inventario_escritorio.css (.ive-*: botones, columnas, modal Categorías).
+   Aquí solo lo propio de servicios (.ssv-*). Los chips de tipo usan la paleta de las áreas
+   (.as-c0 … .as-c5 de base_menu.html, con su versión oscura). */
+
+/* Chip del tipo de servicio */
+.ssv-tipo { display: inline-block; padding: 1px 7px; border-radius: 7px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.ssv-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.ssv-meta .srd-item { margin-top: 0; }
+
+/* Filtros: Tipo de servicio (FilterSelect) y Columnas a la altura de la barra (42px) */
+.ssv .ive-filtros .fs { min-width: 210px; }
+.ssv .ive-filtros .fs-ctl { height: 42px; border-radius: 12px; }
+.ssv .ive-filtros .srd-conteo { margin-left: auto; }
+.ssv .ive-buscar.srd-buscar { flex-basis: 240px; }   /* deja lugar a Tipo, Fecha y Columnas en una línea */
+.ssv-cols-btn { height: 42px; }
+
+/* Tabla: 7 columnas con texto completo. Mínimo 1260px para que Comentarios tenga ~150px;
+   si no cabe se desliza y Acciones queda fija a la derecha. */
+.srd-tabla.ssv-tabla { min-width: 1260px; }
+.ssv-tabla .c-ref { width: 17%; }
+.ssv-tabla .c-cant { width: 84px; }
+.ssv-tabla .c-mot { width: 15%; line-height: 1.5; overflow-wrap: anywhere; }
+.ssv-tabla .c-mot.vacio { color: var(--ive-tenue); }
+.ssv-tabla .c-avance { width: 28%; }
+
+/* Columnas ocultas (<html class="ssv-sin-…">, ver el <head> de la plantilla) */
+.ssv-sin-cantidad .ssc-cantidad, .ssv-sin-motivo .ssc-motivo, .ssv-sin-avance .ssc-avance,
+.ssv-sin-estatus .ssc-estatus, .ssv-sin-comentarios .ssc-comentarios { display: none; }
+
+/* ═══ Modal de seguimiento (sobre .srd-m-*) ═══ */
+.ssv-m-ico { background: var(--ive-pri-lt); color: var(--ive-pri-dk); }
+.ssv-m-cant { width: 200px; }
+.ssv-m-motivo { min-height: 56px; }
+.ssv-m-area[hidden] { display: none; }
+.srd-m-op .ssv-tipo { flex: none; }
+.srd-m-op.ssv-m-agregar { margin-top: 4px; border-top: 1px solid var(--ive-div); border-radius: 0 0 8px 8px; color: var(--ive-pri-dk); font-weight: 600; }
+.srd-m-tarjeta-txt > .srd-cod { color: var(--text); }
+
+/* ═══ Modal "Catálogo de servicios" (sobre .ive-cats-*) ═══ */
+.ive-cats.ssv-cat { width: 780px; }
+.ive-cats-nueva.ssv-cat-nueva { grid-template-columns: 130px minmax(0, 1fr) 190px auto; }
+.ssv-cat-n { font-size: 12px; font-weight: 600; color: var(--ive-muted); letter-spacing: .02em; }
+.ssv-cat-tabla td.ssv-cat-item { font-size: 12px; white-space: nowrap; }
+.ive-cats-editando select.ive-cats-in { height: 34px; font-size: 13px; padding-right: 30px; }

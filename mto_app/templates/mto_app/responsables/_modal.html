@@ -1,0 +1,126 @@
+{% load i18n %}
+{% comment %}
+    Contenido del modal "Responsables" (Plan de mantenimiento). Lo pide responsables_modal.js con fetch a
+    mto:responsables_modal y lo pinta en #rs-cuerpo. Filtros: #rs-q, [data-estado], [data-puesto].
+{% endcomment %}
+<div class="rs" id="rs-raiz">
+
+    <div class="rs-kpis">
+        <div class="rs-kpi">
+            <div class="rs-kpi-l rs-c-ok">{% trans "ACTIVOS" %}</div>
+            <div class="rs-kpi-v">{{ n_act }} <small>{% blocktrans with n=n_total %}de {{ n }} registrados{% endblocktrans %}</small></div>
+        </div>
+        <div class="rs-kpi">
+            <div class="rs-kpi-l">{% trans "INACTIVOS" %}</div>
+            <div class="rs-kpi-v">{{ n_ina }}</div>
+        </div>
+        <div class="rs-kpi">
+            <div class="rs-kpi-l rs-c-pri">{% trans "PUESTOS" %}</div>
+            <div class="rs-kpi-v">{{ chips|length }} <small>{% trans "distintos en la lista" %}</small></div>
+        </div>
+    </div>
+
+    <section class="rs-card">
+        <div class="rs-barra">
+            <label class="rs-buscar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" id="rs-q" value="{{ q }}" placeholder="{% trans 'Buscar por nómina, nombre o puesto…' %}" aria-label="{% trans 'Buscar responsables' %}" autocomplete="off">
+            </label>
+            <div class="rs-seg" role="group" aria-label="{% trans 'Estado' %}">
+                <button type="button" data-estado="activos" aria-pressed="{% if f_estado == 'activos' %}true{% else %}false{% endif %}">{% trans "Activos" %} {{ n_act }}</button>
+                <button type="button" data-estado="inactivos" aria-pressed="{% if f_estado == 'inactivos' %}true{% else %}false{% endif %}">{% trans "Inactivos" %} {{ n_ina }}</button>
+                <button type="button" data-estado="todos" aria-pressed="{% if f_estado == 'todos' %}true{% else %}false{% endif %}">{% trans "Todos" %} {{ n_total }}</button>
+            </div>
+            {% if puede_editar %}
+            <button type="button" class="rs-nuevo" id="rs-nuevo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                {% trans "Agregar responsable" %}
+            </button>
+            {% endif %}
+        </div>
+        {% if chips %}
+        <div class="rs-chips">
+            <span class="rs-etq">{% trans "PUESTO" %}</span>
+            {% for c in chips %}
+            <button type="button" class="rs-chip" data-puesto="{{ c.valor }}" aria-pressed="{% if f_puesto == c.valor %}true{% else %}false{% endif %}">
+                <span class="rs-punto" data-p="{{ c.valor }}"></span>{{ c.label }} {{ c.n }}
+            </button>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="rs-tabla-wrap">
+            <table class="rs-tabla">
+                <thead>
+                    <tr>
+                        <th class="rs-c-resp">{% trans "RESPONSABLE" %}</th>
+                        <th class="rs-c-puesto">{% trans "PUESTO" %}</th>
+                        <th class="rs-c-estado">{% trans "ESTADO" %}</th>
+                        <th class="rs-c-fecha">{% trans "ALTA" %}</th>
+                        <th class="rs-c-edic">{% trans "ÚLTIMA EDICIÓN" %}</th>
+                        {% if puede_editar or puede_eliminar %}<th class="rs-c-acc">{% trans "ACCIONES" %}</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in filas %}
+                    {% with r=f.r %}
+                    <tr class="rs-fila{% if not r.activo %} rs-inactivo{% endif %}">
+                        <td class="rs-c-resp">
+                            <div class="rs-persona">
+                                <span class="rs-av" data-p="{{ r.posicion }}">{{ r.nombre|slice:":1" }}{{ r.apellidos|slice:":1" }}</span>
+                                <div>
+                                    <div class="rs-nombre">{{ r.nombre }} <span>{{ r.apellidos }}</span></div>
+                                    <div class="rs-nomina">{% trans "Nómina" %} <b>{{ r.numero_nomina }}</b></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="rs-c-puesto">{% if f.puesto_label %}<span class="rs-puesto" data-p="{{ r.posicion }}">{{ f.puesto_label }}</span>{% else %}<span class="rs-vacio">—</span>{% endif %}</td>
+                        <td class="rs-c-estado">
+                            {% if r.activo %}<span class="rs-estado rs-e-on"><i></i>{% trans "Activo" %}</span>
+                            {% else %}<span class="rs-estado rs-e-off"><i></i>{% trans "Inactivo" %}</span>{% endif %}
+                        </td>
+                        <td class="rs-c-fecha">{{ r.creado_en|date:"d/m/Y" }}</td>
+                        <td class="rs-c-edic">{{ r.modificado_en|date:"d/m/Y · g:i A" }}</td>
+                        {% if puede_editar or puede_eliminar %}
+                        <td class="rs-c-acc">
+                            {% if puede_editar %}
+                            <button type="button" class="rs-act rs-act-edit" data-editar
+                                    data-id="{{ r.pk }}" data-nomina="{{ r.numero_nomina }}" data-nombre="{{ r.nombre }}"
+                                    data-apellidos="{{ r.apellidos }}" data-puesto="{{ r.posicion }}" data-activo="{% if r.activo %}1{% else %}0{% endif %}"
+                                    data-alta="{{ r.creado_en|date:'d/m/Y' }}" data-edicion="{{ r.modificado_en|date:'d/m/Y · g:i A' }}"
+                                    title="{% trans 'Editar' %}" aria-label="{% trans 'Editar a' %} {{ r.nombre }}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                            </button>
+                            <button type="button" class="rs-act rs-act-off" data-alternar="{{ r.pk }}" data-nombre="{{ r.nombre }}"
+                                    title="{% if r.activo %}{% trans 'Desactivar' %}{% else %}{% trans 'Reactivar' %}{% endif %}"
+                                    aria-label="{% if r.activo %}{% trans 'Desactivar a' %}{% else %}{% trans 'Reactivar a' %}{% endif %} {{ r.nombre }}">
+                                {% if r.activo %}
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>
+                                {% else %}
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>
+                                {% endif %}
+                            </button>
+                            {% endif %}
+                            {% if puede_eliminar %}
+                            <button type="button" class="rs-act rs-act-del" data-eliminar="{{ r.pk }}" data-nombre="{{ r.nombre }} {{ r.apellidos }}" data-registros="{{ f.n_reg }}"
+                                    title="{% trans 'Eliminar' %}"
+                                    aria-label="{% trans 'Eliminar a' %} {{ r.nombre }}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+                            </button>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                    <tr><td colspan="6" class="rs-sin-datos">{% trans "No hay responsables con estos filtros." %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="rs-nota">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+            <span>{% trans "Los responsables con historial se desactivan en lugar de eliminarse, para conservar sus registros." %}</span>
+        </div>
+    </section>
+</div>

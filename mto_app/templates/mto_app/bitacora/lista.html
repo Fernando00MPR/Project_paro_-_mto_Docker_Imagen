@@ -9,6 +9,12 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/bitacora_movil.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/filter_select.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/date_range_picker.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/page_size_toggle.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/row_action_button.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/bitacora_escritorio.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -27,237 +33,332 @@
 {% endif %}
 
 
-<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
-    <div>
-        <div class="card-title">
-            {% trans "Bitácora" %}
-            {% if filtro_area %}
-                {% for a in areas %}{% if a.pk|stringformat:"s" == filtro_area %} — {{ a.nombre }}{% endif %}{% endfor %}
+<!-- ═══ Vista de escritorio (≥768px) — ver bitacora_escritorio.css / .js ═══ -->
+<div class="bd bm-desktop-only" id="bd-raiz" data-area="{{ filtro_area }}">
+
+    <header class="bd-head">
+        <div class="bd-titulos">
+            <h1>{% trans "Bitácora de mantenimiento" %}</h1>
+            <p>{% for a in areas %}{% if a.pk|stringformat:"s" == filtro_area %}{{ a.nombre }} · {% endif %}{% endfor %}{% trans "actividades realizadas y pendientes por equipo" %}</p>
+        </div>
+        <div class="bd-acciones">
+            <a class="bd-btn" href="{% url 'mto:exportar_bitacora' %}?{{ qs_pag }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22663F" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>
+                {% trans "Exportar Excel" %}
+            </a>
+            {% if puede_editar %}
+            <button type="button" class="bd-btn bd-btn-pri" id="bd-nuevo">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                {% trans "Nuevo registro" %}
+            </button>
             {% endif %}
+            {% include 'menu_app/_language_selector.html' %}
         </div>
-        <div class="card-subtitle">
-            {{ total_registros }} registro(s)
+    </header>
+
+    <section class="bd-kpis" aria-label="{% trans 'Indicadores' %}">
+        <div class="bd-kpi">
+            <div class="bd-kpi-l">{% trans "REGISTROS" %}</div>
+            <div class="bd-kpi-v">{{ kpi.total }} <small>{% blocktrans count n=kpi.equipos %}en {{ n }} equipo{% plural %}en {{ n }} equipos{% endblocktrans %}</small></div>
         </div>
-    </div>
-    {% if puede_editar %}
-    <button onclick="abrirModalBitacora(event)" class="btn btn-primary" style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
-        + {% trans "Nuevo registro" %}
-    </button>
-    {% endif %}
-    
-</div>
+        <div class="bd-kpi bd-kpi-pend">
+            <div class="bd-kpi-l">{% trans "CON PENDIENTE" %}</div>
+            <div class="bd-kpi-v">{{ kpi.con_pend }}{% if kpi.con_pend %} <small>{% blocktrans with d=kpi.dias_antiguo %}el más antiguo hace {{ d }} días{% endblocktrans %}</small>{% endif %}</div>
+        </div>
+        <div class="bd-kpi">
+            <div class="bd-kpi-l">{% trans "ÚLTIMO REGISTRO" %}</div>
+            <div class="bd-kpi-v bd-kpi-v2">{% if kpi.ultimo %}{{ kpi.ultimo.fecha|date:"j M Y" }}{% if kpi.ultimo.equipo %} <small>· {{ kpi.ultimo.equipo }}</small>{% endif %}{% else %}—{% endif %}</div>
+        </div>
+    </section>
 
-<div class="card">
-    <div style="margin-bottom:16px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);">
-        <style>
-          .bit-filtros select,
-          .bit-filtros input,
-          .bit-filtros .btn {
-              height: 40px;
-              box-sizing: border-box;
-              border-radius: 8px;
-              font-size: 14px;
-          }
-          .bit-filtros .btn {
-              display: inline-flex;
-              align-items: center;
-              padding: 0 16px;
-              font-weight: 500;
-              white-space: nowrap;
-              text-decoration: none;
-          }
-          /* Flecha nativa del select pegada al borde → chevron propio con espacio.
-             Mismo tono que el texto (--text): hex literal porque no se puede
-             meter var() dentro del data URI. */
-          .bit-filtros select {
-              padding: 0 34px 0 10px;
-              appearance: none; -webkit-appearance: none;
-              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-              background-repeat: no-repeat;
-              background-position: right 10px center;
-              background-size: 14px;
-          }
-          [data-theme="dark"] .bit-filtros select {
-              background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-              background-repeat: no-repeat !important;
-              background-position: right 10px center !important;
-              background-size: 14px !important;
-          }
-          .bit-filtros .filter-divider {
-              width: 1px;
-              height: 40px;
-              background: var(--border);
-              margin: 0 4px;
-          }
-          /* El selector de fecha trae 42px por defecto (compartido con el
-             resto del sitio); se achica a la misma altura que el resto de
-             este filtro (40px / radio 8px). */
-          .bit-filtros .dp-control {
-              height: 40px;
-              border-radius: 8px;
-          }
-          /* Modal "Nuevo/editar registro" — mismo box-model que .form-field
-             input (padding 9px 12px, sin altura fija, radio 7px), que era lo
-             que heredaba bit-fecha sin estilos propios. */
-          #modal-bitacora .dp-control {
-              height: auto;
-              padding: 9px 12px;
-              border-radius: 7px;
-          }
-        </style>
-        <form method="get" class="bit-filtros" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
-                <input type="hidden" name="area" value="{{ filtro_area }}">
+    <section class="bd-filtros" aria-label="{% trans 'Filtros' %}">
+        <label class="bd-buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="bd-q" value="{{ filtro_q }}" placeholder="{% trans 'Buscar equipo, responsable, actividad o pendiente…' %}" aria-label="{% trans 'Buscar en la bitácora' %}" autocomplete="off">
+        </label>
+        <div class="bd-fs">{% include 'mto_app/_filter_select.html' with fs_id='bd-fs-fecha' name='rango' label=_("Fecha") icono="calendario" valor=filtro_rango valor_label=fecha_label todas_label=_("Cualquier fecha") opciones=opciones_fecha %}</div>
+        <div class="bd-fs">{% include 'mto_app/_filter_select.html' with fs_id='bd-fs-equipo' name='equipo' label=_("Equipo") icono="edificio" valor=filtro_equipo valor_label=filtro_equipo todas_label=_("Todos") opciones=equipos_opciones %}</div>
+        <div class="bd-seg" role="group" aria-label="{% trans 'Pendiente' %}">
+            <button type="button" data-pend="" aria-pressed="{% if not filtro_pendiente %}true{% else %}false{% endif %}">{% trans "Todos" %} {{ conteo_todos }}</button>
+            <button type="button" data-pend="1" aria-pressed="{% if filtro_pendiente == '1' %}true{% else %}false{% endif %}"><i class="bd-punto bd-p-ambar"></i>{% trans "Con pendiente" %} {{ conteo_con_pendiente }}</button>
+            <button type="button" data-pend="0" aria-pressed="{% if filtro_pendiente == '0' %}true{% else %}false{% endif %}"><i class="bd-punto bd-p-verde"></i>{% trans "Sin pendiente" %} {{ conteo_sin_pendiente }}</button>
+        </div>
+        {% if filtro_rango == 'rango' %}
+        <div class="bd-rango">
+            {% include 'menu_app/_date_range_picker.html' with name_desde='desde' name_hasta='hasta' initial_desde=filtro_desde initial_hasta=filtro_hasta dp_id='bd-rango' chips=False %}
+        </div>
+        {% endif %}
+    </section>
 
-                <div>
-                    <label style="display:block; font-size:12px; color:var(--text-3); margin-bottom:4px;">
-                        {% trans "Fecha" %}
-                    </label>
-                    {% include 'menu_app/_date_picker.html' with name='fecha' initial=filtro_fecha dp_id='dp-bit-filtro-fecha' %}
-                </div>
-
-                <div>
-                    <label style="display:block; font-size:12px; color:var(--text-3); margin-bottom:4px;">
-                        {% trans "Equipo o Responsable" %}
-                    </label>
-                    <input type="text" name="q" value="{{ filtro_q }}"
-                        placeholder="{% trans 'Buscar equipo o resposable' %}"
-                        oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 500);"
-                        style="padding:0 12px; border:1px solid var(--border);
-                                background:var(--white); color:var(--text);
-                                font-family:inherit; min-width:250px;">
-                </div>
-
-                <div>
-                    <label style="display:block; font-size:12px; color:var(--text-3); margin-bottom:4px;">
-                        {% trans "Pendiente" %}
-                    </label>
-                    <select name="pendiente" onchange="this.form.submit()"
-                        style="border:1px solid var(--border);
-                               background-color:var(--white); color:var(--text); font-family:inherit;">
-                        <option value="" {% if not filtro_pendiente %}selected{% endif %}>{% trans "Todos" %}</option>
-                        <option value="1" {% if filtro_pendiente == '1' %}selected{% endif %}>{% trans "Con pendiente" %}</option>
-                        <option value="0" {% if filtro_pendiente == '0' %}selected{% endif %}>{% trans "Sin pendiente" %}</option>
-                    </select>
-                </div>
-
-                <div class="filter-divider"></div>
-                <a href="?area={{ filtro_area }}" class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
-        </form>
-    </div>
-</div>
-
-<div class="card">
-    <div class="table-wrap" style="overflow-x:auto;">
-        <table class="data-table sticky-actions-col" id="tabla-bitacora">
-            <thead>
-                <tr>
-                    <th style="width:100px;">{% trans "FECHA" %}</th>
-                    <th style="width:70px; text-align: center;">{% trans "SEMANA" %}</th>
-                    <th style="width:160px;">{% trans "EQUIPO" %}</th>
-                    <th style="width:260px;">{% trans "ACTIVIDAD REALIZADA" %}</th>
-                    <th style="width:200px;">{% trans "PENDIENTE" %}</th>
-                    <th style="width:160px;">{% trans "RESPONSABLE" %}</th>
-                    {% if puede_editar or puede_eliminar %}
-                    <th style="width:160px; text-align:center; padding-right:16px;">{% trans "ACCIONES" %}</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in registros %}
-                <tr>
-                    <td style="white-space:nowrap;">{{ r.fecha|date:"d/m/Y" }}</td>
-                    <td style="white-space:nowrap; text-align: center;">{{ r.fecha|date:"W" }}</td>
-                    <td>{{ r.equipo|default:"—" }}</td>
-                    <td style="max-width:260px; text-align:justify;">
-                        {{ r.actividad_realizada }}
-                    </td>
-                    <td style="max-width:200px; text-align:justify;{% if r.pendiente %} background:#FEF9C3; color:#854D0E;{% endif %}">
-                        {{ r.pendiente|default:"—" }}
-                    </td>
-                    <td>{{ r.responsable|default:"—" }}</td>
-                    {% if puede_editar or puede_eliminar %}
-                    <td style="text-align:center; padding-right:16px; white-space:nowrap;">
-                        <div style="display:flex; gap:8px; justify-content:center;">
-                            {% if r.imagenes.all %}
-                            <button type="button" onclick="verImagenesBitacora(event, {{ r.pk }})"
-                                    title="{% trans 'Ver imágenes' %}"
-                                    style="display:inline-flex; align-items:center; justify-content:center;
-                                        width:28px; height:28px; border-radius:6px; border:1px solid var(--border);
-                                        background:var(--surface); color:var(--text-2); cursor:pointer; padding:0; flex-shrink:0;">
-                                <svg width="16" height="16" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                            </button>
+    <section class="bd-tabla-card">
+        <div class="bd-tabla-wrap">
+            <table class="bd-tabla" id="tabla-bitacora">
+                <thead>
+                    <tr>
+                        <th class="bd-c-fecha"><button type="button" class="bd-orden" id="bd-orden">{% trans "FECHA" %} {% if filtro_orden == 'fecha' %}▲{% else %}▼{% endif %}</button></th>
+                        <th class="bd-c-sem">{% trans "SEMANA" %}</th>
+                        <th class="bd-c-equipo">{% trans "EQUIPO" %}</th>
+                        <th class="bd-c-act">{% trans "ACTIVIDAD REALIZADA" %}</th>
+                        <th class="bd-c-pend">{% trans "PENDIENTE" %}</th>
+                        <th class="bd-c-resp">{% trans "RESPONSABLE" %}</th>
+                        <th class="bd-c-acc">{% trans "ACCIONES" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in registros %}
+                    <tr class="bd-fila{% if r.pendiente %} bd-pend{% endif %}" id="bd-fila-{{ r.pk }}" data-id="{{ r.pk }}" data-area="{{ r.area_id }}"
+                        data-fecha-iso="{{ r.fecha|date:'Y-m-d' }}" data-fecha="{{ r.fecha|date:'d/m/Y' }}" data-equipo="{{ r.equipo }}"
+                        data-actividad="{{ r.actividad_realizada }}" data-pendiente="{{ r.pendiente }}" data-responsable="{{ r.responsable }}" data-responsable2="{{ r.responsable2 }}"
+                        data-creado="{{ r.creado_en|date:'d/m/Y' }}" data-eliminar="{% url 'mto:eliminar_bitacora' r.pk %}">
+                        <td class="bd-c-fecha"><span class="bd-f1">{{ r.fecha|date:"d/m/Y" }}</span><span class="bd-f2">{{ r.fecha|date:"l" }}</span></td>
+                        <td class="bd-c-sem"><span class="bd-sem">S{{ r.semana }}</span></td>
+                        <td class="bd-c-equipo"><b>{{ r.equipo|default:"—" }}</b></td>
+                        <td class="bd-c-act">{{ r.actividad_realizada }}</td>
+                        <td class="bd-c-pend">
+                            {% if r.pendiente %}
+                            <div class="bd-pend-caja">
+                                <div class="bd-pend-et">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                                    {% if r.dias == 0 %}{% trans "Pendiente · hoy" %}{% else %}{% blocktrans count d=r.dias %}Pendiente · hace {{ d }} día{% plural %}Pendiente · hace {{ d }} días{% endblocktrans %}{% endif %}
+                                </div>
+                                {{ r.pendiente }}
+                            </div>
                             {% else %}
-                            <div style="width:28px; height:28px; flex-shrink:0;"></div>
+                            <span class="bd-sinpend"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>{% trans "Sin pendiente" %}</span>
                             {% endif %}
-                            {% if puede_editar %}
-                            <button type="button"
-                                onclick="abrirModalEditar(event, {{ r.pk }}, '{% url 'mto:editar_bitacora' r.pk %}', '{{ r.area_id }}', '{{ r.fecha|date:'Y-m-d' }}', '{{ r.equipo|escapejs }}', '{{ r.actividad_realizada|escapejs }}', '{{ r.pendiente|escapejs }}', '{{ r.responsable|escapejs }}')"
-                                style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                    font-size:12px; border-radius:6px; border:1px solid var(--border);
-                                    background:var(--surface); color:var(--text); cursor:pointer; white-space:nowrap;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                {% trans "Editar" %}
-                            </button>
+                        </td>
+                        <td class="bd-c-resp">
+                            {% if r.responsable %}
+                                <div class="bd-persona">
+                                    <span class="bd-av">
+                                        {{ r.iniciales }}
+                                    </span>
+                                    <span>
+                                        {{ r.responsable }}
+                                    </span>
+                                </div>
+                                    {% if r.responsable2 %}
+                                        <div class="bd-persona bd-persona2">
+                                            <span class="bd-av">{{ r.iniciales2 }}</span>
+                                            <span>{{ r.responsable2 }}</span>
+                                        </div>
+                                    {% endif %}
+                            {% else %}
+                                <span class="bd-vacio">—</span>
                             {% endif %}
-                            {% if puede_eliminar %}
-                            <button type="button"
-                                data-url="{% url 'mto:eliminar_bitacora' r.pk %}"
-                                data-texto="{% trans '¿Eliminar el registro del' %} {{ r.fecha|date:'d/m/Y' }}?"
-                                onclick="confirmarEliminarBitacora(event, this.dataset.url, this.dataset.texto)"
-                                style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px;
-                                    font-size:12px; border-radius:6px; border:1px solid #FCA5A5;
-                                    background:#FFF5F5; color:#DC2626; cursor:pointer; white-space:nowrap;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                                {% trans "Eliminar" %}
-                            </button>
-                            {% endif %}
-                        </div>
-                    </td>
-                    {% endif %}
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" style="text-align:center; color:var(--muted); padding:32px;">
-                        {% trans "No hay registros para esta área." %}
-                    </td>
-                </tr>
+                        </td>
+                        <td class="bd-c-acc">
+                            <div class="row-acts">
+                                {% with n=r.imagenes.all|length %}
+                                {% include 'menu_app/_row_action_button.html' with variant='foto' title=_("Ver fotos") label=_("Ver fotos") action='verImagenesBitacora' target_id=r.pk count=n %}
+                                {% endwith %}
+                                {% if puede_editar %}{% include 'menu_app/_row_action_button.html' with variant='edit' title=_("Editar") label=_("Editar registro") action='bdEditar' target_id=r.pk %}{% endif %}
+                                {% if puede_eliminar %}{% include 'menu_app/_row_action_button.html' with variant='del' title=_("Eliminar") label=_("Eliminar registro") action='bdEliminar' target_id=r.pk %}{% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="bd-sin-datos">{% trans "No hay registros con estos filtros." %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <footer class="bd-pie">
+            <span>{% if registros.paginator.count %}{% blocktrans with a=registros.start_index b=registros.end_index n=registros.paginator.count %}Mostrando {{ a }}–{{ b }} de {{ n }}{% endblocktrans %}{% endif %}</span>
+            {% include 'menu_app/_page_size_toggle.html' with ps_id='bd-per-page' label=_("Filas por página") options=perpage_opts value=per_page storage_key='pageSize:bitacora' %}
+            <nav class="bd-pag" aria-label="{% trans 'Paginación' %}">
+                {% if registros.has_previous %}<a class="bd-pag-b" href="?{% if qs_pag %}{{ qs_pag }}&{% endif %}page={{ registros.previous_page_number }}" aria-label="{% trans 'Página anterior' %}">‹</a>{% endif %}
+                {% for n in paginas %}
+                    {% if n is None %}<span class="bd-pag-p">…</span>
+                    {% elif n == registros.number %}<span class="bd-pag-b activo" aria-current="page">{{ n }}</span>
+                    {% else %}<a class="bd-pag-b" href="?{% if qs_pag %}{{ qs_pag }}&{% endif %}page={{ n }}">{{ n }}</a>{% endif %}
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- ── Paginación ── -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; margin-top:4px;">
-        <div class="pagination" style="margin:0;">
-            {% if registros.has_previous %}
-                <a href="?area={{ filtro_area }}&fecha={{ filtro_fecha }}&q={{ filtro_q }}&pendiente={{ filtro_pendiente }}&per_page={{ per_page }}&page={{ registros.previous_page_number }}">‹</a>
-            {% else %}
-                <span class="disabled">‹</span>
-            {% endif %}
-            {% for num in registros.paginator.page_range %}
-                {% if registros.number == num %}
-                    <span class="current">{{ num }}</span>
-                {% elif num > registros.number|add:'-3' and num < registros.number|add:'3' %}
-                    <a href="?area={{ filtro_area }}&fecha={{ filtro_fecha }}&q={{ filtro_q }}&pendiente={{ filtro_pendiente }}&per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
-                {% endif %}
-            {% endfor %}
-            {% if registros.has_next %}
-                <a href="?area={{ filtro_area }}&fecha={{ filtro_fecha }}&q={{ filtro_q }}&pendiente={{ filtro_pendiente }}&per_page={{ per_page }}&page={{ registros.next_page_number }}">›</a>
-            {% else %}
-                <span class="disabled">›</span>
-            {% endif %}
+                {% if registros.has_next %}<a class="bd-pag-b" href="?{% if qs_pag %}{{ qs_pag }}&{% endif %}page={{ registros.next_page_number }}" aria-label="{% trans 'Página siguiente' %}">›</a>{% endif %}
+            </nav>
+        </footer>
+    </section>
+</div>
+
+<!-- ═══ Vista de celular (≤767px) — ver bitacora_movil.css / .js ═══ -->
+<div id="bm-movil" class="movil-only">
+    <div class="bm-header">
+        <div class="bm-titulos">
+            <div class="bm-titulo">{% trans "Bitácora" %}</div>
+            <div class="bm-subtitulo">
+                {% for a in areas %}{% if a.pk|stringformat:"s" == filtro_area %}{{ a.nombre }} · {% endif %}{% endfor %}
+                {% blocktrans count n=total_registros %}{{ n }} registro{% plural %}{{ n }} registros{% endblocktrans %}
+            </div>
         </div>
     </div>
 
+    <div class="bm-buscar-fila">
+        <label class="bm-buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="bm-buscar" value="{{ filtro_q }}" enterkeyhint="search"
+                   placeholder="{% trans 'Buscar equipo o responsable' %}" aria-label="{% trans 'Buscar equipo o responsable' %}">
+        </label>
+        <button type="button" class="bm-btn-icono{% if filtro_fecha %} activo{% endif %}" aria-label="{% trans 'Filtrar por fecha' %}" onclick="bmAbrirFecha(event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>
+        </button>
+    </div>
+    {% if filtro_fecha %}
+    <div class="bm-chips">
+        <button type="button" class="bm-chip" onclick="bmQuitarFecha()" aria-label="{% trans 'Quitar filtro de fecha' %}">
+            {{ filtro_fecha|slice:"8:10" }}/{{ filtro_fecha|slice:"5:7" }}/{{ filtro_fecha|slice:":4" }}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+    </div>
+    {% endif %}
+
+    <nav class="bm-seg" aria-label="{% trans 'Pendiente' %}">
+        <a href="?area={{ filtro_area }}&fecha={{ filtro_fecha }}&q={{ filtro_q|urlencode }}" {% if not filtro_pendiente %}aria-current="true"{% endif %}>{% trans "Todos" %} {{ conteo_todos }}</a>
+        <a href="?area={{ filtro_area }}&fecha={{ filtro_fecha }}&q={{ filtro_q|urlencode }}&pendiente=1" {% if filtro_pendiente == '1' %}aria-current="true"{% endif %}>{% trans "Pendientes" %} {{ conteo_con_pendiente }}</a>
+        <a href="?area={{ filtro_area }}&fecha={{ filtro_fecha }}&q={{ filtro_q|urlencode }}&pendiente=0" {% if filtro_pendiente == '0' %}aria-current="true"{% endif %}>{% trans "Cerrados" %} {{ conteo_sin_pendiente }}</a>
+    </nav>
+
+    <div id="bm-lista">
+        {% for r in registros %}
+        {% with nfotos=r.imagenes.all|length %}
+        <article class="bm-card" data-id="{{ r.pk }}" data-fecha="{{ r.fecha|date:'d/m/Y' }}" data-sem="{{ r.fecha|date:'W' }}" data-nfotos="{{ nfotos }}">
+            <div class="bm-card-top">
+                <span class="bm-mono">{{ r.fecha|date:"d/m/Y" }}</span>
+                <span>·</span>
+                <span>{% trans "Sem" %} {{ r.fecha|date:"W" }}</span>
+                {% if r.pendiente %}
+                <span class="bm-estado pend">{% trans "Con pendiente" %}</span>
+                {% else %}
+                <span class="bm-estado cerr">{% trans "Cerrado" %}</span>
+                {% endif %}
+                {% if puede_editar or puede_eliminar %}
+                <button type="button" class="bm-mas" aria-label="{% trans 'Más acciones' %}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+                </button>
+                {% endif %}
+            </div>
+            <div class="bm-cuerpo" role="button" tabindex="0" aria-label="{% trans 'Ver registro completo' %}">
+                <div>
+                    <div class="bm-equipo">{{ r.equipo|default:"—" }}</div>
+                    <div class="bm-resp">{{ r.responsable|default:"—" }}{% if r.responsable2 %} · {{ r.responsable2 }}{% endif %}</div>
+                </div>
+                <p class="bm-act bm-clamp">{{ r.actividad_realizada }}</p>
+                {% if r.pendiente %}
+                <div class="bm-pend">
+                    <div class="bm-pend-label">{% trans "PENDIENTE" %}</div>
+                    <p class="bm-clamp">{{ r.pendiente }}</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="bm-card-pie">
+                {% if nfotos %}
+                <button type="button" class="bm-fotos">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></svg>
+                    {% blocktrans count n=nfotos %}{{ n }} foto{% plural %}{{ n }} fotos{% endblocktrans %}
+                </button>
+                {% endif %}
+                <button type="button" class="bm-ver">{% trans "Ver completo" %}</button>
+            </div>
+            {% if puede_editar %}
+                <button type="button" class="bm-accion-editar" hidden
+                        onclick="abrirModalEditar(event, {{ r.pk }}, '{% url 'mto:editar_bitacora' r.pk %}', '{{ r.area_id }}', '{{ r.fecha|date:'Y-m-d' }}', '{{ r.equipo|escapejs }}', '{{ r.actividad_realizada|escapejs }}', '{{ r.pendiente|escapejs }}', '{{ r.responsable|escapejs }}', '{{ r.responsable2|escapejs }}')">
+                </button>
+            {% endif %}
+            {% if puede_eliminar %}
+            <button type="button" class="bm-accion-eliminar" hidden
+                    data-url="{% url 'mto:eliminar_bitacora' r.pk %}"
+                    data-texto="{% trans '¿Eliminar el registro del' %} {{ r.fecha|date:'d/m/Y' }}?"
+                    onclick="confirmarEliminarBitacora(event, this.dataset.url, this.dataset.texto)"></button>
+            {% endif %}
+        </article>
+        {% endwith %}
+        {% empty %}
+        <div class="bm-vacio">{% trans "No hay registros para esta área." %}</div>
+        {% endfor %}
+    </div>
+
+    {% if registros.has_next %}
+    <button type="button" id="bm-cargar-mas" data-next="{{ registros.next_page_number }}"
+            data-fin="{{ registros.end_index }}" data-total="{{ registros.paginator.count }}"
+            data-per-page="{{ registros.paginator.per_page }}">{% trans "Cargar más" %}</button>
+    {% endif %}
+    {% if puede_editar %}<div class="bm-espacio-fab"></div>{% endif %}
+</div>
+
+{% if puede_editar %}
+<button type="button" class="bm-fab movil-only" onclick="abrirModalBitacora(event)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    {% trans "Nuevo registro" %}
+</button>
+{% endif %}
+
+<!-- Hoja: filtrar por fecha -->
+<div id="bm-sheet-fecha" class="modal-backdrop movil-only bm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="bm-fecha-titulo">
+        <div class="bm-asa"><span></span></div>
+        <h2 class="bm-sheet-titulo" id="bm-fecha-titulo">{% trans "Filtrar por fecha" %}</h2>
+        <div class="bm-fecha-campo">
+            <span>{% trans "Fecha" %}</span>
+            {% include 'menu_app/_date_picker.html' with name='bm_fecha' initial=filtro_fecha dp_id='dp-bm-fecha' %}
+        </div>
+        <button type="button" class="bm-aplicar" onclick="bmAplicarFecha()">{% trans "Aplicar" %}</button>
+    </div>
+</div>
+
+<!-- Hoja: ⋮ de la tarjeta -->
+<div id="bm-sheet-acciones" class="modal-backdrop movil-only bm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="bm-acc-titulo">
+        <div class="bm-asa"><span></span></div>
+        <h2 class="bm-sheet-titulo" id="bm-acc-titulo"></h2>
+        <button type="button" class="bm-accion" id="bm-acc-editar" onclick="bmEditar('bm-sheet-acciones')">
+            <span class="bm-accion-icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+            {% trans "Editar" %}
+        </button>
+        <button type="button" class="bm-accion peligro" id="bm-acc-eliminar" onclick="bmEliminar('bm-sheet-acciones')">
+            <span class="bm-accion-icono"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></span>
+            {% trans "Eliminar" %}
+        </button>
+    </div>
+</div>
+
+<!-- Hoja: detalle del registro -->
+<div id="bm-sheet-detalle" class="modal-backdrop movil-only bm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="bm-det-equipo">
+        <div class="bm-asa"><span></span></div>
+        <div class="bm-det">
+            <div class="bm-card-top"><span class="bm-mono" id="bm-det-fecha"></span><span class="bm-estado" id="bm-det-estado"></span></div>
+            <div>
+                <h2 class="bm-equipo" id="bm-det-equipo" style="margin:0;"></h2>
+                <div class="bm-resp" id="bm-det-resp"></div>
+            </div>
+            <p class="bm-act" id="bm-det-act"></p>
+            <div class="bm-pend" id="bm-det-pend">
+                <div class="bm-pend-label">{% trans "PENDIENTE" %}</div>
+                <p id="bm-det-pend-txt"></p>
+            </div>
+            <div class="bm-galeria" id="bm-det-galeria"></div>
+            <div class="bm-det-pie">
+                <button type="button" class="bm-det-eliminar" id="bm-det-eliminar" onclick="bmEliminar('bm-sheet-detalle')">{% trans "Eliminar" %}</button>
+                <button type="button" class="bm-det-editar" id="bm-det-editar" onclick="bmEditar('bm-sheet-detalle')">{% trans "Editar" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hoja: ¿salir sin guardar? (nuevo / editar; textos en BITACORA_MOVIL) -->
+<div id="bm-sheet-salir" class="modal-backdrop movil-only bm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="alertdialog" aria-modal="true" aria-labelledby="bm-salir-titulo" aria-describedby="bm-salir-texto">
+        <div class="bm-asa"><span></span></div>
+        <div class="bm-salir">
+            <span class="bm-salir-icono">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4M12 17.2v.1"/></svg>
+            </span>
+            <h2 id="bm-salir-titulo"></h2>
+            <p id="bm-salir-texto"></p>
+            <div class="bm-salir-botones">
+                <button type="button" class="bm-salir-seguir" id="bm-salir-seguir" onclick="bmSalirSeguir()"></button>
+                <button type="button" class="bm-salir-descartar" id="bm-salir-descartar" onclick="bmSalirDescartar()"></button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ── Modal nuevo/editar registro — fondo blanco fijo como en los catálogos ── -->
@@ -291,7 +392,8 @@
     #modal-bitacora .dp-control { background: #fff; border-color: #d8d8e0; }
     #modal-bitacora .dp-control:hover { border-color: #9b9ba6; }
     #modal-bitacora .dp-text, #modal-bitacora .dp-text--vacio, #modal-bitacora .dp-icon { color: #1d1d24; }
-    #modal-bitacora #equipo-dropdown-bit, #modal-bitacora #responsable-dropdown-bit { background: #fff; }
+    #modal-bitacora #equipo-dropdown-bit, #modal-bitacora #responsable-dropdown-bit, #modal-bitacora #responsable2-dropdown-bit { background: #fff; }
+    #bit-area.bit-area-bloq { pointer-events: none; opacity: .75; }
     #modal-bitacora #bit-zona-imagenes { border-color: #d8d8e0; background: #fafafb; }
     #modal-bitacora #bit-zona-texto { color: #33333c; }
     #modal-bitacora .btn-ghost { color: #33333c; border-color: #d8d8e0; }
@@ -314,6 +416,136 @@
     }
     #modal-bitacora[data-closing] .mf-box { transform: scale(.97); }
 </style>
+
+<!-- ── Modal nuevo / editar registro (escritorio) — ver bitacora_escritorio.js ── -->
+<div class="bdm-fondo" id="bdm-fondo" hidden>
+    <div class="bdm-dlg" role="dialog" aria-modal="true" aria-labelledby="bdm-titulo">
+        <div class="bdm-cab">
+            <span class="bdm-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M9 11h6M9 15h4"/></svg>
+            </span>
+            <div>
+                <h2 id="bdm-titulo"></h2>
+                <p id="bdm-sub"></p>
+            </div>
+            <button type="button" class="bdm-x" id="bdm-x" aria-label="{% trans 'Cerrar' %}">✕</button>
+        </div>
+
+        <div class="bdm-cuerpo">
+            <div class="bdm-col">
+                <div>
+                    <label class="bdm-lab" for="bdm-act">{% trans "Actividad realizada" %}<i>*</i><span class="bdm-cnt" id="bdm-cnt-act">0 / 300</span></label>
+                    <textarea class="bdm-ta bdm-ta-act" id="bdm-act" maxlength="300" placeholder="{% trans '¿Qué se hizo? Inspección, ajustes, cambios de refacción…' %}"></textarea>
+                    <div class="bdm-err" id="bdm-err-actividad" hidden></div>
+                </div>
+                <div>
+                    <div class="bdm-pend-cab">
+                        <span id="bdm-pend-lab">{% trans "¿Quedó algo pendiente?" %}</span>
+                        <div class="bdm-sino" id="bdm-sino" role="radiogroup" aria-labelledby="bdm-pend-lab">
+                            <button type="button" role="radio" data-v="si" aria-checked="true">{% trans "Sí" %}</button>
+                            <button type="button" role="radio" data-v="no" aria-checked="false">{% trans "No" %}</button>
+                        </div>
+                        <span class="bdm-cnt" id="bdm-cnt-pend">0 / 200</span>
+                    </div>
+                    <div id="bdm-pend-wrap">
+                        <textarea class="bdm-ta bdm-ta-pend" id="bdm-pend" maxlength="200" placeholder="{% trans 'Refacción por instalar, pruebas, liberación del equipo…' %}"></textarea>
+                        <div class="bdm-ayuda bdm-ayuda-pend">{% trans "Aparecerá resaltado en la bitácora hasta que se resuelva." %}</div>
+                        <div class="bdm-err" id="bdm-err-pendiente" hidden></div>
+                    </div>
+                    <div class="bdm-ok" id="bdm-sinpend" hidden>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+                        {% trans "El equipo quedó liberado, sin pendientes." %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="bdm-col">
+                <div class="bdm-fila2">
+                    <div>
+                        <label class="bdm-lab" for="bdm-area">{% trans "Área" %}<i>*</i></label>
+                        <select class="bdm-sel" id="bdm-area">
+                            {% for a in areas %}<option value="{{ a.pk }}"{% if a.pk|stringformat:"s" == filtro_area %} selected{% endif %}>{{ a.nombre }}</option>{% endfor %}
+                        </select>
+                        <div class="bdm-err" id="bdm-err-area" hidden></div>
+                    </div>
+                    <div>
+                        <label class="bdm-lab">{% trans "Fecha" %}<i>*</i></label>
+                        <div class="bdm-fecha-fila">
+                            <div>{% include 'menu_app/_date_picker.html' with name='fecha' dp_id='dp-bdm-fecha' required=True %}</div>
+                            <span class="bdm-sem" id="bdm-sem"></span>
+                        </div>
+                        <div class="bdm-err" id="bdm-err-fecha" hidden></div>
+                    </div>
+                </div>
+                <div class="bdm-quick" id="bdm-quick">
+                    <button type="button" data-q="hoy" aria-pressed="false">{% trans "Hoy" %}</button>
+                    <button type="button" data-q="ayer" aria-pressed="false">{% trans "Ayer" %}</button>
+                </div>
+
+                <div>
+                    <label class="bdm-lab" for="bdm-equipo">{% trans "Equipo" %}<i>*</i></label>
+                    <div class="bdm-combo" id="bdm-combo-equipo">
+                        <span class="bdm-combo-ico" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 15h18M5 15V9h14v6"/></svg></span>
+                        <input type="text" id="bdm-equipo" role="combobox" aria-expanded="false" aria-controls="bdm-lista-equipo" autocomplete="off" placeholder="{% trans 'Buscar equipo…' %}">
+                        <button type="button" class="bdm-combo-x" id="bdm-x-equipo" aria-label="{% trans 'Quitar equipo' %}" hidden>✕</button>
+                        <ul class="bdm-lista" id="bdm-lista-equipo" role="listbox" hidden></ul>
+                    </div>
+                    <div class="bdm-ayuda" id="bdm-ayuda-equipo"></div>
+                    <div class="bdm-err" id="bdm-err-equipo" hidden></div>
+                </div>
+
+                <div>
+                    <label class="bdm-lab" for="bdm-resp">{% trans "Responsable" %}<i>*</i></label>
+                    <div class="bdm-combo" id="bdm-combo-resp">
+                        <span class="bdm-combo-av" id="bdm-av-resp" hidden></span>
+                        <input type="text" id="bdm-resp" role="combobox" aria-expanded="false" aria-controls="bdm-lista-resp" autocomplete="off" placeholder="{% trans 'Buscar responsable…' %}">
+                        <button type="button" class="bdm-combo-x" id="bdm-x-resp" aria-label="{% trans 'Quitar responsable' %}" hidden>✕</button>
+                        <ul class="bdm-lista" id="bdm-lista-resp" role="listbox" hidden></ul>
+                    </div>
+                    <div class="bdm-grupo2">
+                    <label class="bdm-lab" for="bdm-resp2">{% trans "Segundo responsable" %}<span class="bdm-opc">{% trans "opcional" %}</span></label>
+                    <div class="bdm-combo" id="bdm-combo-resp2">
+                        <span class="bdm-combo-av" id="bdm-av-resp2" hidden></span>
+                        <input type="text" id="bdm-resp2" role="combobox" aria-expanded="false" aria-controls="bdm-lista-resp2" autocomplete="off" placeholder="{% trans 'Buscar responsable…' %}">
+                        <button type="button" class="bdm-combo-x" id="bdm-x-resp2" aria-label="{% trans 'Quitar segundo responsable' %}" hidden>✕</button>
+                        <ul class="bdm-lista" id="bdm-lista-resp2" role="listbox" hidden></ul>
+                    </div>
+                    <div class="bdm-err" id="bdm-err-responsable2" hidden></div>
+                </div>
+                    <div class="bdm-err" id="bdm-err-responsable" hidden></div>
+                </div>
+
+                <div>
+                    <label class="bdm-lab">{% trans "Imágenes" %}<span class="bdm-cnt" id="bdm-cnt-img">0 / 2</span></label>
+                    <div class="bdm-imgs" id="bdm-imgs"></div>
+                    <input type="file" id="bdm-file" accept="image/jpeg,image/png" multiple hidden>
+                    <div class="bdm-ayuda-img">{% trans "Arrastra, pega (Ctrl + V) o haz clic · JPG o PNG hasta 5 MB" %}</div>
+                    <div class="bdm-err" id="bdm-err-imagenes" hidden></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bdm-pie">
+            <small>{% trans "Ctrl + Enter para guardar" %}</small>
+            <div class="bdm-err" id="bdm-err-general" hidden style="margin:0 8px;"></div>
+            <button type="button" class="bdm-btn" id="bdm-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="bdm-btn bdm-btn-pri" id="bdm-guardar">{% trans "Guardar registro" %}</button>
+        </div>
+
+        <div class="bdm-conf-fondo" id="bdm-conf" hidden>
+            <div class="bdm-conf" role="alertdialog" aria-modal="true" aria-labelledby="bdm-conf-t" aria-describedby="bdm-conf-d">
+                <h3 id="bdm-conf-t">{% trans "¿Descartar cambios?" %}</h3>
+                <p id="bdm-conf-d">{% trans "Tienes cambios sin guardar. Si sales ahora, se perderán." %}</p>
+                <div class="bdm-conf-bot">
+                    <button type="button" class="bdm-btn" id="bdm-conf-seguir">{% trans "Seguir editando" %}</button>
+                    <button type="button" class="bdm-btn bdm-btn-mal" id="bdm-conf-descartar">{% trans "Descartar" %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <div id="modal-bitacora"
      style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
             z-index:2000; align-items:center; justify-content:center;">
@@ -321,11 +553,14 @@
                 width:100%; max-width:580px; max-height:90vh; overflow-y:auto;
                 box-shadow:0 8px 40px rgba(0,0,0,.18);">
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <div id="modal-titulo-bitacora" class="mf-doc-title" style="font-size:16px; font-weight:600;">
-                {% trans "Nuevo registro" %}
+        <div class="bm-form-head" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div>
+                <div id="modal-titulo-bitacora" class="mf-doc-title" style="font-size:16px; font-weight:600;">
+                    {% trans "Nuevo registro" %}
+                </div>
+                <span class="bm-form-area movil-only" id="bm-form-area"></span>
             </div>
-            <button onclick="cerrarModalBitacora()"
+            <button type="button" aria-label="{% trans 'Cerrar' %}" onclick="cerrarModalBitacora()"
                     onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
                     onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
                     style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;">✕</button>
@@ -347,9 +582,10 @@
                     </select>
                 </div>
 
-                <div class="form-field modal-row">
+                <div class="form-field modal-row bm-fecha-field">
                     <label>{% trans "Fecha" %} <span class="mf-req">*</span></label>
                     {% include 'menu_app/_date_picker.html' with name='fecha' dp_id='dp-bit-fecha' required=True %}
+                    <div class="bm-semana movil-only">{% trans "Semana" %}<b id="bm-semana">—</b></div>
                 </div>
 
                 <div class="form-field full modal-row" style="position:relative;">
@@ -374,6 +610,17 @@
                                 max-height:180px; overflow-y:auto;"></div>
                 </div>
 
+                <div class="form-field full modal-row" style="position:relative;">
+                    <label for="bit-responsable2">{% trans "Segundo responsable" %} <span style="font-size:11px; font-weight:400; color:var(--text-3);">({% trans "opcional" %})</span></label>
+                    <input type="text" name="responsable2" id="bit-responsable2" autocomplete="off" maxlength="200"
+                           placeholder="{% trans 'Escribe para buscar…' %}">
+                    <div id="responsable2-dropdown-bit"
+                         style="display:none; position:absolute; left:0; right:0; top:100%; z-index:600;
+                                border:1px solid var(--indigo); border-top:none;
+                                border-radius:0 0 7px 7px; box-shadow:var(--shadow-md);
+                                max-height:180px; overflow-y:auto;"></div>
+                </div>
+
                 <div class="form-field full modal-row">
                     <label for="bit-actividad">
                         {% trans "Actividad realizada" %} <span class="mf-req">*</span>
@@ -383,7 +630,12 @@
                               maxlength="300" rows="3" style="resize:vertical;" required></textarea>
                 </div>
 
-                <div class="form-field full modal-row">
+                <div class="form-field full modal-row bm-pend-field" data-pend="on">
+                    <div class="bm-pend-fila movil-only">
+                        <span id="bm-pend-label">{% trans "¿Queda algo pendiente?" %}</span>
+                        <button type="button" class="bm-switch" id="bm-switch-pend" role="switch" aria-checked="true"
+                                aria-labelledby="bm-pend-label"><span></span></button>
+                    </div>
                     <label for="bit-pendiente">
                         {% trans "Pendiente" %}
                         <span id="cnt-pendiente" class="ref-count" style="font-size:11px; font-weight:400; margin-left:6px;">0/200</span>
@@ -404,6 +656,18 @@
                         onmouseout="this.style.borderColor='#d8d8e0';this.style.background='#fafafb'">
                         <div id="bit-zona-texto" style="font-size:12px; font-weight:500;">{% trans "Haz clic para seleccionar imágenes" %}</div>
                     </div>
+                    <div class="bm-fotos-btns movil-only">
+                        <label class="bm-foto-btn">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                            {% trans "Tomar foto" %}
+                            <input type="file" accept="image/*" capture="environment" hidden onchange="bmAgregarFotos(this)">
+                        </label>
+                        <label class="bm-foto-btn">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></svg>
+                            {% trans "Galería" %}
+                            <input type="file" accept="image/*" multiple hidden onchange="bmAgregarFotos(this)">
+                        </label>
+                    </div>
                     <input type="file" id="bit-input-imagenes" name="imagenes" multiple accept="image/*" style="display:none;"
                         onchange="previsualizarImagenesBitacora(this)">
                     <div id="bit-preview-imagenes" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;"></div>
@@ -413,7 +677,7 @@
 
             <div class="form-actions" style="margin-top:20px;">
                 <button type="button" onclick="cerrarModalBitacora()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-                <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
+                <button type="submit" class="btn btn-primary"><span class="bm-desktop-only">{% trans "Guardar" %}</span><span class="movil-only">{% trans "Guardar registro" %}</span></button>
             </div>
         </form>
     </div>
@@ -501,18 +765,87 @@ window.BITACORA_CFG = {
     urlEliminarImagenBase: "/mto/bitacora/imagen/",
     maxImagenes:           2,
     i18n: {
-        selecFecha: "{% trans 'Selecciona una fecha.' %}"
+        selecFecha:     "{% trans 'Selecciona una fecha.' %}",
+        nuevoRegistro:  "{% trans 'Nuevo registro' %}",
+        editarRegistro: "{% trans 'Editar registro' %}",
+        maxImagenes:    "{% trans 'Máximo {max} imágenes. Solo puedes agregar {n} más.' %}",
+        eliminarImagen: "{% trans '¿Eliminar esta imagen?' %}",
+        limiteImagenes: "{% trans 'Límite de {max} imágenes alcanzado' %}",
+        clicImagenes:   "{% trans 'Haz clic para seleccionar imágenes' %}"
     }
 };
 </script>
 {% load static %}
 <script src="{% static 'menu_app/js/date_picker.js' %}"></script>
-<script>
-    // "Fecha" del filtro es el selector de fecha único; no soporta
-    // onchange="" inline como el <input type="date"> nativo que reemplazó.
-    document.querySelector('#dp-bit-filtro-fecha .dp-value').addEventListener('change', function () {
-        this.closest('form').submit();
-    });
-</script>
 <script src="{% static 'mto_app/js/bitacora.js' %}"></script>
+<script>
+window.BD_CFG = {
+    hoy:                   "{{ today|date:'Y-m-d' }}",
+    area:                  "{{ filtro_area }}",
+    puedeEditar:           {% if puede_editar %}true{% else %}false{% endif %},
+    csrf:                  "{{ csrf_token }}",
+    urlGuardar:            "{% url 'mto:guardar_bitacora' %}",
+    urlUltimo:             "{% url 'mto:ultimo_equipo_bitacora' %}",
+    urlBuscarEquipos:      "{% url 'mto:buscar_equipos_bitacora' %}",
+    urlBuscarResponsables: "{% url 'mto:buscar_responsables_bitacora' %}",
+    urlImagenesBase:       "/mto/bitacora/",
+    urlEliminarImagenBase: "/mto/bitacora/imagen/",
+    maxImagenes:           2
+};
+window.BD_I18N = {
+    tituloNuevo:      "{% trans 'Nuevo registro de bitácora' %}",
+    subNuevo:         "{% trans 'Lo que se hizo hoy en un equipo y lo que quedó pendiente' %}",
+    tituloEditar:     "{% trans 'Editar registro' %}",
+    subEditar:        "{% trans 'Creado el {fecha}' %}",
+    guardarRegistro:  "{% trans 'Guardar registro' %}",
+    guardarCambios:   "{% trans 'Guardar cambios' %}",
+    guardando:        "{% trans 'Guardando…' %}",
+    toastGuardado:    "{% trans 'Registro guardado' %}",
+    errorGuardar:     "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
+    errActividad:     "{% trans 'Describe la actividad realizada' %}",
+    errPendiente:     "{% trans 'Describe lo que quedó pendiente' %}",
+    errArea:          "{% trans 'Elige el área' %}",
+    errFecha:         "{% trans 'Elige la fecha' %}",
+    errFutura:        "{% trans 'La fecha no puede ser futura' %}",
+    errEquipo:        "{% trans 'Elige el equipo' %}",
+    errResp:          "{% trans 'Elige el responsable de la lista' %}",
+    errResp2:         "{% trans 'Elige el segundo responsable de la lista' %}",
+    errResp2Igual:    "{% trans 'El segundo responsable debe ser distinto del primero' %}",
+    usarTexto:        "{% trans 'Usar «{texto}»' %}",
+    sinResultados:    "{% trans 'Sin resultados' %}",
+    ayudaUltimo:      "{% trans 'Último registro de este equipo: {fecha} · {resp}' %}",
+    avisoPendiente:   "{% trans 'Este equipo tiene un pendiente del {fecha}: «{texto}»' %}",
+    agregar:          "{% trans 'Agregar' %}",
+    quitarImagen:     "{% trans 'Quitar imagen' %}",
+    soloImagenes:     "{% trans 'Solo imágenes JPG o PNG de hasta 5 MB' %}",
+    maxImagenes:      "{% trans 'Máximo {n} imágenes por registro' %}",
+    eliminarTxt:      "{% trans '¿Eliminar el registro del {fecha} de {equipo}?' %}"
+};
+</script>
+<script src="{% static 'mto_app/js/filter_select.js' %}"></script>
+<script src="{% static 'menu_app/js/date_range_picker.js' %}"></script>
+<script src="{% static 'menu_app/js/page_size_toggle.js' %}"></script>
+<script src="{% static 'mto_app/js/bitacora_escritorio.js' %}"></script>
+<script>
+window.BITACORA_MOVIL = {
+    i18n: {
+        sem:                  "{% trans 'Sem {n}' %}",
+        conPendiente:         "{% trans 'Pendiente' %}",
+        cerrado:              "{% trans 'Cerrado' %}",
+        verFoto:              "{% trans 'Ver foto {n}' %}",
+        cargarN:              "{% trans 'Cargar {n} más' %}",
+        errorCargar:          "{% trans 'No se pudieron cargar más registros.' %}",
+        salirNuevoTitulo:     "{% trans '¿Salir sin guardar?' %}",
+        salirNuevoTexto:      "{% trans 'Este registro todavía no se ha guardado. Si sales ahora, perderás lo que escribiste y las fotos.' %}",
+        salirNuevoSeguir:     "{% trans 'Seguir con el registro' %}",
+        salirNuevoDescartar:  "{% trans 'Salir y descartar' %}",
+        salirEditarTitulo:    "{% trans '¿Salir sin guardar los cambios?' %}",
+        salirEditarTexto:     "{% trans 'Modificaste este registro. Si sales ahora, se quedará como estaba antes.' %}",
+        salirEditarSeguir:    "{% trans 'Seguir editando' %}",
+        salirEditarDescartar: "{% trans 'Descartar cambios' %}",
+        guardando:            "{% trans 'Guardando…' %}",
+    },
+};
+</script>
+<script src="{% static 'mto_app/js/bitacora_movil.js' %}"></script>
 {% endblock %}

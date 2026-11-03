@@ -10,16 +10,23 @@ from .planes import (
     eliminar_plan,
     eliminar_todos_planes_area,
     modal_plan,
+    historial_plan_exportar,
+    plan_detalle_json,
     importar_plan,
     descargar_plantilla,
     exportar_plan,
+    exportar_tiempo_personas,
+    conteo_ots_semanas,
+    distribucion_ots,
 )
 
 from .rutinas import (
-    lista_pasos,
-    importar_pasos,
-    eliminar_pasos_plan,
-    historial_rutinas
+    historial_acciones,
+    rutinas_modal,
+    rutina_importar,
+    rutina_validar,
+    rutina_plantilla,
+    rutina_eliminar,
 )
 
 from .exportacion import (
@@ -29,10 +36,11 @@ from .exportacion import (
 )
 
 from .responsables import (
-    lista_responsables,
-    form_responsable,
-    eliminar_responsable,
     buscar_responsables_mto,
+    responsables_modal,
+    responsable_guardar,
+    responsable_alternar,
+    responsable_eliminar_modal,
 )
 
 from .dashboard import dashboard
@@ -44,7 +52,7 @@ from .registro_ejecucion import (
 )
 
 
-from .backlog import backlog_seguimientos
+from .backlog import backlog_seguimientos, backlog_exportar
 
 from .seguimiento_ot import (
     agregar_seguimiento, 
@@ -67,6 +75,8 @@ from .lista_seguimientos import (
     eliminar_imagen_seguimiento,
 )
 
+from .seguimientos_exportar import seguimientos_exportar
+
 from .bitacora import (
     lista_bitacora,
     form_bitacora,
@@ -75,6 +85,10 @@ from .bitacora import (
     eliminar_imagen_bitacora,
     buscar_equipos_bitacora,
     buscar_responsables_bitacora,
+    bitacora_guardar,
+    bitacora_ultimo_equipo,
+    bitacora_exportar,
+
 )
 
 from .documentacion import (

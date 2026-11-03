@@ -1,0 +1,133 @@
+/* filter_select.css — FilterSelect (menu_app/_filter_select.html).
+   Escritorio: botón + menú desplegable. Celular (≤767px): el menú se abre como hoja inferior. */
+
+.fs {
+    --fs-txt:     #1E2033;
+    --fs-muted:   #5E6175;
+    /* Acento = el mismo que eligió el usuario (var(--indigo), menu_app/base_menu.html),
+       no un azul fijo — así el hover/selección del selector sigue la paleta elegida. */
+    --fs-pri:     var(--indigo);
+    --fs-pri-lt:  var(--indigo-lt);
+    --fs-pri-bd:  color-mix(in oklab, var(--indigo) 50%, transparent);
+    --fs-pri-txt: var(--indigo-dk);
+    --fs-borde:   #E2E3EE;
+    --fs-div:     #ECEDF4;
+    --fs-hover:   #F5F5FA;
+    --fs-fondo:   #FFFFFF;
+    position: relative;
+    min-width: 220px;
+}
+[data-theme="dark"] .fs {
+    --fs-txt:     var(--text);
+    --fs-muted:   var(--text-2);
+    --fs-borde:   var(--border);
+    --fs-div:     var(--border);
+    --fs-hover:   var(--surface);
+    --fs-fondo:   var(--white);
+}
+
+/* ── Botón ── */
+.fs-ctl {
+    display: flex; align-items: center; height: 44px; box-sizing: border-box;
+    border: 1px solid var(--fs-borde); border-radius: 12px; background: var(--fs-fondo);
+    box-shadow: 0 1px 2px rgba(30, 32, 51, .04); transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.fs-ctl:hover { border-color: var(--fs-pri-bd); }
+/* Abierto o con foco de teclado: borde de 2px (el 2º px es sombra interior, así no se mueve nada) + halo */
+.fs-abierto .fs-ctl,
+.fs-ctl:has(.fs-btn:focus-visible) {
+    border-color: var(--fs-pri);
+    box-shadow: inset 0 0 0 1px var(--fs-pri), 0 0 0 4px rgba(61, 91, 217, .12);
+}
+.fs-btn {
+    flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 12px;
+    border: 0; border-radius: 11px; background: transparent; font: inherit; color: var(--fs-txt);
+    text-align: left; cursor: pointer;
+}
+.fs-btn:focus { outline: none; }
+.fs-ico {
+    width: 28px; height: 28px; border-radius: 8px; flex: none; display: flex; align-items: center; justify-content: center;
+    background: var(--fs-pri-lt); color: var(--fs-pri-txt);
+}
+.fs-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.fs-label { font-size: 11px; line-height: 1.1; color: var(--fs-muted); }
+.fs-valor { font-size: 14px; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-chev { flex: none; color: var(--fs-muted); transition: transform .15s; }
+.fs-abierto .fs-chev { transform: rotate(180deg); color: var(--fs-pri); }
+.fs-x {
+    display: none; width: 28px; height: 28px; margin-right: 8px; flex: none; align-items: center; justify-content: center;
+    border: 0; border-radius: 8px; background: transparent; color: var(--fs-pri-txt); cursor: pointer;
+}
+.fs-x:hover { background: rgba(61, 91, 217, .14); }
+.fs-x:focus-visible { outline: 2px solid var(--fs-pri); outline-offset: 1px; }
+
+/* Con filtro elegido (y cerrado): azul claro, ícono sólido y ✕ en lugar del chevron */
+.fs-activo:not(.fs-abierto) .fs-ctl { background: var(--fs-pri-lt); border-color: var(--fs-pri-bd); }
+.fs-activo:not(.fs-abierto) .fs-btn { padding-right: 4px; }
+.fs-activo:not(.fs-abierto) .fs-ico { background: var(--fs-pri); color: #fff; }
+.fs-activo:not(.fs-abierto) .fs-label,
+.fs-activo:not(.fs-abierto) .fs-valor { color: var(--fs-pri-txt); }
+.fs-activo:not(.fs-abierto) .fs-chev { display: none; }
+.fs-activo:not(.fs-abierto) .fs-x { display: flex; }
+
+/* ── Menú ── */
+.fs-capa { position: absolute; left: 0; top: 100%; z-index: 60; padding-top: 6px; width: max(100%, 320px); }
+.fs-capa.fs-arriba { top: auto; bottom: 100%; padding: 0 0 6px; }
+.fs-capa[hidden] { display: none; }
+.fs-menu {
+    box-sizing: border-box; padding: 6px; border: 1px solid var(--fs-borde); border-radius: 14px;
+    background: var(--fs-fondo); box-shadow: 0 12px 32px rgba(30, 32, 51, .14);
+    animation: fs-in 120ms ease-out;
+}
+@keyframes fs-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.fs-asa, .fs-titulo { display: none; }
+
+.fs-buscar {
+    display: block; width: 100%; height: 36px; box-sizing: border-box; margin-bottom: 6px; padding: 0 10px;
+    border: 0; border-radius: 9px; background: var(--fs-hover); font: inherit; font-size: 13px; color: var(--fs-txt);
+}
+.fs-buscar:focus { outline: 2px solid var(--fs-pri); outline-offset: 0; }
+.fs-lista { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+.fs-lista:focus { outline: none; }
+.fs-op {
+    display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 10px; border-radius: 10px;
+    font-size: 14px; color: var(--fs-txt); cursor: pointer;
+}
+.fs-op[hidden] { display: none; }
+.fs-op.fs-activa { background: var(--fs-hover); }
+.fs-op[aria-selected="true"] { background: var(--fs-pri-lt); color: var(--fs-pri-txt); font-weight: 600; }
+.fs-menu[data-teclado] .fs-op.fs-activa { outline: 2px solid var(--fs-pri); outline-offset: -2px; }
+.fs-punto { width: 8px; height: 8px; border-radius: 4px; flex: none; }
+.fs-todas .fs-punto { background: var(--fs-txt); }
+.fs-nombre { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-meta { font-size: 12px; font-weight: 400; color: var(--fs-muted); white-space: nowrap; }
+.fs-check { flex: none; color: var(--fs-pri); visibility: hidden; }
+.fs-op[aria-selected="true"] .fs-check { visibility: visible; }
+.fs-sep { height: 1px; margin: 4px 0; background: var(--fs-div); }
+.fs-vacio { margin: 0; padding: 12px 10px; font-size: 13px; color: var(--fs-muted); }
+
+/* ── Celular: hoja inferior ── */
+@media (max-width: 767px) {
+    .fs { min-width: 0; width: 100%; }
+    .fs-capa, .fs-capa.fs-arriba {
+        position: fixed; inset: 0; z-index: 1000; width: auto; padding: 0;
+        display: flex; align-items: flex-end; background: rgba(30, 27, 75, .45);
+    }
+    .fs-capa[hidden] { display: none; }
+    .fs-menu {
+        width: 100%; max-height: 85vh; display: flex; flex-direction: column;
+        padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+        border: 0; border-radius: 24px 24px 0 0; box-shadow: none;
+        animation: fs-hoja-in 240ms cubic-bezier(.2, .8, .2, 1);
+    }
+    .fs-asa { display: flex; justify-content: center; padding: 2px 0 10px; }
+    .fs-asa span { width: 36px; height: 4px; border-radius: 2px; background: var(--fs-borde); }
+    .fs-titulo { display: block; margin: 0 4px 10px; font-size: 19px; font-weight: 600; color: var(--fs-txt); }
+    .fs-lista { max-height: none; flex: 1; min-height: 0; }
+    .fs-op { min-height: 52px; font-size: 15px; }
+}
+@keyframes fs-hoja-in { from { transform: translateY(100%); } to { transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .fs-menu { animation: none !important; }
+}

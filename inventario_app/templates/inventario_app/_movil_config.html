@@ -1,0 +1,50 @@
+{% load i18n static %}
+{% comment %}
+    Datos y textos de la vista de celular de Inventario (los usa
+    inventario_movil.js). Lo incluyen lista_refacciones.html y detalle_refaccion.html.
+{% endcomment %}
+{{ categorias_movil|json_script:"iv-cats-datos" }}
+<script>
+window.IV_CFG = {
+    areaId:       "{{ filtro_area|default:'' }}",
+    urlCrearCat:  "{% url 'inventario:crear_categoria_refaccion' %}",
+    urlEditarCat: "/inventario/categorias/editar/",   // + <pk> + "/"
+    i18n: {
+        sin:            "{% trans 'Sin stock' %}",
+        bajo:           "{% trans 'Bajo mínimo' %}",
+        sobre:          "{% trans 'Sobre máximo' %}",
+        ok:             "{% trans 'En rango' %}",
+        faltan:         "{% trans '{unidad} · faltan {n} para el mínimo' %}",
+        enMinimo:       "{% trans '{unidad} · en el mínimo' %}",
+        sobreMax:       "{% trans '{unidad} · {n} sobre el máximo' %}",
+        enRango:        "{% trans '{unidad} · en rango' %}",
+        sinExist:       "{% trans '{unidad} · sin existencias' %}",
+        nuevoStock:     "{% trans 'Nuevo stock: {a} → {b} · {estado}' %}",
+        sinCambio:      "{% trans 'Escribe la cantidad contada' %}",
+        stockActualizado: "{% trans 'Stock actualizado' %}",
+        errorGuardar:   "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
+        errorCargar:    "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
+        verMas:         "{% trans 'Ver más' %}",
+        verMenos:       "{% trans 'Ver menos' %}",
+        verUna:         "{% trans 'Ver 1 refacción' %}",
+        verN:           "{% trans 'Ver {n} refacciones' %}",
+        sinResultados:  "{% trans 'Sin resultados' %}",
+        cargarN:        "{% trans 'Cargar {n} más' %}",
+        existentes:     "{% trans 'EXISTENTES ({n})' %}",
+        catExiste:      "{% trans 'Esa categoría ya existe' %}",
+        sinIngles:      "{% trans 'Sin nombre en inglés' %}",
+        sinEspanol:     "{% trans 'Sin nombre en español' %}",
+        unaRef:         "{% trans '1 refacción' %}",
+        nRef:           "{% trans '{n} refacciones' %}",
+        editarCat:      "{% trans 'Editar {nombre}' %}",
+        nombreEs:       "{% trans 'Nombre en español' %}",
+        nombreEn:       "{% trans 'Name in English' %}",
+        guardar:        "{% trans 'Guardar' %}",
+        cancelar:       "{% trans 'Cancelar' %}",
+        sinCategorias:  "{% trans 'Sin categorías registradas.' %}",
+        catGuardada:    "{% trans 'Categoría guardada' %}",
+        sinCamara:      "{% trans 'No se pudo abrir la cámara.' %}",
+    },
+};
+</script>
+<script src="{% static 'inventario_app/js/inventario_movil.js' %}"></script>

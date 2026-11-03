@@ -1,0 +1,79 @@
+{% load i18n %}
+{% comment %}
+    Modal "Categorías de refacciones" de escritorio (≥768px). Lo maneja inventario_categorias.js;
+    estilos en inventario_escritorio.css (.ive-cats-*). Los datos salen de #iv-cats-datos
+    (_movil_config.html), los mismos de la hoja de celular. Celular sigue con #iv-sheet-cats.
+{% endcomment %}
+<div class="ive-ed-fondo" id="ive-cats" hidden
+     data-url-crear="{% url 'inventario:crear_categoria_refaccion' %}"
+     data-url-editar="{% url 'inventario:editar_categoria_refaccion' 0 %}"
+     data-url-eliminar="{% url 'inventario:eliminar_categoria_refaccion' 0 %}">
+    <div class="ive-cats" role="dialog" aria-modal="true" aria-labelledby="ive-cats-t" aria-describedby="ive-cats-sub">
+        {% csrf_token %}
+        <header class="ive-cats-head">
+            <div>
+                <h2 id="ive-cats-t">{% trans "Categorías de refacciones" %}</h2>
+                <p id="ive-cats-sub">{% trans "Nombre en español e inglés para los filtros y reportes" %}</p>
+            </div>
+            <button type="button" class="ive-cats-x" data-cerrar aria-label="{% trans 'Cerrar' %}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+        </header>
+
+        <form class="ive-cats-nueva" id="ive-cats-nueva" novalidate>
+            <label>
+                <span>{% trans "Nombre en español" %} <span class="req" aria-hidden="true">*</span></span>
+                <input class="ive-cats-in" id="ive-cats-es" maxlength="100" autocomplete="off" placeholder="{% trans 'Ej. Neumático' %}" aria-describedby="ive-cats-err">
+            </label>
+            <label>
+                <span>{% trans "Name in English (opcional)" %}</span>
+                <input class="ive-cats-in" id="ive-cats-en" maxlength="100" autocomplete="off" placeholder="{% trans 'Ej. Pneumatic' %}">
+            </label>
+            <button type="submit" class="ive-btn ive-btn-pri">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                {% trans "Agregar" %}
+            </button>
+            <div class="ive-ed-err" id="ive-cats-err" role="alert" hidden></div>
+        </form>
+
+        <div class="ive-cats-barra">
+            <span id="ive-cats-n"></span>
+            <label class="ive-cats-buscar">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" id="ive-cats-q" placeholder="{% trans 'Buscar categoría' %}" aria-label="{% trans 'Buscar categoría' %}">
+            </label>
+        </div>
+
+        <div class="ive-cats-lista">
+            <table class="ive-cats-tabla">
+                <thead>
+                    <tr>
+                        <th>{% trans "Español" %}</th>
+                        <th>English</th>
+                        <th class="num">{% trans "Refacciones" %}</th>
+                        <th class="acc"><span class="ive-sr">{% trans "Acciones" %}</span></th>
+                    </tr>
+                </thead>
+                <tbody id="ive-cats-filas"></tbody>
+            </table>
+            <p class="ive-cats-vacio" id="ive-cats-vacio" hidden></p>
+        </div>
+
+        <footer class="ive-cats-pie">
+            <span>{% trans "No se puede eliminar una categoría con refacciones asignadas." %}</span>
+            <button type="button" class="ive-btn" data-cerrar>{% trans "Cerrar" %}</button>
+        </footer>
+
+        {% comment %} Confirmación de eliminar, dentro del modal {% endcomment %}
+        <div class="ive-ed-conf" id="ive-cats-conf" hidden>
+            <div class="ive-ed-conf-caja" role="alertdialog" aria-modal="true" aria-labelledby="ive-cats-conf-t" aria-describedby="ive-cats-conf-d">
+                <h3 id="ive-cats-conf-t"></h3>
+                <p id="ive-cats-conf-d">{% trans "Esta acción no se puede deshacer." %}</p>
+                <div class="ive-dialogo-pie">
+                    <button type="button" class="ive-btn" id="ive-cats-conf-no">{% trans "Cancelar" %}</button>
+                    <button type="button" class="ive-btn ive-btn-rojo" id="ive-cats-conf-si">{% trans "Eliminar" %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

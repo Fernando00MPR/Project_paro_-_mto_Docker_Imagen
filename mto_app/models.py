@@ -83,7 +83,8 @@ class PlanMantenimiento(models.Model):
     class Meta:
         verbose_name = _("Plan de mantenimiento")
         verbose_name_plural = _("Planes de mantenimiento")
-        ordering = ['area', 'codigo']
+        ordering = ['area', 'locacion', 'actividad', 'codigo']
+
 
 class RegistroEjecucion(models.Model):
 
@@ -107,9 +108,71 @@ class RegistroEjecucion(models.Model):
     observaciones   = models.TextField(blank=True, verbose_name=_("Observaciones"))
     creado_en       = models.DateTimeField(auto_now_add=True)
     modificado      = models.DateTimeField(auto_now=True)
+    modificado_por  = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                        related_name='+', verbose_name=_("Última edición por"))
+
+    # ── Cancelada / Reagendada ──
+    motivo_cancelacion = models.TextField(blank=True, verbose_name=_("Motivo de la cancelación"))
+    reagendada_anio    = models.PositiveIntegerField(null=True, blank=True, verbose_name=_("Reagendada al año"))
+    reagendada_semana  = models.PositiveIntegerField(null=True, blank=True, verbose_name=_("Reagendada a la semana"))
+
+    # ── Atraso: semanas entre la semana programada y la de la fecha de ejecución (lo calcula el servidor) ──
+    semanas_atraso     = models.PositiveIntegerField(default=0, verbose_name=_("Semanas de atraso"))
+
+    # ── Validación ──
+    VALIDACION_CHOICES = [
+        ('por_validar', _('Por validar')),
+        ('validado',    _('Validado')),
+        ('rechazado',   _('Rechazado')),
+    ]
+    validacion         = models.CharField(max_length=12, choices=VALIDACION_CHOICES, default='por_validar',
+                                          verbose_name=_("Validación"))
+    validado_por       = models.ForeignKey('Responsable', on_delete=models.SET_NULL, null=True, blank=True,
+                                           related_name='+', verbose_name=_("Validado por"))
+    validado_usuario   = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                           related_name='+', verbose_name=_("Usuario que validó"))
+    validado_en        = models.DateTimeField(null=True, blank=True, verbose_name=_("Fecha de validación"))
+    motivo_rechazo     = models.TextField(blank=True, verbose_name=_("Motivo del rechazo"))
+    # Nombre tal como estaba al asignar a la persona: editar la ficha del responsable no cambia registros anteriores
+    responsable_nombre  = models.CharField(max_length=200, blank=True, default='', verbose_name=_("Nombre del responsable al asignarlo"))
+    validado_por_nombre = models.CharField(max_length=200, blank=True, default='', verbose_name=_("Nombre de quien validó al asignarlo"))
 
     def __str__(self):
         return f"{self.plan.codigo} S{self.semana_num}/{self.anio} — {self.get_estado_display()}"
+
+    def nombre_responsable(self):
+        """Nombre congelado al asignar; si es un registro viejo sin copia, el de la ficha."""
+        if self.responsable_nombre:
+            return self.responsable_nombre
+        return self.responsable.nombre_completo() if self.responsable_id else ''
+
+    def nombre_validador(self):
+        if self.validado_por_nombre:
+            return self.validado_por_nombre
+        return self.validado_por.nombre_completo() if self.validado_por_id else ''
+
+    def iniciales_responsable(self):
+        """Primera letra del nombre y del último apellido de la copia congelada."""
+        partes = self.nombre_responsable().split()
+        return (partes[0][0] + partes[-1][0]).upper() if len(partes) > 1 else (partes[0][:2].upper() if partes else '')
+    
+    def save(self, *args, **kwargs):
+        # La copia del nombre se renueva solo cuando cambia la persona asignada, no cuando se edita su ficha
+        previo = type(self).objects.filter(pk=self.pk).values(
+            'responsable_id', 'responsable_nombre', 'validado_por_id', 'validado_por_nombre').first() if self.pk else None
+        for fk, copia in (('responsable', 'responsable_nombre'), ('validado_por', 'validado_por_nombre')):
+            persona = getattr(self, fk) if getattr(self, fk + '_id') else None
+            if persona is None:
+                setattr(self, copia, '')
+            elif previo and previo[fk + '_id'] == getattr(self, fk + '_id') and previo[copia]:
+                setattr(self, copia, previo[copia])
+            else:
+                setattr(self, copia, persona.nombre_completo())
+        campos = kwargs.get('update_fields')
+        if campos is not None:
+            kwargs['update_fields'] = list(set(campos) | {'responsable_nombre', 'validado_por_nombre'})
+        super().save(*args, **kwargs)
+
 
     class Meta:
         verbose_name = _("Registro de ejecucion")
@@ -117,14 +180,51 @@ class RegistroEjecucion(models.Model):
         ordering = ['-anio', '-semana_num']
         unique_together = [['plan', 'semana_inicio']]
 
+
+def imagen_registro_upload_path(instance, filename):
+    return f'registros_plan/{instance.registro_id}/{filename}'
+
+
+class ImagenRegistro(models.Model):
+    """Evidencia fotográfica (máx. 4) de un registro de ejecución del plan de mantenimiento."""
+    ETIQUETA_CHOICES = [
+        ('',        _('Sin etiqueta')),
+        ('antes',   _('Antes')),
+        ('despues', _('Después')),
+    ]
+    registro  = models.ForeignKey(RegistroEjecucion, on_delete=models.CASCADE, related_name='imagenes')
+    imagen    = models.ImageField(upload_to=imagen_registro_upload_path, verbose_name='Imagen')
+    etiqueta  = models.CharField(max_length=10, choices=ETIQUETA_CHOICES, blank=True, default='')
+    orden     = models.PositiveSmallIntegerField(default=0)
+    subida_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['orden', 'subida_en']
+
+    def save(self, *args, **kwargs):
+        if self.imagen and not self.imagen._committed:
+            contenido_jpeg, _ = comprimir_imagen_pil(self.imagen)
+            if contenido_jpeg is not None:
+                nombre_base  = os.path.splitext(self.imagen.name)[0]
+                self.imagen.save(f'{nombre_base}.jpg', ContentFile(contenido_jpeg), save=False)
+        super().save(*args, **kwargs)
+
+
+@receiver(post_delete, sender=ImagenRegistro)
+def borrar_archivo_imagen_registro(sender, instance, **kwargs):
+    if instance.imagen:
+        instance.imagen.delete(save=False)
+
+
 class PasoRutina(models.Model):
-    area         = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name=_("Area"), null=True, blank=True)
-    plan_trabajo = models.CharField(max_length=100, verbose_name=_("N° Plan de trabajo"), db_index=True)
-    nombre_plan  = models.CharField(max_length=255, blank=True, verbose_name=_("Nombre del plan"))
-    codigo_plan  = models.CharField(max_length=50, blank=True, verbose_name=_("Codigo del plan"))  
-    secuencia    = models.PositiveIntegerField(verbose_name=_("Seq #"))
-    descripcion  = models.CharField(max_length=200, verbose_name=_("Descripcion"))
-    detalles     = models.TextField(blank=True, verbose_name=_("Detalles"))
+    area            = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name=_("Area"), null=True, blank=True)
+    plan_trabajo    = models.CharField(max_length=100, verbose_name=_("N° Plan de trabajo"), db_index=True)
+    nombre_plan     = models.CharField(max_length=255, blank=True, verbose_name=_("Nombre del plan"))
+    codigo_plan     = models.CharField(max_length=50, blank=True, verbose_name=_("Codigo del plan"))  
+    secuencia       = models.PositiveIntegerField(verbose_name=_("Seq #"))
+    descripcion     = models.CharField(max_length=200, verbose_name=_("Descripcion"))
+    puntos_criticos = models.JSONField(default=list, blank=True, verbose_name=_("Puntos críticos"))   # [0, 2]: 0 obligatoria, 1 secuencia, 2 seguridad
+    detalles        = models.TextField(blank=True, verbose_name=_("Detalles"))
 
     def __str__(self):
         return f"PT-{self.plan_trabajo} Paso {self.secuencia}: {self.descripcion}"
@@ -135,6 +235,31 @@ class PasoRutina(models.Model):
         ordering = ['plan_trabajo', 'secuencia']
         unique_together = [['area', 'plan_trabajo', 'secuencia']]
 
+
+class Rutina(models.Model):
+    """Datos del encabezado del Excel de una rutina. Los pasos son los PasoRutina con la misma área y nº de plan.
+    Las rutinas importadas antes de este modelo no tienen registro (la vista muestra "—")."""
+    area             = models.ForeignKey(Area, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Área"))
+    plan_trabajo     = models.CharField(max_length=100, db_index=True, verbose_name=_("N° Plan de trabajo"))
+    prioridad        = models.CharField(max_length=30, blank=True, verbose_name=_("Prioridad"))
+    area_documento   = models.CharField(max_length=150, blank=True, verbose_name=_("Área del documento"))
+    locacion         = models.CharField(max_length=200, blank=True, verbose_name=_("Locación"))
+    creador          = models.CharField(max_length=150, blank=True, verbose_name=_("Creador"))
+    codigo_documento = models.CharField(max_length=50, blank=True, verbose_name=_("Código del documento"))
+    archivo_origen   = models.CharField(max_length=255, blank=True, verbose_name=_("Archivo de origen"))
+    filas_omitidas   = models.PositiveIntegerField(default=0, verbose_name=_("Filas omitidas"))
+    rango_omitidas   = models.CharField(max_length=30, blank=True, verbose_name=_("Rango de filas omitidas"))   # "14–20"
+    leyenda_puntos   = models.JSONField(default=dict, blank=True, verbose_name=_("Leyenda de puntos críticos"))   # {"0": "...", "1": "...", "2": "..."}
+
+    def __str__(self):
+        return f"PT-{self.plan_trabajo} ({self.area})"
+
+    class Meta:
+        verbose_name = _("Rutina")
+        verbose_name_plural = _("Rutinas")
+        unique_together = [['area', 'plan_trabajo']]
+
+
 class Responsable(models.Model):
     area          = models.ForeignKey(Area, on_delete=models.CASCADE, verbose_name=_("Area"))
     numero_nomina = models.CharField(max_length=20, verbose_name=_("Numero de nomina"))
@@ -142,11 +267,16 @@ class Responsable(models.Model):
     apellidos     = models.CharField(max_length=100, verbose_name=_("Apellidos"))
     posicion      = models.CharField(max_length=100, blank=True, verbose_name=_("Posicion"))
     activo        = models.BooleanField(default=True, verbose_name=_("Activo"))
+    eliminado     = models.BooleanField(default=False, verbose_name=_("Eliminado"))
     creado_en     = models.DateTimeField(auto_now_add=True, verbose_name=_("Fecha de registro"))
     modificado_en = models.DateTimeField(auto_now=True, verbose_name=_("Ultima edicion"))
 
     def nombre_completo(self):
         return f"{self.nombre} {self.apellidos}"
+
+    def nomina_visible(self):
+        """Nómina sin la marca interna '~E<id>' que se le pone a una ficha archivada para liberar el número."""
+        return self.numero_nomina.split('~E')[0]
 
     def __str__(self):
         return f"{self.numero_nomina} - {self.nombre} {self.apellidos}"
@@ -171,6 +301,8 @@ class AccesoMto(models.Model):
     ver_plan_mantenimiento      = models.BooleanField(default=False, verbose_name=_("Ver plan de mantenimiento"))
     editar_plan_mantenimiento   = models.BooleanField(default=False, verbose_name=_("Editar plan de mantenimiento"))
     eliminar_plan_mantenimiento = models.BooleanField(default=False, verbose_name=_("Eliminar plan de mantenimiento"))
+    validar_plan_mantenimiento  = models.BooleanField(default=False, verbose_name=_("Validar plan de mantenimiento"))
+    llenar_plan_mantenimiento   = models.BooleanField(default=False, verbose_name=_("Llenar plan de mantenimiento"))
 
     # ── Rutinas ──
     ver_rutinas      = models.BooleanField(default=False, verbose_name=_("Ver rutinas"))
@@ -181,7 +313,9 @@ class AccesoMto(models.Model):
     ver_seguimiento      = models.BooleanField(default=False, verbose_name=_("Ver seguimiento"))
     editar_seguimiento   = models.BooleanField(default=False, verbose_name=_("Editar seguimiento"))
     eliminar_seguimiento = models.BooleanField(default=False, verbose_name=_("Eliminar seguimiento"))
-
+    validar_seguimiento  = models.BooleanField(default=False, verbose_name=_("Validar seguimiento"))
+    llenar_seguimiento   = models.BooleanField(default=False, verbose_name=_("Llenar seguimiento"))
+    
     # ── Responsables ──
     ver_responsables      = models.BooleanField(default=False, verbose_name=_("Ver responsables"))
     editar_responsables   = models.BooleanField(default=False, verbose_name=_("Editar responsables"))
@@ -267,6 +401,7 @@ class SeguimientoOT(models.Model):
     notas            = models.TextField(blank=True, default='', verbose_name=_('Notas adicionales'))
     creado_por       = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_('Creado por'))
     fecha_creacion   = models.DateTimeField(auto_now_add=True, verbose_name=_('Fecha de creación'))
+    modificado       = models.DateTimeField(auto_now=True, null=True, blank=True, verbose_name=_('Última edición'))
     validado         = models.BooleanField(default=False, verbose_name=_('Validado'))
 
     class Meta:
@@ -507,6 +642,7 @@ class Bitacora(models.Model):
     actividad_realizada = models.CharField(max_length=300, verbose_name=_("Actividad realizada"))
     pendiente           = models.CharField(max_length=200, blank=True, verbose_name=_("Pendiente"))
     responsable         = models.CharField(max_length=200, blank=True, verbose_name=_("Responsable"))
+    responsable2        = models.CharField(max_length=200, blank=True, default='', verbose_name=_("Segundo responsable"))
     creado_en           = models.DateTimeField(auto_now_add=True)
     modificado_en       = models.DateTimeField(auto_now=True)
 

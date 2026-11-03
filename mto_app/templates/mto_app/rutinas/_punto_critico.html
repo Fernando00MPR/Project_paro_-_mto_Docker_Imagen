@@ -1,0 +1,5 @@
+{% comment %}
+    Insignia de punto crítico: la figura del Excel (0 ▼ rojo, 1 ● amarillo, 2 ▲ verde) y el número.
+    Parámetros: v (0, 1 o 2) y tam (px de la figura). Colores en rutinas_modal.css (.rt-fig-0/1/2).
+{% endcomment %}
+<svg class="rt-fig rt-fig-{{ v }}" width="{{ tam }}" height="{{ tam }}" viewBox="0 0 24 24" aria-hidden="true"><path d="{% if v == 0 %}M3 5h18L12 20z{% elif v == 1 %}M12 3.5a8.5 8.5 0 1 0 0 17a8.5 8.5 0 1 0 0-17z{% else %}M12 4l9 15H3z{% endif %}"/></svg>{{ v }}

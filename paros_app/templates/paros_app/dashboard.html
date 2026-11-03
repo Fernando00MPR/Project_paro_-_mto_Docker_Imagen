@@ -4,6 +4,134 @@
 {% block extra_css %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<style>
+/* ── Vista móvil (≤767px) del Dashboard ── */
+.movil-only { display: none; }
+@media (min-width: 768px) { .movil-only { display: none !important; } }
+
+@media (max-width: 767px) {
+    .dsh-desktop-only { display: none !important; }
+    .movil-only { display: block; }
+
+    .dm-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .dm-titulos { flex: 1; min-width: 0; }
+    .dm-titulo { font-size: 19px; font-weight: 600; line-height: 1.2; color: var(--text); }
+    .dm-subtitulo { font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dm-icon-btn {
+        width: 44px; height: 44px; min-width: 44px; border-radius: 12px; border: 1px solid var(--border);
+        background: var(--white); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    .dm-chips-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+    .dm-chips-bar::-webkit-scrollbar { display: none; }
+    .dm-btn-filtros {
+        flex: none; height: 40px; padding: 0 14px; border-radius: 20px; border: 0; background: var(--indigo); color: #fff;
+        font: inherit; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer;
+    }
+    .dm-badge {
+        display: none; min-width: 20px; height: 20px; border-radius: 10px; background: #fff; color: var(--indigo);
+        font-size: 12px; font-weight: 600; align-items: center; justify-content: center; padding: 0 4px;
+    }
+    .dm-badge:not(:empty) { display: flex; }
+    .dm-chips { display: flex; gap: 8px; }
+    .dm-chip {
+        flex: none; height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid #C9D2F5;
+        background: #EBEFFD; color: #2C44A8; font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer;
+    }
+
+    .dm-kpis { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-bottom: 12px; }
+    .dm-kpi { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+    .dm-kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 6px;
+                  font-size: 11px; font-weight: 600; letter-spacing: .05em; color: var(--text-3); }
+    .dm-kpi-ico { width: 28px; height: 28px; min-width: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .dm-kpi-val { font-size: 28px; font-weight: 600; margin-top: 4px; line-height: 1.15; }
+    .dm-kpi-unidad { font-size: 13px; font-weight: 500; color: var(--text-3); }
+
+    .dm-card { padding: 16px !important; margin-bottom: 12px; }
+    .dm-vacio { text-align: center; padding: 40px 20px !important; color: var(--text-3); }
+    .dm-card-titulo { margin: 0; font-size: 16px; font-weight: 600; color: var(--text); }
+    .dm-card-sub { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+    .dm-mini-kpis { display: flex; gap: 8px; margin-top: 14px; }
+    .dm-mini { flex: 1; min-width: 0; background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+    .dm-mini-lbl { font-size: 11px; color: var(--text-3); }
+    .dm-mini-val { font-size: 15px; font-weight: 600; color: var(--text); }
+    .dm-chart-wrap { margin-top: 16px; }
+    .dm-chart-inner { position: relative; height: 170px; }
+    .dm-chart-wrap.dm-completo { overflow-x: auto; }
+    .dm-btn-sec {
+        margin-top: 14px; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border);
+        background: var(--white); font: inherit; font-size: 13px; color: var(--text); cursor: pointer;
+    }
+
+    .dm-turno-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .dm-turno-barra { display: flex; height: 14px; border-radius: 7px; overflow: hidden; margin-top: 14px; gap: 2px; background: var(--surface); }
+    .dm-turno-seg { height: 100%; }
+    .dm-turno-leyenda { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 12px; }
+    .dm-turno-item { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .dm-cuadro { width: 10px; height: 10px; min-width: 10px; border-radius: 3px; }
+    .dm-turno-num { font-size: 20px; font-weight: 600; }
+    .dm-turno-pct { font-size: 12px; font-weight: 500; color: var(--text-3); }
+
+    .dm-card-top { padding: 16px 0 8px !important; }
+    .dm-top-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px; }
+    .dm-segmentado { display: grid; gap: 2px; padding: 3px; background: var(--surface); border-radius: 12px; }
+    .dm-seg-2 { grid-template-columns: repeat(2, minmax(0,1fr)); width: 180px; }
+    .dm-seg-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .dm-seg {
+        height: 36px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 12.5px;
+        color: var(--text-3); cursor: pointer; padding: 0 2px;
+    }
+    .dm-seg[aria-pressed="true"] { background: var(--white); font-weight: 600; color: var(--text); box-shadow: 0 1px 3px rgba(30,32,51,.12); }
+    .dm-tabs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); margin: 14px 16px 4px; border-bottom: 1px solid var(--border); }
+    .dm-tab {
+        height: 44px; border: 0; border-bottom: 2px solid transparent; background: transparent; font: inherit;
+        font-size: 14px; color: var(--text-3); cursor: pointer; padding: 0;
+    }
+    .dm-tab[aria-selected="true"] { border-bottom-color: #3D5BD9; font-weight: 600; color: var(--text); }
+    .dm-top-lista { list-style: none; margin: 0; padding: 0; }
+    .dm-top-lista li { padding: 10px 16px; display: flex; flex-direction: column; gap: 6px; }
+    .dm-top-f1 { display: flex; align-items: baseline; gap: 8px; }
+    .dm-top-nombre { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; line-height: 1.3; color: var(--text);
+                     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: break-word; }
+    .dm-top-valor { font-size: 14px; font-weight: 600; white-space: nowrap; color: var(--text); }
+    .dm-top-f2 { display: flex; align-items: center; gap: 8px; }
+    .dm-top-pista { flex: 1; height: 8px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+    .dm-top-relleno { height: 8px; border-radius: 4px; background: #3D5BD9; }
+    .dm-top-sec { font-size: 11px; color: var(--text-3); white-space: nowrap; min-width: 52px; text-align: right; }
+    .dm-top-vacio { padding: 16px; font-size: 13px; color: var(--text-3); }
+
+    /* Hojas inferiores — mismo mecanismo que lista_paros / análisis */
+    .modal-box.sheet-movil {
+        position: fixed; inset: auto 0 0 0; width: 100%; max-width: none; margin: 0;
+        border-radius: 16px 16px 0 0; overflow-y: auto; max-height: 90vh; padding: 10px 20px 20px; text-align: left;
+    }
+    .sheet-movil::before {
+        content: ''; display: block; width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 14px;
+    }
+    @keyframes sheet-movil-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-backdrop .modal-box.sheet-movil { animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both; }
+    .modal-backdrop[data-closing] .modal-box.sheet-movil { animation: none; transform: translateY(100%); transition: transform 160ms ease-out; }
+    @media (prefers-reduced-motion: reduce) { .modal-box.sheet-movil { animation: none !important; } }
+
+    .dm-sheet-head { display: flex; align-items: center; margin-bottom: 8px; }
+    .dm-sheet-head h2 { flex: 1; margin: 0; font-size: 19px; font-weight: 600; color: var(--text); }
+    .dm-link-btn { height: 44px; padding: 0 8px; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 500; color: #2C44A8; cursor: pointer; }
+    .dm-sheet-body { display: flex; flex-direction: column; gap: 14px; }
+    .dm-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .dm-lbl { font-size: 12px; color: var(--text-3); }
+    .dm-field select, .dm-field input[type="number"] {
+        width: 100%; height: 44px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--border);
+        border-radius: 12px; background: var(--white); font: inherit; font-size: 14px; color: var(--text);
+    }
+    .dm-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+    .dm-extra { display: none; }
+    .dm-extra.dm-visible { display: flex; }
+    .dm-grid-2.dm-extra.dm-visible { display: grid; }
+    .dm-sheet-pie { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .dm-btn-aplicar { width: 100%; height: 52px; border: 0; border-radius: 14px; background: var(--indigo); color: #fff; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+}
+</style>
 {% endblock %}
 {% block content %}
 {% trans "Total de paros" as lbl_total %}
@@ -17,7 +145,7 @@
 {% trans "Sin equipo" as lbl_sin_equipo %}
 
 <!-- ── Cabecera y filtros ── -->
-<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+<div class="dsh-desktop-only" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
     <div>
         <div class="card-title">{% trans "Dashboard de paros" %}</div>
         <div class="card-subtitle">
@@ -178,7 +306,7 @@
 </div>
 
 <!-- ── KPIs ── -->
-<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px;">
+<div class="dsh-desktop-only" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px;">
     {% include 'paros_app/_kpi.html' with valor=total_paros label=lbl_total color="var(--indigo)" icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" kpi_id="total_paros" %}
     {% include 'paros_app/_kpi.html' with valor=total_minutos label=lbl_minutos color="#D97706"   icon="M13 10V3L4 14h7v7l9-11h-7z" sufijo="min" kpi_id="total_minutos" %}
     {% include 'paros_app/_kpi.html' with valor=promedio_min label=lbl_promedio color="#10B981"   icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" sufijo="min" kpi_id="promedio_min" %}
@@ -193,10 +321,8 @@
     {% endif %}
 </div>
 
-
-
 {% if total_paros == 0 %}
-<div class="card" style="text-align:center; padding:60px 20px; color:var(--text-3);">
+<div class="card dsh-desktop-only" style="text-align:center; padding:60px 20px; color:var(--text-3);">
     <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin:0 auto 12px; display:block; opacity:.4;">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
     </svg>
@@ -206,16 +332,27 @@
 {% else %}
 
 <!-- ── Tendencia de paros (gráfica de línea) ── -->
-<div class="card" style="margin-bottom:16px;">
+<div class="card dsh-desktop-only" style="margin-bottom:16px;">
+    {% if es_hoy %}
+    <div style="font-weight:600; font-size:14px; margin-bottom:4px; color:var(--text);">{% trans "Tendencia por hora" %}</div>
+    <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">{% trans "Minutos perdidos por hora" %}</div>
+    {% elif es_semanas %}
+    <div style="font-weight:600; font-size:14px; margin-bottom:4px; color:var(--text);">{% trans "Tendencia semanal" %}</div>
+    <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">{% trans "Minutos perdidos por semana" %}</div>
+    {% elif es_meses %}
+    <div style="font-weight:600; font-size:14px; margin-bottom:4px; color:var(--text);">{% trans "Tendencia mensual" %}</div>
+    <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">{% trans "Minutos perdidos por mes" %}</div>
+    {% else %}
     <div style="font-weight:600; font-size:14px; margin-bottom:4px; color:var(--text);">{% trans "Tendencia diaria de paros" %}</div>
     <div style="font-size:12px; color:var(--text-3); margin-bottom:14px;">{% trans "Número de minutos perdidos por día" %}</div>
+    {% endif %}
     <div style="position:relative; width:100%; height:280px;">
         <canvas id="chartTendencia"></canvas>
     </div>
 </div>
 
 <!-- ── Paros por turno ── -->
-<div class="card" style="margin-bottom:16px;">
+<div class="card dsh-desktop-only" style="margin-bottom:16px;">
     <div style="font-weight:600; font-size:14px; margin-bottom:14px; color:var(--text);">{% trans "Paros por turno" %}</div>
     <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
         <div style="flex:1; min-width:200px;">
@@ -280,7 +417,7 @@
 </div>
 
 <!-- ── Rankings ── -->
-<div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+<div class="dsh-desktop-only" style="display:flex; justify-content:flex-end; margin-bottom:8px;">
     <div style="display:flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; height:28px;">
         <button type="button" id="ordtop-minutos" onclick="cambiarOrdenTop('minutos')"
                 style="padding:0 12px; font-size:11px; font-weight:500; cursor:pointer; border:none; font-family:inherit;
@@ -293,7 +430,7 @@
     </div>
 </div>
 
-<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-bottom:16px;">
+<div class="dsh-desktop-only" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-bottom:16px;">
 
     <!-- Top Responsables -->
     <div class="card">
@@ -361,6 +498,211 @@
 </div>
 {% endif %}
 
+<!-- ════════════════════════════════════════════════════════════════════════
+     Vista móvil (≤767px). Oculta en escritorio. Reutiliza los mismos datos
+     (DASHBOARD_CFG) y funciones (actualizarDashboard, cambiarOrdenTop,
+     crearGraficaTendencia) de dashboard.js; dashboard_movil.js la renderiza.
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="dsh-movil movil-only">
+
+    <div class="dm-header">
+        <div class="dm-titulos">
+            <div class="dm-titulo">{% trans "Dashboard de paros" %}</div>
+            <div class="dm-subtitulo">
+                {% if es_semanas or es_meses %}{{ año_actual }}{% else %}{{ fecha_ini|date:"d/m/y" }} – {{ fecha_fin|date:"d/m/y" }}{% endif %}{% if area_actual %} · {{ area_actual.nombre }}{% endif %}
+            </div>
+        </div>
+        <button type="button" class="dm-icon-btn" aria-label="{% trans 'Actualizar' %}" onclick="actualizarDashboard()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+        </button>
+        <button type="button" class="dm-icon-btn" aria-label="{% trans 'Idioma' %}" onclick="abrirSheetDM('dm-sheet-mas', event)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+    </div>
+
+    <div class="dm-chips-bar">
+        <button type="button" class="dm-btn-filtros" onclick="abrirSheetDM('dm-sheet-filtros', event)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            {% trans "Filtros" %}
+            <span class="dm-badge" id="dm-badge"></span>
+        </button>
+        <div class="dm-chips" id="dm-chips"></div>
+    </div>
+
+    <section class="dm-kpis" aria-label="{% trans 'Resumen' %}">
+        <div class="dm-kpi">
+            <div class="dm-kpi-top"><span>{% trans "TOTAL PAROS" %}</span>
+                <span class="dm-kpi-ico" style="background:#EBEFFD;color:#2C44A8;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9zM7 5H5v15h14V5h-2"/></svg></span></div>
+            <div class="dm-kpi-val" style="color:#2C44A8;" id="dm-kpi-total">{{ total_paros }}</div>
+        </div>
+        <div class="dm-kpi">
+            <div class="dm-kpi-top"><span>{% trans "MIN. PERDIDOS" %}</span>
+                <span class="dm-kpi-ico" style="background:#FDF0E1;color:#A85200;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3 5 14h6l-1 7 8-11h-6z"/></svg></span></div>
+            <div class="dm-kpi-val" style="color:#A85200;"><span id="dm-kpi-minutos">{{ total_minutos }}</span><span class="dm-kpi-unidad"> min</span></div>
+        </div>
+        <div class="dm-kpi">
+            <div class="dm-kpi-top"><span>{% trans "PROMEDIO" %}</span>
+                <span class="dm-kpi-ico" style="background:#E3F3E9;color:#1E7A45;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 20v-6M12 20V8M18 20V4"/></svg></span></div>
+            <div class="dm-kpi-val" style="color:#1E7A45;"><span id="dm-kpi-promedio">{{ promedio_min }}</span><span class="dm-kpi-unidad"> min</span></div>
+        </div>
+        <div class="dm-kpi">
+            <div class="dm-kpi-top"><span>{% trans "ACEPTADOS" %}</span>
+                <span class="dm-kpi-ico" style="background:#E3F3E9;color:#1E7A45;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span></div>
+            <div class="dm-kpi-val" style="color:#1E7A45;" id="dm-kpi-aceptados">{{ Aceptados }}</div>
+        </div>
+    </section>
+
+    {% if total_paros == 0 %}
+    <div class="card dm-card dm-vacio">
+        <div style="font-size:15px; font-weight:500;">{% trans "Sin paros en el período seleccionado" %}</div>
+        <div style="font-size:13px; margin-top:6px;">{% trans "Ajusta el rango de fechas o cambia el área." %}</div>
+    </div>
+    {% else %}
+
+    <section class="card dm-card">
+        {% if es_hoy %}
+        <h2 class="dm-card-titulo">{% trans "Tendencia por hora" %}</h2>
+        <div class="dm-card-sub">{% trans "Minutos perdidos por hora" %}</div>
+        {% elif es_semanas %}
+        <h2 class="dm-card-titulo">{% trans "Tendencia semanal" %}</h2>
+        <div class="dm-card-sub">{% trans "Minutos perdidos por semana" %}</div>
+        <div class="dm-mini-kpis">
+            <div class="dm-mini"><div class="dm-mini-lbl">{% trans "Peor semana" %}</div><div class="dm-mini-val" id="dm-peor-semana">—</div></div>
+            <div class="dm-mini"><div class="dm-mini-lbl">{% trans "Semanas con paros" %}</div><div class="dm-mini-val" id="dm-semanas-con-paros">—</div></div>
+        </div>
+        {% elif es_meses %}
+        <h2 class="dm-card-titulo">{% trans "Tendencia mensual" %}</h2>
+        <div class="dm-card-sub">{% trans "Minutos perdidos por mes" %}</div>
+        {% else %}
+        <h2 class="dm-card-titulo">{% trans "Tendencia diaria de paros" %}</h2>
+        <div class="dm-card-sub">{% trans "Número de minutos perdidos por día" %}</div>
+        {% endif %}
+        <div class="dm-chart-wrap" id="dm-chart-wrap">
+            <div class="dm-chart-inner" id="dm-chart-inner"><canvas id="chartTendenciaMovil"></canvas></div>
+        </div>
+        {% if es_semanas %}
+        <button type="button" class="dm-btn-sec" id="dm-btn-anio" onclick="toggleAnioCompletoDM()">{% trans "Ver año completo" %}</button>
+        {% endif %}
+    </section>
+
+    <section class="card dm-card">
+        <div class="dm-turno-head">
+            <h2 class="dm-card-titulo">{% trans "Paros por turno" %}</h2>
+            <span class="dm-card-sub" id="dm-turno-total"></span>
+        </div>
+        <div class="dm-turno-barra" id="dm-turno-barra" role="img">
+            <div class="dm-turno-seg" id="dm-turno1-seg" style="background:#3D5BD9;"></div>
+            <div class="dm-turno-seg" id="dm-turno2-seg" style="background:#D9822B;"></div>
+        </div>
+        <div class="dm-turno-leyenda">
+            <div class="dm-turno-item">
+                <span class="dm-cuadro" style="background:#3D5BD9;"></span>
+                <div><div class="dm-turno-num" style="color:#2C44A8;"><span id="dm-turno1-num"></span> <span class="dm-turno-pct" id="dm-turno1-pct"></span></div><div class="dm-card-sub">{% trans "Turno 1" %}</div></div>
+            </div>
+            <div class="dm-turno-item">
+                <span class="dm-cuadro" style="background:#D9822B;"></span>
+                <div><div class="dm-turno-num" style="color:#A85200;"><span id="dm-turno2-num"></span> <span class="dm-turno-pct" id="dm-turno2-pct"></span></div><div class="dm-card-sub">{% trans "Turno 2" %}</div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card dm-card dm-card-top">
+        <div class="dm-top-head">
+            <h2 class="dm-card-titulo">{% trans "Top" %}</h2>
+            <div class="dm-segmentado dm-seg-2" role="group" aria-label="{% trans 'Medir por' %}">
+                <button type="button" class="dm-seg" data-orden="minutos" onclick="cambiarOrdenTopDM('minutos')">{% trans "Minutos" %}</button>
+                <button type="button" class="dm-seg" data-orden="cantidad" onclick="cambiarOrdenTopDM('cantidad')">{% trans "Cantidad" %}</button>
+            </div>
+        </div>
+        <div class="dm-tabs" role="tablist" aria-label="{% trans 'Ranking de' %}">
+            <button type="button" role="tab" class="dm-tab" data-tab="responsables" onclick="elegirTabDM('responsables')">{% trans "Responsables" %}</button>
+            <button type="button" role="tab" class="dm-tab" data-tab="fallas" onclick="elegirTabDM('fallas')">{% trans "Fallas" %}</button>
+            <button type="button" role="tab" class="dm-tab" data-tab="equipos" onclick="elegirTabDM('equipos')">{% trans "Equipos" %}</button>
+        </div>
+        <ol class="dm-top-lista" id="dm-top-lista"></ol>
+    </section>
+    {% endif %}
+</div>
+
+<!-- Hoja: Filtros -->
+<div id="dm-sheet-filtros" class="modal-backdrop movil-only" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-label="{% trans 'Filtros' %}">
+        <div class="dm-sheet-head">
+            <h2>{% trans "Filtros" %}</h2>
+            <button type="button" class="dm-link-btn" onclick="restablecerFiltrosDM()">{% trans "Restablecer" %}</button>
+        </div>
+        <div class="dm-sheet-body">
+            <div class="dm-field"><span class="dm-lbl">{% trans "Área" %}</span>
+                <select id="mf-area">
+                    <option value="">{% trans "Todas las áreas" %}</option>
+                    {% for area in areas %}<option value="{{ area.id }}" {% if area_id == area.id|stringformat:"s" %}selected{% endif %}>{{ area.nombre }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="dm-field"><span class="dm-lbl">{% trans "Período" %}</span>
+                <select id="mf-rango" onchange="mostrarExtrasPeriodoDM()">
+                    <option value="1"          {% if rango == '1'          %}selected{% endif %}>{% trans "Hoy" %}</option>
+                    <option value="7"          {% if rango == '7'          %}selected{% endif %}>{% trans "Últimos 7 días" %}</option>
+                    <option value="30"         {% if rango == '30'         %}selected{% endif %}>{% trans "Últimos 30 días" %}</option>
+                    <option value="semana_num" {% if rango == 'semana_num' %}selected{% endif %}>{% trans "Por número de semana" %}</option>
+                    <option value="semanas"    {% if rango == 'semanas'    %}selected{% endif %}>{% trans "Por semana (año actual)" %}</option>
+                    <option value="mes"        {% if rango == 'mes'        %}selected{% endif %}>{% trans "Por mes" %}</option>
+                    <option value="meses"      {% if rango == 'meses'      %}selected{% endif %}>{% trans "Por meses (año completo)" %}</option>
+                    <option value="custom"     {% if rango == 'custom'     %}selected{% endif %}>{% trans "Rango personalizado" %}</option>
+                </select>
+            </div>
+            <div class="dm-field dm-extra" data-rango="semana_num"><span class="dm-lbl">{% trans "Semana" %}</span>
+                <input type="number" id="mf-semana" min="1" max="53" value="{{ semana_num|default:semana_actual }}">
+            </div>
+            <div class="dm-grid-2 dm-extra" data-rango="mes">
+                <div class="dm-field"><span class="dm-lbl">{% trans "Mes" %}</span>
+                    <select id="mf-mes">
+                        {% for num, nombre in meses %}<option value="{{ num }}" {% if mes_num|default:mes_actual|stringformat:"s" == num|stringformat:"s" %}selected{% endif %}>{{ nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="dm-field"><span class="dm-lbl">{% trans "Año" %}</span>
+                    <input type="number" id="mf-anio-mes" min="2015" max="{{ año_actual }}" value="{{ anio_mes|default:año_actual }}">
+                </div>
+            </div>
+            <div class="dm-field dm-extra" data-rango="meses"><span class="dm-lbl">{% trans "Año" %}</span>
+                <input type="number" id="mf-anio-meses" min="2015" max="{{ año_actual }}" value="{{ anio_meses|default:año_actual }}">
+            </div>
+            <div class="dm-grid-2 dm-extra" data-rango="custom">
+                <div class="dm-field"><span class="dm-lbl">{% trans "Desde" %}</span>
+                    {% include 'menu_app/_date_picker.html' with name='mf_fecha_ini' initial=fecha_ini|date:'Y-m-d' dp_id='dm-dp-ini' %}
+                </div>
+                <div class="dm-field"><span class="dm-lbl">{% trans "Hasta" %}</span>
+                    {% include 'menu_app/_date_picker.html' with name='mf_fecha_fin' initial=fecha_fin|date:'Y-m-d' dp_id='dm-dp-fin' %}
+                </div>
+            </div>
+            <div class="dm-field"><span class="dm-lbl">{% trans "Responsable" %}</span>
+                <select id="mf-responsable">
+                    <option value="">{% trans "Todos" %}</option>
+                    {% for resp in responsables_disponibles %}<option value="{{ resp }}" {% if responsable_filtro == resp %}selected{% endif %}>{{ resp }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="dm-field"><span class="dm-lbl">{% trans "Estatus" %}</span>
+                <div class="dm-segmentado dm-seg-4" role="group" aria-label="{% trans 'Estatus' %}" id="mf-estatus-grupo">
+                    <button type="button" class="dm-seg" data-valor="" aria-pressed="{% if estatus_filtro == '' %}true{% else %}false{% endif %}">{% trans "Todos" %}</button>
+                    <button type="button" class="dm-seg" data-valor="verde" aria-pressed="{% if estatus_filtro == 'verde' %}true{% else %}false{% endif %}">{% trans "Aceptados" %}</button>
+                    <button type="button" class="dm-seg" data-valor="rojo" aria-pressed="{% if estatus_filtro == 'rojo' %}true{% else %}false{% endif %}">{% trans "Rechazados" %}</button>
+                    <button type="button" class="dm-seg" data-valor="amarillo" aria-pressed="{% if estatus_filtro == 'amarillo' %}true{% else %}false{% endif %}">{% trans "Pendientes" %}</button>
+                </div>
+            </div>
+        </div>
+        <div class="dm-sheet-pie">
+            <button type="button" class="dm-btn-aplicar" onclick="aplicarFiltrosDM()">{% trans "Aplicar filtros" %}</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hoja: Idioma -->
+<div id="dm-sheet-mas" class="modal-backdrop movil-only" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-label="{% trans 'Idioma' %}">
+        <div class="dm-sheet-head"><h2>{% trans "Idioma" %}</h2></div>
+        <div class="dm-sheet-body">{% include 'menu_app/_language_selector.html' %}</div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -377,6 +719,20 @@ window.DASHBOARD_CFG = {
     sinDatos:         "{% trans 'Sin datos' %}",
     jsonUrl:          "{% url 'paros:dashboard_json' %}",
     initiallyHasData: {{ total_paros|default:0 }} > 0,
+
+    // Solo para la vista móvil (dashboard_movil.js)
+    esSemanas:  {% if es_semanas %}true{% else %}false{% endif %},
+    chartParos: [{% if es_semanas %}{% for s in paros_por_semana %}{{ s.paros }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}],
+    movil: {
+        ordenTop: "{{ orden_top }}",
+        turno1: {{ turno1|default:0 }},
+        turno2: {{ turno2|default:0 }},
+        tops: {
+            responsables: [{% for r in top_responsables %}{nombre: "{{ r.responsable|default:''|escapejs }}", total: {{ r.total|default:0 }}, minutos: {{ r.minutos|default:0 }}}{% if not forloop.last %},{% endif %}{% endfor %}],
+            fallas:       [{% for f in top_fallas %}{nombre: "{{ f.falla|default:''|escapejs }}", total: {{ f.total|default:0 }}, minutos: {{ f.minutos|default:0 }}}{% if not forloop.last %},{% endif %}{% endfor %}],
+            equipos:      [{% for e in top_equipos %}{nombre: "{{ e.equipo|default:''|escapejs }}", total: {{ e.total|default:0 }}, minutos: {{ e.minutos|default:0 }}}{% if not forloop.last %},{% endif %}{% endfor %}],
+        },
+    },
 
     {% if total_paros %}
     chartLabels: [
@@ -445,4 +801,21 @@ window.DASHBOARD_CFG = {
 
 </script>
 <script src="{% static 'paros_app/js/dashboard.js' %}"></script>
+<script>
+    window.DM_I18N = {
+        sinAsignar:   "{% trans 'Sin asignar' %}",
+        sinFalla:     "{% trans 'Sin falla' %}",
+        sinEquipo:    "{% trans 'Sin equipo' %}",
+        sinDatos:     "{% trans 'Sin datos' %}",
+        paro:         "{% trans 'paro' %}",
+        paros:        "{% trans 'paros' %}",
+        de:           "{% trans 'de' %}",
+        turno1:       "{% trans 'Turno 1' %}",
+        turno2:       "{% trans 'Turno 2' %}",
+        verAnio:      "{% trans 'Ver año completo' %}",
+        verRecientes: "{% trans 'Ver recientes' %}",
+        todasAreas:   "{% trans 'Todas las áreas' %}",
+    };
+</script>
+<script src="{% static 'paros_app/js/dashboard_movil.js' %}" defer></script>
 {% endblock %}

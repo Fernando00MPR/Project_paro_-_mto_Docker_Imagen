@@ -104,7 +104,10 @@ function enviarValor(td, valor) {
     const anio  = td.dataset.anio;
     const fecha = `${anio}-${mes}-${dia.toString().padStart(2,'0')}`;
 
-    fetch(cfg.urlGuardar, {
+    // Devuelve una promesa con true/false (la usa la hoja de captura móvil
+    // para no avanzar de hora si falla); en escritorio se ignora.
+
+    return fetch(cfg.urlGuardar, {
         method: 'POST',
         headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
         body: JSON.stringify({area_id:area, fecha, turno, hora, valor: valor === '' ? null : parseInt(valor)})
@@ -141,11 +144,13 @@ function enviarValor(td, valor) {
             }
             recalcularArea(area);
             if (document.getElementById('chartEficiencia')) cargarEficiencia();
+            return true;
         } else {
             alert('Error: ' + (data.error || 'No se pudo guardar'));
+            return false;
         }
     })
-    .catch(() => alert('Error de conexión'));
+    .catch(() => { alert('Error de conexión'); return false; });
 }
 
 // ── Recalcular totales ─────────────────────────────────────────────────────────
@@ -307,6 +312,8 @@ function cargarEficiencia() {
 function renderizarEficiencia(datos) {
     const areaId         = document.getElementById('ef-area').value;
     const targetEfActual = targetEf[areaId] ?? 91;
+    // La tarjeta móvil (hora_hora_movil.js) pinta su lista con estos mismos datos.
+    document.dispatchEvent(new CustomEvent('hxh:eficiencia', { detail: { datos, vista: vistaEf, meta: targetEfActual } }));
     const labels         = datos.map(d => d.label);
     const eficiencia     = datos.map(d => d.eficiencia);
     const targets        = datos.map(d => d.target_ef ?? targetEfActual);

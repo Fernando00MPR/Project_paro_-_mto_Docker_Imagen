@@ -1,0 +1,150 @@
+{% load i18n %}
+{% comment %}
+    Contenido del modal "Rutinas de mantenimiento" (Plan de mantenimiento). Lo pide rutinas_modal.js con fetch a
+    mto:rutinas_modal. Izquierda: lista de rutinas; derecha: encabezado del Excel de la rutina elegida, leyenda de
+    puntos críticos (también filtra los pasos) y la tabla Seq · Paso y detalle · Puntos críticos.
+    En celular solo se ve el aviso de _no_disponible_movil (el resto se oculta por CSS).
+{% endcomment %}
+{% include 'menu_app/_no_disponible_movil.html' %}
+<div class="rt" id="rt-raiz" data-area="{{ area_id }}">
+    {{ planes_disp|json_script:"rt-planes-json" }}
+
+    {% if puede_editar %}
+    <div class="rt-top">
+        <button type="button" class="rt-btn rt-btn-pri rt-importar" id="rt-importar" title="{% trans 'Sube un Excel con los pasos de la rutina' %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V9m0 0-4 4m4-4 4 4M5 4h14"/></svg>
+            {% trans "Importar nueva rutina" %}
+        </button>
+    </div>
+    {% endif %}
+
+    <div class="rt-grid">
+        <aside class="rt-lista-card">
+            <div class="rt-buscar-wrap">
+                <label class="rt-buscar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <input type="search" id="rt-q" value="{{ q }}" placeholder="{% trans 'Código, nombre, área o locación…' %}" aria-label="{% trans 'Buscar rutinas' %}" autocomplete="off">
+                </label>
+            </div>
+            <div class="rt-lista-cab"><b>{% trans "RUTINAS" %}</b><span>{% blocktrans with a=rutinas|length b=total %}{{ a }} de {{ b }}{% endblocktrans %}</span></div>
+            <div class="rt-items" role="listbox" aria-label="{% trans 'Rutinas' %}" id="rt-items">
+                {% for r in rutinas %}
+                <button type="button" class="rt-item" role="option" data-clave="{{ r.clave }}" aria-selected="{% if actual and r.clave == actual.clave %}true{% else %}false{% endif %}">
+                    <span class="rt-num">{{ r.plan }}</span>
+                    <span class="rt-item-t">
+                        <span class="rt-item-f1">
+                            <span class="rt-cod">{{ r.codigo|default:"—" }}</span>
+                            {% if r.prio %}<span class="rt-prio-mini rt-prio-{{ r.prio }}">{% if r.prio == 'alta' %}{% trans "Alta" %}{% elif r.prio == 'media' %}{% trans "Media" %}{% elif r.prio == 'baja' %}{% trans "Baja" %}{% else %}{{ r.prioridad }}{% endif %}</span>{% endif %}
+                        </span>
+                        <span class="rt-nom">{{ r.nombre|default:"—" }}</span>
+                        <span class="rt-res">{% blocktrans count n=r.n %}{{ n }} paso{% plural %}{{ n }} pasos{% endblocktrans %}{% if r.k_pc %} · {% blocktrans with k=r.k_pc %}{{ k }} con punto crítico{% endblocktrans %}{% endif %}{% if r.fecha %} · {% blocktrans with f=r.fecha|date:"j M" %}importada {{ f }}{% endblocktrans %}{% endif %}</span>
+                    </span>
+                </button>
+                {% empty %}
+                <div class="rt-vacio-lista">
+                    {% if q %}{% blocktrans %}Sin rutinas que coincidan con «{{ q }}»{% endblocktrans %}<br><button type="button" class="rt-link" id="rt-limpiar">{% trans "Limpiar búsqueda" %}</button>
+                    {% else %}{% trans "Todavía no hay rutinas en esta área." %}{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="rt-ayuda">{% trans "¿Falta una rutina? Usa" %} <b>{% trans "Importar nueva rutina" %}</b> {% trans "con su Excel." %}</div>
+        </aside>
+
+        <div class="rt-der">
+            {% if actual %}
+            {% comment %} ── Encabezado: chips (código del plan, del documento y prioridad), nombre y 6 datos ── {% endcomment %}
+            <section class="rt-card rt-cab-rutina">
+                <div class="rt-cab-fila">
+                    <div class="rt-cab-t">
+                        <div class="rt-cab-chips">
+                            <span class="rt-chip-cod">{{ actual.codigo|default:"—" }}</span>
+                            {% if actual.codigo_doc %}<span class="rt-chip-doc" title="{% trans 'Código del documento' %}">{{ actual.codigo_doc }}</span>{% endif %}
+                            {% if actual.prio %}
+                            <span class="rt-chip-prio rt-prio-{{ actual.prio }}"><i aria-hidden="true"></i>{% if actual.prio == 'alta' %}{% trans "Prioridad alta" %}{% elif actual.prio == 'media' %}{% trans "Prioridad media" %}{% elif actual.prio == 'baja' %}{% trans "Prioridad baja" %}{% else %}{% blocktrans with p=actual.prioridad %}Prioridad {{ p }}{% endblocktrans %}{% endif %}</span>
+                            {% endif %}
+                        </div>
+                        <h2>{{ actual.nombre|default:"—" }}</h2>
+                    </div>
+                    {% if puede_eliminar %}
+                    <div class="rt-cab-acc">
+                        <button type="button" class="rt-btn rt-btn-mal" id="rt-eliminar"
+                                data-area="{{ actual.area_id }}" data-plan="{{ actual.plan }}" data-codigo="{{ actual.codigo }}"
+                                data-usada="{{ actual.usada }}" data-n="{{ actual.n }}">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                            {% trans "Eliminar" %}
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="rt-datos">
+                    <div><small>{% trans "ÁREA" %}</small><b>{{ actual.area_doc|default:"—" }}</b></div>
+                    <div><small>{% trans "LOCACIÓN" %}</small><b>{{ actual.locacion|default:"—" }}</b></div>
+                    <div><small>{% trans "CREADOR" %}</small><b>{{ actual.creador|default:"—" }}</b></div>
+                    <div><small>{% trans "PASOS" %}</small><b>{% if n_pc %}{% blocktrans with n=actual.n k=n_pc %}{{ n }} · {{ k }} con punto crítico{% endblocktrans %}{% else %}{{ actual.n }}{% endif %}</b></div>
+                    <div><small>{% trans "ÚLTIMA IMPORTACIÓN" %}</small><b>{% if actual.fecha %}{{ actual.fecha|date:"j M Y" }}{% if actual.usuario %} · {{ actual.usuario }}{% endif %}{% else %}—{% endif %}</b></div>
+                    <div><small>{% trans "USADA EN" %}</small><b>{% if actual.usada %}{% blocktrans count n=actual.usada %}{{ n }} plan activo{% plural %}{{ n }} planes activos{% endblocktrans %}{% else %}{% trans "Ningún plan" %}{% endif %}</b></div>
+                </div>
+            </section>
+
+            <section class="rt-card rt-pasos-card">
+                <div class="rt-pasos-cab">
+                    <b>{% trans "Pasos" %}</b>
+                    <span class="rt-muted" id="rt-pasos-txt">· {% blocktrans with n=actual.n %}{{ n }} en orden de ejecución{% endblocktrans %}</span>
+                    <div class="rt-vista" role="group" aria-label="{% trans 'Vista' %}">
+                        <button type="button" data-vista="detalle" aria-pressed="true">{% trans "Con detalle" %}</button>
+                        <button type="button" data-vista="titulos" aria-pressed="false">{% trans "Solo títulos" %}</button>
+                    </div>
+                </div>
+
+                {% comment %} ── Leyenda de puntos críticos: también filtra la tabla (rutinas_modal.js). Sin puntos críticos no se muestra ── {% endcomment %}
+                {% if leyenda %}
+                <div class="rt-leyenda" role="group" aria-label="{% trans 'Filtrar por punto crítico' %}" data-total="{{ actual.n }}">
+                    <button type="button" class="rt-ley rt-ley-todos" data-pc="" aria-pressed="true">
+                        <small>{% trans "TODOS LOS PASOS" %}</small><b>{{ actual.n }}</b>
+                    </button>
+                    {% for l in leyenda %}
+                    <button type="button" class="rt-ley rt-pc-{{ l.v }}" data-pc="{{ l.v }}" data-nombre="{{ l.nombre }}" aria-pressed="false"{% if not l.n %} disabled{% endif %}>
+                        <span class="rt-ley-ins">{% include 'mto_app/rutinas/_punto_critico.html' with v=l.v tam=16 %}</span>
+                        <span class="rt-ley-t">
+                            <span class="rt-ley-f1"><b>{{ l.nombre }}</b><span>{% blocktrans count n=l.n %}{{ n }} paso{% plural %}{{ n }} pasos{% endblocktrans %}{% if l.seqs %} · {{ l.seqs }}{% endif %}</span></span>
+                            <span class="rt-ley-desc">{{ l.desc }}</span>
+                        </span>
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="rt-tabla-cab" aria-hidden="true"><span>{% trans "SEQ." %}</span><span>{% trans "PASO Y DETALLE" %}</span><span>{% trans "PUNTOS CRÍTICOS" %}</span></div>
+                <ol class="rt-pasos">
+                    {% for p in pasos %}
+                    <li class="rt-paso{% if p.seg %} rt-seg{% endif %}" data-pc="{{ p.pc_attr }}">
+                        <span class="rt-n-c"><span class="rt-n">{{ p.seq }}</span></span>
+                        <div class="rt-paso-c">
+                            <div class="rt-paso-t">{{ p.titulo }}</div>
+                            {% if p.detalle %}<p class="rt-det">{{ p.detalle }}</p>{% endif %}
+                        </div>
+                        <div class="rt-pcs">
+                            {% for c in p.pc %}
+                            {% blocktrans with v=c.v nombre=c.nombre asvar lbl_pc %}Punto crítico {{ v }}: {{ nombre }}{% endblocktrans %}
+                            <span class="rt-pc rt-pc-{{ c.v }}" title="{{ c.desc }}" aria-label="{{ lbl_pc }}"><span class="rt-pc-ins">{% include 'mto_app/rutinas/_punto_critico.html' with v=c.v tam=13 %}</span>{{ c.nombre }}</span>
+                            {% empty %}
+                            <span class="rt-pc-no">—</span>
+                            {% endfor %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ol>
+                <div class="rt-pie">
+                    {% if actual.archivo %}
+                        {% trans "Importado de" %} <b>{{ actual.archivo }}</b>{% if actual.omitidas %} · {% blocktrans with r=actual.rango_omitidas count n=actual.omitidas %}se omitió {{ n }} fila vacía (Seq. {{ r }}){% plural %}se omitieron {{ n }} filas vacías (Seq. {{ r }}){% endblocktrans %}{% endif %}
+                    {% else %}
+                        {% blocktrans count n=actual.n %}{{ n }} paso{% plural %}{{ n }} pasos{% endblocktrans %}{% if actual.fecha %} · {% blocktrans with f=actual.fecha|date:"j M Y" %}importados el {{ f }}{% endblocktrans %}{% endif %}
+                    {% endif %}
+                </div>
+            </section>
+            {% else %}
+            <section class="rt-card rt-vacio-der">{% trans "Elige una rutina de la lista." %}</section>
+            {% endif %}
+        </div>
+    </div>
+</div>

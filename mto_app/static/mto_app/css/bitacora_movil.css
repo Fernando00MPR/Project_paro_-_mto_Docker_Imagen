@@ -1,0 +1,265 @@
+/* bitacora_movil.css — Vista de celular (≤767px) de la Bitácora de mantenimiento.
+   El escritorio no se toca: solo se oculta (.bm-desktop-only) y el modal de
+   alta/edición existente se reacomoda como pantalla completa. */
+
+.movil-only { display: none; }
+
+@media (min-width: 768px) {
+    .movil-only { display: none !important; }
+}
+
+@media (max-width: 767px) {
+    .bm-desktop-only { display: none !important; }
+    .movil-only { display: block; }
+
+    /* ── Encabezado ── */
+    .bm-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .bm-titulos { flex: 1; min-width: 0; }
+    .bm-titulo { font-size: 19px; font-weight: 600; line-height: 1.2; color: var(--text); }
+    .bm-subtitulo { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ── Búsqueda + fecha ── */
+    .bm-buscar-fila { display: flex; gap: 8px; margin-bottom: 8px; }
+    .bm-buscar {
+        flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px;
+        background: var(--white); border: 1px solid var(--border); border-radius: 12px; color: var(--text-3);
+    }
+    .bm-buscar:focus-within { border-color: var(--indigo); }
+    .bm-buscar input {
+        flex: 1; min-width: 0; border: 0; outline: none; background: transparent;
+        font: inherit; font-size: 16px; color: var(--text);
+    }
+    .bm-btn-icono {
+        width: 44px; height: 44px; min-width: 44px; border-radius: 12px; padding: 0;
+        border: 1px solid var(--border); background: var(--white); color: var(--text);
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .bm-btn-icono.activo { background: var(--indigo-lt); border-color: var(--indigo-lt); color: var(--indigo-dk); }
+    .bm-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .bm-chip {
+        height: 32px; padding: 0 8px 0 12px; border-radius: 16px; border: 1px solid var(--indigo-dk);
+        background: var(--indigo-lt); color: var(--indigo-dk); font: inherit; font-size: 13px;
+        display: flex; align-items: center; gap: 6px; cursor: pointer;
+    }
+
+    /* ── Filtro de pendiente ── */
+    .bm-seg {
+        display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px;
+        background: var(--surface); border-radius: 14px; margin-bottom: 12px;
+    }
+    .bm-seg a {
+        height: 38px; border-radius: 10px; font-size: 13px; color: var(--text-3); text-decoration: none;
+        display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15;
+        padding: 0 4px; min-width: 0;
+    }
+    .bm-seg a[aria-current="true"] {
+        background: var(--white); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(30,32,51,.12);
+    }
+
+    /* ── Tarjetas ── */
+    #bm-lista { display: flex; flex-direction: column; gap: 10px; }
+    .bm-card {
+        background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+        padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0;
+    }
+    .bm-card-top { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); }
+    .bm-mono { font-family: 'DM Mono', monospace; }
+    .bm-estado { margin-left: auto; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .bm-estado.pend { background: #FFF1C2; color: #7A5508; }
+    .bm-estado.cerr { background: #E3F3E9; color: #22663F; }
+    .bm-mas {
+        width: 36px; height: 36px; margin: -8px -8px -8px 0; border-radius: 10px; border: 0; padding: 0;
+        background: transparent; color: var(--text-3); display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .bm-cuerpo { cursor: pointer; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .bm-equipo { font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--text); overflow-wrap: anywhere; }
+    .bm-resp { font-size: 13px; color: var(--text-3); margin-top: 2px; overflow-wrap: anywhere; }
+    .bm-act { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text); overflow-wrap: anywhere; }
+    .bm-clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .bm-pend { background: #FFF6D6; border-radius: 12px; padding: 10px 12px; }
+    .bm-pend-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: #7A5508; }
+    .bm-pend p { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: #4A3A10; overflow-wrap: anywhere; }
+    .bm-card-pie { display: flex; align-items: center; gap: 8px; }
+    .bm-fotos {
+        display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 16px; border: 0;
+        background: var(--surface); font: inherit; font-size: 12px; color: var(--text-3); cursor: pointer;
+    }
+    .bm-ver {
+        margin-left: auto; height: 36px; padding: 0 4px; border: 0; background: transparent;
+        font: inherit; font-size: 13px; font-weight: 500; color: var(--indigo-dk); cursor: pointer;
+    }
+    .bm-vacio { text-align: center; padding: 40px 16px; color: var(--text-3); }
+
+    #bm-cargar-mas {
+        width: 100%; height: 48px; margin-top: 14px; border-radius: 14px; border: 1px solid var(--border);
+        background: var(--white); font: inherit; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer;
+    }
+    .bm-espacio-fab { height: 110px; }
+    .bm-fab {
+        position: fixed; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 30;
+        height: 56px; padding: 0 20px 0 16px; border-radius: 28px; border: 0; background: var(--indigo); color: #fff;
+        font: inherit; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer;
+        box-shadow: 0 6px 18px rgba(61,91,217,.35);
+    }
+
+    /* ── Hojas inferiores ── */
+    .modal-box.sheet-movil {
+        position: fixed; inset: auto 0 0 0; width: 100%; max-width: none; min-width: 0; box-sizing: border-box;
+        margin: 0; border-radius: 20px 20px 0 0; overflow-y: auto; text-align: left;
+        max-height: 88vh; padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+    }
+    .sheet-movil .bm-asa { display: flex; justify-content: center; padding-bottom: 8px; touch-action: none; }
+    .sheet-movil .bm-asa span { width: 40px; height: 5px; border-radius: 3px; background: var(--border); }
+    @keyframes sheet-movil-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-backdrop .modal-box.sheet-movil {
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both; transform-origin: initial;
+    }
+    .modal-backdrop[data-closing] .modal-box.sheet-movil {
+        animation: none; opacity: 1; transform: translateY(100%); transition: transform 160ms ease-out;
+    }
+    .bm-sheet-titulo { margin: 0 4px 10px; font-size: 18px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+    .bm-accion {
+        display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 8px 4px; width: 100%;
+        border: 0; border-radius: 12px; background: transparent; font: inherit; font-size: 15px; color: var(--text);
+        text-align: left; cursor: pointer;
+    }
+    .bm-accion:active { background: var(--surface); }
+    .bm-accion-icono {
+        width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: var(--indigo-lt); color: var(--indigo-dk);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .bm-accion.peligro { color: var(--red); }
+    .bm-accion.peligro .bm-accion-icono { background: var(--red-lt); color: var(--red); }
+    .bm-accion[hidden] { display: none; }
+
+    /* Detalle */
+    .bm-det { display: flex; flex-direction: column; gap: 12px; }
+    .bm-det .bm-act, .bm-det .bm-pend p { display: block; }
+    .bm-galeria { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .bm-galeria button { flex: 0 0 auto; width: 80px; height: 80px; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: var(--surface); cursor: pointer; }
+    .bm-galeria img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .bm-det-pie { display: flex; gap: 8px; margin-top: 4px; position: sticky; bottom: 0; background: var(--white); padding-top: 8px; }
+    .bm-det-pie button { height: 50px; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .bm-det-eliminar { padding: 0 18px; border: 1px solid #FCA5A5; background: transparent; color: var(--red); }
+    .bm-det-editar { flex: 1; border: 0; background: var(--indigo); color: #fff; }
+    .bm-det-pie button[hidden] { display: none; }
+
+    /* Hoja de fecha */
+    .bm-fecha-campo { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-3); }
+    .bm-fecha-campo .dp-control { height: 44px; border-radius: 12px; }
+    .bm-aplicar {
+        width: 100%; height: 48px; margin-top: 16px; border-radius: 12px; border: 0;
+        background: var(--indigo); color: #fff; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+
+    /* Hoja "¿Salir sin guardar?" — encima del formulario a pantalla completa (z-index 2000) */
+    #bm-sheet-salir { z-index: 2300; background: rgba(30,32,51,.55); }
+    #bm-sheet-salir .modal-box { border-radius: 24px 24px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom)); text-align: center; }
+    .bm-salir { display: flex; flex-direction: column; align-items: center; }
+    .bm-salir-icono {
+        margin-top: 10px; width: 56px; height: 56px; border-radius: 28px; background: #FDF0E1; color: #A85200;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .bm-salir h2 { margin: 16px 0 0; font-size: 20px; font-weight: 600; line-height: 1.3; color: var(--text); }
+    .bm-salir p { margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: var(--text-3); }
+    .bm-salir-botones { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+    .bm-salir-botones button { height: 52px; border-radius: 14px; font: inherit; cursor: pointer; }
+    .bm-salir-seguir { border: 0; background: var(--indigo); color: #fff; font-size: 16px !important; font-weight: 600; }
+    .bm-salir-descartar { border: 1px solid #F0C4C0; background: var(--white); color: #A8322A; font-size: 15px !important; font-weight: 500; }
+
+    /* ── Formulario existente (#modal-bitacora) como pantalla completa ── */
+    #modal-bitacora .mf-box {
+        position: fixed; inset: 0; max-width: none !important; max-height: none !important; height: 100%;
+        border-radius: 0 !important; padding: 0 !important; box-sizing: border-box;
+        display: flex; flex-direction: column; overflow-y: auto !important;
+    }
+    #modal-bitacora .bm-form-head {
+        position: sticky; top: 0; z-index: 5; background: #fff; margin: 0 !important;
+        padding: 12px 12px 10px; border-bottom: 1px solid #ECEDF4; gap: 8px;
+        flex-direction: row-reverse; justify-content: flex-end !important;
+    }
+    #modal-bitacora .bm-form-head > button {
+        width: 44px !important; height: 44px !important; border-radius: 12px !important; background: #F5F5FA !important; color: #1d1d24 !important;
+    }
+    #modal-bitacora .bm-form-head .mf-doc-title { font-size: 17px !important; }
+    #modal-bitacora .bm-form-area { display: block; font-size: 12px; color: #5E6175; font-weight: 400; }
+    #modal-bitacora form { display: flex; flex-direction: column; flex: 1; }
+    #modal-bitacora .form-grid { padding: 16px 20px; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+    #modal-bitacora .form-field label { font-size: 12px; color: #5E6175; }
+    #modal-bitacora .form-field input,
+    #modal-bitacora .form-field select,
+    #modal-bitacora .form-field textarea {
+        font-size: 16px; border-radius: 12px; box-sizing: border-box;
+    }
+    #modal-bitacora .form-field input, #modal-bitacora .form-field select { height: 44px; }
+    #modal-bitacora .dp-control { height: 44px !important; border-radius: 12px !important; }
+    #modal-bitacora .ref-count { display: none; }
+
+    /* Fecha + Semana en 2 columnas */
+    #modal-bitacora .bm-fecha-field {
+        display: grid; grid-template-columns: minmax(0, 1fr) 96px; column-gap: 10px; row-gap: 6px; align-items: end;
+    }
+    #modal-bitacora .bm-fecha-field > label { grid-column: 1; grid-row: 1; margin: 0; }
+    #modal-bitacora .bm-fecha-field > .dp { grid-column: 1; grid-row: 2; min-width: 0; }
+    #modal-bitacora .bm-semana { display: flex; flex-direction: column; gap: 6px; grid-column: 2; grid-row: 1 / 3; font-size: 12px; color: #5E6175; }
+    #modal-bitacora .bm-semana b {
+        height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; background: #F5F5FA;
+        font-size: 15px; font-weight: 400; color: #1d1d24; display: flex; align-items: center;
+    }
+
+    /* Interruptor "¿Queda algo pendiente?" */
+    #modal-bitacora .bm-pend-field > label { display: none; }
+    #modal-bitacora .bm-pend-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    #modal-bitacora .bm-pend-fila span { font-size: 14px; font-weight: 500; color: #1d1d24; }
+    .bm-switch {
+        width: 52px; height: 32px; min-width: 52px; border-radius: 16px; border: 0; padding: 3px; cursor: pointer;
+        background: #D5D6E2; display: flex; justify-content: flex-start; transition: background .15s;
+    }
+    .bm-switch span { width: 26px; height: 26px; border-radius: 13px; background: #fff; display: block; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+    .bm-switch[aria-checked="true"] { background: var(--indigo); justify-content: flex-end; }
+    #modal-bitacora .bm-pend-field[data-pend="off"] textarea { display: none; }
+    #modal-bitacora #bit-pendiente { background: #FFF6D6 !important; border-color: #F0D98A !important; }
+
+    /* Fotos: dos botones (cámara / galería) en lugar de la zona de clic */
+    #modal-bitacora #bit-zona-imagenes { display: none; }
+    #modal-bitacora .bm-fotos-btns { display: flex; gap: 8px; }
+    .bm-foto-btn {
+        flex: 1; height: 72px; border-radius: 12px; border: 1px dashed #C9D2F5; background: #F7F8FE;
+        font-size: 13px; color: #2C44A8 !important; cursor: pointer; margin: 0 !important;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    }
+    .bm-foto-btn.lleno { opacity: .5; pointer-events: none; }
+    #modal-bitacora #bit-preview-imagenes img, #modal-bitacora #bit-imagenes-existentes img { width: 72px !important; height: 72px !important; }
+
+    #modal-bitacora .form-actions {
+        position: sticky; bottom: 0; margin: auto 0 0 !important; padding: 12px 20px calc(16px + env(safe-area-inset-bottom));
+        background: #fff; border-top: 1px solid #ECEDF4;
+    }
+    #modal-bitacora .form-actions .btn-ghost { display: none; }
+    #modal-bitacora .form-actions .btn-primary { width: 100%; height: 52px; border-radius: 14px; font-size: 16px; font-weight: 600; justify-content: center; }
+    #modal-bitacora .form-actions .btn-primary:disabled { opacity: .7; }
+    .bm-spinner {
+        width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.5); border-top-color: #fff;
+        display: inline-block; vertical-align: -3px; margin-right: 8px; animation: bm-gira .8s linear infinite;
+    }
+    @keyframes bm-gira { to { transform: rotate(360deg); } }
+
+    /* ── Confirmar eliminar y visor de imágenes, adaptados ── */
+    #modal-eliminar-bitacora .modal-box {
+        position: fixed !important; inset: auto 0 0 0 !important; max-width: none !important; min-width: 0 !important;
+        width: 100% !important; border-radius: 20px 20px 0 0 !important; box-sizing: border-box;
+        padding: 22px 16px calc(16px + env(safe-area-inset-bottom)) !important;
+        animation: sheet-movil-in 240ms cubic-bezier(.2,.8,.2,1) both !important; transform-origin: initial !important;
+    }
+    #modal-eliminar-bitacora .modal-box > div:last-child { flex-direction: column-reverse; align-items: stretch; }
+    #modal-eliminar-bitacora .btn { width: 100%; height: 48px; justify-content: center; font-size: 15px; }
+    #modal-imagenes-bitacora .modal-box { width: calc(100% - 24px) !important; padding: 16px !important; box-sizing: border-box; }
+    #modal-imagenes-bitacora .modal-box > div:nth-child(2) { height: 60vh !important; }
+    #modal-imagenes-bitacora .modal-box button[onclick^="lightboxBit"] { width: 44px !important; height: 44px !important; font-size: 22px !important; }
+    #modal-imagenes-bitacora .modal-box > div:first-child button { width: 44px !important; height: 44px !important; justify-content: center; border-radius: 12px !important; }
+    #modal-imagenes-bitacora .modal-box > div:first-child button:last-child:active { background: #EF4444 !important; color: #fff !important; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .modal-box.sheet-movil, #modal-eliminar-bitacora .modal-box { animation: none !important; }
+    }
+}

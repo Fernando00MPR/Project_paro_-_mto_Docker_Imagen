@@ -1,6 +1,9 @@
 from datetime import date, timedelta
 from functools import wraps
+from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.utils.translation import gettext as _
+from login_app.permisos import puede_mto
 from ..models import Area
 
 INTERVALO = {
@@ -116,3 +119,45 @@ def areas_permitidas_mto(request):
     except Exception:
         pass
     return Area.objects.none()
+
+def _ve_todas_las_areas(user):
+    perfil = getattr(user, 'perfil', None)
+    return user.is_superuser or bool(perfil and perfil.es_admin)
+
+
+def areas_visibles_mto(request):
+    """Áreas activas que el usuario puede ver: todas si es superusuario/administrador;
+    si no, solo las asignadas en su acceso MTO."""
+    if _ve_todas_las_areas(request.user):
+        return Area.objects.filter(activa=True)
+    return areas_permitidas_mto(request)
+
+
+def areas_ids_restringidas(request):
+    """None si el usuario ve todas las áreas; si no, la lista de ids que puede ver."""
+    if _ve_todas_las_areas(request.user):
+        return None
+    return list(areas_permitidas_mto(request).values_list('id', flat=True))
+
+
+def puede_llenar_mto(user, base):
+    """Llenar (capturar algo nuevo) lo puede quien tenga "Llenar" o "Editar"; `base` = 'plan_mantenimiento' | 'seguimiento'."""
+    return puede_mto(user, f'llenar_{base}') or puede_mto(user, f'editar_{base}')
+
+
+def puede_asignar_responsable(user):
+    """Asignar responsable a una actividad semanal del Plan: permiso de Editar o de Validar el plan."""
+    return puede_mto(user, 'editar_plan_mantenimiento') or puede_mto(user, 'validar_plan_mantenimiento')
+
+
+def requiere_permiso_json(*campos):
+    """Vista JSON/POST que exige al menos uno de los permisos indicados de AccesoMto (403 si no tiene ninguno).
+    Administradores y superusuarios pasan siempre (lo resuelve puede_mto)."""
+    def decorador(vista):
+        @wraps(vista)
+        def envoltura(request, *args, **kwargs):
+            if not any(puede_mto(request.user, c) for c in campos):
+                return JsonResponse({'ok': False, 'error': _('No tienes permiso para realizar esta acción.')}, status=403)
+            return vista(request, *args, **kwargs)
+        return envoltura
+    return decorador

@@ -193,6 +193,9 @@ function crearGraficaTendencia(canvasId, labels, data, opciones) {
                 _setKpi('pendiente',     d.pendiente);
                 _setKpi('aceptados',     d.aceptados);
 
+                // La vista móvil (dashboard_movil.js) escucha esto para re-renderizarse.
+                document.dispatchEvent(new CustomEvent('dashboard:datos', { detail: d }));
+
                 // Sin paros: solo actualizar timestamp y salir
                 if (!d.total_paros) { _marcarActualizado(); return; }
 

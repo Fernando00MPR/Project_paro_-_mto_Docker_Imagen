@@ -1,0 +1,18 @@
+/* page_size_toggle.css — "Filas por página" como control segmentado (menu_app/_page_size_toggle.html).
+   Mismo look que los otros segmentados de la app (12 sem. · Meses · Año del Dashboard). */
+.pst {
+    --pst-riel: #F0F1F7; --pst-sel: #FFFFFF; --pst-txt: #5E6175; --pst-txt-sel: #1E2033;
+    margin-left: auto; display: inline-flex; align-items: center; gap: 12px;
+}
+[data-theme="dark"] .pst { --pst-riel: var(--surface); --pst-sel: var(--white); --pst-txt: var(--text-2); --pst-txt-sel: var(--text); }
+.pst-label { font-size: 13px; color: var(--pst-txt); }
+.pst-riel { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--pst-riel); }
+.pst-op {
+    min-width: 40px; height: 28px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent;
+    color: var(--pst-txt); font: inherit; font-size: 13px; font-weight: 400; cursor: pointer;
+    transition: background 120ms, color 120ms;
+}
+.pst-op:hover { background: rgba(255,255,255,.6); color: var(--pst-txt-sel); }
+[data-theme="dark"] .pst-op:hover { background: rgba(255,255,255,.08); }
+.pst-op[aria-checked="true"] { background: var(--pst-sel); color: var(--pst-txt-sel); font-weight: 600; box-shadow: 0 1px 3px rgba(30,32,51,.12); }
+.pst-op:focus-visible { outline: 2px solid var(--indigo); outline-offset: 1px; }

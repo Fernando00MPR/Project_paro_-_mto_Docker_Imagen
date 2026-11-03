@@ -1,0 +1,29 @@
+/* language_selector.css — LanguageSelector (menu_app/_language_selector.html).
+   Píldora deslizante con ícono de mundo. La altura total sale de --ls-h (por defecto 38px);
+   cada página la cambia con  .mi-contenedor { --ls-h: 44px; }  en vez de forzar los botones con !important.
+   La píldora de color sigue al idioma activo con [data-lang]. */
+.ls { --ls-in: calc(var(--ls-h, 38px) - 10px); margin: 0; display: inline-flex; align-items: center; }
+.ls-grupo {
+    position: relative; display: inline-flex; align-items: center; box-sizing: border-box;
+    height: var(--ls-h, 38px); padding: 4px; border-radius: calc(var(--ls-h, 38px) / 2);
+    background: var(--white); border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(30,32,51,.04);
+}
+.ls-globo { width: var(--ls-in); height: var(--ls-in); flex: none; display: flex; align-items: center; justify-content: center; color: var(--text-2); }
+.ls-pista { position: relative; display: flex; }
+.ls-pastilla {
+    position: absolute; top: 0; left: 0; height: var(--ls-in); width: var(--ls-w-es, 92px); border-radius: calc(var(--ls-in) / 2);
+    background: var(--indigo); box-shadow: 0 2px 8px color-mix(in srgb, var(--indigo) 35%, transparent);
+    transition: transform .22s cubic-bezier(.3,.7,.4,1), width .22s;
+}
+.ls[data-lang="en"] .ls-pastilla { width: var(--ls-w-en, 86px); transform: translateX(var(--ls-w-es, 92px)); }
+.ls-op {
+    position: relative; z-index: 1; height: var(--ls-in); padding: 0; border: 0; border-radius: calc(var(--ls-in) / 2);
+    background: transparent; color: var(--text-2); font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: color .18s;
+}
+.ls-op[lang="es"] { width: var(--ls-w-es, 92px); }
+.ls-op[lang="en"] { width: var(--ls-w-en, 86px); }
+.ls-op:hover { color: var(--text); }
+.ls-op[aria-checked="true"] { color: #fff; font-weight: 600; cursor: default; }
+.ls-op:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .ls-pastilla, .ls-op { transition: none; } }

@@ -1,0 +1,184 @@
+{% extends "menu_app/base_menu.html" %}
+{% load i18n static %}
+{% block title %}{{ r.no_item }} — {% trans "Inventario de refacciones" %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario_app/css/inventario_movil.css' %}">
+{% endblock %}
+{% block content %}
+{% comment %}
+    Detalle de una refacción (lo abre "Ver detalles" en la vista de celular;
+    ruta propia para que el "atrás" del teléfono regrese a la lista). Editar y
+    eliminar reutilizan los modales de escritorio (_modales_refacciones.html).
+{% endcomment %}
+
+{% if messages %}
+<div class="iv-mensajes">
+    {% for msg in messages %}<div class="iv-mensaje {{ msg.tags }}">{{ msg }}</div>{% endfor %}
+</div>
+{% endif %}
+
+<div id="iv-detalle" class="iv-det"
+     data-pk="{{ r.pk }}" data-no-item="{{ r.no_item }}" data-nombre="{{ r.nombre }}" data-area="{{ r.area_id }}"
+     data-area-nombre="{{ r.area.nombre }}" data-categoria="{{ r.categoria_id|default:'' }}" data-unidad="{{ r.unidad }}"
+     data-unidad-label="{{ r.get_unidad_display|lower }}" data-criticidad="{{ r.criticidad }}"
+     data-stock="{{ r.stock_actual }}" data-min="{{ r.stock_minimo }}" data-max="{{ r.stock_maximo }}"
+     data-ubicacion="{{ r.ubicacion }}" data-proveedor="{{ r.proveedor }}" data-costo="{{ r.costo_unitario|default:'' }}"
+     data-descripcion="{{ r.descripcion }}" data-activo="{% if r.activo %}1{% else %}0{% endif %}"
+     data-url-stock="{% url 'inventario:ajustar_stock_refaccion' r.pk %}"
+     data-url-eliminar="{% url 'inventario:eliminar_refaccion' r.pk %}" data-lista="{{ lista_qs }}">
+
+    <!-- Encabezado de celular: el script "topbar" de base_menu lo pasa a la barra -->
+    <div class="movil-only" data-topbar-movil>
+        <div class="iv-titulos">
+            <div class="iv-mono">{{ r.no_item }}</div>
+            <div class="iv-det-tags">
+                {% if r.criticidad == 'critico' %}<span class="iv-tag crit">{% trans "Crítico" %}</span>{% endif %}
+                {% if r.categoria %}<span class="iv-tag cat">{{ r.categoria.nombre }}</span>{% endif %}
+            </div>
+        </div>
+        {% if puede_editar_inventario or puede_eliminar_inventario %}
+        <button type="button" class="iv-btn-icono" id="iv-det-mas-btn" aria-label="{% trans 'Editar o eliminar refacción' %}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+        {% endif %}
+    </div>
+    {% comment %}Botón atrás: inventario_movil.js lo pone en la barra, en lugar del menú.{% endcomment %}
+    <a class="iv-btn-icono iv-volver" id="iv-volver" href="{{ url_lista }}" aria-label="{% trans 'Volver a refacciones' %}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+
+    <!-- Encabezado de escritorio (si se abre este enlace en una pantalla grande) -->
+    <div class="iv-det-escritorio">
+        <a href="{{ url_lista }}" class="btn btn-ghost">‹ {% trans "Volver a refacciones" %}</a>
+        <span class="iv-mono" style="font-weight:700;">{{ r.no_item }}</span>
+        {% if puede_editar_inventario %}<button type="button" class="btn btn-ghost" data-accion="editar">{% trans "Editar" %}</button>{% endif %}
+        {% if puede_eliminar_inventario %}<button type="button" class="btn btn-ghost" style="color:var(--red);" data-accion="eliminar">{% trans "Eliminar" %}</button>{% endif %}
+    </div>
+
+    <div class="iv-det-cuerpo">
+        <div class="iv-det-datos">
+            {% if num_imagenes %}
+            <button type="button" class="iv-det-foto" id="iv-det-foto" aria-label="{% blocktrans with no=r.no_item %}Ver foto de {{ no }}{% endblocktrans %}">
+                <img src="{{ miniatura }}" alt="">
+            </button>
+            {% elif puede_editar_inventario %}
+            <button type="button" class="iv-det-foto vacia" id="iv-det-agregar-foto" aria-label="{% trans 'Agregar foto' %}">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></svg>
+                <small>{% trans "Agregar foto" %}</small>
+            </button>
+            {% else %}
+            <div class="iv-det-foto vacia" role="img" aria-label="{% trans 'Sin foto' %}">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></svg>
+            </div>
+            {% endif %}
+            <div class="iv-det-textos">
+                <h1>{{ r.nombre }}</h1>
+                {% if r.descripcion %}
+                <p class="iv-det-desc" id="iv-det-desc">{{ r.descripcion }}</p>
+                <button type="button" class="iv-btn-texto" id="iv-det-desc-mas" hidden></button>
+                {% else %}
+                <p class="iv-det-desc vacia">{% trans "Sin descripción" %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <dl class="iv-det-minis">
+            <div><dt>{% trans "Ubicación" %}</dt><dd>{{ r.ubicacion|default:_("Sin ubicación") }}</dd></div>
+            <div><dt>{% trans "Unidad" %}</dt><dd>{{ r.get_unidad_display }}</dd></div>
+        </dl>
+
+        <section class="iv-det-stock {{ r.estado_movil }}" id="iv-det-stock" aria-label="{% trans 'Stock actual' %}">
+            <div class="iv-det-stock-l1">
+                <span>{% trans "Stock actual" %}</span>
+                <span class="iv-estado {{ r.estado_movil }}" id="iv-det-estado"><i></i><span></span></span>
+            </div>
+            <div class="iv-det-stock-l2">
+                <b id="iv-det-num">{{ r.stock_actual }}</b>
+                <span id="iv-det-frase"></span>
+            </div>
+            <span class="iv-barra grande" id="iv-det-barra" role="img">
+                <i class="{{ r.estado_movil }}" style="width:{{ r.barra_pct|stringformat:'.1f' }}%;"></i>
+                {% if r.stock_minimo %}<b style="left:{{ r.min_pct|stringformat:'.1f' }}%;"></b>{% endif %}
+            </span>
+            <div class="iv-det-escala">
+                <span>0</span>
+                <span>{% trans "mín" %} {{ r.stock_minimo }} · {% trans "máx" %} {% if r.stock_maximo %}{{ r.stock_maximo }}{% else %}—{% endif %}</span>
+            </div>
+        </section>
+
+        {% if puede_editar_inventario %}
+        <section class="iv-det-ajuste" aria-labelledby="iv-aj-titulo">
+            <h2 class="iv-seccion-t" id="iv-aj-titulo">{% trans "AJUSTAR STOCK" %}</h2>
+            <p class="iv-det-ayuda">{% trans "Conteo: escribe la cantidad que hay en el almacén." %}</p>
+            <div class="iv-aj-control">
+                <button type="button" class="iv-aj-btn" id="iv-aj-menos" aria-label="{% trans 'Restar 1' %}">−</button>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="iv-aj-cantidad" value="{{ r.stock_actual }}" aria-label="{% trans 'Cantidad contada' %}">
+                <button type="button" class="iv-aj-btn" id="iv-aj-mas" aria-label="{% trans 'Sumar 1' %}">+</button>
+            </div>
+            <div class="iv-aj-preview" id="iv-aj-preview" aria-live="polite"></div>
+        </section>
+        {% endif %}
+    </div>
+
+    {% if puede_editar_inventario %}
+    <div class="iv-det-pie">
+        <button type="button" class="iv-btn-principal" id="iv-aj-guardar" disabled>{% trans "Guardar ajuste" %}</button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Hoja: ⋯ de la refacción -->
+<div id="iv-sheet-det-mas" class="modal-backdrop movil-only iv-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="iv-det-mas-titulo">
+        <div class="iv-asa"><span></span></div>
+        <h2 class="iv-sheet-titulo" id="iv-det-mas-titulo">{{ r.no_item }}</h2>
+        <div class="iv-acciones">
+            {% if puede_editar_inventario %}
+            <button type="button" class="iv-accion" data-accion="editar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>
+                {% trans "Editar refacción" %}
+            </button>
+            {% endif %}
+            {% if puede_eliminar_inventario %}
+            <div class="iv-divisor"></div>
+            <button type="button" class="iv-accion peligro" data-accion="eliminar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+                {% trans "Eliminar refacción" %}
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if puede_editar_inventario and not num_imagenes %}
+<!-- Hoja: agregar foto -->
+<div id="iv-sheet-foto" class="modal-backdrop movil-only iv-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="iv-foto-titulo">
+        <div class="iv-asa"><span></span></div>
+        <h2 class="iv-sheet-titulo" id="iv-foto-titulo">{% trans "Agregar foto" %}</h2>
+        <div class="iv-acciones">
+            <label class="iv-accion">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                {% trans "Tomar foto" %}
+                <input type="file" class="iv-oculto" accept="image/*" capture="environment" data-foto>
+            </label>
+            <label class="iv-accion">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></svg>
+                {% trans "Galería" %}
+                <input type="file" class="iv-oculto" accept="image/*" data-foto>
+            </label>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% include "inventario_app/_modales_refacciones.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'inventario_app/js/lista_refacciones.js' %}"></script>
+<script>
+    const CONTADOR_REF_TPL = "{% trans 'Imagen {n} de {total}' %}";
+</script>
+{% include "inventario_app/_movil_config.html" %}
+{% endblock %}

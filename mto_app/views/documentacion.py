@@ -1,14 +1,18 @@
 from collections import defaultdict
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import Http404, JsonResponse
+from django.urls import reverse
+from django.utils.formats import date_format
+from django.utils.timezone import localtime
 from django.utils.translation import gettext as _
 
-from ..models import Carpeta, Documento, MAX_PROFUNDIDAD_CARPETAS
+from ..models import Carpeta, Documento, MAX_PROFUNDIDAD_CARPETAS, EXTENSIONES_DOCUMENTO_PERMITIDAS
 
 
 def _carpetas_para_mover():
@@ -91,6 +95,56 @@ def _construir_arbol_carpetas():
     return por_id, hijos_de
 
 
+# ── Vista de celular: datos por nivel (las listas las pinta documentos_movil.js) ──
+
+def _tiempo_corto(fecha):
+    """Mismo tiempo relativo que escritorio (naturaltime), solo la unidad mayor:
+    "hace 2 meses, 1 semana" → "hace 2 meses"."""
+    return str(naturaltime(fecha)).split(',')[0] if fecha else ''
+
+
+def _carpeta_movil(c, ruta):
+    fecha = c.ultima_actualizacion or c.creado_en
+    return {
+        'tipo': 'carpeta', 'id': c.pk, 'nombre': c.nombre, 'codigo': c.codigo,
+        'nSub': c.total_subcarpetas, 'nArch': c.total_documentos_recursivo,
+        'fecha': fecha.isoformat() if fecha else '', 'rel': _tiempo_corto(fecha),
+        'bytes': 0, 'ruta': ruta, 'url': reverse('mto:carpeta_detalle', args=[c.pk]),
+    }
+
+
+def _documento_movil(d, ruta, carpeta_nombre):
+    try:
+        tam = d.archivo.size
+    except (OSError, ValueError):
+        tam = 0
+    return {
+        'tipo': 'archivo', 'id': d.pk, 'nombre': d.nombre, 'desc': d.descripcion,
+        'ext': d.extension, 'tam': d.tamano_legible, 'bytes': tam,
+        'fecha': d.subido_en.isoformat(), 'rel': _tiempo_corto(d.subido_en),
+        'fechaLarga': date_format(localtime(d.subido_en), 'd/m/Y H:i'),
+        'ver': 'pdf' if d.es_pdf else ('imagen' if d.es_imagen else ''),
+        'url': d.archivo.url, 'carpeta': carpeta_nombre, 'ruta': ruta,
+    }
+
+
+def _indice_movil(raiz_id, ruta_base, hijos_de):
+    """Carpetas y archivos debajo de raiz_id (None = todo), con su ruta, para la
+    búsqueda de celular (que busca en todos los niveles)."""
+    items = []
+
+    def recorrer(carpeta_id, ruta):
+        for c in hijos_de.get(carpeta_id, []):
+            items.append(_carpeta_movil(c, ' › '.join(ruta)))
+            ruta_c = ruta + [c.nombre]
+            for d in c.documentos_directos:
+                items.append(_documento_movil(d, ' › '.join(ruta_c), c.nombre))
+            recorrer(c.pk, ruta_c)
+
+    recorrer(raiz_id, ruta_base)
+    return items
+
+
 @login_required
 def documentos_generales(request):
     permisos = _permisos_documentacion(request)
@@ -102,12 +156,21 @@ def documentos_generales(request):
     categorias = hijos_de.get(None, [])
     total_archivos_general = sum(c.total_documentos_recursivo for c in categorias)
 
+    indice = _indice_movil(None, [], hijos_de)
+    recientes = sorted((i for i in indice if i['tipo'] == 'archivo'), key=lambda i: i['fecha'], reverse=True)[:5]
+
     return render(request, 'mto_app/documentacion/lista_documentos.html', {
         'categorias':             categorias,
         'total_archivos_general': total_archivos_general,
         'carpetas_json':          _carpetas_para_mover(),
         'puede_editar':           permisos['puede_editar'],
         'puede_eliminar':         permisos['puede_eliminar'],
+        'datos_movil': {
+            'carpetas':  [_carpeta_movil(c, '') for c in categorias],
+            'archivos':  [],
+            'recientes': recientes,
+            'indice':    indice,
+        },
     })
 
 
@@ -123,7 +186,22 @@ def carpeta_detalle(request, pk):
     if carpeta is None:
         raise Http404
 
+    ancestros = carpeta.ruta_ancestros()
+    ruta = [a.nombre for a in ancestros] + [carpeta.nombre]
+    indice = _indice_movil(carpeta.pk, ruta, hijos_de)
+    datos_movil = {
+        'carpetas': [_carpeta_movil(c, ' › '.join(ruta)) for c in carpeta.hijos_precargados],
+        'archivos': [_documento_movil(d, ' › '.join(ruta), carpeta.nombre) for d in carpeta.documentos_directos],
+        'recientes': [],
+        'indice':   indice,
+        # Para la confirmación de "Eliminar carpeta": todo lo que se borra con ella.
+        'subcarpetasTotal': sum(1 for i in indice if i['tipo'] == 'carpeta'),
+        'archivosTotal':    carpeta.total_documentos_recursivo,
+        'extensiones':      EXTENSIONES_DOCUMENTO_PERMITIDAS,
+    }
+
     return render(request, 'mto_app/documentacion/carpeta_detalle.html', {
+        'datos_movil':                datos_movil,
         'carpeta':                    carpeta,
         'ancestros':                  carpeta.ruta_ancestros(),
         'subcarpetas':                carpeta.hijos_precargados,
@@ -296,8 +374,14 @@ def eliminar_carpeta(request, pk):
 @login_required
 @require_POST
 def subir_documento(request, carpeta_id):
+    # Celular sube varios archivos uno por uno en segundo plano (con barra de
+    # progreso): a esas peticiones se responde con JSON en vez de redirigir.
+    es_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
     permisos = _permisos_documentacion(request)
     if not permisos['puede_editar']:
+        if es_ajax:
+            return JsonResponse({'ok': False, 'error': _("No tienes permiso para subir documentos.")}, status=403)
         messages.error(request, _("No tienes permiso para subir documentos."))
         return redirect('mto:documentos_generales')
 
@@ -311,6 +395,8 @@ def subir_documento(request, carpeta_id):
     descripcion = request.POST.get('descripcion', '').strip()
 
     if not archivo or not nombre:
+        if es_ajax:
+            return JsonResponse({'ok': False, 'error': _("Debes indicar un nombre y seleccionar un archivo.")}, status=400)
         messages.error(request, _("Debes indicar un nombre y seleccionar un archivo."))
         return _volver()
 
@@ -324,9 +410,14 @@ def subir_documento(request, carpeta_id):
     try:
         documento.full_clean()
         documento.save()
+        if es_ajax:
+            return JsonResponse({'ok': True, 'id': documento.pk})
         messages.success(request, _("Documento subido correctamente."))
     except ValidationError as e:
-        messages.error(request, " ".join(sum(e.message_dict.values(), [])) if hasattr(e, 'message_dict') else str(e))
+        error = " ".join(sum(e.message_dict.values(), [])) if hasattr(e, 'message_dict') else str(e)
+        if es_ajax:
+            return JsonResponse({'ok': False, 'error': error}, status=400)
+        messages.error(request, error)
 
     return _volver()
 

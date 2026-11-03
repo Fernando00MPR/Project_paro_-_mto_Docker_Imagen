@@ -15,6 +15,9 @@ import io
 import uuid
 import threading
 import tempfile
+import re
+import html
+import zipfile
 
 from ..models import PlanMantenimiento, RegistroEjecucion, PasoRutina, Responsable
 from .utils import lunes_de_semana, _planes_que_tocan
@@ -27,6 +30,57 @@ MESES_ES = {
     5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
     9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
 }
+
+
+# Íconos de punto crítico (▼ ● ▲) de la hoja de órdenes: Excel los guarda como formato condicional x14,
+# que openpyxl borra al abrir la plantilla. Se leen de la plantilla y se vuelven a poner al guardar.
+_URI_FORMATO_X14 = '{78C0D931-6437-407d-A8EE-F0AAD7539E65}'
+
+
+def _rutas_hojas(z):
+    """{nombre de hoja: ruta de su XML dentro del .xlsm}."""
+    wb   = z.read('xl/workbook.xml').decode('utf-8')
+    rels = z.read('xl/_rels/workbook.xml.rels').decode('utf-8')
+    destinos = {}
+    for rel in re.findall(r'<Relationship\b[^>]*>', rels):
+        rid, tgt = re.search(r'Id="([^"]+)"', rel), re.search(r'Target="([^"]+)"', rel)
+        if rid and tgt:
+            destinos[rid.group(1)] = tgt.group(1)
+    rutas = {}
+    for hoja in re.findall(r'<sheet\b[^>]*>', wb):
+        nombre = html.unescape(re.search(r'name="([^"]+)"', hoja).group(1))
+        t      = destinos.get(re.search(r'r:id="([^"]+)"', hoja).group(1), '')
+        rutas[nombre] = t.lstrip('/') if t.startswith('/') else 'xl/' + t
+    return rutas
+
+
+def _iconos_plantilla(plantilla_path, hoja='01'):
+    """El bloque <ext> con el formato condicional x14 de la hoja de órdenes ('' si la plantilla no lo trae)."""
+    with zipfile.ZipFile(plantilla_path) as z:
+        ruta = _rutas_hojas(z).get(hoja)
+        xml  = z.read(ruta).decode('utf-8') if ruta else ''
+    m = re.search(r'<ext\b[^>]*uri="%s".*?</ext>' % re.escape(_URI_FORMATO_X14), xml, re.S)
+    return m.group(0) if m else ''
+
+
+def _poner_iconos(path, ext_xml, hojas):
+    """Vuelve a poner el formato condicional x14 en las hojas indicadas del .xlsm ya guardado."""
+    if not ext_xml or not hojas:
+        return
+    with zipfile.ZipFile(path) as z:
+        rutas    = _rutas_hojas(z)
+        objetivo = {rutas[h] for h in hojas if h in rutas}
+        partes   = [(info, z.read(info.filename)) for info in z.infolist()]
+    with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
+        for info, datos in partes:
+            if info.filename in objetivo:
+                # Cada hoja con sus propios id de regla
+                ext = re.sub(r'id="\{[0-9A-Fa-f-]+\}"', lambda m: 'id="{%s}"' % str(uuid.uuid4()).upper(), ext_xml)
+                xml = datos.decode('utf-8')
+                xml = (xml.replace('<extLst>', '<extLst>' + ext, 1) if '<extLst>' in xml
+                       else xml.replace('</worksheet>', '<extLst>%s</extLst></worksheet>' % ext))
+                datos = xml.encode('utf-8')
+            z.writestr(info, datos)
 
 
 def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir):
@@ -78,7 +132,7 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
             reg = registros_map.get(plan.id)
             responsable_ejecutor = ''
             if reg and reg.responsable:
-                responsable_ejecutor = f"{reg.responsable.nombre} {reg.responsable.apellidos}"
+                responsable_ejecutor = reg.nombre_responsable()
             filas.append({
                 'plan':        plan,
                 'codigo':      plan.codigo,
@@ -90,6 +144,8 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
 
         plantilla_path = os.path.join(static_dir, 'Week Format.xlsm')
         wb = load_workbook(plantilla_path, keep_vba=True)
+        ext_iconos = _iconos_plantilla(plantilla_path)
+
 
         px = lambda n: n * 9525
 
@@ -213,7 +269,7 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
             nueva_hoja.sheet_state = 'visible'
             hojas_ordenes.append(nueva_hoja)
 
-        fila_inicio_o = 16
+        fila_inicio_o = 20
         max_pasos     = 19
 
         for idx, entrada in enumerate(filas, start=1):
@@ -233,28 +289,28 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
 
             ws['D6']  = semana
             ws['D7']  = no_orden
-            ws['H7']  = creador
+            ws['I7']  = entrada['supervisor'] or creador   # supervisor del área; si no hay, quien exporta
             ws['D8']  = plan.area.nombre
-            ws['H8']  = '________________'
+            ws['I8']  = '________________'
             ws['D9']  = plan.estatus
-            ws['H9']  = duracion_h
+            ws['I9']  = duracion_h
             ws['D10'] = plan.prioridad
-            ws['H10'] = plan.locacion or plan.area.nombre
+            ws['I10'] = plan.locacion or plan.area.nombre
             ws['D11'] = plan.tipo_mto
             ws['D12'] = plan.rutina
             ws['D13'] = plan.actividad
-            ws['G13'] = plan.codigo
-            ws['H13'] = plan.nombre_equipo or plan.actividad
+            ws['H13'] = plan.codigo
+            ws['I13'] = plan.nombre_equipo or plan.actividad
 
             if logo_bytes:
                 img        = Image(io.BytesIO(logo_bytes))
                 img.anchor = AbsoluteAnchor(
-                    pos=XDRPoint2D(x=px(940), y=px(0)),
+                    pos=XDRPoint2D(x=px(1096), y=px(0)),
                     ext=XDRPositiveSize2D(cx=px(120), cy=px(76))
                 )
                 ws.add_image(img)
 
-            for col in range(3, 9):
+            for col in range(3, 10):
                 celda = ws.cell(row=4, column=col)
                 celda.border = Border(
                     bottom=Side(style='medium', color='000000'),
@@ -264,11 +320,11 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
                 )
 
             if registro and registro.responsable:
-                ws['C41'] = registro.responsable.numero_nomina
-                ws['D41'] = f"{registro.responsable.nombre} {registro.responsable.apellidos}"
+                ws['C45'] = registro.responsable.nomina_visible()
+                ws['D45'] = registro.nombre_responsable()
             else:
-                ws['C41'] = '____________'
-                ws['D41'] = '___________________________'
+                ws['C45'] = '____________'
+                ws['D45'] = '___________________________'
 
             pasos = pasos_map.get((plan.area_id, plan.plan_trabajo), [])
 
@@ -278,28 +334,31 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
                 ws[f'D{fila}'] = ''
                 ws[f'E{fila}'] = ''
                 ws[f'F{fila}'] = '▭'
-                ws[f'G{fila}'] = ''
-                ws[f'H{fila}'] = ''
+                ws[f'G{fila}'] = None
+                ws[f'H{fila}'] = None
+                ws[f'I{fila}'] = ''
                 ws[f'C{fila}'].alignment = Alignment(vertical='center', horizontal='center')
                 ws[f'D{fila}'].alignment = Alignment(wrap_text=True, vertical='center')
                 ws[f'F{fila}'].alignment = Alignment(horizontal='center', vertical='center')
                 ws[f'F{fila}'].font      = Font(size=36)
-                ws[f'H{fila}'].alignment = Alignment(wrap_text=True, vertical='center')
+                ws[f'I{fila}'].alignment = Alignment(wrap_text=True, vertical='center')
                 ws.row_dimensions[fila].height = 25
                 ws.row_dimensions[fila].hidden = False
 
             for i, paso in enumerate(pasos[:max_pasos]):
                 fila = fila_inicio_o + i
+                pc   = sorted(set(paso.puntos_criticos or []))   # 0, 1 o 2: la plantilla los pinta con ▼ ● ▲
                 ws[f'C{fila}'] = paso.secuencia
                 ws[f'D{fila}'] = paso.descripcion
                 ws[f'F{fila}'] = '▭'
-                ws[f'G{fila}'] = ''
-                ws[f'H{fila}'] = paso.detalles
+                ws[f'G{fila}'] = pc[0] if len(pc) > 0 else None
+                ws[f'H{fila}'] = pc[1] if len(pc) > 1 else None
+                ws[f'I{fila}'] = paso.detalles
                 ws[f'C{fila}'].alignment = Alignment(wrap_text=True, vertical='center', horizontal='center')
                 ws[f'D{fila}'].alignment = Alignment(wrap_text=True, vertical='center')
                 ws[f'F{fila}'].alignment = Alignment(horizontal='center', vertical='center')
                 ws[f'F{fila}'].font      = Font(size=36)
-                ws[f'H{fila}'].alignment = Alignment(wrap_text=True, vertical='center')
+                ws[f'I{fila}'].alignment = Alignment(wrap_text=True, vertical='center')
                 desc    = paso.descripcion or ''
                 detalle = paso.detalles or ''
                 lineas  = max(
@@ -312,7 +371,7 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
             for i in range(pasos_count, max_pasos):
                 ws.row_dimensions[fila_inicio_o + i].hidden = True
 
-            ws.print_area = 'A1:I52'
+            ws.print_area = 'A1:I56'
             ws.page_setup.paperSize   = ws.PAPERSIZE_LETTER
             ws.page_setup.orientation = 'portrait'
             ws.page_setup.fitToWidth  = 1
@@ -322,6 +381,7 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
         tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsm')
         wb.save(tmp)
         tmp.close()
+        _poner_iconos(tmp.name, ext_iconos, [h.title for h in hojas_ordenes])
 
         _jobs[token] = {
             'status':   'ready',

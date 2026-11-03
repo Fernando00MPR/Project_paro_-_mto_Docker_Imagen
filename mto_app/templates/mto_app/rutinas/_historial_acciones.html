@@ -1,0 +1,137 @@
+{% load i18n %}
+{% comment %}
+    Contenido del modal "Historial de acciones" (Plan de mantenimiento). Lo pide plan_escritorio con fetch a
+    mto:historial_acciones y lo pinta dentro de #ha-cuerpo; historial_acciones.js maneja filtros, chips y paginación.
+{% endcomment %}
+<div class="ha" id="ha-raiz">
+
+    <div class="ha-kpis">
+        <div class="ha-kpi">
+            <span class="ha-kpi-ico" style="background:#EBEFFD; color:#2C44A8;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v16H5zM9 8h6M9 12h6M9 16h3"/></svg></span>
+            <div><div class="ha-kpi-l">{% trans "Acciones registradas" %}</div>
+                <div class="ha-kpi-v">{{ n_total }}{% if primera %} <small>{% blocktrans with f=primera.fecha|date:"j M" %}desde {{ f }}{% endblocktrans %}</small>{% endif %}</div></div>
+        </div>
+        <div class="ha-kpi">
+            <span class="ha-kpi-ico" style="background:#E3F3E9; color:#22663F;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg></span>
+            <div><div class="ha-kpi-l">{% trans "Importaciones" %}</div>
+                <div class="ha-kpi-v">{{ n_imp }}{% if reimportaciones %} <small>{% blocktrans count n=reimportaciones %}{{ n }} reimportación{% plural %}{{ n }} reimportaciones{% endblocktrans %}</small>{% endif %}</div></div>
+        </div>
+        <div class="ha-kpi">
+            <span class="ha-kpi-ico" style="background:#FBE4E2; color:#A8322A;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></span>
+            <div><div class="ha-kpi-l">{% trans "Eliminaciones" %}</div>
+                <div class="ha-kpi-v">{{ n_eli }}{% if pasos_borrados %} <small>{% blocktrans with n=pasos_borrados %}{{ n }} pasos borrados{% endblocktrans %}</small>{% endif %}</div></div>
+        </div>
+        <div class="ha-kpi">
+            <span class="ha-kpi-ico" style="background:#F0F1F7; color:#5E6175;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/></svg></span>
+            <div><div class="ha-kpi-l">{% trans "Última acción" %}</div>
+                <div class="ha-kpi-v">{% if ultima %}{{ ultima.fecha|date:"j M" }} <small>{{ ultima.fecha|date:"g:i A" }} · {{ ultima.usuario.get_full_name|default:ultima.usuario.username|default:"—" }}</small>{% else %}—{% endif %}</div></div>
+        </div>
+    </div>
+
+    <section class="ha-filtros" aria-label="{% trans 'Filtros' %}">
+        <div class="ha-fila">
+            <label class="ha-buscar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" id="ha-q" value="{{ q }}" placeholder="{% trans 'Buscar por código, nombre de rutina, nº de plan o motivo…' %}" aria-label="{% trans 'Buscar en el historial' %}" autocomplete="off">
+            </label>
+            <div class="ha-fs">
+                {% include 'mto_app/_filter_select.html' with fs_id='ha-fs-usuario' label=_("Usuario") icono="persona" valor=f_usuario valor_label=usuario_label todas_label=_("Todos") opciones=usuarios_op %}
+            </div>
+            <div class="ha-fila-fecha{% if not f_desde and not f_hasta %} ha-sin-rango{% endif %}">
+                {% include 'menu_app/_date_range_picker.html' with name_desde='ha_desde' name_hasta='ha_hasta' initial_desde=f_desde initial_hasta=f_hasta dp_id='ha-rango' chips=False %}
+           </div>
+        </div>
+        <div class="ha-fila">
+            <span class="ha-etq">{% trans "ACCIÓN" %}</span>
+            <button type="button" class="ha-chip" data-accion="" aria-pressed="{% if not f_accion %}true{% else %}false{% endif %}">
+                {% trans "Todas" %} {{ n_total }}
+            </button>
+            <button type="button" class="ha-chip ha-chip-ok" data-accion="importar" aria-pressed="{% if f_accion == 'importar' %}true{% else %}false{% endif %}">
+                {% trans "Importaciones" %} {{ n_imp }}
+            </button>
+            <button type="button" class="ha-chip ha-chip-mal" data-accion="eliminar" aria-pressed="{% if f_accion == 'eliminar' %}true{% else %}false{% endif %}">
+                {% trans "Eliminaciones" %} {{ n_eli }}
+            </button>
+            {% if q or f_usuario or f_desde or f_hasta or f_accion %}
+                <button type="button" class="ha-limpiar" id="ha-limpiar">
+                    {% trans "Limpiar filtros" %}
+                </button>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="ha-tabla-card">
+        <div class="ha-tabla-cab">
+            <b>{% blocktrans count n=pagina.paginator.count %}{{ n }} acción{% plural %}{{ n }} acciones{% endblocktrans %}</b>
+            <span>· {% trans "más recientes primero" %}</span>
+        </div>
+        <div class="ha-tabla-wrap">
+            <table class="ha-tabla">
+                <thead>
+                    <tr>
+                        <th class="ha-c-fecha">{% trans "FECHA Y HORA" %}</th>
+                        <th class="ha-c-accion">{% trans "ACCIÓN" %}</th>
+                        <th>{% trans "RUTINA" %}</th>
+                        <th class="ha-c-area">{% trans "ÁREA" %}</th>
+                        <th class="ha-c-pasos">{% trans "PASOS" %}</th>
+                        <th class="ha-c-user">{% trans "USUARIO" %}</th>
+                        <th>{% trans "MOTIVO" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in filas %}
+                    {% with h=f.h %}
+                    <tr class="ha-fila-dato{% if h.accion == 'eliminar' %} ha-elim{% endif %}">
+                        <td class="ha-c-fecha"><span class="ha-dia">{{ h.fecha|date:"D j M Y" }}</span><span class="ha-hora">{{ h.fecha|date:"g:i A" }}</span></td>
+                        <td class="ha-c-accion">
+                            {% if h.accion == 'importar' %}
+                            <span class="ha-acc ha-acc-ok"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>{% trans "Importación" %}</span>
+                            {% if f.ver > 1 %}<div class="ha-sub">{% blocktrans with v=f.ver %}Reimportación · v{{ v }}{% endblocktrans %}</div>{% endif %}
+                            {% else %}
+                            <span class="ha-acc ha-acc-mal"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>{% trans "Eliminación" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="ha-cod-fila"><span class="ha-cod">{{ h.codigo_plan|default:"—" }}</span>{% if h.plan_trabajo %}<span class="ha-sub">{% blocktrans with p=h.plan_trabajo %}Plan nº {{ p }}{% endblocktrans %}</span>{% endif %}</div>
+                            <div class="ha-nombre">{{ h.nombre_plan|default:"—" }}</div>
+                        </td>
+                        <td class="ha-c-area">{{ h.area.nombre|default:"—" }}</td>
+                        <td class="ha-c-pasos">
+                            <b>{{ h.pasos_afectados }}</b>
+                            {% if h.accion == 'eliminar' %}<span class="ha-delta ha-d-mal">{% trans "eliminados" %}</span>
+                            {% elif f.delta is None %}<span class="ha-delta ha-d-ok">{% trans "nueva" %}</span>
+                            {% elif f.delta == 0 %}<span class="ha-delta ha-d-nulo">{% trans "sin cambios" %}</span>
+                            {% elif f.delta > 0 %}<span class="ha-delta ha-d-azul">+{{ f.delta }}</span>
+                            {% else %}<span class="ha-delta ha-d-azul">{{ f.delta }}</span>{% endif %}
+                        </td>
+                        <td class="ha-c-user"><span class="ha-av">{{ h.usuario.get_full_name|default:h.usuario.username|default:"?"|slice:":2"|upper }}</span><span class="ha-u">{{ h.usuario.get_full_name|default:h.usuario.username|default:"—" }}</span></td>
+                        <td class="ha-motivo{% if not h.motivo %} ha-vacio{% endif %}">{{ h.motivo|default:"—" }}</td>
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                    <tr><td colspan="7" class="ha-sin-datos">{% trans "No hay acciones registradas con estos filtros." %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <footer class="ha-pie">
+            <span>{% if pagina.paginator.count %}{% blocktrans with a=pagina.start_index b=pagina.end_index n=pagina.paginator.count %}Mostrando {{ a }}–{{ b }} de {{ n }}{% endblocktrans %}{% endif %}</span>
+            <div class="pst ha-pst">
+                <span class="pst-label" id="ha-pp-lab">{% trans "Filas por página" %}</span>
+                <div class="pst-riel" role="radiogroup" aria-labelledby="ha-pp-lab" id="ha-pp">
+                    {% for o in perpage_opts %}<button type="button" class="pst-op" role="radio" data-value="{{ o }}" aria-checked="{% if o|stringformat:'s' == per_page %}true{% else %}false{% endif %}">{{ o }}</button>{% endfor %}
+                </div>
+            </div>
+            <nav class="ha-pag" aria-label="{% trans 'Paginación' %}">
+                {% if pagina.has_previous %}<a class="ha-pag-b" href="?{% if qs_pag %}{{ qs_pag }}&{% endif %}page={{ pagina.previous_page_number }}" data-page="{{ pagina.previous_page_number }}" aria-label="{% trans 'Página anterior' %}">‹</a>{% endif %}
+                {% for n in paginas %}
+                    {% if n is None %}<span class="ha-pag-p">…</span>
+                    {% elif n == pagina.number %}<span class="ha-pag-b activo" aria-current="page">{{ n }}</span>
+                    {% else %}<a class="ha-pag-b" href="?{% if qs_pag %}{{ qs_pag }}&{% endif %}page={{ n }}" data-page="{{ n }}">{{ n }}</a>{% endif %}
+                {% endfor %}
+                {% if pagina.has_next %}<a class="ha-pag-b" href="?{% if qs_pag %}{{ qs_pag }}&{% endif %}page={{ pagina.next_page_number }}" data-page="{{ pagina.next_page_number }}" aria-label="{% trans 'Página siguiente' %}">›</a>{% endif %}
+            </nav>
+        </footer>
+    </section>
+</div>

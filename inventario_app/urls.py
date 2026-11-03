@@ -10,8 +10,11 @@ urlpatterns = [
     path('eliminar-todas/',                     views.eliminar_todas_refacciones_area, name='eliminar_todas_refacciones_area'),
     path('categorias/crear/',                   views.crear_categoria_refaccion,       name='crear_categoria_refaccion'),
     path('categorias/editar/<int:pk>/',         views.editar_categoria_refaccion,      name='editar_categoria_refaccion'),
+    path('categorias/eliminar/<int:pk>/',       views.eliminar_categoria_refaccion,    name='eliminar_categoria_refaccion'),
     
     # Refacciones imagenes
+    path('<int:pk>/',                           views.detalle_refaccion,               name='detalle_refaccion'),
+    path('<int:pk>/stock/',                     views.ajustar_stock_refaccion,         name='ajustar_stock_refaccion'),
     path('<int:refaccion_pk>/imagenes/subir/',  views.subir_imagenes_refaccion,        name='subir_imagenes_refaccion'),
     path('<int:refaccion_pk>/imagenes/',        views.imagenes_refaccion,              name='imagenes_refaccion'),
     path('imagen/eliminar/<int:imagen_id>/',    views.eliminar_imagen_refaccion,       name='eliminar_imagen_refaccion'),
@@ -35,6 +38,10 @@ urlpatterns = [
     path('servicios/editar/<int:pk>/',          views.guardar_seguimiento_servicio,    name='editar_seguimiento_servicio'),
     path('servicios/eliminar/<int:pk>/',        views.eliminar_seguimiento_servicio,   name='eliminar_seguimiento_servicio'),
     path('servicios/exportar/',                 views.exportar_seguimientos_servicio,  name='exportar_seguimientos_servicio'),
+    path('servicios/catalogo/buscar/',          views.buscar_servicios_catalogo,       name='buscar_servicios_catalogo'),
+    path('servicios/catalogo/crear/',           views.crear_servicio_catalogo,         name='crear_servicio_catalogo'),
+    path('servicios/catalogo/editar/<int:pk>/', views.editar_servicio_catalogo,        name='editar_servicio_catalogo'),
+    path('servicios/catalogo/eliminar/<int:pk>/', views.eliminar_servicio_catalogo,    name='eliminar_servicio_catalogo'),
 
     # Panel de tareas WCS (almacén automático)
     path('wcs/',                                views.panel_wcs,                       name='panel_wcs'),

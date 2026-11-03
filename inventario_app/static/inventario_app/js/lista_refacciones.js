@@ -51,74 +51,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-
-// ── Modal categorías ──────────────────────────────────────────────────────────
-const CAT_POR_PAGINA = 5;
-let catPaginaActual = 1;
-
-function initPaginadorCategorias() {
-    const lista      = document.getElementById('cat-lista');
-    const paginacion = document.getElementById('cat-paginacion');
-    if (!lista || !paginacion) return;
-
-    const filas = Array.from(lista.querySelectorAll('.cat-edit-row'));
-    const totalPaginas = Math.ceil(filas.length / CAT_POR_PAGINA);
-
-    if (filas.length <= CAT_POR_PAGINA) {
-        filas.forEach(fila => fila.style.display = 'flex');
-        paginacion.style.display = 'none';
-        return;
-    }
-
-    catPaginaActual = 1;
-
-    function render() {
-        const desde = (catPaginaActual - 1) * CAT_POR_PAGINA;
-        const hasta = desde + CAT_POR_PAGINA;
-        filas.forEach((fila, i) => {
-            fila.style.display = (i >= desde && i < hasta) ? 'flex' : 'none';
-        });
-
-        const btnBase = 'width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px; cursor:pointer;';
-        let html = '';
-        html += `<button type="button" ${catPaginaActual === 1 ? 'disabled' : ''} onclick="catIrAPagina(${catPaginaActual - 1})"
-                    style="${btnBase} border:1px solid #d8d8e0; background:#fff; color:#33333c;
-                           ${catPaginaActual === 1 ? 'opacity:.4; cursor:default;' : ''}">‹</button>`;
-        for (let p = 1; p <= totalPaginas; p++) {
-            const activa = p === catPaginaActual;
-            html += `<button type="button" onclick="catIrAPagina(${p})"
-                        style="${btnBase} font-weight:600;
-                               ${activa ? 'background:var(--indigo); color:#fff; border:none;' : 'border:1px solid #d8d8e0; background:#fff; color:#33333c;'}">${p}</button>`;
-        }
-        html += `<button type="button" ${catPaginaActual === totalPaginas ? 'disabled' : ''} onclick="catIrAPagina(${catPaginaActual + 1})"
-                    style="${btnBase} border:1px solid #d8d8e0; background:#fff; color:#33333c;
-                           ${catPaginaActual === totalPaginas ? 'opacity:.4; cursor:default;' : ''}">›</button>`;
-        paginacion.innerHTML = html;
-    }
-
-    window.catIrAPagina = function(p) {
-        if (p < 1 || p > totalPaginas) return;
-        catPaginaActual = p;
-        render();
-    };
-
-    paginacion.style.display = 'flex';
-    render();
-}
-
-function abrirModalCategorias(event) {
-    document.getElementById('cat-volver').value = window.location.search;
-    document.querySelectorAll('.cat-edit-volver').forEach(function(input) {
-        input.value = window.location.search;
-    });
-    abrirModalConAnimacion('modal-categorias', event);
-    initPaginadorCategorias();
-}
-
-function cerrarModalCategorias() {
-    cerrarModalConAnimacion('modal-categorias');
-}
-
 // ── Modal eliminar ────────────────────────────────────────────────────────────
 function confirmarEliminarRefaccion(event, url) {
     document.getElementById('form-eliminar-refaccion').action = url;
@@ -155,7 +87,6 @@ document.getElementById('modal-eliminar-todas-refacciones').addEventListener('cl
 
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        cerrarModalCategorias();
         cerrarModalEliminarRefaccion();
         cerrarModalEliminarTodasRefacciones();
         cerrarModalRefaccion();

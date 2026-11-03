@@ -1,6 +1,7 @@
 {% load i18n %}
+{% load static %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE|default:'es' }}">
+<html lang="{{ LANGUAGE_CODE|default:'es' }}" translate="no">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -181,13 +182,14 @@
 
         /* ── Idioma + tema ──────────────────────────────────────────── */
         .lc-top-controls { position: absolute; top: 18px; right: 56px; display: flex; align-items: center; gap: 6px; z-index: 2; }
-        .lc-lang-form { display: flex; gap: 6px; }
-        .lc-lang-btn {
-            padding: 5px 10px; border-radius: 3px; border: none; cursor: pointer;
-            font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-            background: rgba(148,163,184,.14); color: #9fb4cd;
+        /* LanguageSelector (menu_app): el login no hereda base_menu, así que se le dan sus colores */
+        .lc-top-controls, .lc-m-lang {
+            --white: var(--login-card2); --border: var(--login-border); --text: var(--login-text);
+            --text-2: var(--login-sub); --indigo: #5b4bf0; --ls-h: 32px;
+            --ls-w-es: 70px; --ls-w-en: 64px;
         }
-        .lc-lang-btn.active { background: #5b4bf0; color: #fff; }
+        .lc-m-lang { --ls-h: 30px; --ls-w-es: 66px; --ls-w-en: 60px; }
+        .lc-top-controls .ls-op, .lc-m-lang .ls-op { font-size: 12.5px; }
         .lc-theme-toggle {
             margin-left: 8px; display: flex; align-items: center; gap: 7px;
             padding: 4px 10px 4px 5px; border: 1px solid var(--login-border); border-radius: 999px;
@@ -388,7 +390,6 @@
         .lc-m-brand-name { font-family: 'Barlow Condensed', sans-serif; font-size: 27px; line-height: 1; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--login-text); }
         .lc-m-brand-tag  { margin-top: 1px; font-family: 'IBM Plex Mono', monospace; font-size: 7px; letter-spacing: .24em; color: var(--login-sub); }
         .lc-m-lang { display: flex; gap: 4px; }
-        .lc-lang-btn-m { font-size: 9px; padding: 4px 7px; }
 
         .lc-m-carousel {
             position: relative; z-index: 1; margin: 18px 22px 0; padding: 18px 20px; border-radius: 16px;
@@ -435,6 +436,7 @@
             }
         }
     </style>
+<link rel="stylesheet" href="{% static 'menu_app/css/language_selector.css' %}">
 </head>
 <body>
     <div class="login-canvas">
@@ -486,12 +488,7 @@
             </div>
 
             <div class="lc-top-controls">
-                <form action="{% url 'set_language' %}" method="post" class="lc-lang-form">
-                    {% csrf_token %}
-                    <input name="next" type="hidden" value="{{ request.path }}">
-                    <button type="submit" name="language" value="es" class="lc-lang-btn{% if request.LANGUAGE_CODE == 'es' %} active{% endif %}">ES</button>
-                    <button type="submit" name="language" value="en" class="lc-lang-btn{% if request.LANGUAGE_CODE == 'en' %} active{% endif %}">EN</button>
-                </form>
+                 {% include 'menu_app/_language_selector.html' %}
                 <button type="button" id="lc-theme-toggle" class="lc-theme-toggle" onclick="toggleLoginTheme()" title="{% trans 'Modo claro / oscuro' %}" aria-pressed="false">
                     <span class="lc-theme-knob-track"><span class="lc-theme-knob"></span></span>
                     <span id="lc-theme-label">{% trans "OSCURO" %}</span>
@@ -674,12 +671,7 @@
                     </div>
                 </div>
                 <div class="lc-m-lang">
-                    <form action="{% url 'set_language' %}" method="post" class="lc-lang-form">
-                        {% csrf_token %}
-                        <input name="next" type="hidden" value="{{ request.path }}">
-                        <button type="submit" name="language" value="es" class="lc-lang-btn lc-lang-btn-m{% if request.LANGUAGE_CODE == 'es' %} active{% endif %}">ES</button>
-                        <button type="submit" name="language" value="en" class="lc-lang-btn lc-lang-btn-m{% if request.LANGUAGE_CODE == 'en' %} active{% endif %}">EN</button>
-                    </form>
+                    {% include 'menu_app/_language_selector.html' %}
                 </div>
             </div>
 
@@ -930,5 +922,6 @@
 
     updateThemeLabel(document.documentElement.getAttribute('data-login-theme') || 'dark');
     </script>
+<script src="{% static 'menu_app/js/language_selector.js' %}"></script>
 </body>
 </html>

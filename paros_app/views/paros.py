@@ -13,7 +13,7 @@ from django.utils.translation import gettext as _
 
 from ..forms import ParoForm
 from login_app.permisos import permiso_requerido, get_perfil
-from .utils import _aplicar_filtros, _aplicar_orden
+from .utils import _aplicar_filtros, _aplicar_orden, _resumen_filtros_activos
 from ..models import Area, Paro, BitacoraParo, CatalogoFalla, CatalogoEquipo, CatalogoResponsable, ImagenParo
 
 # ── Helpers internos ──────────────────────────────────────────────────────────
@@ -110,6 +110,9 @@ def lista_paros(request):
         'page_obj':                 page_obj,
         'areas':                    Area.objects.all(),
         'filtros':                  get_params,
+        'filtros_activos':          _resumen_filtros_activos(request.GET),
+        'estatus_choices':          Paro.ESTATUS_CHOICES,
+        'filtros_estatus':          request.GET.getlist('estatus'),
         'total_minutos':            total_minutos,
         'por_pagina':               por_pagina,
         'puede_crear':              es_admin_total or (perfil and perfil.crear_paro),
@@ -183,26 +186,29 @@ def lista_paros_por_area(request, area_id):
     page_obj   = paginator.get_page(get_params.get('page', 1))
 
     return render(request, 'paros_app/paros/lista_paros.html', {
-        'paros':          page_obj,
-        'page_obj':       page_obj,
-        'area_actual':    area,
-        'areas':          Area.objects.all(),
-        'filtros':        get_params,
-        'total_minutos':  total_minutos,
+        'paros':                    page_obj,
+        'page_obj':                 page_obj,
+        'area_actual':              area,
+        'areas':                    Area.objects.all(),
+        'filtros':                  get_params,
+        'filtros_activos':          _resumen_filtros_activos(request.GET),
+        'estatus_choices':          Paro.ESTATUS_CHOICES,
+        'filtros_estatus':          request.GET.getlist('estatus'),
+        'total_minutos':            total_minutos,
         'promedio_min_aceptados':   promedio_min_aceptados,
         'paro_mayor_aceptados':     paro_mayor_aceptados,
-        'por_pagina':     por_pagina,
-        'puede_crear':    request.user.is_superuser or (perfil and (perfil.es_admin or perfil.crear_paro)),
-        'puede_editar':   request.user.is_superuser or (perfil and (perfil.es_admin or perfil.editar_paro or perfil.editar_eliminar_paro)),
+        'por_pagina':               por_pagina,
+        'puede_crear':              request.user.is_superuser or (perfil and (perfil.es_admin or perfil.crear_paro)),
+        'puede_editar':             request.user.is_superuser or (perfil and (perfil.es_admin or perfil.editar_paro or perfil.editar_eliminar_paro)),
         'puede_editar_comentarios': request.user.is_superuser or (perfil and (perfil.es_admin or perfil.editar_comentarios or perfil.editar_paro or perfil.editar_eliminar_paro)),
-        'puede_eliminar': request.user.is_superuser or (perfil and (perfil.es_admin or perfil.editar_eliminar_paro)),
-        'puede_estatus':  request.user.is_superuser or (perfil and (perfil.es_admin or perfil.cambiar_estatus_paro or perfil.editar_paro or perfil.editar_eliminar_paro)),
-        'puede_exportar': request.user.is_superuser or (perfil and (perfil.es_admin or perfil.exportar_paros)),
-        'puede_importar': request.user.is_superuser or (perfil and (perfil.es_admin or perfil.importar_paros)),
-        'paros_aceptados':     paros_aceptados,
-        'minutos_aceptados':   minutos_aceptados,
-        'paros_sin_aceptar':   paros_sin_aceptar,
-        'minutos_sin_aceptar': minutos_sin_aceptar,
+        'puede_eliminar':           request.user.is_superuser or (perfil and (perfil.es_admin or perfil.editar_eliminar_paro)),
+        'puede_estatus':            request.user.is_superuser or (perfil and (perfil.es_admin or perfil.cambiar_estatus_paro or perfil.editar_paro or perfil.editar_eliminar_paro)),
+        'puede_exportar':           request.user.is_superuser or (perfil and (perfil.es_admin or perfil.exportar_paros)),
+        'puede_importar':           request.user.is_superuser or (perfil and (perfil.es_admin or perfil.importar_paros)),
+        'paros_aceptados':          paros_aceptados,
+        'minutos_aceptados':        minutos_aceptados,
+        'paros_sin_aceptar':        paros_sin_aceptar,
+        'minutos_sin_aceptar':      minutos_sin_aceptar,
     })
 
 
@@ -444,10 +450,23 @@ def cambiar_estatus_paro(request, paro_id):
                            or perfil.editar_paro or perfil.editar_eliminar_paro)))
     if not puede:
         return JsonResponse({'error': 'Sin permiso'}, status=403)
+
+    # El detalle móvil manda un estatus exacto en el body ({"estatus": "rojo"|"amarillo"|"verde"})
+    # para fijarlo directamente en vez de rotar. El botón de escritorio no manda body, así que
+    # request.body queda vacío y cae en la rotación de siempre — comportamiento sin cambios.
+    nuevo_estatus = []
+    if request.body:
+        try:
+            candidato = json.loads(request.body).get('estatus')
+            if candidato in ('rojo', 'amarillo', 'verde'):
+                nuevo_estatus = candidato
+        except (ValueError, TypeError, AttributeError):
+            pass    
+
     CICLO = {'rojo': 'amarillo', 'amarillo': 'verde', 'verde': 'rojo'}
     paro             = get_object_or_404(Paro, id=paro_id)
     estatus_anterior = paro.estatus
-    paro.estatus     = CICLO.get(paro.estatus, 'rojo')
+    paro.estatus     = nuevo_estatus if nuevo_estatus else CICLO.get(paro.estatus, 'rojo')
     paro.save(update_fields=['estatus'])
     _registrar_bitacora(paro, request.user, 'estatus', estatus_anterior, paro.estatus)
     return JsonResponse({'estatus': paro.estatus})

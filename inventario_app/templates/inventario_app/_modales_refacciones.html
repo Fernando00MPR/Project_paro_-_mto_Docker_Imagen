@@ -1,0 +1,354 @@
+{% load i18n %}
+{% comment %}
+    Modales de Inventario (eliminar todas, eliminar, nueva/editar
+    refacción y visor de imágenes). Los usa lista_refacciones.html y
+    detalle_refaccion.html (lista_refacciones.js espera que existan).
+{% endcomment %}
+
+<!-- ── Modal confirmar eliminar TODAS las refacciones del área ── -->
+<div id="modal-eliminar-todas-refacciones" class="modal-backdrop"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left;
+                min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar todas las refacciones del área" %}</div>
+        <div id="texto-eliminar-todas-refacciones" style="font-size:13px; color:var(--text-2); margin-bottom:24px;"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="cerrarModalEliminarTodasRefacciones()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <form id="form-eliminar-todas-refacciones" method="post"
+                  action="{% url 'inventario:eliminar_todas_refacciones_area' %}" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="area" id="input-area-eliminar-todas-refacciones" value="">
+                <button type="submit" class="btn btn-danger"
+                        style="background:#EF4444; color:#fff; border-color:#EF4444; padding:8px 16px; font-size:13px;">
+                    {% trans "Sí, eliminar todas" %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- ── Modal confirmar eliminar ── -->
+<div id="modal-eliminar-refaccion" class="modal-backdrop"
+     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
+            z-index:2000; align-items:center; justify-content:center;">
+    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left;
+                min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar refacción" %}</div>
+        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">{% trans "Esta acción no se puede deshacer. ¿Confirmas que deseas eliminar esta refacción?" %}</div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="cerrarModalEliminarRefaccion()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+            <form id="form-eliminar-refaccion" method="post" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="volver" id="elim-ref-volver" value="">
+                <button type="submit" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal nuevo/editar refacción — fondo blanco fijo como en los catálogos ── -->
+<style>
+    #modal-refaccion .mf-box { background: #fff; }
+    #modal-refaccion .mf-doc-title { color: #1d1d24; }
+    #modal-refaccion .form-field label { color: #33333c; }
+    #modal-refaccion .form-field .help { color: #9b9ba6; }
+    #modal-refaccion .form-field input,
+    #modal-refaccion .form-field select,
+    #modal-refaccion .form-field textarea {
+        background: #fff; color: #1d1d24; border-color: #d8d8e0;
+    }
+    #modal-refaccion .form-field select {
+        appearance: none; -webkit-appearance: none;
+        padding-right: 34px;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231d1d24' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 14px;
+    }
+    #modal-refaccion .form-field input::placeholder,
+    #modal-refaccion .form-field textarea::placeholder { color: #9b9ba6; }
+    #modal-refaccion .form-field input:focus,
+    #modal-refaccion .form-field select:focus,
+    #modal-refaccion .form-field textarea:focus {
+        border-color: var(--indigo);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--indigo) 22%, transparent);
+    }
+    #modal-refaccion .btn-ghost { color: #33333c; border-color: #d8d8e0; }
+    #modal-refaccion .btn-ghost:hover { background: #f2f2f5; color: #1d1d24; }
+    #modal-refaccion .ref-row-3 { display:grid; grid-template-columns: repeat(5, 1fr); gap:18px 24px; }
+    #modal-refaccion .ref-row-3 .ref-span2 { grid-column: span 4; }
+    #modal-refaccion .ref-row-4 { display:grid; grid-template-columns: repeat(5, 1fr); gap:18px 24px; }
+    #modal-refaccion .ref-row-5 { display:grid; grid-template-columns: repeat(5, 1fr); gap:14px 20px; }
+    #modal-refaccion .ref-row-2 { display:grid; grid-template-columns: 1fr 1fr; gap:18px 24px; }
+    #modal-refaccion .ref-row-3fields { display:grid; grid-template-columns: 1fr 1fr 2fr; gap:18px 24px; }
+    #modal-refaccion .ref-row-3 > .form-field,
+    #modal-refaccion .ref-row-4 > .form-field,
+    #modal-refaccion .ref-row-5 > .form-field,
+    #modal-refaccion .ref-row-2 > .form-field,
+    #modal-refaccion .ref-row-3fields > .form-field { min-width: 0; }
+    #modal-refaccion .ref-row-3 input, #modal-refaccion .ref-row-3 select,
+    #modal-refaccion .ref-row-4 input, #modal-refaccion .ref-row-4 select,
+    #modal-refaccion .ref-row-5 input, #modal-refaccion .ref-row-5 select,
+    #modal-refaccion .ref-row-2 input, #modal-refaccion .ref-row-2 select,
+    #modal-refaccion .ref-row-3fields input, #modal-refaccion .ref-row-3fields select { width: 100%; box-sizing: border-box; }
+    #modal-refaccion .ref-section-label {
+        font-size: 11px; font-weight: 600; color: #9b9ba6; text-transform: uppercase;
+        letter-spacing: .08em; margin: 20px 0 12px;
+    }
+    #modal-refaccion .ref-divider { border: none; border-top: 1px solid #ececf0; margin: 18px 0 0; }
+    #modal-refaccion .ref-info {
+        color: #9b9ba6; cursor: help; flex-shrink: 0;
+    }
+    @media (max-width: 767px) {
+        #modal-refaccion .ref-row-3,
+        #modal-refaccion .ref-row-4,
+        #modal-refaccion .ref-row-5,
+        #modal-refaccion .ref-row-2,
+        #modal-refaccion .ref-row-3fields { grid-template-columns: 1fr; }
+    }
+    /* Animación (ver keyframes globales en base_menu.html): este modal no usa
+       .modal-backdrop/.modal-box, así que se declara aparte. Sin cascada de
+       filas — el formulario ya tiene su propia grilla de columnas (ref-row-*)
+       y escalonarla encima se ve nervioso. */
+    #modal-refaccion { animation: modal-overlay-in 220ms both; }
+    #modal-refaccion .mf-box {
+        transform-origin: 50% 50%;
+        animation: modal-box-in 220ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+    #modal-refaccion[data-closing],
+    #modal-refaccion[data-closing] .mf-box {
+        animation: none; opacity: 0;
+        transition: opacity 120ms ease-out, transform 120ms ease-out;
+    }
+    #modal-refaccion[data-closing] .mf-box { transform: scale(.97); }
+</style>
+<div id="modal-refaccion"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
+            z-index:3000; align-items:center; justify-content:center;">
+    <div class="mf-box" style="border-radius:12px; padding:24px 28px;
+                min-width:360px; max-width:760px; width:90%; max-height:90vh; overflow-y:auto;
+                box-shadow:0 8px 32px rgba(0,0,0,.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div class="mf-doc-title" style="font-size:16px; font-weight:600;" id="modal-refaccion-titulo">
+                {% trans "Nueva refacción" %}
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#33333c;">
+                    <input type="checkbox" name="activo" id="ref-activo" checked form="form-refaccion"
+                           style="width:16px; height:16px; accent-color:var(--indigo); margin:0;">
+                    {% trans "Activo" %}
+                </label>
+                <button type="button" onclick="cerrarModalRefaccion()"
+                        onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                        onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                        style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s; flex-shrink:0;">✕</button>
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'inventario:nueva_refaccion' %}" id="form-refaccion" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="volver" id="ref-volver" value="">
+
+            <div class="ref-row-3 modal-row">
+                <div class="form-field">
+                    <label>{% trans "No. Item" %} *</label>
+                    <input type="text" name="no_item" id="ref-no_item" required placeholder="Ej: 001">
+                </div>
+
+                <div class="form-field ref-span2">
+                    <label>{% trans "Nombre" %} *</label>
+                    <input type="text" name="nombre" id="ref-nombre" required placeholder="Ej: Rodamiento 6205">
+                </div>
+            </div>
+
+            <div class="ref-row-2 modal-row" style="margin-top:18px;">
+                <div class="form-field">
+                    <label>{% trans "Área" %} *</label>
+                    <select name="area" id="ref-area" required>
+                        <option value="">{% trans "Selecciona un área" %}</option>
+                        {% for a in areas %}
+                        <option value="{{ a.pk }}">{{ a.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Categoría" %}</label>
+                    <select name="categoria" id="ref-categoria">
+                        <option value="">{% trans "Sin categoría" %}</option>
+                        {% for c in categorias %}
+                        <option value="{{ c.pk }}">{{ c.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="ref-row-3fields modal-row" style="margin-top:18px;">
+                <div class="form-field">
+                    <label>{% trans "Unidad" %}</label>
+                    <select name="unidad" id="ref-unidad">
+                        {% for val, label in unidades %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-field modal-row">
+                    <label>{% trans "Criticidad" %}</label>
+                    <select name="criticidad" id="ref-criticidad">
+                        {% for val, label in criticidades %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-field modal-row">
+                    <label>{% trans "Proveedor" %}</label>
+                    <input type="text" name="proveedor" id="ref-proveedor">
+                </div>
+            </div>
+
+            <hr class="ref-divider">
+            <div class="ref-section-label">{% trans "Inventario" %}</div>
+
+            <div class="ref-row-5 modal-row">
+                <div class="form-field">
+                    <label>{% trans "Stock actual" %}</label>
+                    <input type="number" name="stock_actual" id="ref-stock_actual" min="0" value="0">
+                </div>
+
+                <div class="form-field">
+                    <label style="display:flex; align-items:center; gap:5px;">
+                        {% trans "Stock mínimo" %}
+                        <svg class="ref-info" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             title="{% trans 'Se resaltará en rojo si el stock esta abajo de este valor' %}">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path stroke-linecap="round" d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                    </label>
+                    <input type="number" name="stock_minimo" id="ref-stock_minimo" min="0" value="0">
+                </div>
+
+                <div class="form-field">
+                    <label style="display:flex; align-items:center; gap:5px;">
+                        {% trans "Stock máximo" %}
+                        <svg class="ref-info" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             title="{% trans 'Se resaltará en amarillo si el stock excede este valor' %}">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path stroke-linecap="round" d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                    </label>
+                    <input type="number" name="stock_maximo" id="ref-stock_maximo" min="0" value="0">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Ubicación" %}</label>
+                    <input type="text" name="ubicacion" id="ref-ubicacion" placeholder="Ej: Rack 3, Nivel B">
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Costo unitario" %}</label>
+                    <input type="number" name="costo_unitario" id="ref-costo_unitario" step="0.01" min="0" placeholder="0.00">
+                </div>
+            </div>
+
+            <hr class="ref-divider">
+
+            <div class="ref-row-2 modal-row" style="margin-top:18px;">
+                <div class="form-field">
+                    <label style="display:flex; justify-content:space-between; align-items:baseline;">
+                        {% trans "Descripción" %}
+                        <span id="ref-descripcion-contador" style="font-size:11px; font-weight:400; color:#9b9ba6;">0/300</span>
+                    </label>
+                    <textarea name="descripcion" id="ref-descripcion" rows="4" maxlength="300" style="resize:vertical;"
+                              oninput="document.getElementById('ref-descripcion-contador').textContent = this.value.length + '/300'"></textarea>
+                </div>
+
+                <div class="form-field">
+                    <label>{% trans "Imágenes" %} <span style="color:#9b9ba6; font-weight:400;">({% trans "máximo 2" %})</span></label>
+                    <div id="ref-dropzone"
+                        style="border:2px dashed #d8d8e0; border-radius:8px; padding:18px;
+                                text-align:center; cursor:pointer; background:#fafafb;
+                                transition:border-color .15s; flex:1; display:flex; flex-direction:column; justify-content:center;">
+                        <svg width="26" height="26" fill="none" stroke="#9b9ba6" viewBox="0 0 24 24" style="margin:0 auto 6px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <div style="font-size:12px; color:#33333c;">
+                            {% trans "Arrastra imágenes aquí o haz clic para seleccionar" %}
+                        </div>
+                        <input type="file" name="imagenes" id="ref-input-imagenes" accept="image/*" multiple style="display:none;">
+                    </div>
+                    <div id="ref-preview-imagenes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+                    <div id="ref-imagenes-existentes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:22px;">
+                <button type="button" onclick="cerrarModalRefaccion()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+                <button type="submit" class="btn btn-primary">{% trans "Guardar refacción" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal imágenes (lightbox + miniaturas) -->
+<div id="modal-imagenes-ref" class="modal-backdrop" style="display:none; position:fixed; inset:0;
+     background:rgba(30,27,75,.45); z-index:5000; align-items:center; justify-content:center;">
+    <div class="modal-box" style="background:#fff; border-radius:14px; padding:24px; text-align:left;
+                max-width:700px; width:90%; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <div style="font-size:14px; font-weight:600; color:#1d1d24;">{% trans "Imágenes de la refacción" %}</div>
+                    <div id="lightbox-ref-meta" style="display:flex; gap:10px; margin-top:5px; font-size:12px; color:#33333c; flex-wrap:wrap; align-items:center;"></div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center; flex-shrink:0; margin-left:12px;">
+                    <button onclick="descargarImagenRefActual()" title="{% trans 'Descargar' %}"
+                            style="background:none; border:none; cursor:pointer; color:#33333c; display:flex; align-items:center;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-6l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                    </button>
+                    <button onclick="cerrarModalImagenesRef()"
+                            onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
+                            onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';"
+                            style="background:transparent; border:none; border-radius:6px; cursor:pointer; font-size:16px; line-height:1; color:#8a8a96; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;">✕</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="position:relative; background:#fafafb; border-radius:10px;
+                    height:300px; display:flex; align-items:center; justify-content:center;
+                    overflow:hidden; margin-bottom:12px;">
+            <div id="lightbox-ref-skeleton" class="img-skeleton" style="display:none; inset:0; border-radius:10px;">
+                <div class="img-spinner"></div>
+                <div class="img-spinner-label">{% trans "Cargando…" %}</div>
+            </div>
+            <img id="lightbox-ref-img-principal" src="" alt=""
+                 style="max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-in;"
+                 onclick="window.open(this.src, '_blank')">
+
+            <button onclick="lightboxRefAnterior()" title="{% trans 'Anterior' %}"
+                    style="position:absolute; left:8px; top:50%; transform:translateY(-50%);
+                           width:32px; height:32px; border-radius:50%; border:none;
+                           background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+                           display:flex; align-items:center; justify-content:center; font-size:16px;">‹</button>
+            <button onclick="lightboxRefSiguiente()" title="{% trans 'Siguiente' %}"
+                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%);
+                           width:32px; height:32px; border-radius:50%; border:none;
+                           background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+                           display:flex; align-items:center; justify-content:center; font-size:16px;">›</button>
+        </div>
+
+        <!-- Contador -->
+        <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+            <span id="lightbox-ref-contador" style="font-size:11px; color:#9b9ba6;"></span>
+        </div>
+
+        <div id="lightbox-ref-miniaturas" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"></div>
+    </div>
+</div>

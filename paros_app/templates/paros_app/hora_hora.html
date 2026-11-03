@@ -4,10 +4,11 @@
 {% block title %}{% trans "Hora x hora" %}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<link rel="stylesheet" href="{% static 'paros_app/css/hora_hora_movil.css' %}">
 {% endblock %}
 {% block content %}
 
-<div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+<div class="hxh-desktop-only" style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
     <div>
         <div class="card-title">{% trans "Hora x hora" %}</div>
         <div class="card-subtitle">{% trans "Registro de producción por hora, turno y día del mes" %}</div>
@@ -46,7 +47,7 @@
       border-radius: 6px;
   }
 </style>
-<div style="padding:14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:20px;">
+<div class="hxh-desktop-only" style="padding:14px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:20px;">
     <form method="get" id="form-filtros" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
         <div class="filter-group">
             <label>Mes</label>
@@ -67,7 +68,7 @@
 
 <!-- Áreas -->
 {% for area in areas %}
-<div class="card" style="margin-bottom:16px; padding:0; overflow:hidden;">
+<div class="card hxh-desktop-only" style="margin-bottom:16px; padding:0; overflow:hidden;">
 
     <!-- Header colapsable -->
     <div style="display:flex; justify-content:space-between; align-items:center;
@@ -302,6 +303,196 @@
 </div>
 {% endfor %}
 
+<!-- ═══ Vista de celular (≤767px) — ver hora_hora_movil.css / .js ═══ -->
+{% if areas %}{% with area=areas.0 %}
+<div id="hxh-movil" class="movil-only" data-area-id="{{ area.id }}" data-area-nombre="{{ area.nombre }}">
+
+    <div class="hm-header">
+        <div class="hm-titulos">
+            <div class="hm-titulo">{% trans "Hora x hora" %}</div>
+            <div class="hm-subtitulo">{% trans "Producción por hora y turno" %}</div>
+        </div>
+        <button type="button" class="hm-btn-icono" aria-label="{% trans 'Target y opciones' %}"
+                onclick="abrirModalTarget(event, {{ area.id }}, '{{ area.nombre|escapejs }}')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg>
+        </button>
+    </div>
+
+    <div class="hm-fila-mes">
+        <div class="hm-mes">
+            <button type="button" aria-label="{% trans 'Mes anterior' %}" onclick="hmCambiarMes(-1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+            </button>
+            <span>{% for num, nombre in meses %}{% if mes == num %}{{ nombre }}{% endif %}{% endfor %} {{ anio }}</span>
+            <button type="button" aria-label="{% trans 'Mes siguiente' %}" onclick="hmCambiarMes(1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+        </div>
+        <span class="hm-area-chip" title="{{ area.nombre }}">{{ area.nombre }}</span>
+    </div>
+
+    <section class="hm-card hm-cal-card" aria-labelledby="hm-cal-titulo">
+        <div class="hm-card-head">
+            <h2 id="hm-cal-titulo">{% trans "Eficiencia del mes" %}</h2>
+            <span class="hm-muted" id="hm-meta"></span>
+        </div>
+        <div class="hm-cal" id="hm-cal"></div>
+        <div class="hm-leyenda">
+            <span><i style="background:#CDEBD8;"></i>≥ {% trans "meta" %}</span>
+            <span><i style="background:#F6CFCB;"></i>{% trans "Bajo meta" %}</span>
+            <span><i style="background:#F5F5FA; border:1px solid var(--border);"></i>{% trans "Sin registro" %}</span>
+        </div>
+    </section>
+
+    <section class="hm-card hm-dia-card" aria-labelledby="hm-fecha">
+        <div class="hm-dia-head">
+            <div>
+                <div class="hm-muted">{{ area.nombre }}</div>
+                <h2 id="hm-fecha"></h2>
+            </div>
+            <span class="hm-chip-ef nada" id="hm-chip-ef">—</span>
+        </div>
+        <div class="hm-kpis hm-kpis-2">
+            <div class="hm-kpi"><div class="hm-kpi-label">{% trans "Skid corridos" %}</div><div class="hm-kpi-num" id="hm-corr">—</div></div>
+            <div class="hm-kpi"><div class="hm-kpi-label">{% trans "Skid planeados" %}</div><div class="hm-kpi-num" id="hm-plan">—</div></div>
+        </div>
+        <div class="hm-seg hm-turnos" role="tablist" aria-label="{% trans 'Turno' %}" id="hm-turnos">
+            <button type="button" role="tab" data-turno="dia" aria-selected="true"><span class="hm-t1"></span><span class="hm-t2">06:00 – 17:00</span></button>
+            <button type="button" role="tab" data-turno="noche" aria-selected="false"><span class="hm-t1"></span><span class="hm-t2">18:00 – 05:00</span></button>
+        </div>
+        <ul class="hm-horas" id="hm-horas"></ul>
+        <div class="hm-pie">
+            <b id="hm-pie-label"></b>
+            <small id="hm-pie-hrs"></small>
+            <strong id="hm-pie-total"></strong>
+        </div>
+    </section>
+
+    {% if areas_grafico %}
+    <section class="hm-card hm-ef-card" id="hm-ef" aria-labelledby="hm-ef-titulo">
+        <div class="hm-ef-head">
+            <div>
+                <h2 id="hm-ef-titulo">{% trans "Eficiencia de producción" %}</h2>
+                <div class="hm-muted">{% trans "Skid corridos vs planeados" %} · {{ area.nombre }}</div>
+            </div>
+        </div>
+        <div class="hm-seg hm-vista" role="group" aria-label="{% trans 'Agrupar por' %}" id="hm-vista">
+            <button type="button" data-vista="dia" aria-pressed="true">{% trans "Día" %}</button>
+            <button type="button" data-vista="mes" aria-pressed="false">{% trans "Mes" %}</button>
+            <button type="button" data-vista="anio" aria-pressed="false">{% trans "Año" %}</button>
+        </div>
+        <button type="button" class="hm-rango" onclick="hmAbrirRango(event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color:var(--text-3);"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>
+            <span id="hm-rango-txt"></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" style="color:var(--text-3);"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="hm-kpis hm-kpis-3">
+            <div class="hm-kpi"><div class="hm-kpi-label">{% trans "Eficiencia" %}</div><div class="hm-kpi-num" id="hm-ef-pct">—</div></div>
+            <div class="hm-kpi"><div class="hm-kpi-label">{% trans "Corridos" %}</div><div class="hm-kpi-num" id="hm-ef-corr">—</div></div>
+            <div class="hm-kpi"><div class="hm-kpi-label">{% trans "Planeados" %}</div><div class="hm-kpi-num" id="hm-ef-plan">—</div></div>
+        </div>
+        <div class="hm-frase" id="hm-frase"></div>
+    </section>
+
+    <section class="hm-card hm-periodos-card" aria-labelledby="hm-periodos-titulo">
+        <div class="hm-periodos-head">
+            <h3 id="hm-periodos-titulo"></h3>
+            <button type="button" class="hm-link" id="hm-mostrar-todos"></button>
+        </div>
+        <ol class="hm-periodos" id="hm-periodos"></ol>
+        <div class="hm-ef-leyenda">
+            <span><i style="width:2px; height:12px; background:#B7791F; display:inline-block;"></i><span id="hm-leg-meta"></span></span>
+            <span id="hm-leg-escala"></span>
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<button type="button" class="hm-fab movil-only" id="hm-fab" hidden>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <span id="hm-fab-txt"></span>
+</button>
+
+<!-- Hoja: capturar una hora -->
+<div id="hm-sheet-captura" class="modal-backdrop movil-only hm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="hc-titulo">
+        <div class="hm-asa"><span></span></div>
+        <div class="hc-head">
+            <div>
+                <div class="hm-muted" id="hc-contexto"></div>
+                <div class="hc-fecha" id="hc-titulo"></div>
+            </div>
+            <button type="button" class="hm-btn-icono hc-cerrar" aria-label="{% trans 'Cerrar' %}" onclick="hmCerrarCaptura()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+        </div>
+        <div class="hc-nav">
+            <button type="button" id="hc-prev" aria-label="{% trans 'Hora anterior' %}" onclick="hmMoverHora(-1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+            </button>
+            <div class="hc-hora"><b id="hc-hora"></b><span class="hm-muted" id="hc-rango"></span></div>
+            <button type="button" id="hc-next" aria-label="{% trans 'Hora siguiente' %}" onclick="hmMoverHora(1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+        </div>
+        <label class="hc-label" for="hc-input">{% trans "Skid en esta hora" %}</label>
+        <div class="hc-valor">
+            <button type="button" aria-label="{% trans 'Restar 1' %}" onclick="hmSumar(-1)">−</button>
+            <input id="hc-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off">
+            <button type="button" aria-label="{% trans 'Sumar 1' %}" onclick="hmSumar(1)">+</button>
+        </div>
+        <div class="hc-atajos">
+            <button type="button" data-v="0" onclick="hmAtajo(this)">{% trans "0 · sin producción" %}</button>
+            <button type="button" class="prev" id="hc-at-prev" onclick="hmAtajo(this)" hidden></button>
+            <button type="button" id="hc-at-target" onclick="hmAtajo(this)" hidden></button>
+        </div>
+        <div class="hc-total"><span>{% trans "Total del turno con esta hora" %}</span><b id="hc-total"></b></div>
+        <div class="hc-botones">
+            <button type="button" class="hc-guardar" id="hc-guardar" onclick="hmGuardar(false)">{% trans "Guardar" %}</button>
+            <button type="button" class="hc-seguir" id="hc-seguir" onclick="hmGuardar(true)">
+                <span id="hc-seguir-txt"></span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+        </div>
+        <button type="button" class="hc-borrar" id="hc-borrar" onclick="hmBorrar()" hidden>{% trans "Borrar valor de esta hora" %}</button>
+    </div>
+</div>
+
+{% if areas_grafico %}
+<!-- Hoja: rango de la tarjeta de eficiencia -->
+<div id="hm-sheet-rango" class="modal-backdrop movil-only hm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="hm-rango-titulo">
+        <div class="hm-asa"><span></span></div>
+        <h2 class="hr-titulo" id="hm-rango-titulo">{% trans "Periodo" %}</h2>
+        <div class="hr-campos" data-vista="dia">
+            <div class="hr-campo"><span>{% trans "Desde" %}</span>{% include 'menu_app/_date_picker.html' with name='hm_desde' dp_id='dp-hm-desde' %}</div>
+            <div class="hr-campo"><span>{% trans "Hasta" %}</span>{% include 'menu_app/_date_picker.html' with name='hm_hasta' dp_id='dp-hm-hasta' %}</div>
+        </div>
+        <div class="hr-campos" data-vista="mes" style="display:none;">
+            <label class="hr-campo hr-campo-full">{% trans "Año" %}
+                <input type="number" id="hm-mes-anio" min="2018" max="2099" inputmode="numeric">
+            </label>
+            <label class="hr-campo">{% trans "Mes inicio" %}
+                <select id="hm-mes-desde">{% for num, nombre in meses %}<option value="{{ num }}">{{ nombre }}</option>{% endfor %}</select>
+            </label>
+            <label class="hr-campo">{% trans "Mes fin" %}
+                <select id="hm-mes-hasta">{% for num, nombre in meses %}<option value="{{ num }}">{{ nombre }}</option>{% endfor %}</select>
+            </label>
+        </div>
+        <div class="hr-campos" data-vista="anio" style="display:none;">
+            <label class="hr-campo">{% trans "Año inicio" %}
+                <input type="number" id="hm-anio-desde" min="2018" max="2099" inputmode="numeric">
+            </label>
+            <label class="hr-campo">{% trans "Año fin" %}
+                <input type="number" id="hm-anio-hasta" min="2018" max="2099" inputmode="numeric">
+            </label>
+        </div>
+        <button type="button" class="hr-aplicar" onclick="hmAplicarRango()">{% trans "Aplicar" %}</button>
+    </div>
+</div>
+{% endif %}
+{% endwith %}{% endif %}
+
 <!-- Modal edición -->
 <div id="modal-hora" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
      z-index:2000; align-items:center; justify-content:center;">
@@ -324,7 +515,7 @@
 
 <!-- Gráfico de eficiencia -->
  {% if areas_grafico %}
-<div class="card" style="margin-top:20px; padding:0; overflow:hidden;">
+<div class="card hxh-desktop-only" style="margin-top:20px; padding:0; overflow:hidden;">
     <div style="padding:14px 16px; background:var(--surface); border-bottom:1px solid var(--border);">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <div>
@@ -513,4 +704,39 @@ window.HORA_HORA_CFG = {
 };
 </script>
 <script src="{% static 'paros_app/js/hora_hora.js' %}"></script>
+<script>
+window.HXH_MOVIL = {
+    lang: "{{ LANGUAGE_CODE|default:'es' }}",
+    i18n: {
+        turnoDia:        "{% trans 'Día' %}",
+        turnoNoche:      "{% trans 'Noche' %}",
+        turnoDeDia:      "{% trans 'Turno de día' %}",
+        turnoDeNoche:    "{% trans 'Turno de noche' %}",
+        totalTurnoDia:   "{% trans 'Total turno de día' %}",
+        totalTurnoNoche: "{% trans 'Total turno de noche' %}",
+        hrs:             "{% trans 'Hrs' %}",
+        capturar:        "{% trans 'Capturar' %}",
+        capturarHora:    "{% trans 'Capturar {hora}' %}",
+        meta:            "{% trans 'Meta {x}%' %}",
+        ariaDia:         "{% trans '{d} de {mes}, eficiencia {x}' %}",
+        ariaDiaSin:      "{% trans '{d} de {mes}, sin registro' %}",
+        atajoPrev:       "{% trans '{n} · hora anterior' %}",
+        atajoTarget:     "{% trans '{n} · target' %}",
+        guardarSeguir:   "{% trans 'Guardar y seguir a {hora}' %}",
+        guardarCerrar:   "{% trans 'Guardar y cerrar' %}",
+        deSkid:          "{% trans '{c} de {p} skid' %}",
+        fraseDia:        "{% trans '{k} de {n} días con registro alcanzó la meta del {x}%' %}",
+        fraseMes:        "{% trans '{k} de {n} meses con registro alcanzó la meta del {x}%' %}",
+        fraseAnio:       "{% trans '{k} de {n} años con registro alcanzó la meta del {x}%' %}",
+        tituloDia:       "{% trans 'Días con registro' %}",
+        tituloMes:       "{% trans 'Meses con registro' %}",
+        tituloAnio:      "{% trans 'Años con registro' %}",
+        mostrarTodos:    "{% trans 'Mostrar todos' %}",
+        soloConRegistro: "{% trans 'Solo con registro' %}",
+        escala:          "{% trans 'Escala 0 – {x}%' %}",
+        sinDatos:        "{% trans 'Sin registros en este periodo' %}",
+    },
+};
+</script>
+<script src="{% static 'paros_app/js/hora_hora_movil.js' %}"></script>
 {% endblock %}

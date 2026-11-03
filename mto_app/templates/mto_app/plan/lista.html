@@ -4,517 +4,928 @@
 {% block title %}{% trans "Plan de mantenimiento" %}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'menu_app/css/date_picker.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/plan_movil.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'menu_app/css/page_size_toggle.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/row_action_button.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/plan_escritorio.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'mto_app/css/historial_acciones.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/filter_select.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/date_range_picker.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/responsables_modal.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/rutinas_modal.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/seguimientos_escritorio.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/distribucion_ots.css' %}">
+<script>
+/* Celular: siempre se trabaja sobre una semana y un estado (Pendientes por defecto). Si faltan en la
+   URL se redirige aquí, antes de pintar; antes lo hacía plan_movil.js al final y la página parpadeaba. */
+(function () {
+    if (!window.matchMedia('(max-width: 767px)').matches) return;
+    var u = new URL(location.href), q = u.searchParams;
+    if (q.get('semana') && q.get('estado')) return;
+    if (!q.get('semana')) {
+        var d = new Date(), f = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        f.setUTCDate(f.getUTCDate() + 4 - (f.getUTCDay() || 7));
+        var ini = new Date(Date.UTC(f.getUTCFullYear(), 0, 1));
+        q.set('semana', Math.ceil(((f - ini) / 86400000 + 1) / 7));
+        q.set('anio', f.getUTCFullYear());
+    }
+    if (!q.get('estado')) q.set('estado', 'pend');
+    q.delete('page');
+    document.documentElement.style.visibility = 'hidden';   // no pintar la página que se va a reemplazar
+    location.replace(u.toString());
+})();
+</script>
+<script>
+/* Columnas que el usuario prendió o apagó (pe_cols): se aplican antes de pintar, para que la
+   tabla no "salte" al cargar plan_escritorio.js. Cuando ese JS agrega .pe-listo, él manda. */
+(function () {
+    try {
+        var p = JSON.parse(localStorage.getItem('pe_cols') || '{}') || {}, css = '';
+        Object.keys(p).forEach(function (c) {
+            if (/^col-[a-z-]+$/.test(c)) css += 'html .pe-tabla:not(.pe-listo) .' + c + '{display:' + (p[c] ? 'revert' : 'none') + '}';
+        });
+        if (css) { var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s); }
+    } catch (e) { /* sin almacenamiento: columnas de fábrica */ }
+})();
+</script>
 {% endblock %}
 {% block content %}
 
-<!-- ── Encabezado ── -->
-<div class="card">
+<!-- ═══ Vista de escritorio (≥768px) — ver plan_escritorio.css / .js ═══ -->
+<div class="pe pm-desktop-only" id="pe-raiz" data-semana="{{ filtro_semana }}" data-anio="{{ filtro_anio }}"
+     data-area="{{ filtro_area }}" data-area-nombre="{{ area_nombre }}">
 
-    <div class="card-header">
-        <div>
-            <div class="card-title">
-                {% trans "Plan de mantenimiento" %}
-                {% if filtro_area %}
-                    {% for a in areas_menu %}
-                        {% if a.pk|stringformat:"s" == filtro_area %}
-                            — {{ a.nombre }}
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-            </div>
-            <div class="card-subtitle">{% trans "Planes registrados por área y semana" %}</div>
+    <!-- ── Encabezado ── -->
+    <header class="pe-head">
+        <div class="pe-titulos">
+            <h1 class="pe-h1">{% trans "Plan de mantenimiento" %}<span class="pm-error" id="pm-seg-err-general" hidden></span></h1>
+            <p class="pe-sub">{% if area_nombre %}{{ area_nombre }} · {% endif %}{% trans "planes registrados por semana" %}</p>
         </div>
 
-        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <div class="pe-acciones">
+
             {% if filtro_semana %}
-            <a href="{% url 'mto:exportar_semana_excel' %}?semana={{ filtro_semana }}&anio={{ anio_actual }}{% if filtro_area %}&area={{ filtro_area }}{% endif %}"
-               class="btn btn-ghost btn-sm"
-               style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px; display:flex; align-items:center; gap:6px;"
-               onclick="mostrarOverlayExportar(event, this)">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                {% trans "Exportar Excel S" %}{{ filtro_semana }}
-            </a>
+            <button type="button" class="pe-btn" id="pe-exp-sem"
+                    data-url="{% url 'mto:exportar_semana_excel' %}?semana={{ filtro_semana }}&anio={{ filtro_anio }}{% if filtro_area %}&area={{ filtro_area }}{% endif %}"
+                    aria-label="{% blocktrans with n=filtro_semana %}Exportar Excel de la semana {{ n }}{% endblocktrans %}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l4 4m0-4-4 4"/></svg>
+                <span>{% trans "Exportar Excel" %}</span><span class="pe-chip-sem">S{{ filtro_semana }}</span>
+            </button>
             {% endif %}
-            <a href="{% url 'mto:importar_plan' %}" class="btn btn-ghost" 
-                style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
-                    {% trans "Importar Excel" %}
-            </a>
-            <a href="{% url 'mto:exportar_plan' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}" class="btn btn-ghost" 
-                style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
-                    {% trans "Exportar Excel" %}
-            </a>
-            <a href="{% url 'mto:nuevo_plan' %}" class="btn btn-primary" 
-                style="height:38px; padding:0 16px; border-radius:10px; font-size:13.5px;">
-                + {% trans "Nueva tarea" %}
-            </a>
+
+            {% if puede_editar_plan %}
+             <a href="{% url 'mto:nuevo_plan' %}" class="pe-btn pe-btn-primario">
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                 {% trans "Nueva tarea" %}
+             </a>
+            {% endif %}
+
+            <div class="pe-opc" id="pe-opc">
+                <button type="button" class="pe-btn" id="pe-opc-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="pe-opc-menu">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+                    {% trans "Opciones" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="pe-pop pe-opc-menu" id="pe-opc-menu" role="menu" hidden>
+                    {% if puede_editar_plan %}
+                    <a role="menuitem" class="pe-opc-it" href="{% url 'mto:importar_plan' %}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                        {% trans "Importar Excel" %}
+                    </a>
+                    {% endif %}
+                    <button type="button" role="menuitem" class="pe-opc-it" id="pe-exp-plan" data-url="{% url 'mto:exportar_plan' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                        <span>{% trans "Exportar plan" %}</span>
+                    </button>
+                    <button type="button" role="menuitem" class="pe-opc-it" data-abrir-distribucion>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M9 20V4M14 20v-7M19 20V8"/></svg>
+                        {% trans "Distribución de OTs por semana" %}
+                    </button>
+                    {% if puede_ver_historial %}
+                    <span class="pe-opc-sep" role="separator"></span>
+                    <button type="button" role="menuitem" class="pe-opc-it" data-abrir-rutinas>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h7"/></svg>
+                        {% trans "Rutinas de mantenimiento" %}
+                    </button>
+                    <button type="button" role="menuitem" class="pe-opc-it" data-abrir-historial>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        {% trans "Historial de acciones" %}
+                    </button>
+                    {% endif %}
+                    {% if puede_ver_responsables %}
+                    {% if not puede_ver_historial %}<span class="pe-opc-sep" role="separator"></span>{% endif %}
+                    <button type="button" role="menuitem" class="pe-opc-it" data-abrir-responsables>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        {% trans "Responsables" %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% include 'menu_app/_language_selector.html' %}
+        </div>
+    </header>
+
+    <!-- ── Filtros ── -->
+    <section class="pe-card pe-filtros" aria-label="{% trans 'Filtros' %}">
+        <div class="pe-sem" id="pe-sem"{% if ver_todo %} hidden{% endif %}>
+            <button type="button" class="pe-sem-flecha" id="pe-sem-prev" aria-label="{% trans 'Semana anterior' %}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+            </button>
+            <button type="button" class="pe-sem-centro" id="pe-sem-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="pe-sem-pop">
+                <span class="pe-sem-t1" id="pe-sem-t1">{% blocktrans with n=filtro_semana a=filtro_anio %}Semana {{ n }} · {{ a }}{% endblocktrans %}</span>
+                <span class="pe-sem-t2" id="pe-sem-t2">{% if semana_lunes %}{{ semana_lunes|date:"j" }} – {{ semana_domingo|date:"j b" }}{% endif %}</span>
+            </button>
+            <button type="button" class="pe-sem-flecha" id="pe-sem-next" aria-label="{% trans 'Semana siguiente' %}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+            <div class="pe-pop pe-sem-pop" id="pe-sem-pop" role="dialog" aria-label="{% trans 'Elegir semana' %}" hidden></div>
+        </div>
+        <button type="button" class="pe-hoy" id="pe-hoy" hidden>{% trans "Esta semana" %}</button>
+        <button type="button" class="pe-hoy pe-todo{% if ver_todo %} activo{% endif %}" id="pe-todo" aria-pressed="{% if ver_todo %}true{% else %}false{% endif %}">
+            {% if ver_todo %}
+                {% trans "Elegir una semana" %}
+            {% else %}
+                {% trans "Ver todo el plan" %}
+            {% endif %}
+        </button>
+
+        <div class="pe-seg" id="pe-frec" role="radiogroup" aria-label="{% trans 'Frecuencia' %}">
+            <button type="button" class="pe-seg-op" role="radio" data-frec="" aria-checked="{% if not filtro_frec %}true{% else %}false{% endif %}">{% trans "Todas" %} <span class="pe-seg-n">{{ total_sin_frec }}</span></button>
+            {% for f in frecuencias_conteo %}
+            <button type="button" class="pe-seg-op" role="radio" data-frec="{{ f.valor }}" aria-checked="{% if filtro_frec == f.valor %}true{% else %}false{% endif %}">{{ f.label }} <span class="pe-seg-n">{{ f.n }}</span></button>
+            {% endfor %}
+        </div>
+
+        <label class="pe-buscar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="pe-q" value="{{ busqueda }}" placeholder="{% trans 'Código, equipo o rutina' %}" aria-label="{% trans 'Buscar' %}" autocomplete="off">
+        </label>
+
+        {% if puede_eliminar_todos_planes and filtro_area and total_planes_area %}
+        <span class="pe-sep" aria-hidden="true"></span>
+        <button type="button" class="pe-btn pe-btn-peligro" id="pe-elim-todos" data-total="{{ total_planes_area }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+            {% trans "Eliminar todos los planes" %}
+        </button>
+        {% endif %}
+    </section>
+
+    <!-- ── Indicadores ── -->
+    <section class="pe-ind" aria-label="{% trans 'Indicadores' %}">
+        {% if ver_todo %}
+        <div class="pe-kpi">
+            <div class="pe-kpi-l">{% trans "Planes activos" %}</div>
+            <div class="pe-kpi-v">{{ total_activos_area }}</div>
+            <div class="pe-kpi-s">{% trans "en el plan de mantenimiento" %}</div>
+        </div>
+        {% endif %}
+        {% if indicadores %}
+        <div class="pe-kpi">
+            <div class="pe-kpi-l">{% trans "Programados" %} S{{ filtro_semana }}</div>
+            <div class="pe-kpi-v">{{ indicadores.programados }}</div>
+            <div class="pe-kpi-s">{% widthratio indicadores.min_trabajo 60 1 as h_trab %}{% blocktrans with h=h_trab %}{{ h }} h de trabajo{% endblocktrans %}</div>
+        </div>
+        <div class="pe-kpi pe-kpi-ok">
+            <div class="pe-kpi-l">{% trans "Completados" %} S{{ filtro_semana }}</div>
+            <div class="pe-kpi-v">{{ indicadores.completados }}<span class="pe-kpi-de">{% blocktrans with m=indicadores.programados %}de {{ m }}{% endblocktrans %}</span></div>
+            <div class="pe-barra"><i style="width:{{ indicadores.pct_completados }}%"></i></div>
+        </div>
+        <div class="pe-kpi {% if indicadores.sin_resp %}pe-kpi-mal{% endif %}">
+            <div class="pe-kpi-l">{% trans "Sin responsable" %} S{{ filtro_semana }}</div>
+            <div class="pe-kpi-v">{{ indicadores.sin_resp }}</div>
+            <div class="pe-kpi-s">{% trans "por asignar" %}</div>
+        </div>
+        <div class="pe-kpi pe-kpi-tiempo" id="pe-kpi-tiempo">
+            <div class="pe-kpi-fila">
+                <div class="pe-kpi-l">{% trans "Tiempo total" %} S{{ filtro_semana }}</div>
+                <button type="button" class="pe-porpersona" id="pe-abrir-tiempo" aria-haspopup="dialog">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    {% trans "Por persona" %}
+                </button>
+            </div>
+            <div class="pe-kpi-v" id="pe-tiempo-v">—</div>
+            <div class="pe-kpi-s" id="pe-tiempo-s"></div>
+            <div class="pe-dist" id="pe-tiempo-dist" aria-hidden="true"></div>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- ── Tabla ── -->
+    <section class="pe-card pe-tabla-card">
+        <div class="pe-tabla-barra">
+            <span class="pe-tabla-t">{% blocktrans with n=planes.paginator.count %}{{ n }} planes{% endblocktrans %}</span>
+            <div class="pe-colwrap" id="col-picker-wrap">
+                <button type="button" class="pe-btn pe-btn-chico" id="pe-cols-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="col-picker">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>
+                    {% trans "Columnas" %}
+                </button>
+                <div class="pe-pop pe-cols-pop" id="col-picker" role="dialog" aria-label="{% trans 'Mostrar columnas' %}" hidden>
+                    <div class="pe-cols-cab"><b>{% trans "Mostrar columnas" %}</b><span id="pe-cols-n"></span></div>
+                    <div class="pe-cols-cuerpo">
+                        <div class="pe-cols-grupo">{% trans "Plan" %}</div>
+                        <label class="pe-col-op pe-col-fija"><input type="checkbox" checked disabled> {% trans "Código" %} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></label>
+                        <label class="pe-col-op" data-col="col-rutina"><input type="checkbox"> {% trans "Rutina" %}</label>
+                        <label class="pe-col-op" data-col="col-actividad"><input type="checkbox"> {% trans "Actividad" %}</label>
+                        <label class="pe-col-op" data-col="col-plan"><input type="checkbox"> {% trans "N° Plan" %}</label>
+                        <label class="pe-col-op" data-col="col-duracion"><input type="checkbox"> {% trans "Duración" %}</label>
+                        <label class="pe-col-op" data-col="col-frecuencia"><input type="checkbox"> {% trans "Frecuencia" %}</label>
+                        <div class="pe-cols-grupo">{% trans "Programación" %}</div>
+                        <label class="pe-col-op" data-col="col-sinicio"><input type="checkbox"> {% trans "Semana inicio" %}</label>
+                        <label class="pe-col-op" data-col="col-proximo"><input type="checkbox"> {% trans "Próximo mantenimiento" %}</label>
+                        {% if filtro_semana %}<label class="pe-col-op" data-col="col-resp"><input type="checkbox"> {% trans "Responsable" %}</label>{% endif %}
+                        <div class="pe-cols-grupo">{% trans "Equipo y clasificación" %}</div>
+                        <label class="pe-col-op" data-col="col-area"><input type="checkbox"> {% trans "Área" %}</label>
+                        <label class="pe-col-op" data-col="col-nombre-equipo"><input type="checkbox"> {% trans "Equipo" %}</label>
+                        <label class="pe-col-op" data-col="col-locacion"><input type="checkbox"> {% trans "Locación" %}</label>
+                        <label class="pe-col-op" data-col="col-tipo"><input type="checkbox"> {% trans "Tipo de mantenimiento" %}</label>
+                        <label class="pe-col-op" data-col="col-prioridad"><input type="checkbox"> {% trans "Prioridad" %}</label>
+                        <label class="pe-col-op" data-col="col-estatus"><input type="checkbox"> {% trans "Estado" %}</label>
+                    </div>
+                    <div class="pe-cols-pie">
+                        <button type="button" class="pe-link" id="pe-cols-reset">{% trans "Restablecer" %}</button>
+                        <button type="button" class="pe-btn pe-btn-primario pe-btn-chico" id="pe-cols-listo">{% trans "Listo" %}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pe-tabla-wrap">
+            <table class="pe-tabla">
+                <thead>
+                    <tr>
+                        <th class="pe-th-barra"></th>
+                        <th class="col-codigo">
+                            <a class="pe-orden{% if filtro_orden == 'codigo' or filtro_orden == '-codigo' %} activo{% endif %}"
+                               href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'codigo' %}-codigo{% else %}codigo{% endif %}">{% trans "Código" %}
+                                {% if filtro_orden == 'codigo' %}↑{% elif filtro_orden == '-codigo' %}↓{% endif %}</a>
+                            <span class="col-rutina">· {% trans "rutina" %}</span>
+                        </th>
+                        <th class="col-actividad">
+                            <a class="pe-orden{% if filtro_orden == 'actividad' or filtro_orden == '-actividad' %} activo{% endif %}"
+                               href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'actividad' %}-actividad{% else %}actividad{% endif %}">{% trans "Actividad" %}
+                                {% if filtro_orden == 'actividad' %}↑{% elif filtro_orden == '-actividad' %}↓{% endif %}</a>
+                        </th>
+                        <th class="col-frecuencia">{% trans "Frecuencia" %}</th>
+                        <th class="col-duracion pe-num">{% trans "Dur." %}</th>
+                        <th class="col-sinicio">{% trans "Semana inicio" %}</th>
+                        <th class="col-proximo">{% trans "Próximo" %}</th>
+                        {% if filtro_semana %}<th class="col-resp">{% trans "Responsable" %} S{{ filtro_semana }}</th>{% endif %}
+                        <th class="col-area">{% trans "Área" %}</th>
+                        <th class="col-nombre-equipo">{% trans "Equipo" %}</th>
+                        <th class="col-locacion">{% trans "Locación" %}</th>
+                        <th class="col-tipo">{% trans "Tipo" %}</th>
+                        <th class="col-prioridad">{% trans "Prioridad" %}</th>
+                        <th class="col-estatus">{% trans "Estado" %}</th>
+                        <th class="pe-th-acc">{% trans "Acciones" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in planes %}
+                    <tr ondblclick="filaClickVer(event, {{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')">
+                        <td class="pe-td-barra pe-est-{% if filtro_semana %}{% firstof p.registro_semana.estado 'pendiente' %}{% else %}ninguno{% endif %}"
+                            {% if filtro_semana %}title="{% if p.registro_semana.estado == 'completada' %}{% trans 'Completada' %}{% elif p.registro_semana.estado == 'reagendada' %}{% trans 'Reagendada' %}{% elif p.registro_semana.estado == 'cancelada' %}{% trans 'Cancelada' %}{% else %}{% trans 'Pendiente' %}{% endif %} — S{{ filtro_semana }}"{% endif %}></td>
+                        <td class="col-codigo"><span class="pe-cod">{{ p.codigo }}</span><span class="col-rutina pe-rutina">{{ p.rutina }}</span></td>
+                        <td class="col-actividad"><span class="pe-act" title="{{ p.actividad }}">{{ p.actividad }}</span>{% if p.plan_trabajo %}<span class="col-plan pe-plan">{% trans "Plan" %} {{ p.plan_trabajo }}</span>{% endif %}</td>
+                        <td class="col-frecuencia"><span class="pe-frec">{{ p.get_frecuencia_display }}</span></td>
+                        <td class="col-duracion pe-num">{% if p.duracion_minutos < 60 %}{{ p.duracion_minutos }} min{% else %}{% widthratio p.duracion_minutos 60 1 %} h{% endif %}</td>
+                        <td class="col-sinicio">{% if p.semana_inicio and p.anio_inicio %}<b class="pe-sem-tag">S{{ p.semana_inicio }}/{{ p.anio_inicio }}</b><span class="pe-rango">{{ p.semana_inicio_lunes|date:"j b" }} – {{ p.semana_inicio_domingo|date:"j b Y" }}</span>{% else %}<span class="pe-vacio">—</span>{% endif %}</td>
+                        <td class="col-proximo">
+                            {% if p.proximo %}<b class="pe-sem-tag">S{{ p.proximo.semana }}/{{ p.proximo.lunes|date:"Y" }}</b><span class="pe-rango">{{ p.proximo.lunes|date:"j b" }} – {{ p.proximo.domingo|date:"j b" }}</span>
+                            {% else %}<span class="pe-vacio">—</span>{% endif %}
+                            {% if filtro_semana and p.fuera_de_frecuencia %}<span class="pe-fuera" title="{% trans 'Esta semana ya no calza con la frecuencia actual del plan — se muestra porque tiene un registro guardado.' %}">{% trans "Fuera de frecuencia" %}</span>{% endif %}
+                        </td>
+                        {% if filtro_semana %}
+                        <td class="col-resp">
+                            {% if p.registro_semana.responsable_id %}
+                            <button type="button" class="pe-resp" data-plan="{{ p.pk }}" data-area="{{ p.area_id }}" data-resp="{{ p.registro_semana.responsable_id }}" aria-haspopup="listbox"{% if not puede_asignar_responsable %} disabled{% endif %}>
+                                <span class="pe-av pe-av-{% firstof p.registro_semana.estado 'pendiente' %}">
+                                     {{ p.registro_semana.iniciales_responsable }}
+                                </span>
+                                <span class="pe-resp-n">
+                                    {{ p.registro_semana.nombre_responsable }}
+                                </span>
+                            </button>
+                            {% else %}
+                            <button type="button" class="pe-resp pe-resp-vacio" data-plan="{{ p.pk }}" data-area="{{ p.area_id }}" data-resp="" aria-haspopup="listbox"{% if not puede_asignar_responsable %} disabled{% endif %}>
+                                {% if puede_asignar_responsable %}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>{% trans "Asignar" %}{% else %}{% trans "Sin asignar" %}{% endif %}
+                            </button>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td class="col-area">{{ p.area }}</td>
+                        <td class="col-nombre-equipo">{{ p.nombre_equipo|default:"—" }}</td>
+                        <td class="col-locacion">{{ p.locacion|default:"—" }}</td>
+                        <td class="col-tipo">{{ p.get_tipo_mto_display|default:"—" }}</td>
+                        <td class="col-prioridad">{{ p.get_prioridad_display|default:"—" }}</td>
+                        <td class="col-estatus">{% if p.estatus %}<span class="pe-frec">{{ p.estatus }}</span>{% else %}—{% endif %}</td>
+                        <td class="pe-td-acc">
+                            <div class="pe-acc">
+                                <button type="button" class="pe-btn pe-btn-primario pe-btn-chico"
+                                        onclick="abrirModal({{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')">{% trans "Registrar" %}</button>
+                                {% if puede_editar_plan %}
+                                <a class="row-act row-act--edit" href="{% url 'mto:editar_plan' p.pk %}" title="{% trans 'Editar' %}" aria-label="{% trans 'Editar' %} {{ p.codigo }}">
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                                </a>
+                                {% endif %}
+                                <button type="button" class="row-act pe-mas" data-plan="{{ p.pk }}" data-codigo="{{ p.codigo }}"
+                                        data-eliminar="{% if puede_eliminar_plan %}{% url 'mto:eliminar_plan' p.pk %}{% endif %}"
+                                        aria-haspopup="menu" title="{% trans 'Más acciones' %}" aria-label="{% trans 'Más acciones' %} {{ p.codigo }}">
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="pe-vacia">
+                        <td colspan="15">{% trans "No hay tareas registradas." %}{% if puede_editar_plan %} <a href="{% url 'mto:nuevo_plan' %}">{% trans "Agregar primera tarea" %}</a>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ── Pie: conteo, filas por página, paginación ── -->
+        <footer class="pe-pie">
+            <span class="pe-pie-n">{% if planes.paginator.count %}{% blocktrans with a=planes.start_index b=planes.end_index n=planes.paginator.count %}Mostrando {{ a }}–{{ b }} de {{ n }}{% endblocktrans %}{% endif %}</span>
+            {% include 'menu_app/_page_size_toggle.html' with ps_id='pe-per-page' label=_("Filas por página") options=perpage_opts value=per_page storage_key='pageSize:plan' %}
+            <nav class="pe-pag" aria-label="{% trans 'Paginación' %}">
+                {% if planes.has_previous %}<a class="pe-pag-b" href="?{% if qs_pag %}{{ qs_pag }}&{% endif %}page={{ planes.previous_page_number }}" aria-label="{% trans 'Página anterior' %}">‹</a>{% endif %}
+                {% for n in paginas %}
+                    {% if n is None %}<span class="pe-pag-p">…</span>
+                    {% elif n == planes.number %}<span class="pe-pag-b activo" aria-current="page">{{ n }}</span>
+                    {% else %}<a class="pe-pag-b" href="?{% if qs_pag %}{{ qs_pag }}&{% endif %}page={{ n }}">{{ n }}</a>{% endif %}
+                {% endfor %}
+                {% if planes.has_next %}<a class="pe-pag-b" href="?{% if qs_pag %}{{ qs_pag }}&{% endif %}page={{ planes.next_page_number }}" aria-label="{% trans 'Página siguiente' %}">›</a>{% endif %}
+            </nav>
+        </footer>
+    </section>
+</div>
+
+<!-- ═══ Vista de celular (≤767px) — ver plan_movil.css / .js ═══ -->
+<div id="pm-movil" class="movil-only" data-semana="{{ filtro_semana }}" data-anio="{{ filtro_anio }}"
+     data-area="{{ filtro_area }}" data-resp="{{ filtro_resp }}"
+     data-total-min="{{ carga_total_min }}" data-total-tareas="{{ carga_total_tareas }}">
+
+    <!-- Encabezado: el script "topbar" de base_menu lo pasa a la barra sticky -->
+    <div class="movil-only" data-topbar-movil>
+        <div class="pm-titulos">
+            <div class="pm-titulo">{% trans "Plan de mantenimiento" %}</div>
+            <div class="pm-subtitulo">{% for a in areas_menu %}{% if a.pk|stringformat:"s" == filtro_area %}{{ a.nombre }}{% endif %}{% endfor %}</div>
+        </div>
+        <button type="button" class="pm-btn-icono" aria-label="{% trans 'Excel de la semana e idioma' %}" onclick="pmAbrirHoja('pm-sheet-mas', event)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+    </div>
+
+    <div class="pm-semana">
+        <a id="pm-sem-prev" href="#" aria-label="{% trans 'Semana anterior' %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+        </a>
+        <div class="pm-semana-centro">
+            <b>{% blocktrans with n=filtro_semana a=filtro_anio %}Semana {{ n }} · {{ a }}{% endblocktrans %}</b>
+            {% if semana_lunes %}<span>{{ semana_lunes|date:"j b" }} – {{ semana_domingo|date:"j b" }}</span>{% endif %}
+        </div>
+        <a id="pm-sem-next" href="#" aria-label="{% trans 'Semana siguiente' %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        </a>
+    </div>
+
+    <label class="pm-buscar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="pm-buscar" value="{{ busqueda }}" enterkeyhint="search"
+               placeholder="{% trans 'Código, equipo o rutina' %}" aria-label="{% trans 'Buscar' %}">
+    </label>
+    <div class="pm-pildoras">
+        <button type="button" id="pm-btn-persona" class="pm-pildora pm-pildora-persona" onclick="pmAbrirHoja('pm-sheet-persona', event)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+            <span id="pm-persona-txt"></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <button type="button" class="pm-pildora pm-pildora-frec{% if filtro_frec %} activa{% endif %}" onclick="pmAbrirHoja('pm-sheet-frec', event)">
+            <span>{% if filtro_frec %}{% for v, l in frecuencias %}{% if v == filtro_frec %}{{ l }}{% endif %}{% endfor %}{% else %}{% trans "Frecuencia" %}{% endif %}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+    </div>
+
+    {% if avance_movil %}
+    <section class="pm-avance" aria-label="{% trans 'Avance de la semana' %}">
+        <div class="pm-avance-top">
+            <span>{% trans "Avance" %} S{{ filtro_semana }}</span>
+            <span><b>{{ avance_movil.completadas }}</b> {% blocktrans with total=avance_movil.total %}de {{ total }} completadas{% endblocktrans %}</span>
+        </div>
+        <div class="pm-barra" role="img" aria-label="{% blocktrans with k=avance_movil.completadas n=avance_movil.total %}{{ k }} de {{ n }} órdenes completadas{% endblocktrans %}">
+            <i style="width:{{ avance_movil.pct }}%;"></i>
+        </div>
+        <div class="pm-kpis">
+            <div class="pm-kpi pend"><div class="pm-kpi-label">{% trans "Pendientes" %}</div><div class="pm-kpi-num">{{ avance_movil.pendientes }}</div></div>
+            <div class="pm-kpi"><div class="pm-kpi-label">{% trans "Tiempo programado" %}</div>
+                <div class="pm-kpi-num">{% if avance_movil.horas %}{{ avance_movil.horas }} h{% if avance_movil.minutos_resto %} {{ avance_movil.minutos_resto }} min{% endif %}{% else %}{{ avance_movil.minutos_resto }} min{% endif %}</div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <nav class="pm-seg" aria-label="{% trans 'Estado' %}">
+        <a data-estado="pend" {% if filtro_estado == 'pend' %}aria-current="true"{% endif %}>{% trans "Pendientes" %} {{ conteo_pend }}</a>
+        <a data-estado="hechas" {% if filtro_estado == 'hechas' %}aria-current="true"{% endif %}>{% trans "Hechas" %} {{ conteo_hechas }}</a>
+        <a data-estado="todas" {% if filtro_estado != 'pend' and filtro_estado != 'hechas' %}aria-current="true"{% endif %}>{% trans "Todas" %}</a>
+    </nav>
+
+    <div id="pm-lista">
+        {% for p in planes %}
+        {% with est=p.registro_semana.estado|default:'pendiente' %}
+        <article class="pm-card" data-pk="{{ p.pk }}" data-codigo="{{ p.codigo }}" data-actividad="{{ p.actividad|default:'' }}"
+                 data-minutos="{{ p.duracion_minutos|default:0 }}"
+                 data-resp-id="{{ p.registro_semana.responsable_id|default:'' }}"
+                 data-resp-nombre="{{ p.registro_semana.nombre_responsable|default:'' }}">
+            <div class="pm-cuerpo" role="button" tabindex="0" aria-label="{% trans 'Ver detalle de' %} {{ p.codigo }}">
+                <div class="pm-fila1">
+                    <span class="pm-codigo">{{ p.codigo }}</span>
+                    <span class="pm-frec" data-frec="{{ p.frecuencia }}">{{ p.get_frecuencia_display }}</span>
+                    <span class="pm-dur">{% if p.duracion_minutos < 60 %}{{ p.duracion_minutos }} min{% else %}{% widthratio p.duracion_minutos 60 1 %} h{% endif %}</span>
+                    <span class="pm-estado" data-estado="{{ est }}"><i></i>{% if est == 'completada' %}{% trans "Completada" %}{% elif est == 'reagendada' %}{% trans "Reagendada" %}{% elif est == 'cancelada' %}{% trans "Cancelada" %}{% else %}{% trans "Pendiente" %}{% endif %}</span>
+                </div>
+                <div>
+                    <div class="pm-act">{{ p.actividad|default:"—" }}</div>
+                    <div class="pm-sub">{{ p.rutina }} · {% trans "Plan" %} {{ p.plan_trabajo }}{% if p.proximo %} · {% trans "Próximo" %} S{{ p.proximo.semana }}{% endif %}</div>
+                </div>
+            </div>
+            <div class="pm-fila3">
+                <button type="button" class="pm-resp">
+                    <svg class="pm-ico-persona" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+                    <span class="pm-iniciales" aria-hidden="true"></span>
+                    <span></span>
+                </button>
+                <button type="button" class="pm-registrar{% if est == 'completada' %} ver{% endif %}">{% if est == 'completada' %}{% trans "Ver" %}{% else %}{% trans "Registrar" %}{% endif %}</button>
+            </div>
+        </article>
+        {% endwith %}
+        {% empty %}
+        <div class="pm-vacio">{% trans "No hay tareas para esta semana con estos filtros." %}</div>
+        {% endfor %}
+    </div>
+
+    {% if planes.has_next %}
+    <button type="button" id="pm-cargar-mas" data-next="{{ planes.next_page_number }}" data-fin="{{ planes.end_index }}"
+            data-total="{{ planes.paginator.count }}" data-per-page="{{ planes.paginator.per_page }}">{% trans "Cargar más" %}</button>
+    {% endif %}
+</div>
+
+<!-- Hoja "⋯": Excel de la semana e idioma (Nueva tarea, Importar/Exportar Excel
+     y Eliminar todos los planes solo están en escritorio) -->
+<div id="pm-sheet-mas" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="pm-mas-titulo">
+        <div class="pm-asa"><span></span></div>
+        <h2 class="pm-sheet-titulo" id="pm-mas-titulo">{% trans "Más acciones" %}</h2>
+        {% if filtro_semana %}
+        <a href="{% url 'mto:exportar_semana_excel' %}?semana={{ filtro_semana }}&anio={{ filtro_anio }}{% if filtro_area %}&area={{ filtro_area }}{% endif %}"
+           class="pm-accion" onclick="pmCerrarHoja('pm-sheet-mas', false); mostrarOverlayExportar(event, this)">
+            <span class="pm-accion-icono">↓</span>{% trans "Exportar Excel S" %}{{ filtro_semana }}
+        </a>
+        <button type="button" class="pm-accion" onclick="pmAbrirHoras(event)">
+            <span class="pm-accion-icono">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="18" cy="15" r="4"/><path d="M18 13v2l1.3 1.3"/></svg>
+            </span>
+            {% trans "Horas por persona" %}
+        </button>
+        {% endif %}
+        {% if puede_ver_historial %}
+        <button type="button" class="pm-accion" data-abrir-rutinas onclick="pmCerrarHoja('pm-sheet-mas', false)">
+            <span class="pm-accion-icono">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h7"/></svg>
+            </span>
+            {% trans "Rutinas de mantenimiento" %}
+        </button>
+        <button type="button" class="pm-accion" data-abrir-historial onclick="pmCerrarHoja('pm-sheet-mas', false)">
+            <span class="pm-accion-icono">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </span>
+            {% trans "Historial de acciones" %}
+        </button>
+        {% endif %}
+        {% if puede_ver_responsables %}
+        <button type="button" class="pm-accion" data-abrir-responsables onclick="pmCerrarHoja('pm-sheet-mas', false)">
+            <span class="pm-accion-icono">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.3-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c2 .6 3.3 2.3 3.7 4.7"/></svg>
+            </span>
+            {% trans "Responsables" %}
+        </button>
+        {% endif %}
+        <div class="pm-idioma">
+            <span class="pm-idioma-label">{% trans "Idioma" %}</span>
             {% include 'menu_app/_language_selector.html' %}
         </div>
     </div>
-
-    <!-- ── Filtros ── -->
-    <style>
-      .plan-filtros select,
-      .plan-filtros input,
-      .plan-filtros .btn {
-          height: 40px;
-          box-sizing: border-box;
-          border-radius: 8px;
-          font-size: 14px;
-      }
-      .plan-filtros .btn {
-          display: inline-flex;
-          align-items: center;
-          padding: 0 16px;
-          font-weight: 500;
-          white-space: nowrap;
-          text-decoration: none;
-      }
-      /* Flecha nativa del select pegada al borde → chevron propio con espacio.
-         Mismo tono que el texto (--text): hex literal porque no se puede
-         meter var() dentro del data URI. */
-      .plan-filtros select {
-          padding: 0 34px 0 10px;
-          appearance: none; -webkit-appearance: none;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-          background-repeat: no-repeat;
-          background-position: right 10px center;
-          background-size: 14px;
-          background-color: var(--white);
-      }
-      /* En modo oscuro, base_menu.html reasigna [data-theme="dark"] .filter-group
-         select { background: var(--white) !important; }, que borra el chevron de
-         arriba por especificidad + !important. Se repite aquí con el mismo peso
-         para ganar por ir declarada después en el documento. */
-      [data-theme="dark"] .plan-filtros select {
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 10px center !important;
-          background-size: 14px !important;
-      }
-      /* Select de responsable en cada fila (asignación semanal) — mismo
-         arreglo de flecha que .plan-filtros select arriba. */
-      .plan-resp-select {
-          appearance: none; -webkit-appearance: none;
-          padding: 5px 34px 5px 8px;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-          background-repeat: no-repeat;
-          background-position: right 10px center;
-          background-size: 14px;
-          background-color: var(--white);
-      }
-      [data-theme="dark"] .plan-resp-select {
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 10px center !important;
-          background-size: 14px !important;
-      }
-      .plan-filtros .filter-divider {
-          width: 1px;
-          height: 40px;
-          background: var(--border);
-          margin: 0 4px;
-          align-self: flex-end;
-      }
-    </style>
-    <form method="get" class="plan-filtros" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;
-                              padding:14px; background:var(--surface); border:1px solid var(--border);
-                              border-radius:var(--radius); align-items:flex-end;">
-        {% if filtro_area %}
-        <input type="hidden" name="area" value="{{ filtro_area }}">
-        {% endif %}
-        {% if filtro_orden %}
-        <input type="hidden" name="orden" value="{{ filtro_orden }}">
-        {% endif %}
-        <div class="filter-group">
-            <label>{% trans "Semana" %}</label>
-            <input type="number" name="semana" min="1" max="52"
-                   value="{{ filtro_semana|default:'' }}" placeholder="Ej: 17" style="width:90px; padding:0 10px; border:1px solid var(--border); background:var(--white); color:var(--text); font-family:inherit;"
-                   onchange="this.form.submit()">
-        </div>
-        <div class="filter-group">
-            <label>{% trans "Año" %}</label>
-            <input type="number" name="anio" min="2020" max="2099"
-                   value="{{ filtro_anio|default:anio_actual }}" style="width:90px; padding:0 10px; border:1px solid var(--border); background:var(--white); color:var(--text); font-family:inherit;"
-                   onchange="this.form.submit()">
-        </div>
-        <div class="filter-group">
-            <label>{% trans "Frecuencia" %}</label>
-            <select name="frecuencia" onchange="this.form.submit()">
-                <option value="">Todas</option>
-                {% for val, label in frecuencias %}
-                <option value="{{ val }}" {% if filtro_frec == val %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>{% trans "Buscar" %}</label>
-            <div style="position:relative; width:300px;">
-                <input style="width:100%; padding:0 32px 0 10px; border:1px solid var(--border); background:var(--white); color:var(--text); font-family:inherit;"
-                       type="text" name="q" value="{{ busqueda }}" placeholder="Codigo, equipo o rutina..."
-                       oninput="this.nextElementSibling.style.display = this.value ? 'flex' : 'none';"
-                       onkeydown="if (event.key === 'Enter') { event.preventDefault(); this.form.submit(); }">
-                <button type="button" onclick="this.previousElementSibling.value=''; this.style.display='none'; this.previousElementSibling.form.submit();"
-                        style="display:{% if busqueda %}flex{% else %}none{% endif %}; position:absolute; right:6px; top:50%; transform:translateY(-50%);
-                               width:22px; height:22px; align-items:center; justify-content:center; border:none; background:none;
-                               cursor:pointer; color:var(--text-2); border-radius:50%; padding:0;"
-                        title="{% trans 'Limpiar' %}">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <div class="filter-divider"></div>
-        <a href="{% url 'mto:lista_plan' %}{% if filtro_area %}?area={{ filtro_area }}{% endif %}"
-           class="btn btn-ghost btn-limpiar">{% trans "Limpiar" %}</a>
-
-        {% if puede_eliminar_todos_planes and filtro_area and total_planes_area %}
-            <button type="button" class="btn btn-danger" style="margin-left:auto;"
-                    onclick="confirmarEliminarTodos('{{ filtro_area }}', {{ total_planes_area }})">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6"/>
-                </svg>
-                {% trans "Eliminar todos los planes" %}
-            </button>
-        {% endif %}
-    </form>
-
-    <!-- ── Indicadores de semana ── -->
-    {% if filtro_semana %}
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:16px;">
-        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
-            <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Órdenes S{{ filtro_semana }}</div>
-            <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">{{ stats_semana.total }}</div>
-            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">{{ stats_semana.completadas }} completadas</div>
-        </div>
-        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
-            <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Pendientes</div>
-            <div style="font-size:24px; font-weight:500; line-height:1;
-                        color:{% if stats_semana.pendientes > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">
-                {{ stats_semana.pendientes }}<span style="font-size:14px; color:{% if stats_semana.pendientes > 0 %}#E24B4A{% else %}#1D9E75{% endif %};">/{{ stats_semana.total }}</span>
-            </div>
-            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">sin completar esta semana</div>
-        </div>
-        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:6px;">
-                <div style="font-size:11px; color:var(--text-2); text-transform:uppercase; letter-spacing:.04em;">Tiempo total</div>
-                <button type="button" onclick="abrirModalTiempoResponsables()" title="{% trans 'Ver detalle por persona' %}"
-                        style="width:50px; height:30px; flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:5px; border:0; background:transparent; border-radius:7px; padding:0; color:var(--text-3); cursor:pointer; transition:background .15s, color .15s;"
-                        onmouseover="this.style.background='var(--indigo-lt)'; this.style.color='var(--indigo)';"
-                        onmouseout="this.style.background='transparent'; this.style.color='var(--text-3)';">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-                    </svg>
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
-                        <circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3.5 3.5"/>
-                    </svg>
-                </button>
-            </div>
-            <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">
-                {% if stats_semana.horas > 0 %}
-                    {{ stats_semana.horas }}h{% if stats_semana.minutos_resto > 0 %} {{ stats_semana.minutos_resto }}m{% endif %}
-                {% else %}
-                    {{ stats_semana.minutos_total }}m
-                {% endif %}
-            </div>
-            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">de mantenimiento programado</div>
-        </div>
-    </div>
-    {% else %}
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:16px;">
-        <div style="background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px;">
-            <div style="font-size:11px; color:var(--text-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;">Planes activos</div>
-            <div style="font-size:24px; font-weight:500; line-height:1; color:var(--text);">{{ planes.paginator.count }}</div>
-            <div style="font-size:11px; color:var(--text-3); margin-top:4px;">en el plan de mantenimiento</div>
-        </div>
-    </div>
-    {% endif %}
-
 </div>
 
-<div class="card">
+<!-- Hoja: horas por persona en la semana (filas las arma plan_movil.js) -->
+<div id="pm-sheet-horas" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="pm-horas-titulo">
+        <div class="pm-asa"><span></span></div>
+        <h2 class="pm-sheet-titulo" id="pm-horas-titulo" style="margin-bottom:2px;">{% trans "Horas por persona" %}</h2>
+        <p class="pm-horas-sub">{% blocktrans with n=filtro_semana %}Semana {{ n }}{% endblocktrans %}{% if semana_lunes %} · {{ semana_lunes|date:"j b" }} – {{ semana_domingo|date:"j b" }}{% endif %}</p>
+        <div class="pm-horas-total"><span>{% trans "Total programado" %}</span><b id="pm-horas-total"></b></div>
+        <ul class="pm-horas-lista" id="pm-horas-lista"></ul>
+    </div>
+</div>
 
-    <!-- ── Selector de columnas ── -->
-    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-        <div style="position:relative;" id="col-picker-wrap">
-            <button onclick="toggleColPicker()" class="btn btn-ghost btn-sm"
-                    style="display:flex; align-items:center; gap:6px;">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/>
-                </svg>
-                {% trans "Columnas" %}
+<!-- Hoja: filtrar por persona (opciones las arma plan_movil.js) -->
+<div id="pm-sheet-persona" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="pm-persona-titulo">
+        <div class="pm-asa"><span></span></div>
+        <h2 class="pm-sheet-titulo" id="pm-persona-titulo">{% trans "Persona" %}</h2>
+        <div id="pm-persona-lista"></div>
+    </div>
+</div>
+
+<!-- Hoja: frecuencia -->
+<div id="pm-sheet-frec" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="pm-frec-titulo">
+        <div class="pm-asa"><span></span></div>
+        <h2 class="pm-sheet-titulo" id="pm-frec-titulo">{% trans "Frecuencia" %}</h2>
+        <a class="pm-opcion" data-frec="" href="#" {% if not filtro_frec %}aria-current="true"{% endif %}>{% trans "Todas" %}</a>
+        {% for v, l in frecuencias %}
+        <a class="pm-opcion" data-frec="{{ v }}" href="#" {% if v == filtro_frec %}aria-current="true"{% endif %}>{{ l }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Hoja: asignar responsable (solo la semana seleccionada) -->
+<div id="pm-sheet-asignar" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="pm-asig-titulo">
+        <div class="pm-asa"><span></span></div>
+        <div class="pm-asig-head">
+            <h2 id="pm-asig-titulo">{% trans "Asignar responsable" %}</h2>
+            <div class="pm-asig-tarea"><span class="pm-codigo" id="pm-asig-codigo"></span><span id="pm-asig-nombre"></span></div>
+        </div>
+        <div class="pm-alcance">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>
+            <span>{% trans "Se asigna para la" %} <b>{% trans "semana" %} {{ filtro_semana }}</b>{% if semana_lunes %} · {{ semana_lunes|date:"j b" }} – {{ semana_domingo|date:"j b" }}{% endif %}</span>
+        </div>
+        <label class="pm-asig-buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="pm-asig-buscar" placeholder="{% trans 'Buscar persona' %}" aria-label="{% trans 'Buscar persona' %}">
+        </label>
+        <div class="pm-personas" id="pm-personas" role="radiogroup" aria-label="{% trans 'Responsable' %}"></div>
+        <div class="pm-pie"><button type="button" class="pm-btn-principal" id="pm-asignar-ok" disabled></button></div>
+    </div>
+</div>
+
+<!-- Pantalla: detalle del plan y registrar ejecución (celular) -->
+<div id="pm-detalle" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pm-det-titulo">
+        <div class="pm-det-head">
+            <button type="button" class="pm-btn-icono pm-cerrar" aria-label="{% trans 'Cerrar' %}" onclick="pmCerrarDetalle()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
             </button>
-            <div id="col-picker" style="display:none; position:absolute; right:0; top:36px; z-index:100;
-                                        background:var(--white); border:1px solid var(--border);
-                                        border-radius:10px; padding:12px 16px; min-width:200px;
-                                        box-shadow:var(--shadow-md);">
-                <div style="font-size:11px; font-weight:600; color:var(--text-3);
-                            text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px;">
-                    {% trans "Mostrar columnas" %}
+            <div><span class="pm-pill-codigo" id="pm-det-codigo"></span><span class="pm-det-meta" id="pm-det-meta"></span></div>
+            <button type="button" class="pm-btn-icono" style="border:0; background:transparent; color:#5E6175;" aria-label="{% trans 'Más acciones' %}" onclick="pmAbrirTarea(event)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+            </button>
+        </div>
+        <div class="pm-det-cuerpo">
+            <div class="pm-cargando" id="pm-det-cargando">{% trans "Cargando…" %}</div>
+            <div id="pm-det-contenido" hidden>
+                <h1 id="pm-det-titulo"></h1>
+                <div class="pm-det-kpis">
+                    <div><small>{% trans "PRÓXIMA" %}</small><b id="pm-det-proxima"></b></div>
+                    <div id="pm-det-cum"><small id="pm-det-cum-l"></small><b id="pm-det-cum-v"></b></div>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <label class="col-toggle" data-col="col-area"><input type="checkbox" checked onchange="toggleCol('col-area', this.checked)"> {% trans "Area" %}</label>
-                    <label class="col-toggle" data-col="col-codigo"><input type="checkbox" checked onchange="toggleCol('col-codigo', this.checked)"> {% trans "Codigo" %}</label>
-                    <label class="col-toggle" data-col="col-rutina"><input type="checkbox" checked onchange="toggleCol('col-rutina', this.checked)"> {% trans "Rutina" %}</label>
-                    <label class="col-toggle" data-col="col-actividad"><input type="checkbox" checked onchange="toggleCol('col-actividad', this.checked)"> {% trans "Actividad" %}</label>
-                    <label class="col-toggle" data-col="col-duracion"><input type="checkbox" checked onchange="toggleCol('col-duracion', this.checked)"> {% trans "Duración" %}</label>
-                    <label class="col-toggle" data-col="col-frecuencia"><input type="checkbox" checked onchange="toggleCol('col-frecuencia', this.checked)"> {% trans "Frecuencia" %}</label>
-                    <label class="col-toggle" data-col="col-plan"><input type="checkbox" onchange="toggleCol('col-plan', this.checked)"> {% trans "N° Plan" %}</label>
-                    <label class="col-toggle" data-col="col-sinicio"><input type="checkbox" onchange="toggleCol('col-sinicio', this.checked)"> {% trans "Semana inicio" %}</label>
-                    <label class="col-toggle" data-col="col-proximo"><input type="checkbox" checked onchange="toggleCol('col-proximo', this.checked)"> {% trans "Proximo mantenimiento" %}</label>
-                    <label class="col-toggle" data-col="col-nombre-equipo"><input type="checkbox" onchange="toggleCol('col-nombre-equipo', this.checked)"> {% trans "Equipo" %}</label>
-                    <label class="col-toggle" data-col="col-locacion"><input type="checkbox" onchange="toggleCol('col-locacion', this.checked)"> {% trans "Locación" %}</label>
-                    <label class="col-toggle" data-col="col-tipo"><input type="checkbox" onchange="toggleCol('col-tipo', this.checked)"> {% trans "Tipo de mantenimiento" %}</label>
-                    <label class="col-toggle" data-col="col-prioridad"><input type="checkbox" onchange="toggleCol('col-prioridad', this.checked)"> {% trans "Prioridad" %}</label>
-                    <label class="col-toggle" data-col="col-estatus"><input type="checkbox" onchange="toggleCol('col-estatus', this.checked)"> {% trans "Estatus" %}</label>
-                </div>
+
+                <!-- Calendario -->
+                <section class="pm-cal" aria-labelledby="pm-sem-titulo">
+                    <div class="pm-sem-head">
+                        <div>
+                            <h2 id="pm-sem-titulo">{% trans "Calendario" %}</h2>
+                            <div class="pm-cal-n" id="pm-cal-n"></div>
+                        </div>
+                        <div class="pm-anios" role="group" aria-label="{% trans 'Año' %}" id="pm-det-anios"></div>
+                    </div>
+                    <div class="pm-sem-grid" id="pm-det-semanas" role="listbox"></div>
+                    <div class="pm-leyenda" aria-hidden="true">
+                        <span><i class="lg-completada"></i>{% trans "Completada" %}</span>
+                        <span><i class="lg-pendiente"></i>{% trans "Pendiente" %}</span>
+                        <span><i class="lg-reagendada"></i>{% trans "Reagendada" %}</span>
+                        <span><i class="lg-cancelada"></i>{% trans "Cancelada" %}</span>
+                        <span><i class="lg-sinreg"></i>{% trans "Sin registro" %}</span>
+                        <span><i class="lg-proxima"></i>{% trans "Próxima" %}</span>
+                    </div>
+                </section>
+
+                <!-- Registrar ejecución -->
+                <section class="pm-registro" id="pm-registro" aria-labelledby="pm-reg-titulo">
+                    <div class="pm-registro-head">
+                        <h2 id="pm-reg-titulo">{% trans "Registrar ejecución" %}</h2>
+                        <div id="pm-reg-sub"></div>
+                    </div>
+                    <div class="pm-aviso permiso" id="pm-aviso-permiso" hidden>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 8v5m0 3h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                        <span class="txt"></span>
+                    </div>
+
+                    <div class="pm-campo">
+                        <span class="pm-lab" id="pm-lab-estado">{% trans "Estado" %} <span class="pm-req">*</span></span>
+                        <div class="pm-estados" role="radiogroup" aria-labelledby="pm-lab-estado">
+                            <button type="button" role="radio" data-estado="completada" aria-checked="false"><i></i>{% trans "Completada" %}</button>
+                            <button type="button" role="radio" data-estado="pendiente" aria-checked="false"><i></i>{% trans "Pendiente" %}</button>
+                            <button type="button" role="radio" data-estado="reagendada" aria-checked="false"><i></i>{% trans "Reagendada" %}</button>
+                            <button type="button" role="radio" data-estado="cancelada" aria-checked="false"><i></i>{% trans "Cancelada" %}</button>
+                        </div>
+                        <span class="pm-error" id="pm-err-estado" hidden></span>
+                        <div class="pm-bloque" id="pm-blk-reag" hidden>
+                            <span class="pm-lab">{% trans "Reagendar a la semana" %} <span class="pm-req">*</span></span>
+                            <div class="pm-reag">
+                                <input type="number" id="pm-reag-sem" min="1" max="53" inputmode="numeric" placeholder="{% trans 'Semana' %}" aria-label="{% trans 'Semana' %}">
+                                <input type="number" id="pm-reag-anio" min="2000" max="2100" inputmode="numeric" aria-label="{% trans 'Año' %}">
+                                <span id="pm-reag-rango"></span>
+                            </div>
+                            <span class="pm-error" id="pm-err-reag" hidden></span>
+                        </div>
+                        <div class="pm-bloque" id="pm-blk-canc" hidden>
+                            <label class="pm-lab" for="pm-reg-canc">{% trans "Motivo de la cancelación" %} <span class="pm-req">*</span></label>
+                            <textarea id="pm-reg-canc" rows="2"></textarea>
+                            <span class="pm-error" id="pm-err-canc" hidden></span>
+                        </div>
+                    </div>
+
+                    <div class="pm-campo">
+                        <span class="pm-lab">{% trans "Responsable" %} <span class="pm-req">*</span></span>
+                        <button type="button" class="pm-selector" id="pm-btn-resp" aria-haspopup="dialog">
+                            <span class="pm-av" hidden></span>
+                            <span class="pm-sel-txt"></span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <span class="pm-error" id="pm-err-resp" hidden></span>
+                    </div>
+
+                    <div class="pm-campo">
+                        <span class="pm-lab">{% trans "Fecha de ejecución" %} <span class="pm-req">*</span></span>
+                        <div class="pm-fechaw" id="pm-fechaw">
+                            {% include 'menu_app/_date_picker.html' with name='pm_fecha' dp_id='dp-pm-fecha' %}
+                            <span class="pm-fecha-sem" id="pm-fecha-sem"></span>
+                        </div>
+                        <span class="pm-error" id="pm-err-fecha" hidden></span>
+                        <div class="pm-aviso" id="pm-aviso-atraso" hidden>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 8v5m0 3h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                            <span class="txt"></span>
+                        </div>
+                    </div>
+
+                    <div class="pm-campo">
+                        <label class="pm-lab" for="pm-reg-obs">{% trans "Observaciones" %} <span class="pm-opc">{% trans "opcional" %}</span></label>
+                        <textarea id="pm-reg-obs" rows="3" maxlength="1000" placeholder="{% trans 'Lo realizado, materiales usados, anomalías…' %}"></textarea>
+                    </div>
+
+                    <div class="pm-campo">
+                        <span class="pm-lab">{% trans "Evidencia fotográfica" %} <span class="pm-opc" id="pm-cnt-imgs">0 / 4</span></span>
+                        <div class="pm-imgs" id="pm-imgs"></div>
+                        <input type="file" id="pm-file" accept="image/*" multiple hidden>
+                        <span class="pm-ayuda">{% trans "Toca «Agregar» para usar la cámara o la galería · máximo 4" %}</span>
+                        <span class="pm-error" id="pm-err-fotos" hidden></span>
+                    </div>
+
+                    <div class="pm-val" id="pm-val" data-v="por_validar">
+                        <div class="pm-val-head">
+                            <span class="pm-val-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                            <div><b id="pm-lab-val">{% trans "Validación" %}</b><small id="pm-val-hint"></small></div>
+                        </div>
+                        <div class="pm-val-ops" role="radiogroup" aria-labelledby="pm-lab-val">
+                            <button type="button" role="radio" class="pm-val-op" data-val="por_validar" aria-checked="false" aria-disabled="false"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{% trans "Por validar" %}</button>
+                            <button type="button" role="radio" class="pm-val-op" data-val="validado" aria-checked="false" aria-disabled="false"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>{% trans "Validado" %}</button>
+                            <button type="button" role="radio" class="pm-val-op" data-val="rechazado" aria-checked="false" aria-disabled="false"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>{% trans "Rechazado" %}</button>
+                        </div>
+                        <div class="pm-val-by" id="pm-val-validado" hidden>
+                            <button type="button" class="pm-selector" id="pm-btn-valpor" aria-haspopup="dialog">
+                                <span class="pm-av" hidden></span>
+                                <span class="pm-sel-txt"></span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <span class="pm-val-fecha" id="pm-val-fecha"></span>
+                            <span class="pm-error" id="pm-err-valpor" hidden></span>
+                        </div>
+                        <div class="pm-val-rech" id="pm-val-rechazo" hidden>
+                            <textarea id="pm-val-motivo" rows="2" placeholder="{% trans 'Motivo del rechazo (obligatorio)…' %}" aria-label="{% trans 'Motivo del rechazo' %}"></textarea>
+                            <span class="pm-error" id="pm-err-motivo" hidden></span>
+                        </div>
+                        <div class="pm-reset" id="pm-val-reset" hidden>{% trans "Al guardar, la validación se reiniciará" %}</div>
+                    </div>
+
+                    <span class="pm-error" id="pm-err-general" hidden></span>
+                    <button type="button" class="pm-elim-reg" id="pm-btn-elim-reg" hidden>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+                        <span id="pm-elim-reg-txt"></span>
+                    </button>
+                </section>
+
+                <!-- Seguimientos e Historial del año -->
+                <section class="pm-secs">
+                    <div class="pm-sec" id="pm-sec-seg">
+                        <div class="pm-sec-fila">
+                            <button type="button" class="pm-sec-toggle" aria-expanded="false" aria-controls="pm-sec-seg-body">
+                                <span class="pm-sec-ico seg"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                                <span class="pm-sec-txt"><b>{% trans "Seguimientos" %}</b><small id="pm-sec-seg-sub"></small></span>
+                            </button>
+                            <button type="button" class="pm-sec-dar" id="pm-btn-dar" aria-disabled="false">+ {% trans "Dar" %}</button>
+                            <svg class="pm-sec-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                        <div class="pm-sec-body" id="pm-sec-seg-body" hidden>
+                            <div class="pm-segm" id="pm-seg-filtro" role="group" aria-label="{% trans 'Mostrar' %}">
+                                <button type="button" data-f="abiertos" aria-pressed="true"></button>
+                                <button type="button" data-f="todos" aria-pressed="false"></button>
+                            </div>
+                            <div id="pm-seg-lista" class="pm-tarjetas"></div>
+                        </div>
+                    </div>
+                    <div class="pm-sec" id="pm-sec-his">
+                        <div class="pm-sec-fila">
+                            <button type="button" class="pm-sec-toggle" aria-expanded="false" aria-controls="pm-sec-his-body">
+                                <span class="pm-sec-ico his"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 4h14v16H5zM9 8h6M9 12h6M9 16h3"/></svg></span>
+                                <span class="pm-sec-txt"><b>{% trans "Historial del año" %}</b><small id="pm-sec-his-sub"></small></span>
+                            </button>
+                            <svg class="pm-sec-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                        <div class="pm-sec-body" id="pm-sec-his-body" hidden>
+                            <div class="pm-chips" id="pm-his-chips" role="group" aria-label="{% trans 'Filtrar historial' %}"></div>
+                            <div id="pm-his-lista" class="pm-tarjetas"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <div class="pm-det-pie">
+            <button type="button" class="pm-btn-sec" onclick="pmCerrarDetalle()">{% trans "Cancelar" %}</button>
+            <button type="button" class="pm-btn-azul" id="pm-det-guardar" disabled>{% trans "Guardar" %}</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hoja: elegir persona (Responsable de la ejecución / Validado por / Responsable del seguimiento) -->
+<div id="pm-sheet-resp" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="pm-resp-titulo">
+        <div class="pm-asa"><span></span></div>
+        <div class="pm-asig-head"><h2 id="pm-resp-titulo">{% trans "Responsable" %}</h2></div>
+        <label class="pm-asig-buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="pm-resp-buscar" placeholder="{% trans 'Buscar persona' %}" aria-label="{% trans 'Buscar persona' %}">
+        </label>
+        <div class="pm-personas" id="pm-resp-personas" role="radiogroup" aria-labelledby="pm-resp-titulo"></div>
+    </div>
+</div>
+
+<!-- Hoja: ¿eliminar el registro de la semana? -->
+<div id="pm-sheet-elimreg" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="alertdialog" aria-modal="true" aria-labelledby="pm-er-titulo" aria-describedby="pm-er-texto">
+        <div class="pm-asa"><span></span></div>
+        <div class="pm-confirmar">
+            <span class="pm-confirmar-icono" style="background:#FBE4E2; color:#A8322A;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></span>
+            <h2 id="pm-er-titulo">{% trans "Eliminar registro" %}</h2>
+            <p id="pm-er-texto"></p>
+            <div class="pm-confirmar-botones">
+                <button type="button" class="pm-btn-azul" onclick="pmCerrarHoja('pm-sheet-elimreg')">{% trans "Cancelar" %}</button>
+                <button type="button" class="pm-btn-rojo-borde" id="pm-er-ok">{% trans "Sí, eliminar" %}</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- ── Tabla ── -->
-    <div class="table-wrap" style="overflow-x:auto;">
-        <table class="sticky-actions-col" style="table-layout:auto; width:auto; min-width:100%;">
-            <thead>
-                <tr>
-                    <th style="width:6px; padding:0; border-bottom:1px solid var(--border);"></th>
-                    <th class="col-area"          style="text-align:center;">{% trans "Área" %}</th>
-                    <th class="col-codigo"        style="text-align:center; width:140px;">
-                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'codigo' %}-codigo{% else %}codigo{% endif %}"
-                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if filtro_orden == 'codigo' or filtro_orden == '-codigo' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if filtro_orden == 'codigo' or filtro_orden == '-codigo' %}600{% else %}500{% endif %};">
-                            {% trans "Código" %}
-                            {% if filtro_orden == 'codigo' %}
-                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
-                            {% elif filtro_orden == '-codigo' %}
-                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                            {% else %}
-                            <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
-                            {% endif %}
-                        </a>
-                    </th>
-                    <th class="col-rutina"        style="text-align:center; width:160px;">{% trans "Rutina" %}</th>
-                    <th class="col-actividad"     style="text-align:center; width:550px; min-width:550px;">
-                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'actividad' %}-actividad{% else %}actividad{% endif %}"
-                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if filtro_orden == 'actividad' or filtro_orden == '-actividad' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if filtro_orden == 'actividad' or filtro_orden == '-actividad' %}600{% else %}500{% endif %};">
-                            {% trans "Actividad" %}
-                            {% if filtro_orden == 'actividad' %}
-                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
-                            {% elif filtro_orden == '-actividad' %}
-                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                            {% else %}
-                            <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
-                            {% endif %}
-                        </a>
-                    </th>
-                    <th class="col-duracion"      style="text-align:center; width:60px; ">{% trans "Dur." %}</th>
-                    <th class="col-frecuencia"    style="text-align:center; width:150px;">{% trans "Frecuencia" %}</th>
-                    <th class="col-plan"          style="text-align:center; width:60px;">
-                        <a href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'plan_trabajo' %}-plan_trabajo{% else %}plan_trabajo{% endif %}"
-                        style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:{% if filtro_orden == 'plan_trabajo' or filtro_orden == '-plan_trabajo' %}var(--indigo){% else %}var(--text-2){% endif %}; font-weight:{% if filtro_orden == 'plan_trabajo' or filtro_orden == '-plan_trabajo' %}600{% else %}500{% endif %};">
-                            N°<br>{% trans "Plan" %}
-                            {% if filtro_orden == 'plan_trabajo' %}
-                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
-                            {% elif filtro_orden == '-plan_trabajo' %}
-                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                            {% else %}
-                            <svg width="12" height="12" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
-                            {% endif %}
-                        </a>
-                    </th>
-                    <th class="col-sinicio"       style="display:none; text-align:center; width:180px; min-width:180px;">{% trans "Semana" %}<br>{% trans "inicio" %}</th>
-                    {% if filtro_semana %}
-                    <th                           style="text-align:center; width:180px;">{% trans "Semana" %}<br>{% trans "actual" %}</th>
-                    {% endif %}
-                    <th class="col-proximo"       style="text-align:center; width:180px;">{% trans "Proximo" %}<br>{% trans "mantenimiento" %}</th>
-                    {% if filtro_semana %}
-                    <th style="text-align:center;">{% trans "Responsable" %}</th>
-                    {% endif %}
-                    <th class="col-nombre-equipo" style="display:none; text-align:center;">{% trans "Equipo" %}</th>
-                    <th class="col-locacion"      style="display:none; text-align:center;">{% trans "Locación" %}</th>
-                    <th class="col-tipo"          style="display:none; text-align:center;">{% trans "Tipo" %}<br>{% trans "Mantenimiento" %}</th>
-                    <th class="col-prioridad"     style="display:none; text-align:center;">{% trans "Prioridad" %}</th>
-                    <th class="col-estatus"       style="display:none; text-align:center;">{% trans "Estatus" %}</th>
-                    <th style="text-align:center;">{% trans "Acciones" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in planes %}
-                <tr style="cursor:pointer;" ondblclick="filaClickVer(event, {{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')">
-                    <td style="width:6px; padding:0;
-                       background:{% if filtro_semana %}{% if p.registro_semana.estado == 'completada' %}#1D9E75{% elif p.registro_semana.estado == 'reagendada' %}#7E92CF{% elif p.registro_semana.estado == 'cancelada' %}#E01919{% else %}#F59E0B{% endif %}{% else %}transparent{% endif %};"
-                        {% if filtro_semana %}title="{% if p.registro_semana.estado == 'completada' %}{% trans 'Completada' %}{% elif p.registro_semana.estado == 'reagendada' %}{% trans 'Reagendada' %}{% elif p.registro_semana.estado == 'cancelada' %}{% trans 'Cancelada' %}{% else %}{% trans 'Pendiente' %}{% endif %} — S{{ filtro_semana }}"{% endif %}></td>
-                    <td class="col-area"   style="white-space:nowrap;">{{ p.area }}</td>
-                    <td class="col-codigo" style="text-align:center; white-space:nowrap;"><strong style="font-family:ui-monospace,SFMono-Regular,'Roboto Mono',Menlo,Consolas,monospace;">{{ p.codigo }}</strong></td>
-                    <td class="col-rutina" style="text-align:center; white-space:nowrap;">{{ p.rutina }}</td>
-                    <td class="col-actividad">{{ p.actividad }}</td>
-                    <td class="col-duracion" style="text-align:center;">
-                        {% if p.duracion_minutos < 60 %}{{ p.duracion_minutos }} min
-                        {% else %}{% widthratio p.duracion_minutos 60 1 %} h{% endif %}
-                    </td>
-                    <td class="col-frecuencia" style="text-align:center;">
-                        <span class="badge badge-t1">{{ p.get_frecuencia_display }}</span>
-                    </td>
-                    <td class="col-plan" style="text-align:center;">{{ p.plan_trabajo }}</td>
-
-                    <td class="col-sinicio" style="display:none; min-width:180px;">
-                        {% if p.semana_inicio and p.anio_inicio %}
-                        <div style="display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center;">
-                            <span style="font-size:12px; font-weight:600; color:var(--text-2);">S{{ p.semana_inicio }}/{{ p.anio_inicio }}</span>
-                            <span style="font-size:11px; color:var(--text-3);">{{ p.semana_inicio_lunes|date:"d M" }} – {{ p.semana_inicio_domingo|date:"d M Y" }}</span>
-                        </div>
-                        {% else %}
-                        <span style="color:var(--text-3); display:block; text-align:center;">--</span>
-                        {% endif %}
-                    </td>
-
-                    {% if filtro_semana %}
-                    <td style="text-align:center; min-width:180px;">
-                        {% if p.semana_actual %}
-                            <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
-                                <span style="font-size:12px; font-weight:600; color:#065F46;">S{{ p.semana_actual.semana }}/{{ p.semana_actual.lunes|date:"Y" }}</span>
-                                <span style="font-size:11px; color:var(--text-3);">{{ p.semana_actual.lunes|date:"d M" }} – {{ p.semana_actual.domingo|date:"d M" }}</span>
-                                {% if p.fuera_de_frecuencia %}
-                                    <span title="{% trans 'Esta semana ya no calza con la frecuencia actual del plan — se muestra porque tiene un registro guardado.' %}"
-                                        style="font-size:10px; font-weight:600; color:#B45309; background:#FEF3C7; border:1px solid #FDE68A; border-radius:4px; padding:1px 6px; margin-top:1px;">
-                                        {% trans "Fuera de frecuencia" %}
-                                    </span>
-                                {% endif %}
-                            </div>
-                        {% else %}
-                            <span style="color:var(--text-3);">--</span>
-                        {% endif %}
-                    </td>
-                    {% endif %}
-
-                    <td class="col-proximo" style="min-width:180px;">
-                        {% if p.proximo %}
-                        <div style="display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center;">
-                            <span style="font-size:12px; font-weight:600; color:var(--indigo);">S{{ p.proximo.semana }}/{{ p.proximo.lunes|date:"Y" }}</span>
-                            <span style="font-size:11px; color:var(--text-2);">{{ p.proximo.lunes|date:"d M" }} – {{ p.proximo.domingo|date:"d M Y" }}</span>
-                        </div>
-                        {% else %}<span style="color:var(--text-3); display:block; text-align:center;">--</span>{% endif %}
-                    </td>
-
-                    {% if filtro_semana %}
-                    <td style="text-align:center;">
-                        <select onchange="asignarResponsable({{ p.pk }}, {{ filtro_semana }}, this)"
-                                class="plan-resp-select" 
-                                style="border:1px solid var(--border); border-radius:6px;
-                                       font-family:inherit; font-size:12px;
-                                       color:var(--text); outline:none; min-width:150px; cursor:pointer;">
-                            <option value="">-- Sin asignar --</option>
-                            {% for r in p.responsables_area %}
-                            <option value="{{ r.pk }}" {% if p.registro_semana and p.registro_semana.responsable_id == r.pk %}selected{% endif %}>
-                                {{ r.numero_nomina }} — {{ r.nombre }} {{ r.apellidos }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        {% if p.registro_semana and p.registro_semana.estado %}
-                        <div style="margin-top:4px;">
-                            {% if p.registro_semana.estado == 'completada' %}
-                                <span style="font-size:10px; font-weight:600; color:#065F46; background:#D1FAE5; padding:2px 8px; border-radius:20px;">{% trans "Completada" %}</span>
-                            {% elif p.registro_semana.estado == 'pendiente' %}
-                                <span style="font-size:10px; font-weight:600; color:#92400E; background:#FEF3C7; padding:2px 8px; border-radius:20px;">{% trans "Pendiente" %}</span>
-                            {% elif p.registro_semana.estado == 'reagendada' %}
-                                <span style="font-size:10px; font-weight:600; color:#33499b; background:#e9eefc; padding:2px 8px; border-radius:20px;">{% trans "Reagendada" %}</span>
-                            {% elif p.registro_semana.estado == 'cancelada' %}
-                                <span style="font-size:10px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px;">{% trans "Cancelada" %}</span>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                    </td>
-                    {% endif %}
-
-                    <td class="col-nombre-equipo" style="display:none;                    white-space:nowrap;">{{ p.nombre_equipo|default:"--" }}</td>
-                    <td class="col-locacion"      style="display:none; text-align:center; white-space:nowrap;">{{ p.locacion|default:"--" }}</td>
-                    <td class="col-tipo"          style="display:none; text-align:center;">{{ p.get_tipo_mto_display|default:"--" }}</td>
-                    <td class="col-prioridad"     style="display:none; text-align:center;">{{ p.get_prioridad_display|default:"--" }}</td>
-                    <td class="col-estatus"       style="display:none; text-align:center;">
-                        {% if p.estatus == 'Abierta' %}
-                        <span style="font-size:11px; font-weight:600; color:#065F46; background:#D1FAE5; padding:2px 8px; border-radius:20px;">{% trans "Abierta" %}</span>
-                        {% elif p.estatus == 'Cerrada' %}
-                        <span style="font-size:11px; font-weight:600; color:#6B7280; background:#F3F4F6; padding:2px 8px; border-radius:20px;">{% trans "Cerrada" %}</span>
-                        {% elif p.estatus == 'Cancelada' %}
-                        <span style="font-size:11px; font-weight:600; color:#991B1B; background:#FEE2E2; padding:2px 8px; border-radius:20px;">{% trans "Cancelada" %}</span>
-                        {% endif %}
-                    </td>
-
-                    <td style="align-items:center;">
-                        <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:nowrap;">
-                            <button onclick="abrirModal({{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Ver" %}</button>
-                            
-                            {% if puede_editar_plan %}
-                            <a href="{% url 'mto:editar_plan' p.pk %}" class="btn btn-ghost btn-sm" style="padding:4px 8px; white-space:nowrap;">{% trans "Editar" %}</a>
-                            {% endif %}
-                            
-                            {% if puede_eliminar_plan %}
-                            <button type="button" class="btn btn-danger btn-sm" style="padding:4px 8px; white-space:nowrap;"
-                                    onclick="confirmarEliminar('{% url 'mto:eliminar_plan' p.pk %}')">{% trans "Eliminar" %}</button>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="13" style="text-align:center; color:var(--text-3); padding:24px;">
-                        {% trans "No hay tareas registradas." %} <a href="{% url 'mto:nuevo_plan' %}">{% trans "Agregar primera tarea" %}</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ── Paginación ── -->
-    {% if planes.has_other_pages or planes.paginator.num_pages > 1 %}
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:4px;">
-        <div style="display:flex; align-items:center; gap:4px;">
-            {% if planes.has_previous %}
-            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if filtro_orden %}orden={{ filtro_orden }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ planes.previous_page_number }}"
-               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--text-2); text-decoration:none; font-size:13px;">‹</a>
-            {% endif %}
-            {% for num in planes.paginator.page_range %}
-                {% if planes.number == num %}
-                <span style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; background:var(--indigo); color:#fff; border-radius:6px; font-size:13px; font-weight:600;">{{ num }}</span>
-                {% elif num > planes.number|add:'-3' and num < planes.number|add:'3' %}
-                <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if filtro_orden %}orden={{ filtro_orden }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ num }}"
-                   style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--text-2); text-decoration:none; font-size:13px;">{{ num }}</a>
-                {% endif %}
-            {% endfor %}
-            {% if planes.has_next %}
-            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if filtro_orden %}orden={{ filtro_orden }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ per_page }}&page={{ planes.next_page_number }}"
-               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--text-2); text-decoration:none; font-size:13px;">›</a>
-            {% endif %}
+<!-- Pantalla: nuevo / editar seguimiento (celular) -->
+<div id="pm-seg" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pm-seg-titulo">
+        <div class="pm-det-head">
+            <button type="button" class="pm-btn-icono pm-cerrar" aria-label="{% trans 'Cerrar' %}" id="pm-seg-x">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+            <div style="flex-direction:column; align-items:flex-start; gap:0;">
+                <b id="pm-seg-titulo" style="font-size:16px;"></b>
+                <span class="pm-det-meta" id="pm-seg-sub"></span>
+            </div>
         </div>
-        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
-            <span>{% trans "Mostrar" %}</span>
-            {% for n in perpage_opts %}
-            <a href="?{% if filtro_area %}area={{ filtro_area }}&{% endif %}{% if filtro_semana %}semana={{ filtro_semana }}&anio={{ filtro_anio }}&{% endif %}{% if filtro_frec %}frecuencia={{ filtro_frec }}&{% endif %}{% if filtro_orden %}orden={{ filtro_orden }}&{% endif %}{% if busqueda %}q={{ busqueda }}&{% endif %}per_page={{ n }}&page=1"
-               style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;
-                      {% if per_page == n %}background:var(--indigo); color:#fff;{% else %}border:1px solid var(--border); color:var(--text-2);{% endif %}">{{ n }}</a>
-            {% endfor %}
+        <div class="pm-det-cuerpo">
+            <div class="pm-ligado" id="pm-seg-ligado">
+                <span class="pm-pill-codigo" id="pm-seg-cod"></span>
+                <span class="nm" id="pm-seg-nom"></span>
+                <span class="pm-chip-s" id="pm-seg-sem"></span>
+            </div>
+            <div class="pm-campo">
+                <label class="pm-lab" for="pm-seg-problema">{% trans "Problema encontrado" %} <span class="pm-req">*</span></label>
+                <textarea id="pm-seg-problema" rows="3" maxlength="500" placeholder="{% trans '¿Qué falla se encontró? Equipo, síntoma, ubicación…' %}"></textarea>
+                <span class="pm-error" id="pm-seg-err-problema" hidden></span>
+            </div>
+            <div class="pm-campo">
+                <label class="pm-lab" for="pm-seg-accion">{% trans "Acción realizada" %}</label>
+                <textarea id="pm-seg-accion" rows="3" maxlength="500" placeholder="{% trans '¿Qué se hizo o qué se va a hacer?' %}"></textarea>
+                <span class="pm-error" id="pm-seg-err-accion" hidden></span>
+            </div>
+            <div class="pm-campo">
+                <span class="pm-lab">{% trans "Responsable" %} <span class="pm-req">*</span></span>
+                <button type="button" class="pm-selector" id="pm-seg-btn-resp" aria-haspopup="dialog">
+                    <span class="pm-av" hidden></span>
+                    <span class="pm-sel-txt"></span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <span class="pm-error" id="pm-seg-err-resp" hidden></span>
+            </div>
+            <div class="pm-campo">
+                <span class="pm-lab">{% trans "Fecha compromiso" %}</span>
+                <div class="pm-fechaw">
+                    {% include 'menu_app/_date_picker.html' with name='pm_seg_fecha' dp_id='dp-pm-seg-fecha' %}
+                    <span class="pm-fecha-sem" id="pm-seg-fecha-sem"></span>
+                </div>
+                <div class="pm-atajos" id="pm-seg-atajos">
+                    <button type="button" data-atajo="hoy">{% trans "Hoy" %}</button>
+                    <button type="button" data-atajo="7">{% trans "+1 semana" %}</button>
+                    <button type="button" data-atajo="14">{% trans "+2 semanas" %}</button>
+                    <button type="button" data-atajo="fin">{% trans "Fin de mes" %}</button>
+                </div>
+                <span class="pm-error" id="pm-seg-err-fecha" hidden></span>
+            </div>
+            <div class="pm-campo">
+                <span class="pm-lab" id="pm-seg-lab-est">{% trans "Estatus" %}</span>
+                <div class="pm-estados tres" role="radiogroup" aria-labelledby="pm-seg-lab-est" id="pm-seg-estatus">
+                    <button type="button" role="radio" data-estado="pendiente" aria-checked="false"><i></i>{% trans "Pendiente" %}</button>
+                    <button type="button" role="radio" data-estado="en_proceso" aria-checked="false"><i></i>{% trans "En proceso" %}</button>
+                    <button type="button" role="radio" data-estado="completado" aria-checked="false"><i></i>{% trans "Completado" %}</button>
+                </div>
+            </div>
+            <div class="pm-campo">
+                <label class="pm-lab" for="pm-seg-notas">{% trans "Notas adicionales" %} <span class="pm-opc">{% trans "opcional" %}</span></label>
+                <textarea id="pm-seg-notas" rows="2" placeholder="{% trans 'Refacciones usadas, observaciones…' %}"></textarea>
+            </div>
+            <div class="pm-campo">
+                <span class="pm-lab">{% trans "Imágenes" %} <span class="pm-opc" id="pm-seg-cnt-imgs">0 / 4</span></span>
+                <div class="pm-imgs" id="pm-seg-imgs"></div>
+                <div class="pm-foto-btns">
+                    <button type="button" id="pm-seg-tomar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4zM12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+                        {% trans "Tomar foto" %}
+                    </button>
+                    <button type="button" id="pm-seg-galeria">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v14H3zM21 16l-5-5-8 8M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
+                        {% trans "Subir imagen" %}
+                    </button>
+                </div>
+                <input type="file" id="pm-seg-file-cam" accept="image/*" capture="environment" hidden>
+                <input type="file" id="pm-seg-file" accept="image/*" multiple hidden>
+                <span class="pm-ayuda">{% trans "Toma una foto o sube imágenes de tu galería · máximo 4" %}</span>
+                <span class="pm-error" id="pm-seg-err-fotos" hidden></span>
+            </div>
+            <span class="pm-error" id="pm-seg-err-general" hidden></span>
+            <button type="button" class="pm-elim-reg" id="pm-seg-eliminar" hidden>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+                <span id="pm-seg-elim-txt"></span>
+            </button>
+        </div>
+        <div class="pm-det-pie">
+            <button type="button" class="pm-btn-sec" id="pm-seg-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="pm-btn-azul" id="pm-seg-guardar">{% trans "Crear seguimiento" %}</button>
         </div>
     </div>
-    {% endif %}
+</div>
 
+<!-- Visor de fotos -->
+<div class="pm-visor" id="pm-visor" hidden role="dialog" aria-modal="true" aria-label="{% trans 'Foto' %}">
+    <button type="button" class="pm-visor-x" id="pm-visor-x" aria-label="{% trans 'Cerrar' %}">&times;</button>
+    <img id="pm-visor-img" alt="">
+    <div class="pm-visor-pie" id="pm-visor-pie"></div>
+</div>
+
+<!-- Hoja "⋯" del detalle: idioma (editar/eliminar tareas solo en escritorio) -->
+<div id="pm-sheet-tarea" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="dialog" aria-modal="true" aria-labelledby="pm-tarea-titulo">
+        <div class="pm-asa"><span></span></div>
+        <h2 class="pm-sheet-titulo" id="pm-tarea-titulo">{% trans "Más acciones" %}</h2>
+        <div class="pm-idioma">
+            <span class="pm-idioma-label">{% trans "Idioma" %}</span>
+            {% include 'menu_app/_language_selector.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Hoja: ¿salir sin guardar? (detalle) -->
+<div id="pm-sheet-salir" class="modal-backdrop movil-only pm-hoja" style="display:none;">
+    <div class="modal-box sheet-movil" role="alertdialog" aria-modal="true" aria-labelledby="pm-salir-titulo" aria-describedby="pm-salir-texto">
+        <div class="pm-asa"><span></span></div>
+        <div class="pm-confirmar">
+            <span class="pm-confirmar-icono" style="background:#FDF0E1; color:#A85200;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4M12 17.2v.1"/></svg></span>
+            <h2 id="pm-salir-titulo">{% trans "¿Salir sin guardar los cambios?" %}</h2>
+            <p id="pm-salir-texto">{% trans "Cambiaste el registro de esta semana. Si sales ahora, se quedará como estaba antes." %}</p>
+            <div class="pm-confirmar-botones">
+                <button type="button" class="pm-btn-azul" id="pm-salir-seguir" onclick="pmSalirSeguir()">{% trans "Seguir editando" %}</button>
+                <button type="button" class="pm-btn-rojo-borde" onclick="pmSalirDescartar()">{% trans "Descartar cambios" %}</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ── Modal calendario ── -->
 <div id="modal-backdrop"
      style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
-            z-index:1000; align-items:center; justify-content:center; padding:40px 24px 64px;">
-    <div style="background:#fff; border-radius:16px; width:min(880px,95vw);
-                box-shadow:0 1px 2px rgba(24,20,50,.06), 0 24px 56px -20px rgba(24,20,50,.28);
+            z-index:1000; align-items:center; justify-content:center; padding:24px;">
+    <div style="background:#fff; border-radius:20px; width:min(1080px, calc(100vw - 48px));
+                box-shadow:0 24px 64px rgba(30,32,51,.28);
                 overflow:hidden; position:relative;">
-        <iframe id="modal-iframe" src="" style="width:100%; height:940px; border:none; display:block;"></iframe>
+        <iframe id="modal-iframe" src="" title="{% trans 'Detalle del plan' %}" style="width:100%; height:min(1180px, calc(100vh - 48px)); border:none; display:block;"></iframe>
     </div>
 </div>
 
@@ -536,54 +947,279 @@
     </div>
 </div>
 
-<!-- ── Modal confirmar eliminar TODOS los planes del área ── -->
-<div id="modal-eliminar-todos"
-     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
-            z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
-                min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar todos los planes del área" %}</div>
-        <div id="texto-eliminar-todos" style="font-size:13px; color:var(--text-2); margin-bottom:24px;"></div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button onclick="cerrarModalEliminarTodos()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-            <form id="form-eliminar-todos" method="post" action="{% url 'mto:eliminar_todos_planes_area' %}" style="margin:0;">
-                {% csrf_token %}
-                <input type="hidden" name="area" id="input-area-eliminar-todos" value="">
-                <button type="submit" class="btn btn-danger" style="background:#EF4444; color:#fff; border-color:#EF4444; padding:8px 16px; font-size:13px;">{% trans "Sí, eliminar todos" %}</button>
-            </form>
+<!-- ── Modal: eliminar TODOS los planes del área (escritorio) ── -->
+<div class="pe-fondo" id="pe-elim-fondo" hidden>
+    <div class="pe-dlg pe-dlg-elim" role="alertdialog" aria-modal="true" aria-labelledby="pe-elim-t" aria-describedby="pe-elim-d">
+        <div class="ico" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4m0 4h.01"/></svg>
+        </div>
+        <h2 id="pe-elim-t">{% blocktrans with n=total_planes_area a=area_nombre %}¿Eliminar los {{ n }} planes de {{ a }}?{% endblocktrans %}</h2>
+        <p id="pe-elim-d">{% trans "Se eliminarán todos los planes del área junto con todo su historial de ejecuciones semanales. Esta acción no se puede deshacer." %}
+            {% trans "Antes de continuar puedes" %} <a id="pe-elim-exp" role="button" tabindex="0">{% trans "exportar el plan completo" %}</a>.</p>
+        <form method="post" action="{% url 'mto:eliminar_todos_planes_area' %}" id="pe-elim-form">
+            {% csrf_token %}
+            <input type="hidden" name="area" value="{{ filtro_area }}">
+            <label for="pe-elim-in">{% trans "Escribe ELIMINAR para confirmar" %}</label>
+            <input type="text" id="pe-elim-in" name="confirmacion" autocomplete="off" spellcheck="false" placeholder="ELIMINAR">
+            <div class="pe-dlg-botones">
+                <button type="button" class="pe-btn" id="pe-elim-cancel">{% trans "Cancelar" %}</button>
+                <button type="submit" class="pe-btn pe-btn-rojo" id="pe-elim-ok" disabled>{% blocktrans with n=total_planes_area %}Eliminar {{ n }} planes{% endblocktrans %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Modal: Tiempo por persona (escritorio) ── -->
+<div class="pe-fondo" id="pe-t-fondo" hidden>
+    <div class="pe-dlg pe-dlg-t" role="dialog" aria-modal="true" aria-labelledby="pe-t-titulo">
+        <div class="pe-t-cab">
+            <span class="pe-t-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 3.5"/></svg>
+            </span>
+            <div class="pe-t-tit">
+                <h2 id="pe-t-titulo">{% trans "Tiempo por persona" %}</h2>
+                <p>{{ area_nombre }} · {% trans "horas programadas por responsable" %}</p>
+            </div>
+            <div class="pe-t-sem">
+                <button type="button" class="fl" id="pe-t-prev" aria-label="{% trans 'Semana anterior' %}">‹</button>
+                <span class="ce" id="pe-t-semana" aria-live="polite"></span>
+                <button type="button" class="fl" id="pe-t-next" aria-label="{% trans 'Semana siguiente' %}">›</button>
+            </div>
+            <button type="button" class="pe-t-x" id="pe-t-x" aria-label="{% trans 'Cerrar' %}">✕</button>
+        </div>
+        <div class="pe-t-cuerpo">
+            <div class="pe-t-res" id="pe-t-res"></div>
+            <div>
+                <div class="pe-t-bar" id="pe-t-bar" role="img"></div>
+                <div class="pe-t-leyenda" id="pe-t-ley"></div>
+            </div>
+            <div class="pe-t-lista-cab">
+                <h3>{% trans "Responsables" %}</h3>
+                <div class="pe-t-orden">{% trans "Ordenar por" %}
+                    <div>
+                        <button type="button" id="pe-t-ord-t" aria-pressed="true">{% trans "Tiempo" %}</button>
+                        <button type="button" id="pe-t-ord-n" aria-pressed="false">{% trans "Nombre" %}</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pe-t-lista" id="pe-t-lista"></div>
+        </div>
+        <div class="pe-t-pie">
+            <small id="pe-t-nota"></small>
+            <button type="button" class="pe-btn" id="pe-t-exp">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                {% trans "Exportar" %}
+            </button>
+            <button type="button" class="pe-btn pe-btn-primario" id="pe-t-listo">{% trans "Listo" %}</button>
         </div>
     </div>
 </div>
 
-<!-- ── Modal tiempo por responsable (semana seleccionada) ── -->
-<div id="modal-tiempo-responsables"
-     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
-            z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:24px 28px;
-                min-width:320px; max-width:420px; width:90%; max-height:80vh; overflow-y:auto;
-                box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-            <div style="font-size:16px; font-weight:600; color:var(--text);">{% trans "Tiempo por persona" %}</div>
-            <button type="button" onclick="cerrarModalTiempoResponsables()" aria-label="{% trans 'Cerrar' %}"
-                    style="width:28px; height:28px; border-radius:6px; border:none; background:transparent; color:#8a8a96; cursor:pointer; font-size:15px; line-height:1; display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s;"
-                    onmouseover="this.style.background='#EF4444'; this.style.color='#fff';"
-                    onmouseout="this.style.background='transparent'; this.style.color='#8a8a96';">✕</button>
-        </div>
-        <div style="font-size:12.5px; color:var(--text-3); margin-bottom:16px;">{% trans "Semana" %} {{ filtro_semana }}</div>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-            {% for r in stats_semana.por_responsable %}
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:9px 12px; background:var(--surface); border-radius:8px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">{{ r.nombre }}</span>
-                <span style="font-size:13px; color:var(--text-2); font-variant-numeric:tabular-nums;">
-                    {% if r.horas > 0 %}{{ r.horas }}h{% if r.minutos_resto > 0 %} {{ r.minutos_resto }}m{% endif %}{% else %}{{ r.minutos }}m{% endif %}
-                </span>
+{% if puede_ver_historial %}
+<!-- ── Modal: Historial de acciones (contenido por fetch; ver historial_acciones.js) ── -->
+<div class="ha-fondo" id="ha-fondo" hidden>
+    <div class="ha-dlg" role="dialog" aria-modal="true" aria-labelledby="ha-titulo">
+        <div class="ha-cab">
+            <div>
+                <h2 id="ha-titulo">{% trans "Historial de acciones" %}</h2>
+                <p>{% trans "Importaciones y eliminaciones de rutinas" %}{% if area_nombre %} · {{ area_nombre }}{% endif %}</p>
             </div>
-            {% empty %}
-            <div style="text-align:center; padding:20px; color:var(--text-3); font-size:13px;">{% trans "Sin datos para esta semana." %}</div>
-            {% endfor %}
+            <button type="button" class="ha-x" id="ha-x" aria-label="{% trans 'Cerrar' %}">✕</button>
+        </div>
+        <div class="ha-cuerpo" id="ha-cuerpo"></div>
+    </div>
+</div>
+{% endif %}
+
+{% if puede_ver_responsables %}
+<!-- ── Modal: Responsables (lista por fetch + formulario en segundo diálogo; ver responsables_modal.js) ── -->
+<div class="rs-fondo" id="rs-fondo" hidden>
+    <div class="rs-dlg" role="dialog" aria-modal="true" aria-labelledby="rs-titulo">
+        <div class="rs-cab">
+            <div>
+                <h2 id="rs-titulo">{% trans "Responsables" %}</h2>
+                <p>{% if area_nombre %}{{ area_nombre }} · {% endif %}{% trans "personas que pueden asignarse a planes y seguimientos" %}</p>
+            </div>
+            <button type="button" class="rs-x" id="rs-x" aria-label="{% trans 'Cerrar' %}">✕</button>
+        </div>
+        <div class="rs-cuerpo" id="rs-cuerpo"></div>
+    </div>
+</div>
+
+<div class="rsf-fondo" id="rsf-fondo" hidden>
+    <div class="rsf-dlg" role="dialog" aria-modal="true" aria-labelledby="rsf-titulo">
+        <div class="rsf-cab">
+            <span class="rsf-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 19a4 4 0 0 0-8 0M11 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 8v6M16 11h6"/></svg>
+            </span>
+            <div>
+                <h2 id="rsf-titulo"></h2>
+                <p id="rsf-sub"></p>
+            </div>
+            <button type="button" class="rs-x" id="rsf-x" aria-label="{% trans 'Cerrar' %}">✕</button>
+        </div>
+        <div class="rsf-cuerpo">
+            <div class="rsf-prev">
+                <span class="rs-av" id="rsf-prev-av" data-p=""></span>
+                <div><b id="rsf-prev-nom"></b><span class="sub" id="rsf-prev-sub"></span></div>
+                <small>{% trans "Vista previa" %}</small>
+            </div>
+            <div>
+                <label class="rsf-lab" for="rsf-nomina">{% trans "Número de nómina" %}<i>*</i></label>
+                <input class="rsf-in rsf-mono" id="rsf-nomina" inputmode="numeric" autocomplete="off">
+                <div class="rsf-err" id="rsf-err-nomina" hidden></div>
+            </div>
+            <div>
+                <label class="rsf-lab" for="rsf-nombre">{% trans "Nombre(s)" %}<i>*</i></label>
+                <input class="rsf-in" id="rsf-nombre" autocomplete="off" placeholder="{% trans 'Ej. Juan' %}">
+                <div class="rsf-err" id="rsf-err-nombre" hidden></div>
+            </div>
+            <div>
+                <label class="rsf-lab" for="rsf-apellidos">{% trans "Apellidos" %}<i>*</i></label>
+                <input class="rsf-in" id="rsf-apellidos" autocomplete="off" placeholder="{% trans 'Ej. Perez' %}">
+                <div class="rsf-err" id="rsf-err-apellidos" hidden></div>
+            </div>
+            <div>
+                <span class="rsf-lab" id="rsf-lab-puesto">{% trans "Puesto" %}</span>
+                <div class="rsf-puestos" id="rsf-puestos" role="radiogroup" aria-labelledby="rsf-lab-puesto"></div>
+            </div>
+            <div class="rsf-act">
+                <div><b>{% trans "Activo" %}</b><span>{% trans "Puede asignarse a planes y seguimientos" %}</span></div>
+                <button type="button" class="rsf-sw" id="rsf-activo" role="switch" aria-checked="true" aria-label="{% trans 'Activo' %}"><i></i></button>
+            </div>
+            <div class="rsf-err" id="rsf-err-general" hidden></div>
+        </div>
+        <div class="rsf-pie">
+            <small>{% trans "Ctrl + Enter para guardar" %}</small>
+            <button type="button" class="rsf-btn" id="rsf-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="rsf-btn rsf-btn-pri" id="rsf-guardar">{% trans "Agregar responsable" %}</button>
         </div>
     </div>
 </div>
+<div class="rsf-fondo" id="rse-fondo" hidden>
+    <div class="rsf-dlg rse-dlg" role="alertdialog" aria-modal="true" aria-labelledby="rse-titulo" aria-describedby="rse-txt">
+        <div class="rse-cuerpo">
+            <span class="rse-ico" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+            </span>
+            <h2 id="rse-titulo"></h2>
+            <p id="rse-txt"></p>
+            <div class="rsf-err" id="rse-err" hidden></div>
+        </div>
+        <div class="rsf-pie">
+            <button type="button" class="rsf-btn" id="rse-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="rsf-btn rse-btn-del" id="rse-ok">{% trans "Eliminar" %}</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% include 'mto_app/plan/_distribucion_ots.html' %}
+
+{% if puede_ver_historial %}
+<!-- ── Modal: Rutinas de mantenimiento (contenido por fetch; ver rutinas_modal.js) ── -->
+<div class="rt-fondo" id="rt-fondo" hidden>
+    <div class="rt-dlg" role="dialog" aria-modal="true" aria-labelledby="rt-titulo">
+        <div class="rt-cab">
+            <div>
+                <h2 id="rt-titulo">{% trans "Rutinas de mantenimiento" %}</h2>
+                <p>{% if area_nombre %}{{ area_nombre }} · {% endif %}{% trans "pasos de cada rutina por plan de trabajo" %}</p>
+            </div>
+            <button type="button" class="rt-x" id="rt-x" aria-label="{% trans 'Cerrar' %}">✕</button>
+        </div>
+        <div class="rt-cuerpo" id="rt-cuerpo"></div>
+    </div>
+</div>
+
+<div class="rsf-fondo" id="rtdi-fondo" hidden>
+    <div class="rsf-dlg rtd-ancho" role="dialog" aria-modal="true" aria-labelledby="rtdi-titulo">
+        <div class="rsf-cab">
+            <span class="rsf-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9m0 0-4 4m4-4 4 4M5 4h14"/></svg>
+            </span>
+            <div>
+                <h2 id="rtdi-titulo">{% trans "Importar nueva rutina" %}</h2>
+                <p>{% trans "Sube un Excel con los pasos de la rutina" %}</p>
+            </div>
+            <button type="button" class="rs-x" id="rtdi-x" aria-label="{% trans 'Cerrar' %}">✕</button>
+        </div>
+        <div class="rsf-cuerpo">
+            <div class="rtd-campo">
+                <label class="rsf-lab" for="rtdi-plan">{% trans "Número de plan de trabajo" %}<i>*</i></label>
+                <select class="rtd-sel" id="rtdi-plan"></select>
+                <div class="rsf-err" id="rtdi-err-plan" hidden></div>
+            </div>
+            <div class="rtd-campo">
+                <div class="rtdz-etq">
+                    <label class="rsf-lab" for="rtdi-archivo">{% trans "Archivo de Excel" %}<i>*</i></label>
+                    <a class="rtdz-plantilla" href="{% url 'mto:rutina_plantilla' %}">{% trans "Descargar plantilla" %}</a>
+                </div>
+                <input type="file" id="rtdi-archivo" accept=".xlsx,.xlsm" hidden>
+                <div id="rtdi-caja-archivo">
+                    <div class="rtdz-vacio" id="rtdz-vacio" role="button" tabindex="0" aria-label="{% trans 'Seleccionar archivo de Excel' %}">
+                        <div class="rtdz-norm">
+                            <span class="rtdz-ico" aria-hidden="true">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6m0 0-2.5 2.5M12 12l2.5 2.5"/></svg>
+                            </span>
+                            <div class="rtdz-t1">{% trans "Arrastra tu Excel aquí" %}</div>
+                            <div class="rtdz-t2">{% trans "o" %} <u>{% trans "elige un archivo" %}</u></div>
+                            <div class="rtdz-t3">{% trans ".xlsx · hasta 5 MB" %}</div>
+                        </div>
+                        <div class="rtdz-arr">
+                            <span class="rtdz-ico" aria-hidden="true">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>
+                            </span>
+                            <div class="rtdz-t1" id="rtdz-arr-txt">{% trans "Suelta el archivo para subirlo" %}</div>
+                        </div>
+                    </div>
+                    <div class="rtdz-t" id="rtdz-tarjeta" hidden></div>
+                </div>
+                <div class="rsf-err" id="rtdi-err-archivo" hidden></div>
+                <div class="rtdz-sr" id="rtdz-anuncio" aria-live="polite"></div>
+            </div>
+            <div class="rtd-campo">
+                <label class="rsf-lab" for="rtdi-motivo">{% trans "Motivo" %}<i>*</i></label>
+                <textarea class="rtd-ta" id="rtdi-motivo" placeholder="{% trans 'Ej. Primera carga de la rutina' %}"></textarea>
+                <div class="rsf-err" id="rtdi-err-motivo" hidden></div>
+            </div>
+            <div class="rtd-aviso" id="rtdi-existe" hidden></div>
+            <div class="rsf-err" id="rtdi-err-general" hidden></div>
+        </div>
+        <div class="rsf-pie">
+            <button type="button" class="rsf-btn" id="rtdi-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="rsf-btn rsf-btn-pri" id="rtdi-ok">{% trans "Importar" %}</button>
+        </div>
+    </div>
+</div>
+
+<div class="rsf-fondo" id="rtde-fondo" hidden>
+    <div class="rsf-dlg rse-dlg rtd-ancho" role="alertdialog" aria-modal="true" aria-labelledby="rtde-titulo" aria-describedby="rtde-txt">
+        <div class="rse-cuerpo">
+            <span class="rse-ico" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4m0 4h.01"/></svg>
+            </span>
+            <h2 id="rtde-titulo"></h2>
+            <p id="rtde-txt"></p>
+            <div class="rtd-campo">
+                <label class="rsf-lab" for="rtde-motivo">{% trans "Motivo" %}<i>*</i></label>
+                <textarea class="rtd-ta" id="rtde-motivo"></textarea>
+                <div class="rsf-err" id="rtde-err-motivo" hidden></div>
+            </div>
+            <div class="rtd-campo" id="rtde-confirmar-wrap" hidden>
+                <label class="rsf-lab" id="rtde-confirmar-lab" for="rtde-confirmar"></label>
+                <input class="rsf-in rsf-mono" id="rtde-confirmar" autocomplete="off">
+                <div class="rsf-err" id="rtde-err-confirmar" hidden></div>
+            </div>
+            <div class="rsf-err" id="rtde-err-general" hidden></div>
+        </div>
+        <div class="rsf-pie">
+            <button type="button" class="rsf-btn" id="rtde-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="rsf-btn rse-btn-del" id="rtde-ok" disabled>{% trans "Eliminar rutina" %}</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 
 <!-- Toast global -->
 <div id="toast-global"
@@ -606,67 +1242,171 @@
 </div>
 <style>
 @keyframes overlay-spin { to { transform: rotate(360deg); } }
-/* Modal "Nuevo/editar seguimiento" — mismo box-model que el input de fecha
-   nativo que reemplazó (padding 8px 10px, sin altura fija, radio 7px). */
-#modal-seg-padre .dp-control { height: auto; padding: 8px 10px; border-radius: 7px; }
+#modal-seg-padre .dp-control { height: 44px; border-radius: 10px; }
+/* Modal "Nuevo/Editar seguimiento" del Plan: franja "Ligado a", chips y visor (el resto reutiliza seguimientos_escritorio.css) */
+.psf-ligado { margin: 14px 24px 0; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+              background: var(--sge-thead); border: 1px solid var(--sge-guia); font-size: 13px; color: var(--sge-muted); }
+.psf-ligado[hidden] { display: none; }
+.psf-ligado svg { flex: none; }
+.psf-cod { font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 700; font-size: 12px; color: var(--indigo-dk); background: var(--indigo-lt); padding: 2px 7px; border-radius: 6px; }
+.psf-nom { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.psf-chip { padding: 3px 9px; border-radius: 8px; background: var(--sge-fondo); border: 1px solid var(--sge-borde); font-weight: 600; font-size: 12px; color: var(--text); white-space: nowrap; }
+.psf-est { padding: 3px 9px; border-radius: 8px; font-weight: 600; font-size: 12px; white-space: nowrap; background: var(--sge-neutro-lt); color: var(--sge-neutro); }
+.psf-est.completada { background: var(--sge-comp-lt); color: var(--sge-comp); }
+.psf-est.pendiente  { background: var(--sge-pend-lt); color: var(--sge-pend); }
+.psf-est.reagendada { background: var(--sge-proc-lt); color: var(--sge-proc); }
+.psf-est.cancelada  { background: var(--sge-venc-lt); color: var(--sge-venc); }
+.psf-semtag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 7px; background: var(--sge-neutro-lt); color: var(--sge-neutro); white-space: nowrap; }
+.psf-semtag:empty { display: none; }
+.psf-semtag.hoy  { background: var(--sge-pend-lt); color: var(--sge-pend); }
+.psf-semtag.venc { background: var(--sge-venc-lt); color: var(--sge-venc); }
+.psf-av { width: 28px; height: 28px; flex: none; border-radius: 14px; background: var(--indigo-lt); color: var(--indigo-dk); font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.psf-resp-nom { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#modal-seg-padre .sge-lista .av { background: var(--indigo-lt); color: var(--indigo-dk); }
+.psf-visor { position: absolute; inset: 0; z-index: 5; background: rgba(30,32,51,.85); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.psf-visor[hidden] { display: none; }
+.psf-visor img { max-width: 100%; max-height: 100%; border-radius: 12px; }
+.psf-visor button { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border: 0; border-radius: 10px; background: rgba(255,255,255,.14); color: #fff; font-size: 18px; cursor: pointer; }
+.psf-visor button:hover { background: #EF4444; }
 </style>
 
-<!-- Modal seguimiento -->
-<div id="modal-seg-padre"
-     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
-            z-index:3000; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; padding:24px 28px;
-                min-width:360px; max-width:480px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;" id="mseg-titulo">{% trans "Nuevo seguimiento" %}</div>
-        <div style="font-size:11px; color:#9CA3AF; margin-bottom:16px;" id="mseg-subtitulo"></div>
+<!-- ── Modal Nuevo / Editar seguimiento (se abre desde el detalle del plan; ver plan_seguimiento_form.js) ── -->
+<div id="modal-seg-padre" class="sge-m" role="presentation" style="background:rgba(30,32,51,.55);">
+    <div class="mf-box sge-modal" style="width:880px;" role="dialog" aria-modal="true" aria-labelledby="psf-titulo">
 
-        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
-            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Problema encontrado" %} *</label>
-            <textarea id="mseg-problema" rows="3" placeholder="Describe el problema..."
-                      style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical;"></textarea>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
-            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Acción realizada" %}</label>
-            <textarea id="mseg-accion" rows="2" placeholder="Describe la acción tomada..."
-                      style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical;"></textarea>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:5px; position:relative; margin-bottom:14px;">
-            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Responsable" %}</label>
-            <input type="text" id="mseg-responsable" placeholder="Buscar responsable..." autocomplete="off"
-                style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px; width:100%;">
-            <div id="mseg-resp-dropdown" style="display:none; position:absolute; left:0; right:0; top:100%;
-                background:var(--white); border:1px solid var(--indigo); border-top:none;
-                border-radius:0 0 7px 7px; z-index:5000; max-height:180px; overflow-y:auto;
-                box-shadow:0 4px 16px rgba(0,0,0,.15);"></div>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
-            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Fecha compromiso" %}</label>
-            {% include 'menu_app/_date_picker.html' with name='mseg_fecha_iso' dp_id='dp-mseg-fecha' %}
-        </div>
-        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
-            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Estatus" %}</label>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button type="button" class="mseg-pill" data-val="pendiente" onclick="msegEstatus('pendiente')"
-                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid #854F0B; background:#FAEEDA; color:#854F0B;">{% trans "Pendiente" %}</button>
-                <button type="button" class="mseg-pill" data-val="en_proceso" onclick="msegEstatus('en_proceso')"
-                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #E5E4F0; background:#fff; color:#6B7280;">{% trans "En proceso" %}</button>
-                <button type="button" class="mseg-pill" data-val="completado" onclick="msegEstatus('completado')"
-                        style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #E5E4F0; background:#fff; color:#6B7280;">{% trans "Completado" %}</button>
+        <div class="sge-m-head">
+            <span class="sge-m-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path id="psf-ico-path" d="M12 5v14M5 12h14"/></svg>
+            </span>
+            <div class="sge-m-tt">
+                <h2 id="psf-titulo"><span id="psf-titulo-txt">{% trans "Nuevo seguimiento" %}</span><span class="orden" id="psf-orden" hidden></span></h2>
+                <div class="sge-m-sub" id="psf-sub"></div>
             </div>
-            <input type="hidden" id="mseg-estatus" value="pendiente">
-            <input type="hidden" id="mseg-id" value="">
-            <input type="hidden" id="mseg-registro-pk" value="">
+            <button type="button" class="sge-x" id="psf-cerrar" aria-label="{% trans 'Cerrar' %}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
         </div>
-        <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:16px;">
-            <label style="font-size:11px; font-weight:600; color:#6B7280; text-transform:uppercase;">{% trans "Notas adicionales" %}</label>
-            <textarea id="mseg-notas" rows="2" placeholder="Notas opcionales..."
-                      style="padding:8px 10px; border:1px solid #E5E4F0; border-radius:7px; font-family:inherit; font-size:14px; resize:vertical;"></textarea>
+
+        <!-- Ligado a: plan, semana y estado de esa semana (solo lectura) -->
+        <div class="psf-ligado" id="psf-ligado" hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+            <span class="lab">{% trans "Ligado a" %}</span>
+            <span class="psf-cod" id="psf-lig-cod"></span>
+            <span class="psf-nom" id="psf-lig-nom"></span>
+            <span class="psf-chip" id="psf-lig-sem"></span>
+            <span class="psf-est" id="psf-lig-est"></span>
         </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button type="button" onclick="cerrarMseg()"
-                    style="padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; border:1px solid #E5E4F0; background:transparent; color:#6B7280;">{% trans "Cancelar" %}</button>
-            <button type="button" onclick="guardarMseg()"
-                    style="padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; border:none; background:var(--indigo); color:#fff;">{% trans "Guardar" %}</button>
+
+        <div class="sge-m-cuerpo">
+            <div class="sge-col">
+                <div>
+                    <label class="sge-lab" for="psf-problema">{% trans "Problema encontrado" %} <span class="req" aria-hidden="true">*</span><span class="cnt" id="psf-cnt-problema">0 / 500</span></label>
+                    <textarea class="sge-ta" id="psf-problema" maxlength="500" style="height:104px;" aria-required="true"
+                              placeholder="{% trans '¿Qué falla se encontró? Equipo, síntoma, ubicación…' %}"></textarea>
+                    <div class="sge-err" id="psf-err-problema" hidden></div>
+                </div>
+                <div>
+                    <label class="sge-lab" for="psf-accion">{% trans "Acción realizada" %} <span class="cnt" id="psf-cnt-accion">0 / 500</span></label>
+                    <textarea class="sge-ta" id="psf-accion" maxlength="500" style="height:88px;"
+                              placeholder="{% trans '¿Qué se hizo o qué se va a hacer?' %}"></textarea>
+                    <div class="sge-err" id="psf-err-accion" hidden></div>
+                </div>
+                <div>
+                    <label class="sge-lab" for="psf-notas">{% trans "Notas adicionales" %} <span class="opc">{% trans "opcional" %}</span></label>
+                    <textarea class="sge-ta" id="psf-notas" style="height:72px;" placeholder="{% trans 'Refacciones usadas, observaciones…' %}"></textarea>
+                </div>
+            </div>
+
+            <div class="sge-col">
+                <div>
+                    <label class="sge-lab" id="psf-resp-lab" for="psf-resp-input">{% trans "Responsable" %} <span class="req" aria-hidden="true">*</span></label>
+                    <div class="sge-combo" id="psf-combo">
+                        <span class="elegido-txt" id="psf-resp-elegido"></span>
+                        <input type="text" id="psf-resp-input" role="combobox" autocomplete="off" aria-autocomplete="list" aria-expanded="false"
+                               aria-controls="psf-resp-lista" placeholder="{% trans 'Buscar responsable…' %}">
+                        <button type="button" class="quitar" id="psf-resp-quitar" aria-label="{% trans 'Quitar responsable' %}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                        </button>
+                        <ul class="sge-lista" id="psf-resp-lista" role="listbox" aria-labelledby="psf-resp-lab" hidden></ul>
+                    </div>
+                    <div class="sge-err" id="psf-err-resp" hidden></div>
+                </div>
+
+                <div>
+                    <label class="sge-lab">{% trans "Fecha compromiso" %}</label>
+                    <div class="sge-fecha-fila">
+                        <div class="sge-fechaw" id="psf-fechaw" style="flex:1; min-width:0;">
+                            {% include 'menu_app/_date_picker.html' with name='psf_fecha_iso' dp_id='dp-psf-fecha' %}
+                        </div>
+                        <span class="psf-semtag" id="psf-sem-tag"></span>
+                    </div>
+                    <div class="sge-atajos">
+                        <button type="button" class="sge-atajo psf-atajo" data-atajo="hoy" aria-pressed="false">{% trans "Hoy" %}</button>
+                        <button type="button" class="sge-atajo psf-atajo" data-atajo="7" aria-pressed="false">{% trans "+1 semana" %}</button>
+                        <button type="button" class="sge-atajo psf-atajo" data-atajo="14" aria-pressed="false">{% trans "+2 semanas" %}</button>
+                        <button type="button" class="sge-atajo psf-atajo" data-atajo="fin" aria-pressed="false">{% trans "Fin de mes" %}</button>
+                    </div>
+                    <div class="sge-err" id="psf-err-fecha" hidden></div>
+                </div>
+
+                <div>
+                    <label class="sge-lab" id="psf-est-lab">{% trans "Estatus" %}</label>
+                    <div class="sge-estatus" role="radiogroup" aria-labelledby="psf-est-lab">
+                        <button type="button" class="sge-eb psf-eb" role="radio" data-val="pendiente" aria-checked="false"><i></i>{% trans "Pendiente" %}</button>
+                        <button type="button" class="sge-eb psf-eb" role="radio" data-val="en_proceso" aria-checked="false"><i></i>{% trans "En proceso" %}</button>
+                        <button type="button" class="sge-eb psf-eb" role="radio" data-val="completado" aria-checked="false"><i></i>{% trans "Completado" %}</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="sge-lab">{% trans "Imágenes" %} <span class="cnt" id="psf-cnt-imgs">0 / 4</span></label>
+                    <div class="sge-imgs" id="psf-imgs"></div>
+                    <input type="file" id="psf-file" accept="image/jpeg,image/png" multiple hidden>
+                    <div class="sge-ayuda">{% trans "Arrastra, pega (Ctrl + V) o haz clic · JPG o PNG hasta 5 MB" %}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sge-err" id="psf-err-general" hidden style="margin:0 24px 10px;"></div>
+
+        <div class="sge-m-pie">
+            <button type="button" class="eliminar" id="psf-eliminar" hidden>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+                {% trans "Eliminar" %}
+            </button>
+            <span class="atajo">{% trans "Ctrl + Enter para guardar" %}</span>
+            <button type="button" class="cancelar" id="psf-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="guardar" id="psf-guardar">{% trans "Crear seguimiento" %}</button>
+        </div>
+
+        <!-- Visor de fotos -->
+        <div class="psf-visor" id="psf-visor" hidden role="dialog" aria-modal="true" aria-label="{% trans 'Foto' %}">
+            <img alt="">
+            <button type="button" aria-label="{% trans 'Cerrar' %}">&times;</button>
+        </div>
+    </div>
+</div>
+
+<!-- ¿Descartar cambios? -->
+<div id="psf-descartar" class="sge-m" style="z-index:3100; background:rgba(30,32,51,.55);" role="presentation">
+    <div class="mf-box sge-dlg" role="alertdialog" aria-modal="true" aria-labelledby="psf-d-tt" aria-describedby="psf-d-tx">
+        <h2 id="psf-d-tt">{% trans "¿Descartar cambios?" %}</h2>
+        <p id="psf-d-tx">{% trans "Tienes cambios sin guardar en este seguimiento." %}</p>
+        <div class="sge-dlg-btns">
+            <button type="button" class="seguro" id="psf-d-seguir">{% trans "Seguir editando" %}</button>
+            <button type="button" class="peligro" id="psf-d-descartar">{% trans "Descartar" %}</button>
+        </div>
+    </div>
+</div>
+
+<!-- Eliminar seguimiento -->
+<div id="psf-eliminar-dlg" class="sge-m" style="z-index:3100; background:rgba(30,32,51,.55);" role="presentation">
+    <div class="mf-box sge-dlg" role="alertdialog" aria-modal="true" aria-labelledby="psf-e-tt" aria-describedby="psf-eliminar-tx">
+        <h2 id="psf-e-tt">{% trans "Eliminar seguimiento" %}</h2>
+        <p id="psf-eliminar-tx"></p>
+        <div class="sge-dlg-btns">
+            <button type="button" id="psf-e-cancelar">{% trans "Cancelar" %}</button>
+            <button type="button" class="peligro" id="psf-e-eliminar">{% trans "Eliminar" %}</button>
         </div>
     </div>
 </div>
@@ -676,11 +1416,392 @@
 {% block extra_js %}
 <!-- Variable Django necesaria para el JS -->
 <script>
-    window.MTO_CONFIG = { anio_actual: {{ anio_actual }}, csrf_token: '{{ csrf_token }}' };
+    window.MTO_CONFIG = { anio_actual: {{ anio_actual }}, anio_filtro: {{ filtro_anio|default:anio_actual }}, csrf_token: '{{ csrf_token }}' };
     const CSRF_MTO = '{{ csrf_token }}';
 </script>
 <script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 <script src="{% static 'mto_app/js/plan_lista.js' %}"></script>
+<script>
+window.PSF_I18N = {
+    sinResultados:     "{% trans 'Sin resultados' %}",
+    venceHoy:          "{% trans 'vence hoy' %}",
+    vencida:           "{% trans 'vencida' %}",
+    fechaAnterior:     "{% trans 'La fecha compromiso no puede ser anterior a la creación ({f})' %}",
+    verFoto:           "{% trans 'Ver foto {n}' %}",
+    quitarFoto:        "{% trans 'Quitar foto' %}",
+    agregarFoto:       "{% trans 'Agregar foto' %}",
+    agregar:           "{% trans 'Agregar' %}",
+    maxFotos:          "{% trans 'Máximo 4 imágenes por seguimiento' %}",
+    soloImagenes:      "{% trans 'Solo JPG o PNG de hasta 5 MB' %}",
+    tituloEditar:      "{% trans 'Editar seguimiento' %}",
+    tituloNuevo:       "{% trans 'Nuevo seguimiento' %}",
+    subNuevo:          "{% trans 'Acción correctiva ligada al plan' %}",
+    subEditar:         "{% trans 'Creado el {fecha} por {usuario}' %}",
+    ultimaEdicion:     "{% trans 'última edición {cuando}' %}",
+    guardarCambios:    "{% trans 'Guardar cambios' %}",
+    crearSeguimiento:  "{% trans 'Crear seguimiento' %}",
+    sinRegistro:       "{% trans 'Sin registro' %}",
+    errProblema:       "{% trans 'Describe el problema' %}",
+    errAccion:         "{% trans 'Describe la acción realizada' %}",
+    errResp:           "{% trans 'Elige un responsable de la lista' %}",
+    guardando:         "{% trans 'Guardando…' %}",
+    errorGuardar:      "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
+    errorFotos:        "{% trans 'El seguimiento se guardó, pero no se pudieron subir las imágenes.' %}",
+    errorRed:          "{% trans 'Error de red. Intenta de nuevo.' %}",
+    toastGuardado:     "{% trans 'Cambios guardados' %}",
+    toastCreado:       "{% trans 'Seguimiento {orden} creado' %}",
+    toastEliminado:    "{% trans 'Seguimiento {orden} eliminado' %}",
+    confirmarEliminar: "{% trans '¿Eliminar el seguimiento {orden}? Esta acción no se puede deshacer.' %}",
+    errorEliminar:     "{% trans 'No se pudo eliminar. Intenta de nuevo.' %}"
+};
+</script>
+<script src="{% static 'mto_app/js/plan_seguimiento_form.js' %}?v=3"></script>
 <script src="{% static 'mto_app/js/overlay_exportar.js' %}"></script>
+{{ carga_persona|json_script:"pe-carga" }}
+<script>
+window.PE_I18N = {
+    semana:        "{% trans 'Semana {n} · {a}' %}",
+    semanaCorta:   "{% trans 'Semana {n}' %}",
+    exportando:    "{% trans 'Generando archivo…' %}",
+    descargado:    "{% trans 'Se descargó {archivo}' %}",
+    errorArchivo:  "{% trans 'No se pudo generar el archivo.' %}",
+    eliminados:    "{% trans 'Se eliminaron {n} planes' %}",
+    responsableOk: "{% trans 'Responsable guardado' %}",
+    errorResp:     "{% trans 'No se pudo guardar el responsable.' %}",
+    sinAsignar:    "{% trans 'Sin asignar' %}",
+    asignar:       "{% trans 'Asignar' %}",
+    verDetalle:    "{% trans 'Ver detalle' %}",
+    eliminar:      "{% trans 'Eliminar' %}",
+    sinResponsables: "{% trans 'No hay responsables en esta área.' %}",
+    columnasDe:    "{% trans '{n} de {t}' %}",
+    total:         "{% trans 'Total' %}",
+    asignado:      "{% trans 'Asignado' %}",
+    tareas:        "{% trans '{n} tareas' %}",
+    tarea1:        "{% trans '1 tarea' %}",
+    personas:      "{% trans '{n} personas' %}",
+    persona1:      "{% trans '1 persona' %}",
+    delTotal:      "{% trans 'del total' %}",
+    deCap:         "{% trans 'de {c} h' %}",
+    capRef:        "{% trans 'Capacidad de referencia: {c} h por persona' %}",
+    sobrecargado:  "{% trans 'Sobrecargado' %}",
+    verSin:        "{% trans 'Ver las {n} tareas sin responsable' %}",
+    asignarSem:    "{% trans 'Asignar responsables de S{n}' %}",
+    grupos:        "{% trans '{k} grupos · tiempos según la duración de cada plan' %}",
+    sinDatos:      "{% trans 'Sin datos para esta semana.' %}",
+    pendiente:     "{% trans 'Pendiente' %}",
+    completada:    "{% trans 'Completada' %}",
+    reagendada:    "{% trans 'Reagendada' %}",
+    sinRegistro:   "{% trans 'Sin registro' %}",
+    distribucion:  "{% trans 'Distribución del tiempo' %}",
+    tareasDe:      "{% trans '{n} tareas · {p} personas' %}",
+    anioAnt:       "{% trans 'Año anterior' %}",
+    anioSig:       "{% trans 'Año siguiente' %}",
+    quitarFiltro:  "{% trans 'Quitar filtro de responsable' %}",
+    ots1:          "{% trans '1 OT' %}",
+    otsN:          "{% trans '{n} OTs' %}"
+};
+window.PE_CFG = {
+    csrf:             '{{ csrf_token }}',
+    urlTiempoXlsx:    "{% url 'mto:exportar_tiempo_personas' %}",
+    urlSemanaStatus:  "{% url 'mto:exportar_semana_excel' %}",
+    area:             "{{ filtro_area }}",
+    urlConteoSemanas: "{% url 'mto:conteo_ots_semanas' %}",
+    urlDistribucion:  "{% url 'mto:distribucion_ots' %}"
 
+};
+</script>
+<script src="{% static 'menu_app/js/page_size_toggle.js' %}"></script>
+<script src="{% static 'mto_app/js/plan_escritorio.js' %}?v=1"></script>
+<script src="{% static 'mto_app/js/distribucion_ots.js' %}"></script>
+{% if puede_ver_historial %}
+<script>
+window.HA_CFG = { url: "{% url 'mto:historial_acciones' %}", area: "{{ filtro_area }}" };
+window.HA_I18N = {
+    cargando: "{% trans 'Cargando…' %}",
+    error:    "{% trans 'No se pudo cargar el historial.' %}"
+};
+</script>
+<script src="{% static 'mto_app/js/filter_select.js' %}"></script>
+<script src="{% static 'menu_app/js/date_range_picker.js' %}"></script>
+<script src="{% static 'mto_app/js/historial_acciones.js' %}"></script>
+{% endif %}
+
+{% if puede_ver_responsables %}
+<script>
+window.RS_CFG = {
+    urlLista:    "{% url 'mto:responsables_modal' %}",
+    urlGuardar:  "{% url 'mto:guardar_responsable' %}",
+    urlAlternar: "{% url 'mto:alternar_responsable' 0 %}".replace(/0\/$/, ''),
+    urlEliminar: "{% url 'mto:eliminar_responsable_modal' 0 %}".replace(/0\/$/, ''),
+    area:        "{{ filtro_area }}",
+    areaNombre:  "{{ area_nombre|escapejs }}",
+    csrf:        "{{ csrf_token }}",
+    puestos: [
+        { valor: "Gerente",     label: "{% trans 'Gerente' %}" },
+        { valor: "Coordinador", label: "{% trans 'Coordinador' %}" },
+        { valor: "Supervisor",  label: "{% trans 'Supervisor' %}" },
+        { valor: "Líder",       label: "{% trans 'Líder' %}" },
+        { valor: "Técnico",     label: "{% trans 'Técnico' %}" },
+        { valor: "Auxiliar",    label: "{% trans 'Auxiliar' %}" }
+    ]
+};
+window.RS_I18N = {
+    cargando:         "{% trans 'Cargando…' %}",
+    error:            "{% trans 'No se pudo cargar la lista de responsables.' %}",
+    errorGuardar:     "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
+    errNomina:        "{% trans 'Escribe el número de nómina' %}",
+    errNombre:        "{% trans 'Escribe el nombre' %}",
+    errApellidos:     "{% trans 'Escribe los apellidos' %}",
+    guardando:        "{% trans 'Guardando…' %}",
+    guardarCambios:   "{% trans 'Guardar cambios' %}",
+    agregar:          "{% trans 'Agregar responsable' %}",
+    tituloNuevo:      "{% trans 'Nuevo responsable' %}",
+    tituloEditar:     "{% trans 'Editar responsable' %}",
+    subEditar:        "{% trans 'Alta {alta} · última edición {edicion}' %}",
+    previoVacio:      "{% trans 'Nombre del responsable' %}",
+    previoSub:        "{% trans 'Nómina {nomina} · {puesto} · {estado}' %}",
+    sinPuesto:        "{% trans 'Sin puesto' %}",
+    activo:           "{% trans 'Activo' %}",
+    inactivo:         "{% trans 'Inactivo' %}",
+    sinArea:          "{% trans 'Elige un área para agregar responsables.' %}",
+    toastCreado:      "{% trans 'Responsable agregado' %}",
+    toastGuardado:    "{% trans 'Cambios guardados' %}",
+    toastDesactivado: "{% trans '{nombre} se desactivó' %}",
+    toastReactivado:  "{% trans '{nombre} se reactivó' %}",
+    eliminarTitulo:   "{% trans '¿Eliminar a {nombre}?' %}",
+    toastEliminado:   "{% trans '{nombre} se eliminó' %}",
+    errorEliminar:    "{% trans 'No se pudo eliminar. Intenta de nuevo.' %}",
+    eliminarSin:      "{% trans 'Esta acción no se puede deshacer.' %}",
+    eliminarCon:      "{% trans 'Tiene {n} registros asignados. Se conservarán tal como están, con su nombre. La persona dejará de aparecer en las listas y ya no se podrá asignar.' %}",
+    toastRecuperado:  "{% trans '{nombre} se recuperó con su historial' %}"
+};
+</script>
+<script src="{% static 'mto_app/js/responsables_modal.js' %}"></script>
+{% endif %}
+
+{% if puede_ver_historial %}
+<script>
+window.RT_CFG = {
+    urlLista:    "{% url 'mto:rutinas_modal' %}",
+    urlValidar:  "{% url 'mto:rutina_validar' %}",
+    urlImportar: "{% url 'mto:rutina_importar' %}",
+    urlEliminar: "{% url 'mto:rutina_eliminar' %}",
+    area:        "{{ filtro_area }}",
+    areaNombre:  "{{ area_nombre|escapejs }}",
+    csrf:        "{{ csrf_token }}"
+};
+window.RT_I18N = {
+    cargando:       "{% trans 'Cargando…' %}",
+    error:          "{% trans 'No se pudo cargar las rutinas.' %}",
+    sinArea:        "{% trans 'Elige un área para importar rutinas.' %}",
+    eligePlan:      "{% trans 'Elige el número de plan…' %}",
+    importar:       "{% trans 'Importar' %}",
+    importando:     "{% trans 'Importando…' %}",
+    reemplazar:     "{% trans 'Reemplazar rutina' %}",
+    existe:         "{% trans 'Ya existe {codigo} con {n} pasos. ¿Reemplazarla? Se borrarán sus pasos actuales y se cargarán los del archivo.' %}",
+    revisando:      "{% trans 'Revisando…' %}",
+    subido:         "{% trans '{tamano} · subido' %}",
+    pasosDetectados:"{% trans '{n} pasos detectados (Seq {min}–{max})' %}",
+    codigoArea:     "{% trans 'Código {codigo} · {area}' %}",
+    yaExiste:       "{% trans 'Ya existe {codigo} con {n} pasos: se reemplazará' %}",
+    verPrevia:      "{% trans 'Ver vista previa' %}",
+    ocultarPrevia:  "{% trans 'Ocultar vista previa' %}",
+    cambiarArchivo: "{% trans 'Cambiar archivo' %}",
+    elegirOtro:     "{% trans 'Elegir otro archivo' %}",
+    plantilla:      "{% trans 'Descargar plantilla' %}",
+    noSePuede:      "{% trans 'No se puede importar' %}",
+    masErrores:     "{% trans 'y {k} más…' %}",
+    quitar:         "{% trans 'Quitar archivo' %}",
+    sinDetalle:     "{% trans 'Sin detalle' %}",
+    anuncioListo:   "{% trans 'Archivo listo: {n} pasos detectados' %}",
+    anuncioError:   "{% trans 'No se puede importar: {k} errores' %}",
+    soloExcel:      "{% trans 'Solo archivos de Excel' %}",
+    suelta:         "{% trans 'Suelta el archivo para subirlo' %}",
+    errorRevisar:   "{% trans 'No se pudo revisar el archivo. Intenta de nuevo.' %}",
+    confirmaReemplazo: "{% trans 'Ya existe {codigo} con {m} pasos. ¿Reemplazarla por {n} pasos?' %}",
+    descartar:         "{% trans '¿Descartar la importación?' %}",   
+    errPlan:           "{% trans 'Elige el número de plan' %}",
+    errArchivo:        "{% trans 'Elige el archivo de Excel' %}",
+    errMotivo:         "{% trans 'Escribe el motivo' %}",
+    errorGuardar:      "{% trans 'No se pudo importar. Intenta de nuevo.' %}",
+    errorEliminar:     "{% trans 'No se pudo eliminar. Intenta de nuevo.' %}",
+    toastImportada:    "{% trans 'Rutina {codigo} importada · {n} pasos' %}",
+    toastEliminada:    "{% trans 'Rutina {codigo} eliminada' %}",
+    eliminarTitulo:    "{% trans '¿Eliminar la rutina {codigo}?' %}",
+    eliminarTxt:       "{% trans 'Se borran sus {n} pasos. Esta acción no se puede deshacer.' %}",
+    eliminarTxtUso:    "{% trans 'Se borran sus {n} pasos. Los planes que la usan ({k}) se quedarán sin rutina. Esta acción no se puede deshacer.' %}",
+    confirmaCodigo:    "{% trans 'Escribe {codigo} para confirmar' %}",
+    ordenEjecucion:    "{% trans '{n} en orden de ejecución' %}",
+    filtroPc:          "{% trans '{m} de {n} con punto crítico {v} ({nombre})' %}",
+    omitida1:          "{% trans '1 fila vacía omitida' %}",
+    omitidasN:         "{% trans '{k} filas vacías omitidas' %}",
+    documento:         "{% trans 'Documento {doc}' %}",
+    prioridadRes:      "{% trans 'Prioridad {p}' %}",
+    creadorRes:        "{% trans 'Creador {c}' %}",
+    conPc:             "{% trans '{k} pasos con punto crítico' %}",
+    prioridad:         "{% trans 'Prioridad' %}",
+    area:              "{% trans 'Área' %}",
+    locacion:          "{% trans 'Locación' %}",
+    creador:           "{% trans 'Creador' %}",
+    seq:               "{% trans 'SEQ.' %}",
+    pasoDetalle:       "{% trans 'PASO Y DETALLE' %}",
+    puntosCriticos:    "{% trans 'PUNTOS CRÍTICOS' %}",
+    pcNombres:         ["{% trans 'Obligatoria' %}", "{% trans 'Secuencia obligatoria' %}", "{% trans 'Seguridad' %}"]
+ 
+};
+</script>
+<script src="{% static 'mto_app/js/rutinas_modal.js' %}"></script>
+{% endif %}
+
+
+{{ responsables_por_area|json_script:"pm-responsables" }}
+{{ carga_semana|json_script:"pm-carga" }}
+<script>
+window.PLAN_MOVIL = {
+    puedeAsignar: {% if puede_asignar_responsable %}true{% else %}false{% endif %},
+    i18n: {
+        persona:          "{% trans 'Persona: {nombre}' %}",
+        todas:            "{% trans 'Todas' %}",
+        sinAsignar:       "{% trans 'Sin asignar' %}",
+        asignar:          "{% trans 'Asignar responsable' %}",
+        cambiarResp:      "{% trans 'Responsable: {nombre}. Cambiar' %}",
+        carga:            "{% trans '{n} tareas esta semana · {h}' %}",
+        quitarResp:       "{% trans 'Quitar responsable' %}",
+        asignarA:         "{% trans 'Asignar a {nombre}' %}",
+        respGuardado:     "{% trans '✓ Responsable guardado' %}",
+        errorGuardar:     "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
+        errorCargar:      "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
+        cargarN:          "{% trans 'Cargar {n} más · quedan {m}' %}",
+        palabraEliminar:  "{% trans 'ELIMINAR' %}",
+        programadas:      "{% trans 'Programadas {anio}' %}",
+        progValor:        "{% trans '{n} · {k} hechas' %}",
+        sinSemanas:       "{% trans 'Esta tarea no tiene semanas programadas en este año.' %}",
+        ariaSemana:       "{% trans 'Semana {n}, {estado}' %}",
+        seleccionada:     "{% trans 'seleccionada' %}",
+        est_completada:   "{% trans 'completada' %}",
+        est_pendiente:    "{% trans 'pendiente' %}",
+        est_reagendada:   "{% trans 'reagendada' %}",
+        est_cancelada:    "{% trans 'cancelada' %}",
+        est_vacio:        "{% trans 'sin generar' %}",
+        semanaRango:      "{% trans 'Semana {n} · {rango} {anio}' %}",
+        guardarS:         "{% trans 'Guardar S{n}' %}",
+        registroGuardado: "{% trans '✓ S{n} guardada' %}",
+        unaTarea:         "{% trans '1 tarea' %}",
+        nTareas:          "{% trans '{n} tareas' %}",
+        pctTotal:         "{% trans '{p}% del total' %}",
+        sinHoras:         "{% trans 'No hay tareas programadas en esta semana.' %}",
+    },
+};
+</script>
+<script>
+/* Textos del detalle del plan en celular (plan_movil.js) */
+window.PLAN_MOVIL_DET = {
+    cargando:         "{% trans 'Cargando…' %}",
+    errorCargar:      "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
+    ariaSemana:       "{% trans 'Semana {n}, {rango}, {estado}' %}",
+    cumLabel:         "{% trans 'Cumplimiento {anio}' %}",
+    cumValor:         "{% trans '{h} de {e} · {p}%' %}",
+    nOcurr1:          "{% trans '1 ocurrencia programada' %}",
+    nOcurrN:          "{% trans '{n} ocurrencias programadas' %}",
+    segResumen1:      "{% trans '1 abierto · {orden}' %}",
+    segResumenN:      "{% trans '{n} abiertos · {orden}' %}",
+    sinSeguimientos:  "{% trans 'Sin seguimientos' %}",
+    abiertos:         "{% trans 'Abiertos · {n}' %}",
+    todos:            "{% trans 'Todos · {n}' %}",
+    sinSegMostrar:    "{% trans 'Sin seguimientos para mostrar.' %}",
+    semanaN:          "{% trans 'Semana {n}' %}",
+    cumplido:         "{% trans 'Cumplido' %}",
+    vencidoN:         "{% trans 'Vencido {n} d' %}",
+    compromisoF:      "{% trans 'Compromiso {f}' %}",
+    editar:           "{% trans 'Editar' %}",
+    hisResumen:       "{% trans '{n} ocurrencias · {v} vencidas sin registro' %}",
+    chTodas:          "{% trans 'Todas · {n}' %}",
+    chCompletadas:    "{% trans 'Completadas · {n}' %}",
+    chPendientes:     "{% trans 'Pendientes · {n}' %}",
+    chCanceladas:     "{% trans 'Canceladas · {n}' %}",
+    chSinReg:         "{% trans 'Sin registro · {n}' %}",
+    chProximas:       "{% trans 'Próximas · {n}' %}",
+    sinAsignar:       "{% trans 'Sin asignar' %}",
+    ejecutadaF:       "{% trans 'Ejecutada {f}' %}",
+    atrasoSem:        "{% trans '{n} sem. de atraso' %}",
+    validado:         "{% trans 'Validado' %}",
+    porValidar:       "{% trans 'Por validar' %}",
+    rechazado:        "{% trans 'Rechazado' %}",
+    rechazadoM:       "{% trans 'Rechazado: {m}' %}",
+    fotosN:           "{% trans 'Fotos ({n})' %}",
+    editarRegistro:   "{% trans 'Editar registro' %}",
+    verSemana:        "{% trans 'Ver semana' %}",
+    registrarEjec:    "{% trans 'Registrar ejecución' %}",
+    completada:       "{% trans 'Completada' %}",
+    pendiente:        "{% trans 'Pendiente' %}",
+    reagendada:       "{% trans 'Reagendada' %}",
+    cancelada:        "{% trans 'Cancelada' %}",
+    sinRegVencida:    "{% trans 'Sin registro · vencida' %}",
+    sinRegistro:      "{% trans 'Sin registro' %}",
+    proxima:          "{% trans 'Próxima' %}",
+    subSemana:        "{% trans 'Semana {n} · {rango} {anio}' %}",
+    editadoPor:       "{% trans 'editado por {u}' %}",
+    guardarS:         "{% trans 'Guardar S{n}' %}",
+    elimReg:          "{% trans 'Eliminar registro de S{n}' %}",
+    elegirResp:       "{% trans 'Elegir responsable' %}",
+    elegirValidador:  "{% trans 'Validado por…' %}",
+    responsable:      "{% trans 'Responsable' %}",
+    validadoPor:      "{% trans 'Validado por' %}",
+    fechaFutura:      "{% trans 'La fecha de ejecución no puede ser futura' %}",
+    atrasoUna:        "{% trans 'Se registrará como <b>ejecutada con {n} semana de atraso</b> (programada en S{y}).' %}",
+    atrasoN:          "{% trans 'Se registrará como <b>ejecutada con {n} semanas de atraso</b> (programada en S{y}).' %}",
+    verFoto:          "{% trans 'Ver foto {n}' %}",
+    quitarFoto:       "{% trans 'Quitar foto' %}",
+    sinEtiqueta:      "{% trans 'Sin etiqueta' %}",
+    antes:            "{% trans 'Antes' %}",
+    despues:          "{% trans 'Después' %}",
+    agregarFoto:      "{% trans 'Agregar foto' %}",
+    agregar:          "{% trans 'Agregar' %}",
+    maxFotos:         "{% trans 'Máximo 4 fotos por registro' %}",
+    soloImagenes:     "{% trans 'Solo se aceptan imágenes de hasta 5 MB' %}",
+    fotosDe:          "{% trans 'Fotos de la S{n}' %}",
+    fotoN:            "{% trans 'Foto {i} de {n}' %}",
+    valHintNo:        "{% trans 'Disponible al marcar como Completada' %}",
+    valHintSi:        "{% trans 'Revisa la evidencia antes de validar' %}",
+    valHintSolo:      "{% trans 'No tienes permiso para validar' %}",
+    hoyF:             "{% trans 'hoy {f}' %}",
+    elegirEstado:     "{% trans 'Elige un estado' %}",
+    errResp:          "{% trans 'Elige un responsable de la lista' %}",
+    pedirResp:        "{% trans 'Esta semana aún no tiene responsable. Pide a un supervisor que lo asigne.' %}",
+    errFecha:         "{% trans 'La fecha de ejecución es obligatoria' %}",
+    errCanc:          "{% trans 'Indica el motivo de la cancelación' %}",
+    errReag:          "{% trans 'Elige la semana a la que se reagenda' %}",
+    errValPor:        "{% trans 'Elige quién valida' %}",
+    errMotivo:        "{% trans 'Indica el motivo del rechazo' %}",
+    guardando:        "{% trans 'Guardando…' %}",
+    eliminarRegistro: "{% trans 'Eliminar registro' %}",
+    elimRegTexto:     "{% trans '¿Eliminar el registro de la S{n}? Se borrarán también sus fotos.' %}",
+    registroEliminado:"{% trans 'Registro de S{n} eliminado' %}",
+    darNoDisponible:  "{% trans 'Disponible cuando la ejecución de la semana está Completada' %}",
+    venceHoy:         "{% trans 'vence hoy' %}",
+    vencida:          "{% trans 'vencida' %}",
+    fechaAnterior:    "{% trans 'La fecha compromiso no puede ser anterior a {f}' %}",
+    segEditar:        "{% trans 'Editar seguimiento' %}",
+    segNuevo:         "{% trans 'Nuevo seguimiento' %}",
+    segSubEditar:     "{% trans 'Creado el {f} por {u}' %}",
+    segSubNuevo:      "{% trans 'Acción correctiva ligada al plan' %}",
+    segGuardar:       "{% trans 'Guardar cambios' %}",
+    segCrear:         "{% trans 'Crear seguimiento' %}",
+    errProblema:      "{% trans 'Describe el problema' %}",
+    errAccion:        "{% trans 'Describe la acción realizada' %}",
+    segGuardado:      "{% trans 'Cambios guardados' %}",
+    segCreado:        "{% trans 'Seguimiento {orden} creado' %}",
+    segEliminar:      "{% trans 'Eliminar seguimiento' %}",
+    segElimTexto:     "{% trans '¿Eliminar el seguimiento {orden}? Esta acción no se puede deshacer.' %}",
+    segEliminado:     "{% trans 'Seguimiento {orden} eliminado' %}",
+    eliminar:         "{% trans 'Eliminar' %}",
+    avisoLectura:     "{% trans 'No tienes permiso para registrar ejecuciones.' %}",
+    avisoYaLlenado:   "{% trans 'Este registro ya fue llenado. Para modificarlo necesitas permiso de edición.' %}",
+    avisoSoloValidar: "{% trans 'Solo puedes cambiar la validación de este registro.' %}",
+    errorFotosSeg:    "{% trans 'El seguimiento se guardó, pero no se pudieron subir las imágenes.' %}",
+    maxFotosSeg:      "{% trans 'Máximo 4 imágenes por seguimiento' %}"
+};
+</script>
+
+<script src="{% static 'mto_app/js/plan_movil.js' %}?v=2"></script>
 {% endblock %}
