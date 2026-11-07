@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 13:22-0600\n"
+"POT-Creation-Date: 2026-11-06 22:17-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -113,7 +113,7 @@ msgstr "No. Item"
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:260
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:314
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:342
-#: .\mto_app\templates\mto_app\plan\lista.html:1001 .\paros_app\models.py:65
+#: .\mto_app\templates\mto_app\plan\lista.html:1056 .\paros_app\models.py:65
 #: .\paros_app\templates\paros_app\moldes\catalogo_moldes.html:395
 #: .\paros_app\templates\paros_app\moldes\catalogo_moldes.html:442
 msgid "Nombre"
@@ -130,8 +130,8 @@ msgstr "Name"
 #: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:333
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:145
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:346
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:130
-#: .\mto_app\views\backlog.py:413
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:131
+#: .\mto_app\views\backlog.py:421
 msgid "Descripción"
 msgstr "Description"
 
@@ -157,12 +157,12 @@ msgstr "Criticality"
 #: .\mto_app\templates\mto_app\dashboard.html:298
 #: .\mto_app\templates\mto_app\dashboard.html:422
 #: .\mto_app\templates\mto_app\dashboard.html:443
-#: .\mto_app\templates\mto_app\plan\form.html:43
-#: .\mto_app\templates\mto_app\plan\lista.html:238
-#: .\mto_app\templates\mto_app\plan\lista.html:274
-#: .\mto_app\templates\mto_app\plan\lista.html:1643
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:26
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:171
+#: .\mto_app\templates\mto_app\plan\form.html:40
+#: .\mto_app\templates\mto_app\plan\lista.html:279
+#: .\mto_app\templates\mto_app\plan\lista.html:320
+#: .\mto_app\templates\mto_app\plan\lista.html:1703
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:27
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:186
 #: .\mto_app\views\bitacora.py:461 .\paros_app\models.py:23
 #: .\paros_app\models.py:63 .\paros_app\models.py:79 .\paros_app\models.py:94
 #: .\paros_app\models.py:109
@@ -250,9 +250,9 @@ msgstr "Unit Cost"
 #: .\inventario_app\models.py:52
 #: .\inventario_app\templates\inventario_app\_modales_refacciones.html:141
 #: .\mto_app\models.py:76 .\mto_app\models.py:269
-#: .\mto_app\templates\mto_app\plan\lista.html:1087
-#: .\mto_app\templates\mto_app\plan\lista.html:1088
-#: .\mto_app\templates\mto_app\plan\lista.html:1564
+#: .\mto_app\templates\mto_app\plan\lista.html:1142
+#: .\mto_app\templates\mto_app\plan\lista.html:1143
+#: .\mto_app\templates\mto_app\plan\lista.html:1624
 #: .\mto_app\templates\mto_app\responsables\_modal.html:79
 msgid "Activo"
 msgstr "Active"
@@ -431,20 +431,21 @@ msgstr "Services that can be contracted; the type is copied to each follow-up"
 #: .\mto_app\templates\mto_app\bitacora\lista.html:563
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:15
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:48
-#: .\mto_app\templates\mto_app\plan\lista.html:579
-#: .\mto_app\templates\mto_app\plan\lista.html:796
-#: .\mto_app\templates\mto_app\plan\lista.html:888
-#: .\mto_app\templates\mto_app\plan\lista.html:988
-#: .\mto_app\templates\mto_app\plan\lista.html:1027
+#: .\mto_app\templates\mto_app\plan\form.html:21
+#: .\mto_app\templates\mto_app\plan\lista.html:634
+#: .\mto_app\templates\mto_app\plan\lista.html:851
+#: .\mto_app\templates\mto_app\plan\lista.html:943
 #: .\mto_app\templates\mto_app\plan\lista.html:1043
-#: .\mto_app\templates\mto_app\plan\lista.html:1059
-#: .\mto_app\templates\mto_app\plan\lista.html:1128
-#: .\mto_app\templates\mto_app\plan\lista.html:1144
-#: .\mto_app\templates\mto_app\plan\lista.html:1285
-#: .\mto_app\templates\mto_app\plan\lista.html:1385
+#: .\mto_app\templates\mto_app\plan\lista.html:1082
+#: .\mto_app\templates\mto_app\plan\lista.html:1098
+#: .\mto_app\templates\mto_app\plan\lista.html:1114
+#: .\mto_app\templates\mto_app\plan\lista.html:1185
+#: .\mto_app\templates\mto_app\plan\lista.html:1201
+#: .\mto_app\templates\mto_app\plan\lista.html:1342
+#: .\mto_app\templates\mto_app\plan\lista.html:1442
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:186
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:375
-#: .\mto_app\templates\mto_app\plan\registro_form.html:373
+#: .\mto_app\templates\mto_app\plan\registro_form.html:389
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:393
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:544
 #: .\paros_app\templates\paros_app\analisis_paros.html:675
@@ -489,9 +490,9 @@ msgstr "Choose…"
 #: .\mto_app\templates\mto_app\bitacora\lista.html:818
 #: .\mto_app\templates\mto_app\documentacion\_movil_hojas.html:128
 #: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:271
-#: .\mto_app\templates\mto_app\plan\lista.html:1433
-#: .\mto_app\templates\mto_app\plan\lista.html:1759
-#: .\mto_app\templates\mto_app\plan\registro_form.html:443
+#: .\mto_app\templates\mto_app\plan\lista.html:1490
+#: .\mto_app\templates\mto_app\plan\lista.html:1819
+#: .\mto_app\templates\mto_app\plan\registro_form.html:459
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:770
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:83
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:536
@@ -509,19 +510,19 @@ msgid "Buscar servicio"
 msgstr "Search service"
 
 #: .\inventario_app\templates\inventario_app\_catalogo_servicios.html:60
-#: .\mto_app\models.py:395 .\mto_app\templates\mto_app\plan\lista.html:277
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:28
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:85
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:128
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:201
-#: .\mto_app\views\backlog.py:413 .\mto_app\views\seguimientos_exportar.py:30
+#: .\mto_app\models.py:395 .\mto_app\templates\mto_app\plan\lista.html:323
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:29
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:86
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:129
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:216
+#: .\mto_app\views\backlog.py:421 .\mto_app\views\seguimientos_exportar.py:30
 msgid "Tipo"
 msgstr "Type"
 
 #: .\inventario_app\templates\inventario_app\_catalogo_servicios.html:61
 #: .\menu_app\templates\menu_app\base_menu.html:1038
 #: .\menu_app\templates\menu_app\base_menu.html:1044
-#: .\mto_app\templates\mto_app\plan\lista.html:727
+#: .\mto_app\templates\mto_app\plan\lista.html:782
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:244
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:261
 #: .\mto_app\views\seguimientos_exportar.py:118
@@ -538,7 +539,7 @@ msgstr "Follow-ups"
 #: .\login_app\templates\login_app\lista_usuarios.html:110
 #: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:188
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:149
-#: .\mto_app\templates\mto_app\plan\lista.html:280
+#: .\mto_app\templates\mto_app\plan\lista.html:326
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:266
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:332
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:182
@@ -561,7 +562,7 @@ msgstr ""
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:277
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:235
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:291
-#: .\mto_app\templates\mto_app\plan\lista.html:1574
+#: .\mto_app\templates\mto_app\plan\lista.html:1634
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:503
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:653
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:295
@@ -612,21 +613,20 @@ msgstr "This action cannot be undone."
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:370
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:383
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:474
-#: .\mto_app\templates\mto_app\plan\form.html:146
-#: .\mto_app\templates\mto_app\plan\form.html:163
-#: .\mto_app\templates\mto_app\plan\lista.html:757
-#: .\mto_app\templates\mto_app\plan\lista.html:785
-#: .\mto_app\templates\mto_app\plan\lista.html:880
-#: .\mto_app\templates\mto_app\plan\lista.html:941
-#: .\mto_app\templates\mto_app\plan\lista.html:965
-#: .\mto_app\templates\mto_app\plan\lista.html:1094
-#: .\mto_app\templates\mto_app\plan\lista.html:1110
-#: .\mto_app\templates\mto_app\plan\lista.html:1189
-#: .\mto_app\templates\mto_app\plan\lista.html:1216
-#: .\mto_app\templates\mto_app\plan\lista.html:1378
-#: .\mto_app\templates\mto_app\plan\lista.html:1408
-#: .\mto_app\templates\mto_app\plan\registro_form.html:365
-#: .\mto_app\templates\mto_app\plan\registro_form.html:413
+#: .\mto_app\templates\mto_app\plan\form.html:133
+#: .\mto_app\templates\mto_app\plan\lista.html:812
+#: .\mto_app\templates\mto_app\plan\lista.html:840
+#: .\mto_app\templates\mto_app\plan\lista.html:935
+#: .\mto_app\templates\mto_app\plan\lista.html:996
+#: .\mto_app\templates\mto_app\plan\lista.html:1020
+#: .\mto_app\templates\mto_app\plan\lista.html:1149
+#: .\mto_app\templates\mto_app\plan\lista.html:1165
+#: .\mto_app\templates\mto_app\plan\lista.html:1246
+#: .\mto_app\templates\mto_app\plan\lista.html:1273
+#: .\mto_app\templates\mto_app\plan\lista.html:1435
+#: .\mto_app\templates\mto_app\plan\lista.html:1465
+#: .\mto_app\templates\mto_app\plan\registro_form.html:381
+#: .\mto_app\templates\mto_app\plan\registro_form.html:429
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:455
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:505
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:631
@@ -692,11 +692,11 @@ msgstr "Cancel"
 #: .\mto_app\templates\mto_app\bitacora\lista.html:156
 #: .\mto_app\templates\mto_app\bitacora\lista.html:317
 #: .\mto_app\templates\mto_app\bitacora\lista.html:339
-#: .\mto_app\templates\mto_app\plan\lista.html:1111
-#: .\mto_app\templates\mto_app\plan\lista.html:1375
-#: .\mto_app\templates\mto_app\plan\lista.html:1409
-#: .\mto_app\templates\mto_app\plan\lista.html:1474
-#: .\mto_app\templates\mto_app\plan\lista.html:1797
+#: .\mto_app\templates\mto_app\plan\lista.html:1166
+#: .\mto_app\templates\mto_app\plan\lista.html:1432
+#: .\mto_app\templates\mto_app\plan\lista.html:1466
+#: .\mto_app\templates\mto_app\plan\lista.html:1533
+#: .\mto_app\templates\mto_app\plan\lista.html:1857
 #: .\mto_app\templates\mto_app\responsables\_modal.html:106
 #: .\mto_app\templates\mto_app\rutinas\_rutinas_modal.html:75
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:236
@@ -774,9 +774,9 @@ msgstr "Photo: click, drag or paste an image"
 #: .\inventario_app\templates\inventario_app\detalle_refaccion.html:66
 #: .\inventario_app\templates\inventario_app\detalle_refaccion.html:68
 #: .\inventario_app\templates\inventario_app\detalle_refaccion.html:159
-#: .\mto_app\templates\mto_app\plan\lista.html:1432
-#: .\mto_app\templates\mto_app\plan\lista.html:1758
-#: .\mto_app\templates\mto_app\plan\registro_form.html:442
+#: .\mto_app\templates\mto_app\plan\lista.html:1489
+#: .\mto_app\templates\mto_app\plan\lista.html:1818
+#: .\mto_app\templates\mto_app\plan\registro_form.html:458
 msgid "Agregar foto"
 msgstr "Add photo"
 
@@ -797,9 +797,9 @@ msgid "Cambiar"
 msgstr "Change"
 
 #: .\inventario_app\templates\inventario_app\_editor_refaccion.html:44
-#: .\mto_app\templates\mto_app\plan\lista.html:1431
-#: .\mto_app\templates\mto_app\plan\lista.html:1754
-#: .\mto_app\templates\mto_app\plan\registro_form.html:437
+#: .\mto_app\templates\mto_app\plan\lista.html:1488
+#: .\mto_app\templates\mto_app\plan\lista.html:1814
+#: .\mto_app\templates\mto_app\plan\registro_form.html:453
 msgid "Quitar foto"
 msgstr "Remove photo"
 
@@ -868,9 +868,10 @@ msgstr "E.g. SKF México"
 #: .\inventario_app\templates\inventario_app\_seg_refaccion_modal.html:134
 #: .\inventario_app\templates\inventario_app\_seg_servicio_modal.html:152
 #: .\mto_app\templates\mto_app\bitacora\lista.html:529
-#: .\mto_app\templates\mto_app\plan\lista.html:1093
-#: .\mto_app\templates\mto_app\plan\lista.html:1377
-#: .\mto_app\templates\mto_app\plan\registro_form.html:364
+#: .\mto_app\templates\mto_app\plan\form.html:132
+#: .\mto_app\templates\mto_app\plan\lista.html:1148
+#: .\mto_app\templates\mto_app\plan\lista.html:1434
+#: .\mto_app\templates\mto_app\plan\registro_form.html:380
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:630
 msgid "Ctrl + Enter para guardar"
 msgstr "Ctrl + Enter to save"
@@ -901,8 +902,8 @@ msgstr ""
 #: .\mto_app\templates\mto_app\bitacora\lista.html:699
 #: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:484
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:386
-#: .\mto_app\templates\mto_app\plan\lista.html:786
-#: .\mto_app\templates\mto_app\plan\registro_form.html:414
+#: .\mto_app\templates\mto_app\plan\lista.html:841
+#: .\mto_app\templates\mto_app\plan\registro_form.html:430
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:518
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:563
 #: .\paros_app\templates\paros_app\moldes\catalogo_moldes.html:473
@@ -945,8 +946,8 @@ msgstr "Will be highlighted in yellow if stock exceeds this value"
 #: .\inventario_app\templates\inventario_app\_modales_refacciones.html:270
 #: .\mto_app\templates\mto_app\bitacora\lista.html:519
 #: .\mto_app\templates\mto_app\bitacora\lista.html:648
-#: .\mto_app\templates\mto_app\plan\lista.html:856
-#: .\mto_app\templates\mto_app\plan\lista.html:1362
+#: .\mto_app\templates\mto_app\plan\lista.html:911
+#: .\mto_app\templates\mto_app\plan\lista.html:1419
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:450
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:615
 #: .\paros_app\templates\paros_app\paros\crear_paro.html:190
@@ -1001,11 +1002,11 @@ msgstr "Download"
 #: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:542
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:408
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:444
-#: .\mto_app\templates\mto_app\plan\lista.html:588
-#: .\mto_app\templates\mto_app\plan\lista.html:1520
-#: .\mto_app\templates\mto_app\plan\lista.html:1549
-#: .\mto_app\templates\mto_app\plan\lista.html:1594
-#: .\mto_app\templates\mto_app\plan\lista.html:1699
+#: .\mto_app\templates\mto_app\plan\lista.html:643
+#: .\mto_app\templates\mto_app\plan\lista.html:1581
+#: .\mto_app\templates\mto_app\plan\lista.html:1609
+#: .\mto_app\templates\mto_app\plan\lista.html:1654
+#: .\mto_app\templates\mto_app\plan\lista.html:1759
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:695
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:539
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:584
@@ -1104,10 +1105,10 @@ msgstr "Stock updated"
 #: .\inventario_app\templates\inventario_app\_movil_config.html:25
 #: .\mto_app\templates\mto_app\bitacora\lista.html:804
 #: .\mto_app\templates\mto_app\documentacion\_movil_config.html:34
-#: .\mto_app\templates\mto_app\plan\lista.html:1448
-#: .\mto_app\templates\mto_app\plan\lista.html:1551
-#: .\mto_app\templates\mto_app\plan\lista.html:1672
-#: .\mto_app\templates\mto_app\plan\registro_form.html:458
+#: .\mto_app\templates\mto_app\plan\lista.html:1505
+#: .\mto_app\templates\mto_app\plan\lista.html:1611
+#: .\mto_app\templates\mto_app\plan\lista.html:1732
+#: .\mto_app\templates\mto_app\plan\registro_form.html:474
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:827
 msgid "No se pudo guardar. Intenta de nuevo."
 msgstr "Couldn't save. Please try again."
@@ -1115,8 +1116,8 @@ msgstr "Couldn't save. Please try again."
 #: .\inventario_app\templates\inventario_app\_movil_config.html:26
 #: .\mto_app\templates\mto_app\dashboard.html:491
 #: .\mto_app\templates\mto_app\dashboard.html:512
-#: .\mto_app\templates\mto_app\plan\lista.html:1673
-#: .\mto_app\templates\mto_app\plan\lista.html:1700
+#: .\mto_app\templates\mto_app\plan\lista.html:1733
+#: .\mto_app\templates\mto_app\plan\lista.html:1760
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:828
 msgid "No se pudo cargar. Revisa tu conexión."
 msgstr "Couldn't load. Check your connection."
@@ -1141,8 +1142,8 @@ msgstr "View {n} spare parts"
 #: .\inventario_app\templates\inventario_app\_movil_config.html:31
 #: .\mto_app\templates\mto_app\bitacora\lista.html:815
 #: .\mto_app\templates\mto_app\dashboard.html:487
-#: .\mto_app\templates\mto_app\plan\lista.html:1426
-#: .\mto_app\templates\mto_app\plan\registro_form.html:432
+#: .\mto_app\templates\mto_app\plan\lista.html:1483
+#: .\mto_app\templates\mto_app\plan\registro_form.html:448
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:835
 msgid "Sin resultados"
 msgstr "No results"
@@ -1205,8 +1206,7 @@ msgstr "Name in English"
 #: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:573
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:319
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:473
-#: .\mto_app\templates\mto_app\plan\form.html:145
-#: .\mto_app\templates\mto_app\plan\lista.html:758
+#: .\mto_app\templates\mto_app\plan\lista.html:813
 #: .\paros_app\templates\paros_app\bitacora_agv.html:449
 #: .\paros_app\templates\paros_app\bitacora_agv.html:527
 #: .\paros_app\templates\paros_app\bitacora_agv.html:660
@@ -1269,9 +1269,9 @@ msgstr "Add 1"
 #: .\inventario_app\templates\inventario_app\importar_stock.html:105
 #: .\mto_app\templates\mto_app\bitacora\lista.html:506
 #: .\mto_app\templates\mto_app\bitacora\lista.html:614
-#: .\mto_app\templates\mto_app\plan\lista.html:676
-#: .\mto_app\templates\mto_app\plan\lista.html:852
-#: .\mto_app\templates\mto_app\plan\lista.html:1315
+#: .\mto_app\templates\mto_app\plan\lista.html:731
+#: .\mto_app\templates\mto_app\plan\lista.html:907
+#: .\mto_app\templates\mto_app\plan\lista.html:1372
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:446
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:558
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:564
@@ -1364,8 +1364,8 @@ msgstr "Search by item no. or name. The service type comes from the catalog."
 #: .\inventario_app\templates\inventario_app\_seg_servicio_modal.html:77
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:121
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:142
-#: .\mto_app\models.py:370 .\mto_app\templates\mto_app\plan\lista.html:1181
-#: .\mto_app\templates\mto_app\plan\lista.html:1204
+#: .\mto_app\models.py:370 .\mto_app\templates\mto_app\plan\lista.html:1238
+#: .\mto_app\templates\mto_app\plan\lista.html:1261
 msgid "Motivo"
 msgstr "Reason"
 
@@ -1380,7 +1380,7 @@ msgstr "Supplier, service result, notes…"
 #: .\inventario_app\templates\inventario_app\_seg_servicio_modal.html:95
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:122
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:143
-#: .\mto_app\templates\mto_app\plan\lista.html:414
+#: .\mto_app\templates\mto_app\plan\lista.html:469
 msgid "Avance"
 msgstr "Progress"
 
@@ -1417,9 +1417,8 @@ msgstr "Back to spare parts"
 #: .\mto_app\templates\mto_app\bitacora\lista.html:313
 #: .\mto_app\templates\mto_app\bitacora\lista.html:340
 #: .\mto_app\templates\mto_app\plan\detalle.html:19
-#: .\mto_app\templates\mto_app\plan\form.html:3
-#: .\mto_app\templates\mto_app\plan\lista.html:327
-#: .\mto_app\templates\mto_app\plan\lista.html:1716
+#: .\mto_app\templates\mto_app\plan\lista.html:382
+#: .\mto_app\templates\mto_app\plan\lista.html:1776
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:287
 #: .\mto_app\templates\mto_app\responsables\_modal.html:91
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:194
@@ -1493,7 +1492,7 @@ msgstr "Edit spare part"
 #: .\inventario_app\templates\inventario_app\detalle_refaccion.html:163
 #: .\mto_app\templates\mto_app\bitacora\lista.html:662
 #: .\mto_app\templates\mto_app\documentacion\_movil_hojas.html:137
-#: .\mto_app\templates\mto_app\plan\lista.html:861
+#: .\mto_app\templates\mto_app\plan\lista.html:916
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:820
 msgid "Tomar foto"
 msgstr "Take photo"
@@ -1536,8 +1535,8 @@ msgstr "Back"
 #: .\inventario_app\templates\inventario_app\importar_completo.html:22
 #: .\inventario_app\templates\inventario_app\importar_stock.html:17
 #: .\inventario_app\templates\inventario_app\importar_stock.html:21
-#: .\mto_app\templates\mto_app\plan\form.html:45
-#: .\mto_app\templates\mto_app\plan\form.html:56
+#: .\mto_app\templates\mto_app\plan\form.html:42
+#: .\mto_app\templates\mto_app\plan\form.html:72
 #: .\mto_app\templates\mto_app\plan\importar.html:17
 #: .\mto_app\templates\mto_app\plan\importar.html:21
 #: .\paros_app\templates\paros_app\equipos\importar_equipos.html:17
@@ -1656,7 +1655,7 @@ msgstr "select a file"
 #: .\inventario_app\templates\inventario_app\importar_completo.html:69
 #: .\inventario_app\templates\inventario_app\importar_stock.html:68
 #: .\mto_app\templates\mto_app\plan\importar.html:68
-#: .\mto_app\templates\mto_app\plan\lista.html:1065
+#: .\mto_app\templates\mto_app\plan\lista.html:1120
 #: .\paros_app\templates\paros_app\equipos\importar_equipos.html:92
 #: .\paros_app\templates\paros_app\equipos\importar_equipos_por_area.html:70
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:118
@@ -1675,8 +1674,8 @@ msgstr "Cost"
 #: .\inventario_app\templates\inventario_app\importar_completo.html:90
 #: .\inventario_app\templates\inventario_app\importar_stock.html:83
 #: .\mto_app\models.py:359 .\mto_app\templates\mto_app\plan\importar.html:85
-#: .\mto_app\templates\mto_app\plan\lista.html:1190
-#: .\mto_app\templates\mto_app\plan\lista.html:1598
+#: .\mto_app\templates\mto_app\plan\lista.html:1247
+#: .\mto_app\templates\mto_app\plan\lista.html:1658
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:71
 #: .\paros_app\templates\paros_app\equipos\importar_equipos.html:113
 #: .\paros_app\templates\paros_app\equipos\importar_equipos_por_area.html:90
@@ -1886,13 +1885,13 @@ msgstr "Stock status"
 #: .\mto_app\templates\mto_app\dashboard.html:387
 #: .\mto_app\templates\mto_app\dashboard.html:423
 #: .\mto_app\templates\mto_app\plan\lista.html:154
-#: .\mto_app\templates\mto_app\plan\lista.html:432
-#: .\mto_app\templates\mto_app\plan\lista.html:547
-#: .\mto_app\templates\mto_app\plan\lista.html:1664
+#: .\mto_app\templates\mto_app\plan\lista.html:487
+#: .\mto_app\templates\mto_app\plan\lista.html:602
+#: .\mto_app\templates\mto_app\plan\lista.html:1724
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:320
 #: .\mto_app\templates\mto_app\rutinas\_historial_acciones.html:47
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:29
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:202
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:30
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:217
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:73
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:355
 #: .\paros_app\templates\paros_app\analisis_paros.html:154
@@ -1906,7 +1905,7 @@ msgstr "All"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:106
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:114
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:429
-#: .\mto_app\templates\mto_app\plan\lista.html:221
+#: .\mto_app\templates\mto_app\plan\lista.html:257
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:152
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:255
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:258
@@ -1920,8 +1919,8 @@ msgstr "Columns"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:116
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:117
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:437
-#: .\mto_app\templates\mto_app\plan\lista.html:223
-#: .\mto_app\templates\mto_app\plan\lista.html:224
+#: .\mto_app\templates\mto_app\plan\lista.html:259
+#: .\mto_app\templates\mto_app\plan\lista.html:260
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:155
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:265
 msgid "Mostrar columnas"
@@ -1932,14 +1931,14 @@ msgstr "Show columns"
 #: .\mto_app\models.py:102 .\mto_app\templates\mto_app\dashboard.html:164
 #: .\mto_app\templates\mto_app\dashboard.html:201
 #: .\mto_app\templates\mto_app\dashboard.html:386
-#: .\mto_app\templates\mto_app\plan\lista.html:243
-#: .\mto_app\templates\mto_app\plan\lista.html:279
-#: .\mto_app\templates\mto_app\plan\lista.html:429
-#: .\mto_app\templates\mto_app\plan\lista.html:628
+#: .\mto_app\templates\mto_app\plan\lista.html:284
+#: .\mto_app\templates\mto_app\plan\lista.html:325
+#: .\mto_app\templates\mto_app\plan\lista.html:484
+#: .\mto_app\templates\mto_app\plan\lista.html:683
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:331
-#: .\mto_app\templates\mto_app\plan\registro_form.html:246
+#: .\mto_app\templates\mto_app\plan\registro_form.html:262
 #: .\mto_app\templates\mto_app\responsables\_modal.html:29
-#: .\mto_app\views\planes.py:801 .\mto_app\views\planes.py:1275
+#: .\mto_app\views\planes.py:862 .\mto_app\views\planes.py:1336
 msgid "Estado"
 msgstr "State"
 
@@ -1960,7 +1959,7 @@ msgstr "Modified on"
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:150
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:119
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:128
-#: .\mto_app\templates\mto_app\plan\lista.html:246
+#: .\mto_app\templates\mto_app\plan\lista.html:287
 #: .\paros_app\templates\paros_app\analisis_paros.html:59
 #: .\paros_app\templates\paros_app\dashboard.html:632
 msgid "Restablecer"
@@ -1971,8 +1970,8 @@ msgstr "Reset"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:129
 #: .\menu_app\templates\menu_app\_date_picker.html:46
 #: .\menu_app\templates\menu_app\_date_range_picker.html:70
-#: .\mto_app\templates\mto_app\plan\lista.html:247
-#: .\mto_app\templates\mto_app\plan\lista.html:1013
+#: .\mto_app\templates\mto_app\plan\lista.html:288
+#: .\mto_app\templates\mto_app\plan\lista.html:1068
 msgid "Listo"
 msgstr "Done"
 
@@ -1994,11 +1993,11 @@ msgstr[1] "View %(n)s photos"
 #: .\mto_app\templates\mto_app\bitacora\lista.html:233
 #: .\mto_app\templates\mto_app\documentacion\_fila_carpeta.html:80
 #: .\mto_app\templates\mto_app\documentacion\_fila_documento.html:95
-#: .\mto_app\templates\mto_app\plan\lista.html:333
-#: .\mto_app\templates\mto_app\plan\lista.html:480
-#: .\mto_app\templates\mto_app\plan\lista.html:583
-#: .\mto_app\templates\mto_app\plan\lista.html:897
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:260
+#: .\mto_app\templates\mto_app\plan\lista.html:388
+#: .\mto_app\templates\mto_app\plan\lista.html:535
+#: .\mto_app\templates\mto_app\plan\lista.html:638
+#: .\mto_app\templates\mto_app\plan\lista.html:952
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:275
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:400
 #: .\paros_app\templates\paros_app\bitacora_agv.html:390
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:153
@@ -2051,8 +2050,9 @@ msgstr "sorted by restock urgency"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:202
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:214
 #: .\mto_app\templates\mto_app\bitacora\lista.html:168
-#: .\mto_app\templates\mto_app\plan\lista.html:351
+#: .\mto_app\templates\mto_app\plan\lista.html:406
 #: .\mto_app\templates\mto_app\rutinas\_historial_acciones.html:121
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:145
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:262
 msgid "Filas por página"
 msgstr "Rows per page"
@@ -2061,8 +2061,9 @@ msgstr "Rows per page"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:203
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:215
 #: .\mto_app\templates\mto_app\bitacora\lista.html:169
-#: .\mto_app\templates\mto_app\plan\lista.html:352
+#: .\mto_app\templates\mto_app\plan\lista.html:407
 #: .\mto_app\templates\mto_app\rutinas\_historial_acciones.html:126
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:152
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:263
 msgid "Paginación"
 msgstr "Pagination"
@@ -2071,8 +2072,9 @@ msgstr "Pagination"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:204
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:216
 #: .\mto_app\templates\mto_app\bitacora\lista.html:170
-#: .\mto_app\templates\mto_app\plan\lista.html:353
+#: .\mto_app\templates\mto_app\plan\lista.html:408
 #: .\mto_app\templates\mto_app\rutinas\_historial_acciones.html:127
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:307
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:265
 msgid "Página anterior"
 msgstr "Previous page"
@@ -2081,8 +2083,9 @@ msgstr "Previous page"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:210
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:222
 #: .\mto_app\templates\mto_app\bitacora\lista.html:176
-#: .\mto_app\templates\mto_app\plan\lista.html:359
+#: .\mto_app\templates\mto_app\plan\lista.html:414
 #: .\mto_app\templates\mto_app\rutinas\_historial_acciones.html:133
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:308
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:274
 msgid "Página siguiente"
 msgstr "Next page"
@@ -2099,14 +2102,14 @@ msgid ""
 msgstr "This can't be undone. Parts with purchase follow-ups won't be deleted."
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:311
-#: .\mto_app\templates\mto_app\plan\lista.html:962
+#: .\mto_app\templates\mto_app\plan\lista.html:1017
 msgid "Escribe ELIMINAR para confirmar"
 msgstr "Type ELIMINAR to confirm"
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:312
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:550
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:551
-#: .\mto_app\templates\mto_app\plan\lista.html:1675
+#: .\mto_app\templates\mto_app\plan\lista.html:1735
 msgid "ELIMINAR"
 msgstr "DELETE"
 
@@ -2151,7 +2154,7 @@ msgstr[1] "Filters, %(n)s active"
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:352
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:483
 #: .\mto_app\templates\mto_app\bitacora\lista.html:74
-#: .\mto_app\templates\mto_app\plan\lista.html:130
+#: .\mto_app\templates\mto_app\plan\lista.html:131
 #: .\mto_app\templates\mto_app\rutinas\_historial_acciones.html:31
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:63
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:298
@@ -2181,7 +2184,7 @@ msgstr[1] "of %(n)s spare parts need restocking"
 #: .\mto_app\templates\mto_app\documentacion\_fila_documento.html:67
 #: .\mto_app\templates\mto_app\documentacion\_fila_documento.html:76
 #: .\mto_app\templates\mto_app\documentacion\_movil_hojas.html:43
-#: .\mto_app\templates\mto_app\plan\lista.html:460
+#: .\mto_app\templates\mto_app\plan\lista.html:515
 msgid "Ver"
 msgstr "View"
 
@@ -2203,15 +2206,15 @@ msgstr "No spare parts have been registered."
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:427
 #: .\mto_app\templates\mto_app\bitacora\lista.html:281
-#: .\mto_app\templates\mto_app\plan\lista.html:471
+#: .\mto_app\templates\mto_app\plan\lista.html:526
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:333
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:665
 msgid "Cargar más"
 msgstr "Load more"
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:461
-#: .\mto_app\templates\mto_app\plan\lista.html:1011
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:37
+#: .\mto_app\templates\mto_app\plan\lista.html:1066
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:38
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:69
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:260
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:73
@@ -2227,9 +2230,9 @@ msgstr "Export"
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:465
 #: .\menu_app\templates\menu_app\_language_selector.html:10
-#: .\mto_app\templates\mto_app\plan\lista.html:516
-#: .\mto_app\templates\mto_app\plan\lista.html:899
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:262
+#: .\mto_app\templates\mto_app\plan\lista.html:571
+#: .\mto_app\templates\mto_app\plan\lista.html:954
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:277
 #: .\paros_app\templates\paros_app\bitacora_agv.html:400
 #: .\paros_app\templates\paros_app\dashboard.html:518
 #: .\paros_app\templates\paros_app\dashboard.html:700
@@ -2318,9 +2321,9 @@ msgstr "Created on {fecha} · modified {hace} ago"
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:589
 #: .\login_app\templates\login_app\form_usuario.html:655
 #: .\mto_app\templates\mto_app\bitacora\lista.html:801
-#: .\mto_app\templates\mto_app\plan\lista.html:1441
-#: .\mto_app\templates\mto_app\plan\lista.html:1556
-#: .\mto_app\templates\mto_app\plan\lista.html:1788
+#: .\mto_app\templates\mto_app\plan\lista.html:1498
+#: .\mto_app\templates\mto_app\plan\lista.html:1616
+#: .\mto_app\templates\mto_app\plan\lista.html:1848
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:759
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:500
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:545
@@ -2378,9 +2381,9 @@ msgstr "Up to 2 photos per spare part."
 
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:603
 #: .\mto_app\templates\mto_app\bitacora\lista.html:835
-#: .\mto_app\templates\mto_app\plan\lista.html:1430
-#: .\mto_app\templates\mto_app\plan\lista.html:1753
-#: .\mto_app\templates\mto_app\plan\registro_form.html:438
+#: .\mto_app\templates\mto_app\plan\lista.html:1487
+#: .\mto_app\templates\mto_app\plan\lista.html:1813
+#: .\mto_app\templates\mto_app\plan\registro_form.html:454
 #, python-brace-format
 msgid "Ver foto {n}"
 msgstr "View photo {n}"
@@ -2393,9 +2396,9 @@ msgstr "Add another photo"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:270
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:284
 #: .\mto_app\templates\mto_app\bitacora\lista.html:537
-#: .\mto_app\templates\mto_app\plan\lista.html:1393
+#: .\mto_app\templates\mto_app\plan\lista.html:1450
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:388
-#: .\mto_app\templates\mto_app\plan\registro_form.html:379
+#: .\mto_app\templates\mto_app\plan\registro_form.html:395
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:640
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:538
 msgid "¿Descartar cambios?"
@@ -2410,10 +2413,11 @@ msgstr "The changes you made to this spare part will be lost."
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:286
 #: .\mto_app\templates\mto_app\bitacora\lista.html:540
 #: .\mto_app\templates\mto_app\bitacora\lista.html:844
-#: .\mto_app\templates\mto_app\plan\lista.html:914
-#: .\mto_app\templates\mto_app\plan\lista.html:1396
+#: .\mto_app\templates\mto_app\plan\form.html:142
+#: .\mto_app\templates\mto_app\plan\lista.html:969
+#: .\mto_app\templates\mto_app\plan\lista.html:1453
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:391
-#: .\mto_app\templates\mto_app\plan\registro_form.html:382
+#: .\mto_app\templates\mto_app\plan\registro_form.html:398
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:643
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:843
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:541
@@ -2424,9 +2428,10 @@ msgstr "Keep editing"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:273
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:287
 #: .\mto_app\templates\mto_app\bitacora\lista.html:541
-#: .\mto_app\templates\mto_app\plan\lista.html:1397
+#: .\mto_app\templates\mto_app\plan\form.html:143
+#: .\mto_app\templates\mto_app\plan\lista.html:1454
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:392
-#: .\mto_app\templates\mto_app\plan\registro_form.html:383
+#: .\mto_app\templates\mto_app\plan\registro_form.html:399
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:644
 msgid "Descartar"
 msgstr "Discard"
@@ -2439,6 +2444,7 @@ msgstr "Delete {nombre} ({item})?"
 #: .\inventario_app\templates\inventario_app\lista_refacciones.html:613
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:280
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:295
+#: .\mto_app\templates\mto_app\plan\form.html:162
 msgid "No se pudo guardar. Revisa tu conexión."
 msgstr "Couldn't save. Check your connection."
 
@@ -2489,7 +2495,7 @@ msgstr "purchase requests from PR to PO until received (SR)"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:44
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:51
 #: .\mto_app\templates\mto_app\bitacora\lista.html:47
-#: .\mto_app\templates\mto_app\plan\lista.html:72
+#: .\mto_app\templates\mto_app\plan\lista.html:73
 #: .\paros_app\templates\paros_app\registro_produccion.html:590
 #: .\paros_app\templates\paros_app\registro_produccion.html:776
 msgid "Exportar Excel"
@@ -2497,9 +2503,9 @@ msgstr "Export Excel"
 
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:49
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:56
-#: .\mto_app\templates\mto_app\plan\lista.html:1282
-#: .\mto_app\templates\mto_app\plan\lista.html:1437
-#: .\mto_app\templates\mto_app\plan\lista.html:1785
+#: .\mto_app\templates\mto_app\plan\lista.html:1339
+#: .\mto_app\templates\mto_app\plan\lista.html:1494
+#: .\mto_app\templates\mto_app\plan\lista.html:1845
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:57
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:340
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:538
@@ -2515,10 +2521,10 @@ msgstr "New Follow-Up"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:123
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:144
 #: .\mto_app\models.py:74 .\mto_app\models.py:400
-#: .\mto_app\templates\mto_app\plan\form.html:113
+#: .\mto_app\templates\mto_app\plan\form.html:101
 #: .\mto_app\templates\mto_app\plan\importar.html:114
-#: .\mto_app\templates\mto_app\plan\lista.html:844
-#: .\mto_app\templates\mto_app\plan\lista.html:1353
+#: .\mto_app\templates\mto_app\plan\lista.html:899
+#: .\mto_app\templates\mto_app\plan\lista.html:1410
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:266
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:177
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:305
@@ -2544,8 +2550,8 @@ msgstr "Status"
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:68
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:536
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:55
-#: .\mto_app\templates\mto_app\plan\lista.html:1477
-#: .\mto_app\views\planes.py:1273 .\mto_app\views\seguimientos_exportar.py:158
+#: .\mto_app\templates\mto_app\plan\lista.html:1536
+#: .\mto_app\views\planes.py:1334 .\mto_app\views\seguimientos_exportar.py:158
 msgid "Total"
 msgstr "Total"
 
@@ -2738,14 +2744,14 @@ msgstr "No date"
 #: .\mto_app\templates\mto_app\dashboard.html:407
 #: .\mto_app\templates\mto_app\dashboard.html:482
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:82
-#: .\mto_app\templates\mto_app\plan\lista.html:287
-#: .\mto_app\templates\mto_app\plan\lista.html:447
-#: .\mto_app\templates\mto_app\plan\lista.html:608
-#: .\mto_app\templates\mto_app\plan\lista.html:631
-#: .\mto_app\templates\mto_app\plan\lista.html:846
-#: .\mto_app\templates\mto_app\plan\lista.html:1355
-#: .\mto_app\templates\mto_app\plan\lista.html:1491
-#: .\mto_app\templates\mto_app\plan\lista.html:1736
+#: .\mto_app\templates\mto_app\plan\lista.html:333
+#: .\mto_app\templates\mto_app\plan\lista.html:502
+#: .\mto_app\templates\mto_app\plan\lista.html:663
+#: .\mto_app\templates\mto_app\plan\lista.html:686
+#: .\mto_app\templates\mto_app\plan\lista.html:901
+#: .\mto_app\templates\mto_app\plan\lista.html:1412
+#: .\mto_app\templates\mto_app\plan\lista.html:1550
+#: .\mto_app\templates\mto_app\plan\lista.html:1796
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:201
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:106
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:307
@@ -2816,8 +2822,8 @@ msgstr "New purchase follow-up"
 
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:244
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:261
-#: .\mto_app\models.py:314 .\mto_app\templates\mto_app\plan\lista.html:1436
-#: .\mto_app\templates\mto_app\plan\lista.html:1784
+#: .\mto_app\models.py:314 .\mto_app\templates\mto_app\plan\lista.html:1493
+#: .\mto_app\templates\mto_app\plan\lista.html:1844
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:755
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:811
 msgid "Editar seguimiento"
@@ -2927,8 +2933,8 @@ msgstr "Still {x} below the minimum ({m})."
 #: .\inventario_app\templates\inventario_app\lista_seguimientos.html:267
 #: .\inventario_app\templates\inventario_app\lista_seguimientos_servicio.html:281
 #: .\mto_app\models.py:388 .\mto_app\models.py:422
-#: .\mto_app\templates\mto_app\plan\lista.html:848
-#: .\mto_app\templates\mto_app\plan\lista.html:1357
+#: .\mto_app\templates\mto_app\plan\lista.html:903
+#: .\mto_app\templates\mto_app\plan\lista.html:1414
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:114
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:309
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:442
@@ -3007,8 +3013,8 @@ msgstr "Search item no., service, reason, PR, PO or SR no.…"
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:251
 #: .\mto_app\templates\mto_app\responsables\_modal.html:32
 #: .\mto_app\templates\mto_app\rutinas\_historial_acciones.html:38
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:115
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:278
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:116
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:293
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:72
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:103
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:306
@@ -3115,8 +3121,8 @@ msgid "Reemplazar"
 msgstr "Replace"
 
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:296
-#: .\mto_app\templates\mto_app\plan\lista.html:162
-#: .\mto_app\templates\mto_app\plan\lista.html:397
+#: .\mto_app\templates\mto_app\plan\lista.html:190
+#: .\mto_app\templates\mto_app\plan\lista.html:452
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:160
 #: .\paros_app\templates\paros_app\fallas\catalogo_fallas_general.html:166
 #: .\paros_app\templates\paros_app\moldes\catalogo_moldes.html:156
@@ -3267,6 +3273,7 @@ msgstr "Time until"
 
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:358
 #: .\login_app\templates\login_app\lista_usuarios.html:142
+#: .\mto_app\templates\mto_app\plan\lista.html:196
 #: .\mto_app\templates\mto_app\rutinas\_historial_acciones.html:57
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:138
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:245
@@ -3279,8 +3286,8 @@ msgstr "Average duration by Locations"
 
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:372
 #: .\mto_app\templates\mto_app\plan\importar.html:75
-#: .\mto_app\templates\mto_app\plan\lista.html:231
-#: .\mto_app\views\planes.py:1275
+#: .\mto_app\templates\mto_app\plan\lista.html:272
+#: .\mto_app\views\planes.py:1336
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:518
 msgid "Duración"
 msgstr "Duration"
@@ -3322,12 +3329,12 @@ msgstr "Serial number"
 #: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:459
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:256
 #: .\mto_app\templates\mto_app\documentacion\lista_documentos.html:310
-#: .\mto_app\templates\mto_app\plan\form.html:34
+#: .\mto_app\templates\mto_app\plan\form.html:29
 #: .\mto_app\templates\mto_app\plan\importar.html:72
 #: .\mto_app\templates\mto_app\plan\importar.html:104
-#: .\mto_app\templates\mto_app\plan\lista.html:227
-#: .\mto_app\templates\mto_app\plan\lista.html:260
-#: .\mto_app\views\planes.py:1275 .\paros_app\models.py:64
+#: .\mto_app\templates\mto_app\plan\lista.html:268
+#: .\mto_app\templates\mto_app\plan\lista.html:306
+#: .\mto_app\views\planes.py:1336 .\paros_app\models.py:64
 #: .\paros_app\models.py:80 .\paros_app\models.py:95
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:99
 #: .\paros_app\templates\paros_app\equipos\catalogo_equipos.html:396
@@ -3405,14 +3412,14 @@ msgstr "Filter…"
 
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:499
 #: .\mto_app\templates\mto_app\documentacion\carpeta_detalle.html:256
-#: .\mto_app\templates\mto_app\plan\lista.html:733
+#: .\mto_app\templates\mto_app\plan\lista.html:788
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:249
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:434
 msgid "Mostrar"
 msgstr "Show"
 
 #: .\inventario_app\templates\inventario_app\wcs_panel.html:528
-#: .\mto_app\views\planes.py:1269
+#: .\mto_app\views\planes.py:1330
 msgid "Tareas"
 msgstr "Tasks"
 
@@ -3546,7 +3553,7 @@ msgstr "Only {n} image(s) were saved; limit of 2 reached."
 #: .\inventario_app\views\inventario.py:463
 #: .\inventario_app\views\seguimiento_refacciones.py:340
 #: .\inventario_app\views\seguimiento_servicios.py:343
-#: .\mto_app\views\bitacora.py:224 .\mto_app\views\planes.py:459
+#: .\mto_app\views\bitacora.py:224
 #, python-brace-format
 msgid "Error al guardar: {error}"
 msgstr "Error saving: {error}"
@@ -3633,7 +3640,7 @@ msgid ""
 msgstr "Import completed: {actualizados} updated, {ignorados} skipped."
 
 #: .\inventario_app\views\inventario.py:761
-#: .\inventario_app\views\inventario.py:940 .\mto_app\views\planes.py:1090
+#: .\inventario_app\views\inventario.py:940 .\mto_app\views\planes.py:1151
 #: .\paros_app\views\catalogos\equipos.py:111
 #: .\paros_app\views\catalogos\fallas.py:140
 #, python-brace-format
@@ -3797,7 +3804,7 @@ msgid "Tu usuario no tiene perfil. Contacta al administrador."
 msgstr "Your user has no profile. Contact the administrator."
 
 #: .\login_app\permisos.py:39 .\mto_app\views\lista_seguimientos.py:378
-#: .\mto_app\views\utils.py:160
+#: .\mto_app\views\utils.py:171
 msgid "No tienes permiso para realizar esta acción."
 msgstr "You do not have permission to perform this action."
 
@@ -3957,11 +3964,11 @@ msgstr "Fault"
 #: .\mto_app\models.py:641 .\mto_app\templates\mto_app\bitacora\lista.html:80
 #: .\mto_app\templates\mto_app\bitacora\lista.html:486
 #: .\mto_app\templates\mto_app\bitacora\lista.html:592
-#: .\mto_app\templates\mto_app\plan\form.html:81
+#: .\mto_app\templates\mto_app\plan\form.html:47
 #: .\mto_app\templates\mto_app\plan\importar.html:74
 #: .\mto_app\templates\mto_app\plan\importar.html:110
-#: .\mto_app\templates\mto_app\plan\lista.html:239
-#: .\mto_app\templates\mto_app\plan\lista.html:275
+#: .\mto_app\templates\mto_app\plan\lista.html:280
+#: .\mto_app\templates\mto_app\plan\lista.html:321
 #: .\mto_app\views\bitacora.py:461 .\paros_app\models.py:81
 #: .\paros_app\templates\paros_app\analisis_paros.html:209
 #: .\paros_app\templates\paros_app\analisis_paros.html:266
@@ -3988,27 +3995,27 @@ msgstr "Equipment"
 #: .\mto_app\templates\mto_app\bitacora\lista.html:498
 #: .\mto_app\templates\mto_app\bitacora\lista.html:603
 #: .\mto_app\templates\mto_app\dashboard.html:200
-#: .\mto_app\templates\mto_app\plan\lista.html:236
-#: .\mto_app\templates\mto_app\plan\lista.html:273
-#: .\mto_app\templates\mto_app\plan\lista.html:570
-#: .\mto_app\templates\mto_app\plan\lista.html:653
-#: .\mto_app\templates\mto_app\plan\lista.html:767
-#: .\mto_app\templates\mto_app\plan\lista.html:821
-#: .\mto_app\templates\mto_app\plan\lista.html:1322
-#: .\mto_app\templates\mto_app\plan\lista.html:1748
+#: .\mto_app\templates\mto_app\plan\lista.html:277
+#: .\mto_app\templates\mto_app\plan\lista.html:319
+#: .\mto_app\templates\mto_app\plan\lista.html:625
+#: .\mto_app\templates\mto_app\plan\lista.html:708
+#: .\mto_app\templates\mto_app\plan\lista.html:822
+#: .\mto_app\templates\mto_app\plan\lista.html:876
+#: .\mto_app\templates\mto_app\plan\lista.html:1379
+#: .\mto_app\templates\mto_app\plan\lista.html:1808
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:266
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:331
-#: .\mto_app\templates\mto_app\plan\registro_form.html:272
-#: .\mto_app\templates\mto_app\plan\registro_form.html:275
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:86
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:129
+#: .\mto_app\templates\mto_app\plan\registro_form.html:288
+#: .\mto_app\templates\mto_app\plan\registro_form.html:291
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:87
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:130
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:72
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:173
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:415
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:464
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:572
-#: .\mto_app\views\backlog.py:413 .\mto_app\views\bitacora.py:462
-#: .\mto_app\views\planes.py:801 .\mto_app\views\seguimientos_exportar.py:35
+#: .\mto_app\views\backlog.py:421 .\mto_app\views\bitacora.py:462
+#: .\mto_app\views\planes.py:862 .\mto_app\views\seguimientos_exportar.py:35
 #: .\paros_app\models.py:96
 #: .\paros_app\templates\paros_app\analisis_paros.html:211
 #: .\paros_app\templates\paros_app\analisis_paros.html:268
@@ -4192,8 +4199,8 @@ msgstr "Validate"
 #: .\menu_app\templates\menu_app\base_menu.html:1032 .\mto_app\models.py:84
 #: .\mto_app\templates\mto_app\dashboard.html:278
 #: .\mto_app\templates\mto_app\plan\lista.html:4
-#: .\mto_app\templates\mto_app\plan\lista.html:61
-#: .\mto_app\templates\mto_app\plan\lista.html:373
+#: .\mto_app\templates\mto_app\plan\lista.html:62
+#: .\mto_app\templates\mto_app\plan\lista.html:428
 msgid "Plan de mantenimiento"
 msgstr "Maintenance Plan"
 
@@ -4208,10 +4215,10 @@ msgid "Seguimiento"
 msgstr "Follow-ups"
 
 #: .\login_app\templates\login_app\form_usuario.html:539
-#: .\mto_app\models.py:286 .\mto_app\templates\mto_app\plan\lista.html:119
-#: .\mto_app\templates\mto_app\plan\lista.html:512
-#: .\mto_app\templates\mto_app\plan\lista.html:997
-#: .\mto_app\templates\mto_app\plan\lista.html:1040
+#: .\mto_app\models.py:286 .\mto_app\templates\mto_app\plan\lista.html:120
+#: .\mto_app\templates\mto_app\plan\lista.html:567
+#: .\mto_app\templates\mto_app\plan\lista.html:1052
+#: .\mto_app\templates\mto_app\plan\lista.html:1095
 #: .\paros_app\templates\paros_app\analisis_paros.html:203
 #: .\paros_app\templates\paros_app\analisis_paros.html:426
 #: .\paros_app\templates\paros_app\analisis_paros.html:950
@@ -4285,8 +4292,8 @@ msgstr "Search by username or name…"
 #: .\login_app\templates\login_app\lista_usuarios.html:53
 #: .\login_app\views.py:181 .\mto_app\templates\mto_app\dashboard.html:52
 #: .\mto_app\templates\mto_app\dashboard.html:444
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:26
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:171
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:27
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:186
 #: .\mto_app\views\dashboard.py:384
 #: .\paros_app\templates\paros_app\analisis_paros.html:99
 #: .\paros_app\templates\paros_app\dashboard.html:196
@@ -4556,7 +4563,7 @@ msgstr "Production"
 #: .\menu_app\templates\menu_app\base_menu.html:1286
 #: .\menu_app\templates\menu_app\base_menu.html:1292
 #: .\mto_app\templates\mto_app\bitacora\lista.html:59
-#: .\mto_app\templates\mto_app\plan\lista.html:175
+#: .\mto_app\templates\mto_app\plan\lista.html:211
 #: .\paros_app\templates\paros_app\analisis_paros.html:551
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:230
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:565
@@ -4636,7 +4643,7 @@ msgstr "Choose date"
 
 #: .\menu_app\templates\menu_app\_date_picker.html:36
 #: .\menu_app\templates\menu_app\_date_range_picker.html:60
-#: .\mto_app\templates\mto_app\plan\lista.html:600
+#: .\mto_app\templates\mto_app\plan\lista.html:655
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:195
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:197
 msgid "Calendario"
@@ -4659,8 +4666,8 @@ msgstr "Next month"
 #: .\menu_app\templates\menu_app\_date_picker.html:45
 #: .\menu_app\templates\menu_app\_date_range_picker.html:53
 #: .\mto_app\templates\mto_app\bitacora\lista.html:481
-#: .\mto_app\templates\mto_app\plan\lista.html:836
-#: .\mto_app\templates\mto_app\plan\lista.html:1344
+#: .\mto_app\templates\mto_app\plan\lista.html:891
+#: .\mto_app\templates\mto_app\plan\lista.html:1401
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:595
 #: .\mto_app\views\bitacora.py:126
 #: .\paros_app\templates\paros_app\analisis_paros.html:108
@@ -4726,7 +4733,7 @@ msgid "Paros de Producción"
 msgstr "Production Downtime"
 
 #: .\menu_app\templates\menu_app\base_menu.html:988
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:162
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:177
 msgid "Backlog"
 msgstr "Backlog"
 
@@ -4989,11 +4996,11 @@ msgstr "Closed"
 #: .\mto_app\templates\mto_app\dashboard.html:392
 #: .\mto_app\templates\mto_app\dashboard.html:407
 #: .\mto_app\templates\mto_app\dashboard.html:485
-#: .\mto_app\templates\mto_app\plan\lista.html:287
-#: .\mto_app\templates\mto_app\plan\lista.html:447
-#: .\mto_app\templates\mto_app\plan\lista.html:610
-#: .\mto_app\templates\mto_app\plan\lista.html:633
-#: .\mto_app\templates\mto_app\plan\lista.html:1738
+#: .\mto_app\templates\mto_app\plan\lista.html:333
+#: .\mto_app\templates\mto_app\plan\lista.html:502
+#: .\mto_app\templates\mto_app\plan\lista.html:665
+#: .\mto_app\templates\mto_app\plan\lista.html:688
+#: .\mto_app\templates\mto_app\plan\lista.html:1798
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:203
 msgid "Cancelada"
 msgstr "Cancelled"
@@ -5013,11 +5020,11 @@ msgid "Preventivo"
 msgstr "Preventive"
 
 #: .\mto_app\models.py:52
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:231
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:288
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:246
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:303
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:540
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:791
-#: .\mto_app\views\backlog.py:423 .\mto_app\views\seguimientos_exportar.py:68
+#: .\mto_app\views\backlog.py:431 .\mto_app\views\seguimientos_exportar.py:68
 msgid "Correctivo"
 msgstr "Corrective"
 
@@ -5032,10 +5039,10 @@ msgid "Codigo"
 msgstr "Code"
 
 #: .\mto_app\models.py:59 .\mto_app\models.py:258
-#: .\mto_app\templates\mto_app\plan\form.html:70
+#: .\mto_app\templates\mto_app\plan\form.html:30
 #: .\mto_app\templates\mto_app\plan\importar.html:73
 #: .\mto_app\templates\mto_app\plan\importar.html:105
-#: .\mto_app\templates\mto_app\plan\lista.html:228
+#: .\mto_app\templates\mto_app\plan\lista.html:269
 msgid "Rutina"
 msgstr "Routine"
 
@@ -5043,14 +5050,15 @@ msgstr "Routine"
 msgid "Plan de trabajo"
 msgstr "Work Plan"
 
-#: .\mto_app\models.py:61 .\mto_app\templates\mto_app\plan\form.html:54
+#: .\mto_app\models.py:61 .\mto_app\templates\mto_app\plan\form.html:70
 #: .\mto_app\templates\mto_app\plan\importar.html:76
 #: .\mto_app\templates\mto_app\plan\importar.html:108
-#: .\mto_app\templates\mto_app\plan\lista.html:153
-#: .\mto_app\templates\mto_app\plan\lista.html:232
-#: .\mto_app\templates\mto_app\plan\lista.html:269
-#: .\mto_app\templates\mto_app\plan\lista.html:406
-#: .\mto_app\templates\mto_app\plan\lista.html:546
+#: .\mto_app\templates\mto_app\plan\lista.html:161
+#: .\mto_app\templates\mto_app\plan\lista.html:169
+#: .\mto_app\templates\mto_app\plan\lista.html:273
+#: .\mto_app\templates\mto_app\plan\lista.html:315
+#: .\mto_app\templates\mto_app\plan\lista.html:461
+#: .\mto_app\templates\mto_app\plan\lista.html:601
 msgid "Frecuencia"
 msgstr "Frequency"
 
@@ -5058,8 +5066,7 @@ msgstr "Frequency"
 msgid "Duracion en minutos"
 msgstr "Duration in minutes"
 
-#: .\mto_app\models.py:63 .\mto_app\templates\mto_app\plan\form.html:123
-#: .\mto_app\templates\mto_app\plan\importar.html:115
+#: .\mto_app\models.py:63 .\mto_app\templates\mto_app\plan\importar.html:115
 msgid "Semana de inicio"
 msgstr "Start Week"
 
@@ -5071,18 +5078,18 @@ msgstr "Start year"
 msgid "Locacion"
 msgstr "Location"
 
-#: .\mto_app\models.py:70 .\mto_app\templates\mto_app\plan\form.html:93
+#: .\mto_app\models.py:70 .\mto_app\templates\mto_app\plan\form.html:52
 #: .\mto_app\templates\mto_app\plan\importar.html:112
-#: .\mto_app\templates\mto_app\plan\lista.html:241
+#: .\mto_app\templates\mto_app\plan\lista.html:282
 msgid "Tipo de mantenimiento"
 msgstr "Maintenance Type"
 
 #: .\mto_app\models.py:72 .\mto_app\models.py:244
-#: .\mto_app\templates\mto_app\plan\form.html:103
+#: .\mto_app\templates\mto_app\plan\form.html:58
 #: .\mto_app\templates\mto_app\plan\importar.html:113
-#: .\mto_app\templates\mto_app\plan\lista.html:242
-#: .\mto_app\templates\mto_app\plan\lista.html:278
-#: .\mto_app\templates\mto_app\plan\lista.html:1642
+#: .\mto_app\templates\mto_app\plan\lista.html:283
+#: .\mto_app\templates\mto_app\plan\lista.html:324
+#: .\mto_app\templates\mto_app\plan\lista.html:1702
 msgid "Prioridad"
 msgstr "Priority"
 
@@ -5098,12 +5105,12 @@ msgstr "Maintenance plans"
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:80
 #: .\mto_app\templates\mto_app\plan\detalle.html:88
 #: .\mto_app\templates\mto_app\plan\detalle.html:123
-#: .\mto_app\templates\mto_app\plan\lista.html:287
-#: .\mto_app\templates\mto_app\plan\lista.html:447
-#: .\mto_app\templates\mto_app\plan\lista.html:607
-#: .\mto_app\templates\mto_app\plan\lista.html:630
-#: .\mto_app\templates\mto_app\plan\lista.html:1492
-#: .\mto_app\templates\mto_app\plan\lista.html:1735
+#: .\mto_app\templates\mto_app\plan\lista.html:333
+#: .\mto_app\templates\mto_app\plan\lista.html:502
+#: .\mto_app\templates\mto_app\plan\lista.html:662
+#: .\mto_app\templates\mto_app\plan\lista.html:685
+#: .\mto_app\templates\mto_app\plan\lista.html:1551
+#: .\mto_app\templates\mto_app\plan\lista.html:1795
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:200
 msgid "Completada"
 msgstr "Completed"
@@ -5115,20 +5122,20 @@ msgstr "Completed"
 #: .\mto_app\templates\mto_app\dashboard.html:484
 #: .\mto_app\templates\mto_app\plan\detalle.html:94
 #: .\mto_app\templates\mto_app\plan\detalle.html:139
-#: .\mto_app\templates\mto_app\plan\lista.html:287
-#: .\mto_app\templates\mto_app\plan\lista.html:447
-#: .\mto_app\templates\mto_app\plan\lista.html:609
-#: .\mto_app\templates\mto_app\plan\lista.html:632
-#: .\mto_app\templates\mto_app\plan\lista.html:1493
-#: .\mto_app\templates\mto_app\plan\lista.html:1737
+#: .\mto_app\templates\mto_app\plan\lista.html:333
+#: .\mto_app\templates\mto_app\plan\lista.html:502
+#: .\mto_app\templates\mto_app\plan\lista.html:664
+#: .\mto_app\templates\mto_app\plan\lista.html:687
+#: .\mto_app\templates\mto_app\plan\lista.html:1552
+#: .\mto_app\templates\mto_app\plan\lista.html:1797
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:202
 msgid "Reagendada"
 msgstr "Rescheduled"
 
 #: .\mto_app\models.py:98 .\mto_app\templates\mto_app\plan\importar.html:77
-#: .\mto_app\templates\mto_app\plan\lista.html:226
-#: .\mto_app\templates\mto_app\plan\lista.html:289
-#: .\mto_app\templates\mto_app\plan\lista.html:451
+#: .\mto_app\templates\mto_app\plan\lista.html:267
+#: .\mto_app\templates\mto_app\plan\lista.html:344
+#: .\mto_app\templates\mto_app\plan\lista.html:506
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:195
 msgid "Plan"
 msgstr "Plan"
@@ -5149,10 +5156,10 @@ msgstr "Monday of the week"
 msgid "Fecha de ejecucion"
 msgstr "Execution date"
 
-#: .\mto_app\models.py:108 .\mto_app\templates\mto_app\plan\lista.html:676
+#: .\mto_app\models.py:108 .\mto_app\templates\mto_app\plan\lista.html:731
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:332
-#: .\mto_app\templates\mto_app\plan\registro_form.html:298
-#: .\mto_app\views\planes.py:802
+#: .\mto_app\templates\mto_app\plan\registro_form.html:314
+#: .\mto_app\views\planes.py:863
 msgid "Observaciones"
 msgstr "Observations"
 
@@ -5160,8 +5167,8 @@ msgstr "Observations"
 msgid "Última edición por"
 msgstr "Last edited by"
 
-#: .\mto_app\models.py:115 .\mto_app\templates\mto_app\plan\lista.html:646
-#: .\mto_app\templates\mto_app\plan\registro_form.html:264
+#: .\mto_app\models.py:115 .\mto_app\templates\mto_app\plan\lista.html:701
+#: .\mto_app\templates\mto_app\plan\registro_form.html:280
 msgid "Motivo de la cancelación"
 msgstr "Cancellation reason"
 
@@ -5173,12 +5180,12 @@ msgstr "Rescheduled to year"
 msgid "Reagendada a la semana"
 msgstr "Rescheduled to week"
 
-#: .\mto_app\models.py:120 .\mto_app\views\planes.py:801
+#: .\mto_app\models.py:120 .\mto_app\views\planes.py:862
 msgid "Semanas de atraso"
 msgstr "Weeks late"
 
-#: .\mto_app\models.py:124 .\mto_app\templates\mto_app\plan\lista.html:694
-#: .\mto_app\templates\mto_app\plan\lista.html:1728
+#: .\mto_app\models.py:124 .\mto_app\templates\mto_app\plan\lista.html:749
+#: .\mto_app\templates\mto_app\plan\lista.html:1788
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:134
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:224
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:356
@@ -5194,8 +5201,8 @@ msgid "Por validar"
 msgstr "To validate"
 
 #: .\mto_app\models.py:125 .\mto_app\models.py:405 .\mto_app\models.py:436
-#: .\mto_app\templates\mto_app\plan\lista.html:695
-#: .\mto_app\templates\mto_app\plan\lista.html:1727
+#: .\mto_app\templates\mto_app\plan\lista.html:750
+#: .\mto_app\templates\mto_app\plan\lista.html:1787
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:224
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:357
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:775
@@ -5207,8 +5214,8 @@ msgstr "To validate"
 msgid "Validado"
 msgstr "Validated"
 
-#: .\mto_app\models.py:126 .\mto_app\templates\mto_app\plan\lista.html:696
-#: .\mto_app\templates\mto_app\plan\lista.html:1729
+#: .\mto_app\models.py:126 .\mto_app\templates\mto_app\plan\lista.html:751
+#: .\mto_app\templates\mto_app\plan\lista.html:1789
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:349
 #: .\paros_app\models.py:33
 #: .\paros_app\templates\paros_app\paros\editar_paro.html:147
@@ -5219,18 +5226,18 @@ msgstr "Validated"
 msgid "Rechazado"
 msgstr "Rejected"
 
-#: .\mto_app\models.py:129 .\mto_app\templates\mto_app\plan\lista.html:691
+#: .\mto_app\models.py:129 .\mto_app\templates\mto_app\plan\lista.html:746
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:332
-#: .\mto_app\templates\mto_app\plan\registro_form.html:319
+#: .\mto_app\templates\mto_app\plan\registro_form.html:335
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:73
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:158
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:178
-#: .\mto_app\views\planes.py:802 .\mto_app\views\seguimientos_exportar.py:40
+#: .\mto_app\views\planes.py:863 .\mto_app\views\seguimientos_exportar.py:40
 msgid "Validación"
 msgstr "Validation"
 
-#: .\mto_app\models.py:131 .\mto_app\templates\mto_app\plan\lista.html:1749
-#: .\mto_app\templates\mto_app\plan\registro_form.html:333
+#: .\mto_app\models.py:131 .\mto_app\templates\mto_app\plan\lista.html:1809
+#: .\mto_app\templates\mto_app\plan\registro_form.html:349
 msgid "Validado por"
 msgstr "Validated by"
 
@@ -5242,8 +5249,8 @@ msgstr "User who validated"
 msgid "Fecha de validación"
 msgstr "Validation date"
 
-#: .\mto_app\models.py:135 .\mto_app\templates\mto_app\plan\lista.html:708
-#: .\mto_app\templates\mto_app\plan\registro_form.html:346
+#: .\mto_app\models.py:135 .\mto_app\templates\mto_app\plan\lista.html:763
+#: .\mto_app\templates\mto_app\plan\registro_form.html:362
 msgid "Motivo del rechazo"
 msgstr "Rejection reason"
 
@@ -5263,25 +5270,24 @@ msgstr "Execution log"
 msgid "Registros de ejecucion"
 msgstr "Execution records"
 
-#: .\mto_app\models.py:191 .\mto_app\templates\mto_app\plan\lista.html:1755
-#: .\mto_app\templates\mto_app\plan\registro_form.html:441
+#: .\mto_app\models.py:191 .\mto_app\templates\mto_app\plan\lista.html:1815
+#: .\mto_app\templates\mto_app\plan\registro_form.html:457
 msgid "Sin etiqueta"
 msgstr "No label"
 
-#: .\mto_app\models.py:192 .\mto_app\templates\mto_app\plan\lista.html:1756
+#: .\mto_app\models.py:192 .\mto_app\templates\mto_app\plan\lista.html:1816
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:407
-#: .\mto_app\templates\mto_app\plan\registro_form.html:439
+#: .\mto_app\templates\mto_app\plan\registro_form.html:455
 msgid "Antes"
 msgstr "Before"
 
-#: .\mto_app\models.py:193 .\mto_app\templates\mto_app\plan\lista.html:1757
+#: .\mto_app\models.py:193 .\mto_app\templates\mto_app\plan\lista.html:1817
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:408
-#: .\mto_app\templates\mto_app\plan\registro_form.html:440
+#: .\mto_app\templates\mto_app\plan\registro_form.html:456
 msgid "Después"
 msgstr "After"
 
 #: .\mto_app\models.py:221 .\mto_app\models.py:243 .\mto_app\models.py:366
-#: .\mto_app\templates\mto_app\plan\form.html:38
 msgid "N° Plan de trabajo"
 msgstr "Work Plan No."
 
@@ -5321,16 +5327,16 @@ msgstr "Routine Steps"
 msgid "Área del documento"
 msgstr "Document area"
 
-#: .\mto_app\models.py:246 .\mto_app\templates\mto_app\plan\form.html:87
+#: .\mto_app\models.py:246 .\mto_app\templates\mto_app\plan\form.html:49
 #: .\mto_app\templates\mto_app\plan\importar.html:111
-#: .\mto_app\templates\mto_app\plan\lista.html:240
-#: .\mto_app\templates\mto_app\plan\lista.html:276
-#: .\mto_app\templates\mto_app\plan\lista.html:1644
-#: .\mto_app\views\planes.py:1010
+#: .\mto_app\templates\mto_app\plan\lista.html:281
+#: .\mto_app\templates\mto_app\plan\lista.html:322
+#: .\mto_app\templates\mto_app\plan\lista.html:1704
+#: .\mto_app\views\planes.py:1071
 msgid "Locación"
 msgstr "Location"
 
-#: .\mto_app\models.py:247 .\mto_app\templates\mto_app\plan\lista.html:1645
+#: .\mto_app\models.py:247 .\mto_app\templates\mto_app\plan\lista.html:1705
 msgid "Creador"
 msgstr "Author"
 
@@ -5359,7 +5365,7 @@ msgstr "Critical point legend"
 msgid "Numero de nomina"
 msgstr "Payroll Number"
 
-#: .\mto_app\models.py:267 .\mto_app\templates\mto_app\plan\lista.html:1078
+#: .\mto_app\models.py:267 .\mto_app\templates\mto_app\plan\lista.html:1133
 msgid "Apellidos"
 msgstr "Last names"
 
@@ -5415,8 +5421,8 @@ msgstr "Delete routines"
 msgid "Ver seguimiento"
 msgstr "View Follow-Up"
 
-#: .\mto_app\models.py:315 .\mto_app\templates\mto_app\plan\lista.html:1405
-#: .\mto_app\templates\mto_app\plan\lista.html:1794
+#: .\mto_app\models.py:315 .\mto_app\templates\mto_app\plan\lista.html:1462
+#: .\mto_app\templates\mto_app\plan\lista.html:1854
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:487
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:652
 msgid "Eliminar seguimiento"
@@ -5550,8 +5556,8 @@ msgid "Correctiva"
 msgstr "Corrective"
 
 #: .\mto_app\models.py:387 .\mto_app\models.py:421
-#: .\mto_app\templates\mto_app\plan\lista.html:847
-#: .\mto_app\templates\mto_app\plan\lista.html:1356
+#: .\mto_app\templates\mto_app\plan\lista.html:902
+#: .\mto_app\templates\mto_app\plan\lista.html:1413
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:110
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:308
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:441
@@ -5567,24 +5573,24 @@ msgid "Registro de ejecución"
 msgstr "Execution log"
 
 #: .\mto_app\models.py:396 .\mto_app\models.py:428
-#: .\mto_app\templates\mto_app\plan\lista.html:811
-#: .\mto_app\templates\mto_app\plan\lista.html:1303
+#: .\mto_app\templates\mto_app\plan\lista.html:866
+#: .\mto_app\templates\mto_app\plan\lista.html:1360
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:406
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:552
 msgid "Problema encontrado"
 msgstr "Issue Found"
 
 #: .\mto_app\models.py:397 .\mto_app\models.py:429
-#: .\mto_app\templates\mto_app\plan\lista.html:816
-#: .\mto_app\templates\mto_app\plan\lista.html:1309
+#: .\mto_app\templates\mto_app\plan\lista.html:871
+#: .\mto_app\templates\mto_app\plan\lista.html:1366
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:411
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:558
 msgid "Acción realizada"
 msgstr "Action Taken"
 
 #: .\mto_app\models.py:399 .\mto_app\models.py:431
-#: .\mto_app\templates\mto_app\plan\lista.html:830
-#: .\mto_app\templates\mto_app\plan\lista.html:1336
+#: .\mto_app\templates\mto_app\plan\lista.html:885
+#: .\mto_app\templates\mto_app\plan\lista.html:1393
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:423
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:587
 #: .\mto_app\views\seguimientos_exportar.py:36
@@ -5592,8 +5598,8 @@ msgid "Fecha compromiso"
 msgstr "Due Date"
 
 #: .\mto_app\models.py:401 .\mto_app\models.py:433
-#: .\mto_app\templates\mto_app\plan\lista.html:852
-#: .\mto_app\templates\mto_app\plan\lista.html:1315
+#: .\mto_app\templates\mto_app\plan\lista.html:907
+#: .\mto_app\templates\mto_app\plan\lista.html:1372
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:446
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:564
 msgid "Notas adicionales"
@@ -5609,7 +5615,7 @@ msgid "Fecha de creación"
 msgstr "Creation date"
 
 #: .\mto_app\models.py:404
-#: .\mto_app\templates\mto_app\plan\registro_form.html:226
+#: .\mto_app\templates\mto_app\plan\registro_form.html:241
 msgid "Última edición"
 msgstr "Last edit"
 
@@ -5745,7 +5751,8 @@ msgstr "Choose due week"
 #: .\mto_app\templates\mto_app\_week_select.html:43
 #: .\mto_app\templates\mto_app\dashboard.html:39
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:20
-#: .\mto_app\templates\mto_app\plan\lista.html:1497
+#: .\mto_app\templates\mto_app\plan\form.html:175
+#: .\mto_app\templates\mto_app\plan\lista.html:1556
 #: .\paros_app\templates\paros_app\analisis_paros.html:309
 #: .\paros_app\templates\paros_app\analisis_paros.html:324
 #: .\paros_app\templates\paros_app\analisis_paros.html:614
@@ -5758,7 +5765,8 @@ msgstr "Previous year"
 #: .\mto_app\templates\mto_app\_week_select.html:47
 #: .\mto_app\templates\mto_app\dashboard.html:43
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:22
-#: .\mto_app\templates\mto_app\plan\lista.html:1498
+#: .\mto_app\templates\mto_app\plan\form.html:176
+#: .\mto_app\templates\mto_app\plan\lista.html:1557
 #: .\paros_app\templates\paros_app\analisis_paros.html:317
 #: .\paros_app\templates\paros_app\analisis_paros.html:332
 #: .\paros_app\templates\paros_app\analisis_paros.html:618
@@ -5769,8 +5777,8 @@ msgid "Año siguiente"
 msgstr "Next year"
 
 #: .\mto_app\templates\mto_app\_week_select.html:58
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:48
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:115
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:49
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:116
 msgid "Órdenes vencidas"
 msgstr "Overdue orders"
 
@@ -5780,12 +5788,13 @@ msgstr "Selected"
 
 #: .\mto_app\templates\mto_app\_week_select.html:60
 #: .\mto_app\templates\mto_app\plan\detalle.html:100
-#: .\mto_app\templates\mto_app\plan\registro_form.html:223
+#: .\mto_app\templates\mto_app\plan\form.html:120
+#: .\mto_app\templates\mto_app\plan\registro_form.html:236
 msgid "Semana actual"
 msgstr "Current week"
 
 #: .\mto_app\templates\mto_app\_week_select.html:71
-#: .\mto_app\templates\mto_app\plan\lista.html:1718
+#: .\mto_app\templates\mto_app\plan\lista.html:1778
 #, python-brace-format
 msgid "Todas · {n}"
 msgstr "All · {n}"
@@ -5802,6 +5811,7 @@ msgstr "W{n}/{anio}"
 
 #: .\mto_app\templates\mto_app\_week_select.html:74
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:69
+#: .\mto_app\templates\mto_app\plan\form.html:169
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:402
 #, python-brace-format
 msgid "S{n}"
@@ -5817,12 +5827,13 @@ msgid "Más de 6 meses · {n}"
 msgstr "Over 6 months · {n}"
 
 #: .\mto_app\templates\mto_app\_week_select.html:77
-#: .\mto_app\views\backlog.py:233
+#: .\mto_app\views\backlog.py:241
 msgid "Más de 6 meses"
 msgstr "Over 6 months"
 
 #: .\mto_app\templates\mto_app\_week_select.html:78
 #: .\mto_app\templates\mto_app\dashboard.html:492
+#: .\mto_app\templates\mto_app\plan\form.html:167
 #, python-brace-format
 msgid "Semanas de {anio}"
 msgstr "Weeks of {anio}"
@@ -5972,7 +5983,7 @@ msgstr "View photos"
 #: .\mto_app\templates\mto_app\bitacora\lista.html:155
 #: .\mto_app\templates\mto_app\bitacora\lista.html:770
 #: .\mto_app\templates\mto_app\bitacora\lista.html:798
-#: .\mto_app\templates\mto_app\plan\lista.html:1732
+#: .\mto_app\templates\mto_app\plan\lista.html:1792
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:353
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:354
 msgid "Editar registro"
@@ -5980,10 +5991,10 @@ msgstr "Edit record"
 
 #: .\mto_app\templates\mto_app\bitacora\lista.html:156
 #: .\mto_app\templates\mto_app\bitacora\lista.html:692
-#: .\mto_app\templates\mto_app\plan\lista.html:782
-#: .\mto_app\templates\mto_app\plan\lista.html:1777
-#: .\mto_app\templates\mto_app\plan\registro_form.html:361
-#: .\mto_app\templates\mto_app\plan\registro_form.html:410
+#: .\mto_app\templates\mto_app\plan\lista.html:837
+#: .\mto_app\templates\mto_app\plan\lista.html:1837
+#: .\mto_app\templates\mto_app\plan\registro_form.html:377
+#: .\mto_app\templates\mto_app\plan\registro_form.html:426
 msgid "Eliminar registro"
 msgstr "Delete record"
 
@@ -5992,7 +6003,7 @@ msgid "No hay registros con estos filtros."
 msgstr "No records match these filters."
 
 #: .\mto_app\templates\mto_app\bitacora\lista.html:167
-#: .\mto_app\templates\mto_app\plan\lista.html:350
+#: .\mto_app\templates\mto_app\plan\lista.html:405
 #: .\mto_app\templates\mto_app\rutinas\_historial_acciones.html:119
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:258
 #, python-format
@@ -6023,8 +6034,8 @@ msgstr "Remove date filter"
 #: .\mto_app\templates\mto_app\dashboard.html:101
 #: .\mto_app\templates\mto_app\dashboard.html:322
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:58
-#: .\mto_app\templates\mto_app\plan\lista.html:421
-#: .\mto_app\templates\mto_app\plan\lista.html:430
+#: .\mto_app\templates\mto_app\plan\lista.html:476
+#: .\mto_app\templates\mto_app\plan\lista.html:485
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:322
 #: .\paros_app\templates\paros_app\analisis_paros.html:180
 #: .\paros_app\templates\paros_app\analisis_paros.html:186
@@ -6117,8 +6128,8 @@ msgstr "Remove equipment"
 
 #: .\mto_app\templates\mto_app\bitacora\lista.html:501
 #: .\mto_app\templates\mto_app\bitacora\lista.html:509
-#: .\mto_app\templates\mto_app\plan\lista.html:1326
-#: .\mto_app\templates\mto_app\plan\registro_form.html:275
+#: .\mto_app\templates\mto_app\plan\lista.html:1383
+#: .\mto_app\templates\mto_app\plan\registro_form.html:291
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:577
 #: .\paros_app\templates\paros_app\analisis_paros.html:432
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:168
@@ -6127,9 +6138,9 @@ msgid "Buscar responsable…"
 msgstr "Search responsible…"
 
 #: .\mto_app\templates\mto_app\bitacora\lista.html:502
-#: .\mto_app\templates\mto_app\plan\lista.html:1327
-#: .\mto_app\templates\mto_app\plan\lista.html:1669
-#: .\mto_app\templates\mto_app\plan\registro_form.html:277
+#: .\mto_app\templates\mto_app\plan\lista.html:1384
+#: .\mto_app\templates\mto_app\plan\lista.html:1729
+#: .\mto_app\templates\mto_app\plan\registro_form.html:293
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:578
 msgid "Quitar responsable"
 msgstr "Remove responsible"
@@ -6139,7 +6150,7 @@ msgid "Quitar segundo responsable"
 msgstr "Remove second person in charge"
 
 #: .\mto_app\templates\mto_app\bitacora\lista.html:522
-#: .\mto_app\templates\mto_app\plan\lista.html:1365
+#: .\mto_app\templates\mto_app\plan\lista.html:1422
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:618
 msgid "Arrastra, pega (Ctrl + V) o haz clic · JPG o PNG hasta 5 MB"
 msgstr "Drag, paste (Ctrl + V) or click · JPG or PNG up to 5 MB"
@@ -6156,14 +6167,14 @@ msgstr "You have unsaved changes. If you leave now, they will be lost."
 
 #: .\mto_app\templates\mto_app\bitacora\lista.html:588
 #: .\mto_app\templates\mto_app\dashboard.html:243
-#: .\mto_app\templates\mto_app\plan\lista.html:639
+#: .\mto_app\templates\mto_app\plan\lista.html:694
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:275
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:331
-#: .\mto_app\templates\mto_app\plan\registro_form.html:221
-#: .\mto_app\templates\mto_app\plan\registro_form.html:257
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:131
-#: .\mto_app\views\backlog.py:414 .\mto_app\views\bitacora.py:461
-#: .\mto_app\views\planes.py:801
+#: .\mto_app\templates\mto_app\plan\registro_form.html:227
+#: .\mto_app\templates\mto_app\plan\registro_form.html:273
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:132
+#: .\mto_app\views\backlog.py:422 .\mto_app\views\bitacora.py:461
+#: .\mto_app\views\planes.py:862
 #: .\paros_app\templates\paros_app\analisis_paros.html:120
 #: .\paros_app\templates\paros_app\dashboard.html:222
 #: .\paros_app\templates\paros_app\dashboard.html:653
@@ -6236,10 +6247,11 @@ msgstr "Created on {fecha}"
 
 #: .\mto_app\templates\mto_app\bitacora\lista.html:802
 #: .\mto_app\templates\mto_app\bitacora\lista.html:846
-#: .\mto_app\templates\mto_app\plan\lista.html:1447
-#: .\mto_app\templates\mto_app\plan\lista.html:1555
-#: .\mto_app\templates\mto_app\plan\lista.html:1776
-#: .\mto_app\templates\mto_app\plan\registro_form.html:457
+#: .\mto_app\templates\mto_app\plan\form.html:158
+#: .\mto_app\templates\mto_app\plan\lista.html:1504
+#: .\mto_app\templates\mto_app\plan\lista.html:1615
+#: .\mto_app\templates\mto_app\plan\lista.html:1836
+#: .\mto_app\templates\mto_app\plan\registro_form.html:473
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:760
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:824
 msgid "Guardando…"
@@ -6361,7 +6373,7 @@ msgid "Salir y descartar"
 msgstr "Leave and discard"
 
 #: .\mto_app\templates\mto_app\bitacora\lista.html:842
-#: .\mto_app\templates\mto_app\plan\lista.html:911
+#: .\mto_app\templates\mto_app\plan\lista.html:966
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:841
 msgid "¿Salir sin guardar los cambios?"
 msgstr "Leave without saving the changes?"
@@ -6373,7 +6385,7 @@ msgstr ""
 "You changed this record. If you leave now, it will stay as it was before."
 
 #: .\mto_app\templates\mto_app\bitacora\lista.html:845
-#: .\mto_app\templates\mto_app\plan\lista.html:915
+#: .\mto_app\templates\mto_app\plan\lista.html:970
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:844
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:544
 msgid "Descartar cambios"
@@ -6389,30 +6401,31 @@ msgstr "Plan compliance by week"
 
 #: .\mto_app\templates\mto_app\dashboard.html:25
 #: .\mto_app\templates\mto_app\dashboard.html:285
-#: .\mto_app\templates\mto_app\plan\lista.html:132
-#: .\mto_app\templates\mto_app\plan\lista.html:382
-#: .\mto_app\templates\mto_app\plan\lista.html:984
+#: .\mto_app\templates\mto_app\plan\lista.html:133
+#: .\mto_app\templates\mto_app\plan\lista.html:437
+#: .\mto_app\templates\mto_app\plan\lista.html:1039
 msgid "Semana anterior"
 msgstr "Previous week"
 
 #: .\mto_app\templates\mto_app\dashboard.html:30
 #: .\mto_app\templates\mto_app\dashboard.html:290
-#: .\mto_app\templates\mto_app\plan\lista.html:136
-#: .\mto_app\templates\mto_app\plan\lista.html:386
+#: .\mto_app\templates\mto_app\plan\lista.html:137
+#: .\mto_app\templates\mto_app\plan\lista.html:441
 #, python-format
 msgid "Semana %(n)s · %(a)s"
 msgstr "Week %(n)s · %(a)s"
 
 #: .\mto_app\templates\mto_app\dashboard.html:33
 #: .\mto_app\templates\mto_app\dashboard.html:293
-#: .\mto_app\templates\mto_app\plan\lista.html:139
-#: .\mto_app\templates\mto_app\plan\lista.html:389
-#: .\mto_app\templates\mto_app\plan\lista.html:986
+#: .\mto_app\templates\mto_app\plan\lista.html:140
+#: .\mto_app\templates\mto_app\plan\lista.html:444
+#: .\mto_app\templates\mto_app\plan\lista.html:1041
 msgid "Semana siguiente"
 msgstr "Next week"
 
 #: .\mto_app\templates\mto_app\dashboard.html:37
-#: .\mto_app\templates\mto_app\plan\lista.html:142
+#: .\mto_app\templates\mto_app\plan\form.html:83
+#: .\mto_app\templates\mto_app\plan\lista.html:143
 msgid "Elegir semana"
 msgstr "Choose week"
 
@@ -6422,7 +6435,7 @@ msgstr "Weeks of the year"
 
 #: .\mto_app\templates\mto_app\dashboard.html:48
 #: .\mto_app\templates\mto_app\dashboard.html:494
-#: .\mto_app\templates\mto_app\plan\lista.html:144
+#: .\mto_app\templates\mto_app\plan\lista.html:145
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:88
 #: .\mto_app\views\bitacora.py:126 .\mto_app\views\lista_seguimientos.py:297
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:707
@@ -6496,8 +6509,8 @@ msgid "SIN RESPONSABLE S%(n)s"
 msgstr "NO RESPONSIBLE W%(n)s"
 
 #: .\mto_app\templates\mto_app\dashboard.html:117
-#: .\mto_app\templates\mto_app\plan\lista.html:311
-#: .\mto_app\templates\mto_app\plan\lista.html:1472
+#: .\mto_app\templates\mto_app\plan\lista.html:366
+#: .\mto_app\templates\mto_app\plan\lista.html:1531
 msgid "Asignar"
 msgstr "Assign"
 
@@ -6552,10 +6565,10 @@ msgid "Meses"
 msgstr "Months"
 
 #: .\mto_app\templates\mto_app\dashboard.html:149
-#: .\mto_app\templates\mto_app\plan\lista.html:603
-#: .\mto_app\templates\mto_app\plan\lista.html:640
+#: .\mto_app\templates\mto_app\plan\lista.html:658
+#: .\mto_app\templates\mto_app\plan\lista.html:695
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:207
-#: .\mto_app\templates\mto_app\plan\registro_form.html:258
+#: .\mto_app\templates\mto_app\plan\registro_form.html:274
 #: .\paros_app\templates\paros_app\analisis_paros.html:136
 #: .\paros_app\templates\paros_app\bitacora_agv.html:147
 #: .\paros_app\templates\paros_app\bitacora_agv.html:366
@@ -6577,7 +6590,7 @@ msgid "Año"
 msgstr "Year"
 
 #: .\mto_app\templates\mto_app\dashboard.html:161
-#: .\mto_app\templates\mto_app\plan\lista.html:527
+#: .\mto_app\templates\mto_app\plan\lista.html:582
 #, python-format
 msgid "Semana %(n)s"
 msgstr "Week %(n)s"
@@ -6593,7 +6606,7 @@ msgstr "%(t)s orders"
 #: .\mto_app\templates\mto_app\dashboard.html:389
 #: .\mto_app\templates\mto_app\dashboard.html:404
 #: .\mto_app\templates\mto_app\dashboard.html:481
-#: .\mto_app\templates\mto_app\plan\lista.html:195
+#: .\mto_app\templates\mto_app\plan\lista.html:231
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:126
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:204
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:802
@@ -6613,11 +6626,11 @@ msgstr "Week %(n)s orders"
 
 #: .\mto_app\templates\mto_app\dashboard.html:199
 #: .\mto_app\templates\mto_app\dashboard.html:242
-#: .\mto_app\templates\mto_app\plan\form.html:65
+#: .\mto_app\templates\mto_app\plan\form.html:33
 #: .\mto_app\templates\mto_app\plan\importar.html:106
-#: .\mto_app\templates\mto_app\plan\lista.html:229
-#: .\mto_app\templates\mto_app\plan\lista.html:266
-#: .\mto_app\views\planes.py:1010 .\mto_app\views\planes.py:1275
+#: .\mto_app\templates\mto_app\plan\lista.html:270
+#: .\mto_app\templates\mto_app\plan\lista.html:312
+#: .\mto_app\views\planes.py:1071 .\mto_app\views\planes.py:1336
 msgid "Actividad"
 msgstr "Activity"
 
@@ -6625,16 +6638,16 @@ msgstr "Activity"
 #: .\mto_app\templates\mto_app\dashboard.html:407
 #: .\mto_app\templates\mto_app\dashboard.html:486
 #: .\mto_app\templates\mto_app\plan\detalle.html:172
-#: .\mto_app\templates\mto_app\plan\lista.html:611
-#: .\mto_app\templates\mto_app\plan\lista.html:1443
-#: .\mto_app\templates\mto_app\plan\lista.html:1494
-#: .\mto_app\templates\mto_app\plan\lista.html:1740
+#: .\mto_app\templates\mto_app\plan\lista.html:666
+#: .\mto_app\templates\mto_app\plan\lista.html:1500
+#: .\mto_app\templates\mto_app\plan\lista.html:1553
+#: .\mto_app\templates\mto_app\plan\lista.html:1800
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:204
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:217
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:219
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:324
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:343
-#: .\mto_app\views\planes.py:812
+#: .\mto_app\views\planes.py:873
 #: .\paros_app\templates\paros_app\hora_hora.html:343
 msgid "Sin registro"
 msgstr "No record"
@@ -6657,7 +6670,7 @@ msgid "Órdenes vencidas sin registro"
 msgstr "Overdue orders with no record"
 
 #: .\mto_app\templates\mto_app\dashboard.html:244
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:133
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:134
 msgid "Atraso"
 msgstr "Delay"
 
@@ -6687,7 +6700,7 @@ msgid "%(c)s de %(t)s completadas"
 msgstr "%(c)s of %(t)s completed"
 
 #: .\mto_app\templates\mto_app\dashboard.html:328
-#: .\mto_app\templates\mto_app\plan\lista.html:178
+#: .\mto_app\templates\mto_app\plan\lista.html:214
 msgid "Planes activos"
 msgstr "Active Plans"
 
@@ -6706,7 +6719,7 @@ msgstr "Weekly Compliance"
 
 #: .\mto_app\templates\mto_app\dashboard.html:375
 #: .\mto_app\templates\mto_app\plan\detalle.html:3
-#: .\mto_app\views\planes.py:1274
+#: .\mto_app\views\planes.py:1335
 msgid "Detalle"
 msgstr "Detail"
 
@@ -6999,9 +7012,9 @@ msgid "No se pudo subir"
 msgstr "Couldn't upload"
 
 #: .\mto_app\templates\mto_app\documentacion\_movil_config.html:43
-#: .\mto_app\templates\mto_app\plan\lista.html:887
-#: .\mto_app\templates\mto_app\plan\lista.html:1383
-#: .\mto_app\templates\mto_app\plan\registro_form.html:371
+#: .\mto_app\templates\mto_app\plan\lista.html:942
+#: .\mto_app\templates\mto_app\plan\lista.html:1440
+#: .\mto_app\templates\mto_app\plan\registro_form.html:387
 msgid "Foto"
 msgstr "Photo"
 
@@ -7308,7 +7321,7 @@ msgid "PDF, Excel, Word o PowerPoint — máx. 25 MB"
 msgstr "PDF, Excel, Word, or PowerPoint — max. 25 MB"
 
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:12
-#: .\mto_app\templates\mto_app\plan\lista.html:102
+#: .\mto_app\templates\mto_app\plan\lista.html:103
 msgid "Distribución de OTs por semana"
 msgstr "Work orders by week"
 
@@ -7325,6 +7338,9 @@ msgid "Detalle de la semana"
 msgstr "Week details"
 
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:36
+#: .\mto_app\templates\mto_app\plan\lista.html:264
+#: .\mto_app\templates\mto_app\plan\lista.html:301
+#: .\mto_app\templates\mto_app\plan\registro_form.html:230
 msgid "No. OT"
 msgstr "WO no."
 
@@ -7391,23 +7407,23 @@ msgid "en el año"
 msgstr "in the year"
 
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:65
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:30
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:203
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:31
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:218
 msgid "OTs"
 msgstr "WOs"
 
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:66
-#: .\mto_app\templates\mto_app\plan\lista.html:1501
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:284
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:297
+#: .\mto_app\templates\mto_app\plan\lista.html:1560
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:299
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:317
 #, python-brace-format
 msgid "{n} OTs"
 msgstr "{n} WOs"
 
 #: .\mto_app\templates\mto_app\plan\_distribucion_ots.html:67
-#: .\mto_app\templates\mto_app\plan\lista.html:1500
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:283
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:296
+#: .\mto_app\templates\mto_app\plan\lista.html:1559
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:298
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:316
 msgid "1 OT"
 msgstr "1 WO"
 
@@ -7535,60 +7551,211 @@ msgstr "Pending Generation"
 msgid "No hay fechas programadas para este año."
 msgstr "No scheduled dates for this year."
 
-#: .\mto_app\templates\mto_app\plan\form.html:3
-msgid "Nueva"
-msgstr "New"
+#: .\mto_app\templates\mto_app\plan\form.html:27
+msgid "PLAN Y ACTIVIDAD"
+msgstr "PLAN AND ACTIVITY"
 
-#: .\mto_app\templates\mto_app\plan\form.html:3
-msgid "tarea"
-msgstr "task"
+#: .\mto_app\templates\mto_app\plan\form.html:30
+msgid "Descripción de la rutina de mantenimiento"
+msgstr "Description of the maintenance routine"
 
-#: .\mto_app\templates\mto_app\plan\form.html:26
-msgid "Editar tarea"
-msgstr "Edit task"
+#: .\mto_app\templates\mto_app\plan\form.html:31
+msgid "Nº plan de trabajo"
+msgstr "Work plan no."
 
-#: .\mto_app\templates\mto_app\plan\form.html:26
+#: .\mto_app\templates\mto_app\plan\form.html:31
+msgid "Ej: PT-2024-001"
+msgstr "E.g. PT-2024-001"
+
+#: .\mto_app\templates\mto_app\plan\form.html:33
+msgid "Descriptivo de la actividad del equipo"
+msgstr "Description of the equipment activity"
+
+#: .\mto_app\templates\mto_app\plan\form.html:37
+msgid "EQUIPO Y UBICACIÓN"
+msgstr "EQUIPMENT AND LOCATION"
+
+#: .\mto_app\templates\mto_app\plan\form.html:47
+msgid "Nombre corto del equipo"
+msgstr "Short equipment name"
+
+#: .\mto_app\templates\mto_app\plan\form.html:49
+msgid "Ej: Automatic Warehouse"
+msgstr "E.g. Automatic Warehouse"
+
+#: .\mto_app\templates\mto_app\plan\form.html:67
+msgid "PROGRAMACIÓN"
+msgstr "SCHEDULE"
+
+#: .\mto_app\templates\mto_app\plan\form.html:73
+msgid "cada semana"
+msgstr "every week"
+
+#: .\mto_app\templates\mto_app\plan\form.html:73
+#, python-format
+msgid "cada %(n)s semanas"
+msgstr "every %(n)s weeks"
+
+#: .\mto_app\templates\mto_app\plan\form.html:78
+msgid "Primera semana"
+msgstr "First week"
+
+#: .\mto_app\templates\mto_app\plan\form.html:89
+msgid "Duración estimada"
+msgstr "Estimated duration"
+
+#: .\mto_app\templates\mto_app\plan\form.html:90
+msgid "min"
+msgstr "min"
+
+#: .\mto_app\templates\mto_app\plan\form.html:94
+msgid "Equivale a"
+msgstr "Equals"
+
+#: .\mto_app\templates\mto_app\plan\form.html:97
+msgid "por OT"
+msgstr "per WO"
+
+#: .\mto_app\templates\mto_app\plan\form.html:110
+msgid "Resumen de programación"
+msgstr "Schedule summary"
+
+#: .\mto_app\templates\mto_app\plan\form.html:111
+msgid "Así quedará en el plan"
+msgstr "How it will look in the plan"
+
+#: .\mto_app\templates\mto_app\plan\form.html:114
+msgid "OTS POR AÑO"
+msgstr "WOS PER YEAR"
+
+#: .\mto_app\templates\mto_app\plan\form.html:115
+msgid "TIEMPO AL AÑO"
+msgstr "TIME PER YEAR"
+
+#: .\mto_app\templates\mto_app\plan\form.html:120
+msgid "Con OT"
+msgstr "With WO"
+
+#: .\mto_app\templates\mto_app\plan\form.html:123
+msgid "Próximas OTs"
+msgstr "Upcoming WOs"
+
+#: .\mto_app\templates\mto_app\plan\form.html:131
+msgid "Eliminar tarea"
+msgstr "Delete task"
+
+#: .\mto_app\templates\mto_app\plan\form.html:134
+#: .\mto_app\templates\mto_app\plan\form.html:159
+msgid "Guardar tarea"
+msgstr "Save task"
+
+#: .\mto_app\templates\mto_app\plan\form.html:139
+msgid "¿Descartar la tarea?"
+msgstr "Discard the task?"
+
+#: .\mto_app\templates\mto_app\plan\form.html:140
+msgid "Los cambios que hiciste se perderán."
+msgstr "Your changes will be lost."
+
+#: .\mto_app\templates\mto_app\plan\form.html:150
 msgid "Nueva tarea de mantenimiento"
 msgstr "New Maintenance Task"
 
-#: .\mto_app\templates\mto_app\plan\form.html:27
-msgid "Completa todos los campos del plan"
-msgstr "Please complete all plan fields."
+#: .\mto_app\templates\mto_app\plan\form.html:151
+msgid "Se agrega al Plan de mantenimiento y genera sus OTs por semana"
+msgstr "It is added to the Maintenance plan and generates its WOs by week"
 
-#: .\mto_app\templates\mto_app\plan\form.html:75
-msgid "Duración estimada (minutos)"
-msgstr "Estimated Duration (minutes)"
+#: .\mto_app\templates\mto_app\plan\form.html:152
+msgid "Editar tarea"
+msgstr "Edit task"
 
-#: .\mto_app\templates\mto_app\plan\form.html:127
-msgid "Numero de semana del año (1 al 52)"
-msgstr "Week Number of the Year (1–52)"
+#: .\mto_app\templates\mto_app\plan\form.html:153
+msgid "Activa"
+msgstr "Active"
 
-#: .\mto_app\templates\mto_app\plan\form.html:130
-#: .\mto_app\templates\mto_app\plan\importar.html:116
-msgid "Año de inicio"
-msgstr "Start year"
+#: .\mto_app\templates\mto_app\plan\form.html:154
+msgid "Inactiva"
+msgstr "Inactive"
 
-#: .\mto_app\templates\mto_app\plan\form.html:140
-msgid "Tarea activa"
-msgstr "Active Task"
+#: .\mto_app\templates\mto_app\plan\form.html:155 .\mto_app\views\planes.py:454
+#: .\mto_app\views\planes.py:460
+msgid "Campo obligatorio"
+msgstr "Required field"
 
-#: .\mto_app\templates\mto_app\plan\form.html:158
-msgid "Esta tarea ya tiene registros guardados"
-msgstr "This task already has saved records"
+#: .\mto_app\templates\mto_app\plan\form.html:156 .\mto_app\views\planes.py:464
+msgid "Elige una frecuencia"
+msgstr "Choose a frequency"
+
+#: .\mto_app\templates\mto_app\plan\form.html:157 .\mto_app\views\planes.py:482
+msgid "Escribe los minutos (ej. 60)"
+msgstr "Enter the minutes (e.g. 60)"
 
 #: .\mto_app\templates\mto_app\plan\form.html:160
-msgid ""
-"Cambiar la frecuencia puede hacer que algunas semanas ya completadas dejen "
-"de calzar con el nuevo patrón (quedarán marcadas como \"Fuera de "
-"frecuencia\" en vez de desaparecer). ¿Confirmas el cambio?"
-msgstr ""
-"Changing the frequency may cause some already-completed weeks to no longer "
-"match the new pattern (they'll be marked \"Out of frequency\" instead of "
-"disappearing). Do you confirm the change?"
+#, python-brace-format
+msgid "Tarea {codigo} creada · {n} OTs en {anio}"
+msgstr "Task {codigo} created · {n} WOs in {anio}"
+
+#: .\mto_app\templates\mto_app\plan\form.html:161
+#, python-brace-format
+msgid "Tarea {codigo} actualizada"
+msgstr "Task {codigo} updated"
+
+#: .\mto_app\templates\mto_app\plan\form.html:163
+msgid "No se pudo cargar la tarea."
+msgstr "The task could not be loaded."
 
 #: .\mto_app\templates\mto_app\plan\form.html:164
-msgid "Sí, cambiar frecuencia"
-msgstr "Yes, change frequency"
+msgid ""
+"Cambian las semanas de las OTs, también las pasadas. Las semanas con "
+"registro que dejen de calzar quedarán como «Fuera de frecuencia», y los No. "
+"de OT se vuelven a numerar."
+msgstr ""
+"The WO weeks change, including past ones. Weeks with a record that no longer "
+"match will show as “Out of frequency”, and WO numbers are renumbered."
+
+#: .\mto_app\templates\mto_app\plan\form.html:165
+msgid ""
+"La nueva duración aplica a todas las OTs de esta tarea, también a las "
+"pasadas."
+msgstr "The new duration applies to all WOs of this task, including past ones."
+
+#: .\mto_app\templates\mto_app\plan\form.html:166
+#, python-brace-format
+msgid "OTS EN {anio}"
+msgstr "WOS IN {anio}"
+
+#: .\mto_app\templates\mto_app\plan\form.html:168
+#, python-brace-format
+msgid "S{n} · {anio}"
+msgstr "W{n} · {anio}"
+
+#: .\mto_app\templates\mto_app\plan\form.html:170
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:246
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:302
+#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:790
+#: .\mto_app\views\backlog.py:431
+msgid "OT"
+msgstr "WO"
+
+#: .\mto_app\templates\mto_app\plan\form.html:171
+#, python-brace-format
+msgid "{n} OTs × {dur}"
+msgstr "{n} WOs × {dur}"
+
+#: .\mto_app\templates\mto_app\plan\form.html:172
+#, python-brace-format
+msgid "{h} h"
+msgstr "{h} h"
+
+#: .\mto_app\templates\mto_app\plan\form.html:173
+#, python-brace-format
+msgid "{h} h {m} min"
+msgstr "{h} h {m} min"
+
+#: .\mto_app\templates\mto_app\plan\form.html:174
+#, python-brace-format
+msgid "{m} min"
+msgstr "{m} min"
 
 #: .\mto_app\templates\mto_app\plan\importar.html:3
 msgid "Importar plan"
@@ -7619,138 +7786,155 @@ msgstr ""
 msgid "Duración de la tarea (horas)"
 msgstr "Task Duration (hours)"
 
+#: .\mto_app\templates\mto_app\plan\importar.html:116
+msgid "Año de inicio"
+msgstr "Start year"
+
 #: .\mto_app\templates\mto_app\plan\importar.html:120
 msgid "Mapeo de frecuencias:"
 msgstr "Frequency Mapping:"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:62
+#: .\mto_app\templates\mto_app\plan\lista.html:63
 msgid "planes registrados por semana"
 msgstr "plans recorded by week"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:70
+#: .\mto_app\templates\mto_app\plan\lista.html:71
 #, python-format
 msgid "Exportar Excel de la semana %(n)s"
 msgstr "Export Excel for week %(n)s"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:79
+#: .\mto_app\templates\mto_app\plan\lista.html:80
 msgid "Nueva tarea"
 msgstr "New task"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:86
+#: .\mto_app\templates\mto_app\plan\lista.html:87
 msgid "Opciones"
 msgstr "Options"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:93
+#: .\mto_app\templates\mto_app\plan\lista.html:94
 msgid "Importar Excel"
 msgstr "Import Excel"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:98
+#: .\mto_app\templates\mto_app\plan\lista.html:99
 msgid "Exportar plan"
 msgstr "Export plan"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:108
-#: .\mto_app\templates\mto_app\plan\lista.html:498
-#: .\mto_app\templates\mto_app\plan\lista.html:1125
+#: .\mto_app\templates\mto_app\plan\lista.html:109
+#: .\mto_app\templates\mto_app\plan\lista.html:553
+#: .\mto_app\templates\mto_app\plan\lista.html:1182
 msgid "Rutinas de mantenimiento"
 msgstr "Maintenance Routines"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:112
-#: .\mto_app\templates\mto_app\plan\lista.html:504
-#: .\mto_app\templates\mto_app\plan\lista.html:1024
+#: .\mto_app\templates\mto_app\plan\lista.html:113
+#: .\mto_app\templates\mto_app\plan\lista.html:559
+#: .\mto_app\templates\mto_app\plan\lista.html:1079
 msgid "Historial de acciones"
 msgstr "Action History"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:147
+#: .\mto_app\templates\mto_app\plan\lista.html:148
 msgid "Elegir una semana"
 msgstr "Choose a week"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:149
+#: .\mto_app\templates\mto_app\plan\lista.html:150
 msgid "Ver todo el plan"
 msgstr "View full plan"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:162
-#: .\mto_app\templates\mto_app\plan\lista.html:397
-msgid "Código, equipo o rutina"
-msgstr "Code, equipment or routine"
+#: .\mto_app\templates\mto_app\plan\lista.html:160
+#, python-format
+msgid "Filtrar por frecuencia: %(v)s"
+msgstr "Filter by frequency: %(v)s"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:169
+#: .\mto_app\templates\mto_app\plan\lista.html:190
+msgid "Código, rutina o responsable"
+msgstr "Code, routine or assignee"
+
+#: .\mto_app\templates\mto_app\plan\lista.html:190
+#: .\mto_app\templates\mto_app\plan\lista.html:452
+msgid "Código, actividad, rutina o responsable"
+msgstr "Code, activity, routine or assignee"
+
+#: .\mto_app\templates\mto_app\plan\lista.html:205
 msgid "Eliminar todos los planes"
 msgstr "Delete all plans"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:180
+#: .\mto_app\templates\mto_app\plan\lista.html:216
 msgid "en el plan de mantenimiento"
 msgstr "in the maintenance plan"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:185
+#: .\mto_app\templates\mto_app\plan\lista.html:221
 msgid "Programados"
 msgstr "Scheduled"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:187
+#: .\mto_app\templates\mto_app\plan\lista.html:223
 #, python-format
 msgid "%(h)s h de trabajo"
 msgstr "%(h)s h of work"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:190
+#: .\mto_app\templates\mto_app\plan\lista.html:226
 msgid "Completados"
 msgstr "Completed"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:191
+#: .\mto_app\templates\mto_app\plan\lista.html:227
 #, python-format
 msgid "de %(m)s"
 msgstr "of %(m)s"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:197
+#: .\mto_app\templates\mto_app\plan\lista.html:233
 msgid "por asignar"
 msgstr "to assign"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:201
+#: .\mto_app\templates\mto_app\plan\lista.html:237
 msgid "Tiempo total"
 msgstr "Total time"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:204
+#: .\mto_app\templates\mto_app\plan\lista.html:240
 msgid "Por persona"
 msgstr "By person"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:217
+#: .\mto_app\templates\mto_app\plan\lista.html:253
 #, python-format
 msgid "%(n)s planes"
 msgstr "%(n)s plans"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:230
+#: .\mto_app\templates\mto_app\plan\lista.html:271
 msgid "N° Plan"
 msgstr "N° Plan"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:233
+#: .\mto_app\templates\mto_app\plan\lista.html:274
 msgid "Programación"
 msgstr "Scheduling"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:234
-#: .\mto_app\templates\mto_app\plan\lista.html:271
+#: .\mto_app\templates\mto_app\plan\lista.html:275
+#: .\mto_app\templates\mto_app\plan\lista.html:317
 msgid "Semana inicio"
 msgstr "Start Week"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:235
+#: .\mto_app\templates\mto_app\plan\lista.html:276
 msgid "Próximo mantenimiento"
 msgstr "Next maintenance"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:237
+#: .\mto_app\templates\mto_app\plan\lista.html:278
 msgid "Equipo y clasificación"
 msgstr "Equipment and classification"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:262
+#: .\mto_app\templates\mto_app\plan\lista.html:308
 msgid "rutina"
 msgstr "routine"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:270
+#: .\mto_app\templates\mto_app\plan\lista.html:316
 msgid "Dur."
 msgstr "Dur."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:272
-#: .\mto_app\templates\mto_app\plan\lista.html:451
+#: .\mto_app\templates\mto_app\plan\lista.html:318
+#: .\mto_app\templates\mto_app\plan\lista.html:506
 msgid "Próximo"
 msgstr "Next"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:296
+#: .\mto_app\templates\mto_app\plan\lista.html:339
+msgid "Fuera de frecuencia: no sale en el Excel de la semana"
+msgstr "Out of frequency: not included in the week's Excel"
+
+#: .\mto_app\templates\mto_app\plan\lista.html:351
 msgid ""
 "Esta semana ya no calza con la frecuencia actual del plan — se muestra "
 "porque tiene un registro guardado."
@@ -7758,236 +7942,236 @@ msgstr ""
 "This week no longer matches the plan's current frequency — it's shown "
 "because it has a saved record."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:296
+#: .\mto_app\templates\mto_app\plan\lista.html:351
 msgid "Fuera de frecuencia"
 msgstr "Out of frequency"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:311
-#: .\mto_app\templates\mto_app\plan\lista.html:1471
-#: .\mto_app\templates\mto_app\plan\lista.html:1665
-#: .\mto_app\templates\mto_app\plan\lista.html:1724
+#: .\mto_app\templates\mto_app\plan\lista.html:366
+#: .\mto_app\templates\mto_app\plan\lista.html:1530
+#: .\mto_app\templates\mto_app\plan\lista.html:1725
+#: .\mto_app\templates\mto_app\plan\lista.html:1784
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:346
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:815
-#: .\mto_app\views\planes.py:1270
+#: .\mto_app\views\planes.py:1331
 #: .\paros_app\templates\paros_app\dashboard.html:143
 #: .\paros_app\templates\paros_app\dashboard.html:716
 #: .\paros_app\templates\paros_app\dashboard.html:806
 msgid "Sin asignar"
 msgstr "Unassigned"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:325
-#: .\mto_app\templates\mto_app\plan\lista.html:460
+#: .\mto_app\templates\mto_app\plan\lista.html:380
+#: .\mto_app\templates\mto_app\plan\lista.html:515
 msgid "Registrar"
 msgstr "Record"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:341
+#: .\mto_app\templates\mto_app\plan\lista.html:396
 msgid "No hay tareas registradas."
 msgstr "No tasks have been recorded."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:341
+#: .\mto_app\templates\mto_app\plan\lista.html:396
 msgid "Agregar primera tarea"
 msgstr "Add First Task"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:376
+#: .\mto_app\templates\mto_app\plan\lista.html:431
 msgid "Excel de la semana e idioma"
 msgstr "Week Excel and language"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:412
+#: .\mto_app\templates\mto_app\plan\lista.html:467
 msgid "Avance de la semana"
 msgstr "Week progress"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:415
+#: .\mto_app\templates\mto_app\plan\lista.html:470
 #, python-format
 msgid "de %(total)s completadas"
 msgstr "of %(total)s completed"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:417
+#: .\mto_app\templates\mto_app\plan\lista.html:472
 #, python-format
 msgid "%(k)s de %(n)s órdenes completadas"
 msgstr "%(k)s of %(n)s orders completed"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:422
+#: .\mto_app\templates\mto_app\plan\lista.html:477
 msgid "Tiempo programado"
 msgstr "Scheduled time"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:431
+#: .\mto_app\templates\mto_app\plan\lista.html:486
 msgid "Hechas"
 msgstr "Done"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:442
+#: .\mto_app\templates\mto_app\plan\lista.html:497
 msgid "Ver detalle de"
 msgstr "View details of"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:465
+#: .\mto_app\templates\mto_app\plan\lista.html:520
 msgid "No hay tareas para esta semana con estos filtros."
 msgstr "No tasks for this week with these filters."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:484
+#: .\mto_app\templates\mto_app\plan\lista.html:539
 msgid "Exportar Excel S"
 msgstr "Export Excel S"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:490
-#: .\mto_app\templates\mto_app\plan\lista.html:526
+#: .\mto_app\templates\mto_app\plan\lista.html:545
+#: .\mto_app\templates\mto_app\plan\lista.html:581
 msgid "Horas por persona"
 msgstr "Hours per person"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:528
+#: .\mto_app\templates\mto_app\plan\lista.html:583
 msgid "Total programado"
 msgstr "Total scheduled"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:537
-#: .\mto_app\views\planes.py:1269 .\mto_app\views\planes.py:1275
+#: .\mto_app\templates\mto_app\plan\lista.html:592
+#: .\mto_app\views\planes.py:1330 .\mto_app\views\planes.py:1336
 msgid "Persona"
 msgstr "Person"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:559
-#: .\mto_app\templates\mto_app\plan\lista.html:1666
+#: .\mto_app\templates\mto_app\plan\lista.html:614
+#: .\mto_app\templates\mto_app\plan\lista.html:1726
 msgid "Asignar responsable"
 msgstr "Assign responsible"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:564
+#: .\mto_app\templates\mto_app\plan\lista.html:619
 msgid "Se asigna para la"
 msgstr "Assigned for"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:564
+#: .\mto_app\templates\mto_app\plan\lista.html:619
 #: .\paros_app\views\utils.py:93
 msgid "semana"
 msgstr "week"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:568
-#: .\mto_app\templates\mto_app\plan\lista.html:770
+#: .\mto_app\templates\mto_app\plan\lista.html:623
+#: .\mto_app\templates\mto_app\plan\lista.html:825
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:467
 msgid "Buscar persona"
 msgstr "Search person"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:592
+#: .\mto_app\templates\mto_app\plan\lista.html:647
 msgid "PRÓXIMA"
 msgstr "NEXT"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:612
-#: .\mto_app\templates\mto_app\plan\lista.html:1741
+#: .\mto_app\templates\mto_app\plan\lista.html:667
+#: .\mto_app\templates\mto_app\plan\lista.html:1801
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:178
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:205
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:217
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:219
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:344
-#: .\mto_app\views\planes.py:812
+#: .\mto_app\views\planes.py:873
 msgid "Próxima"
 msgstr "Next"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:619
-#: .\mto_app\templates\mto_app\plan\lista.html:1734
+#: .\mto_app\templates\mto_app\plan\lista.html:674
+#: .\mto_app\templates\mto_app\plan\lista.html:1794
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:231
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:232
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:353
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:354
-#: .\mto_app\templates\mto_app\plan\registro_form.html:220
+#: .\mto_app\templates\mto_app\plan\registro_form.html:226
 msgid "Registrar ejecución"
 msgstr "Record execution"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:637
-#: .\mto_app\templates\mto_app\plan\registro_form.html:255
+#: .\mto_app\templates\mto_app\plan\lista.html:692
+#: .\mto_app\templates\mto_app\plan\registro_form.html:271
 msgid "Reagendar a la semana"
 msgstr "Reschedule to week"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:663
-#: .\mto_app\templates\mto_app\plan\registro_form.html:283
+#: .\mto_app\templates\mto_app\plan\lista.html:718
+#: .\mto_app\templates\mto_app\plan\registro_form.html:299
 msgid "Fecha de ejecución"
 msgstr "Execution date"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:677
+#: .\mto_app\templates\mto_app\plan\lista.html:732
 msgid "Lo realizado, materiales usados, anomalías…"
 msgstr "Work done, materials used, anomalies…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:681
-#: .\mto_app\templates\mto_app\plan\registro_form.html:307
+#: .\mto_app\templates\mto_app\plan\lista.html:736
+#: .\mto_app\templates\mto_app\plan\registro_form.html:323
 msgid "Evidencia fotográfica"
 msgstr "Photo evidence"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:684
+#: .\mto_app\templates\mto_app\plan\lista.html:739
 msgid "Toca «Agregar» para usar la cámara o la galería · máximo 4"
 msgstr "Tap \"Add\" to use the camera or the gallery · max. 4"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:708
-#: .\mto_app\templates\mto_app\plan\registro_form.html:347
+#: .\mto_app\templates\mto_app\plan\lista.html:763
+#: .\mto_app\templates\mto_app\plan\registro_form.html:363
 msgid "Motivo del rechazo (obligatorio)…"
 msgstr "Rejection reason (required)…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:711
-#: .\mto_app\templates\mto_app\plan\registro_form.html:350
+#: .\mto_app\templates\mto_app\plan\lista.html:766
+#: .\mto_app\templates\mto_app\plan\registro_form.html:366
 msgid "Al guardar, la validación se reiniciará"
 msgstr "On save, the validation will be reset"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:729
+#: .\mto_app\templates\mto_app\plan\lista.html:784
 msgid "Dar"
 msgstr "Add"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:744
+#: .\mto_app\templates\mto_app\plan\lista.html:799
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:306
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:327
 msgid "Historial del año"
 msgstr "Year history"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:749
+#: .\mto_app\templates\mto_app\plan\lista.html:804
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:319
 msgid "Filtrar historial"
 msgstr "Filter history"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:812
-#: .\mto_app\templates\mto_app\plan\lista.html:1305
+#: .\mto_app\templates\mto_app\plan\lista.html:867
+#: .\mto_app\templates\mto_app\plan\lista.html:1362
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:554
 msgid "¿Qué falla se encontró? Equipo, síntoma, ubicación…"
 msgstr "What fault was found? Equipment, symptom, location…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:817
-#: .\mto_app\templates\mto_app\plan\lista.html:1311
+#: .\mto_app\templates\mto_app\plan\lista.html:872
+#: .\mto_app\templates\mto_app\plan\lista.html:1368
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:560
 msgid "¿Qué se hizo o qué se va a hacer?"
 msgstr "What was done or what will be done?"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:837
-#: .\mto_app\templates\mto_app\plan\lista.html:1345
+#: .\mto_app\templates\mto_app\plan\lista.html:892
+#: .\mto_app\templates\mto_app\plan\lista.html:1402
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:596
 msgid "+1 semana"
 msgstr "+1 week"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:838
-#: .\mto_app\templates\mto_app\plan\lista.html:1346
+#: .\mto_app\templates\mto_app\plan\lista.html:893
+#: .\mto_app\templates\mto_app\plan\lista.html:1403
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:597
 msgid "+2 semanas"
 msgstr "+2 weeks"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:839
-#: .\mto_app\templates\mto_app\plan\lista.html:1347
+#: .\mto_app\templates\mto_app\plan\lista.html:894
+#: .\mto_app\templates\mto_app\plan\lista.html:1404
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:434
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:598
 msgid "Fin de mes"
 msgstr "End of month"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:853
-#: .\mto_app\templates\mto_app\plan\lista.html:1316
+#: .\mto_app\templates\mto_app\plan\lista.html:908
+#: .\mto_app\templates\mto_app\plan\lista.html:1373
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:566
 msgid "Refacciones usadas, observaciones…"
 msgstr "Parts used, observations…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:865
+#: .\mto_app\templates\mto_app\plan\lista.html:920
 msgid "Subir imagen"
 msgstr "Upload image"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:870
+#: .\mto_app\templates\mto_app\plan\lista.html:925
 msgid "Toma una foto o sube imágenes de tu galería · máximo 4"
 msgstr "Take a photo or upload images from your gallery · max. 4"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:881
-#: .\mto_app\templates\mto_app\plan\lista.html:1379
-#: .\mto_app\templates\mto_app\plan\lista.html:1442
-#: .\mto_app\templates\mto_app\plan\lista.html:1789
+#: .\mto_app\templates\mto_app\plan\lista.html:936
+#: .\mto_app\templates\mto_app\plan\lista.html:1436
+#: .\mto_app\templates\mto_app\plan\lista.html:1499
+#: .\mto_app\templates\mto_app\plan\lista.html:1849
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:632
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:758
 msgid "Crear seguimiento"
 msgstr "Create follow-up"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:912
+#: .\mto_app\templates\mto_app\plan\lista.html:967
 msgid ""
 "Cambiaste el registro de esta semana. Si sales ahora, se quedará como estaba "
 "antes."
@@ -7995,31 +8179,31 @@ msgstr ""
 "You changed this week's record. If you leave now, it will stay as it was "
 "before."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:928
+#: .\mto_app\templates\mto_app\plan\lista.html:983
 msgid "Detalle del plan"
 msgstr "Plan details"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:938
+#: .\mto_app\templates\mto_app\plan\lista.html:993
 msgid "Eliminar plan"
 msgstr "Delete Plan"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:939
+#: .\mto_app\templates\mto_app\plan\lista.html:994
 msgid ""
 "Esta accion no se puede deshacer. ¿Confirmas que deseas eliminar este plan?"
 msgstr ""
 "This action cannot be undone. Are you sure you want to delete this plan?This "
 "action cannot be undone. Are you sure you want to delete this plan?"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:944
+#: .\mto_app\templates\mto_app\plan\lista.html:999
 msgid "Si, eliminar"
 msgstr "Yes, delete"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:956
+#: .\mto_app\templates\mto_app\plan\lista.html:1011
 #, python-format
 msgid "¿Eliminar los %(n)s planes de %(a)s?"
 msgstr "Delete all %(n)s plans of %(a)s?"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:957
+#: .\mto_app\templates\mto_app\plan\lista.html:1012
 msgid ""
 "Se eliminarán todos los planes del área junto con todo su historial de "
 "ejecuciones semanales. Esta acción no se puede deshacer."
@@ -8027,72 +8211,72 @@ msgstr ""
 "All plans in the area will be deleted together with their entire weekly "
 "execution history. This cannot be undone."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:958
+#: .\mto_app\templates\mto_app\plan\lista.html:1013
 msgid "Antes de continuar puedes"
 msgstr "Before continuing you can"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:958
+#: .\mto_app\templates\mto_app\plan\lista.html:1013
 msgid "exportar el plan completo"
 msgstr "export the full plan"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:966
+#: .\mto_app\templates\mto_app\plan\lista.html:1021
 #, python-format
 msgid "Eliminar %(n)s planes"
 msgstr "Delete %(n)s plans"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:980
+#: .\mto_app\templates\mto_app\plan\lista.html:1035
 msgid "Tiempo por persona"
 msgstr "Time per person"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:981
+#: .\mto_app\templates\mto_app\plan\lista.html:1036
 msgid "horas programadas por responsable"
 msgstr "scheduled hours per person in charge"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:998
+#: .\mto_app\templates\mto_app\plan\lista.html:1053
 msgid "Ordenar por"
 msgstr "Sort by"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1000
+#: .\mto_app\templates\mto_app\plan\lista.html:1055
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:274
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:311
 #: .\paros_app\templates\paros_app\paros\lista_paros.html:771
 msgid "Tiempo"
 msgstr "Time"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1025
+#: .\mto_app\templates\mto_app\plan\lista.html:1080
 msgid "Importaciones y eliminaciones de rutinas"
 msgstr "Routine imports and deletions"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1041
+#: .\mto_app\templates\mto_app\plan\lista.html:1096
 msgid "personas que pueden asignarse a planes y seguimientos"
 msgstr "people who can be assigned to plans and follow-ups"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1068
+#: .\mto_app\templates\mto_app\plan\lista.html:1123
 msgid "Número de nómina"
 msgstr "Payroll number"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1073
+#: .\mto_app\templates\mto_app\plan\lista.html:1128
 msgid "Nombre(s)"
 msgstr "First name(s)"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1074
+#: .\mto_app\templates\mto_app\plan\lista.html:1129
 msgid "Ej. Juan"
 msgstr "E.g. John"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1079
+#: .\mto_app\templates\mto_app\plan\lista.html:1134
 msgid "Ej. Perez"
 msgstr "E.g. Smith"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1083
+#: .\mto_app\templates\mto_app\plan\lista.html:1138
 msgid "Puesto"
 msgstr "Position"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1087
+#: .\mto_app\templates\mto_app\plan\lista.html:1142
 msgid "Puede asignarse a planes y seguimientos"
 msgstr "Can be assigned to plans and follow-ups"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1095
-#: .\mto_app\templates\mto_app\plan\lista.html:1557
+#: .\mto_app\templates\mto_app\plan\lista.html:1150
+#: .\mto_app\templates\mto_app\plan\lista.html:1617
 #: .\mto_app\templates\mto_app\responsables\_modal.html:37
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:203
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:217
@@ -8101,43 +8285,43 @@ msgstr "Can be assigned to plans and follow-ups"
 msgid "Agregar responsable"
 msgstr "Add responsible"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1126
+#: .\mto_app\templates\mto_app\plan\lista.html:1183
 msgid "pasos de cada rutina por plan de trabajo"
 msgstr "steps of each routine by work plan"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1141
+#: .\mto_app\templates\mto_app\plan\lista.html:1198
 #: .\mto_app\templates\mto_app\rutinas\_rutinas_modal.html:16
 #: .\mto_app\templates\mto_app\rutinas\_rutinas_modal.html:50
 msgid "Importar nueva rutina"
 msgstr "Import new routine"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1142
+#: .\mto_app\templates\mto_app\plan\lista.html:1199
 #: .\mto_app\templates\mto_app\rutinas\_rutinas_modal.html:14
 msgid "Sube un Excel con los pasos de la rutina"
 msgstr "Upload an Excel file with the routine steps"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1148
+#: .\mto_app\templates\mto_app\plan\lista.html:1205
 msgid "Número de plan de trabajo"
 msgstr "Work plan number"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1154
+#: .\mto_app\templates\mto_app\plan\lista.html:1211
 msgid "Archivo de Excel"
 msgstr "Excel file"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1155
-#: .\mto_app\templates\mto_app\plan\lista.html:1611
+#: .\mto_app\templates\mto_app\plan\lista.html:1212
+#: .\mto_app\templates\mto_app\plan\lista.html:1671
 msgid "Descargar plantilla"
 msgstr "Download template"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1159
+#: .\mto_app\templates\mto_app\plan\lista.html:1216
 msgid "Seleccionar archivo de Excel"
 msgstr "Select Excel file"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1164
+#: .\mto_app\templates\mto_app\plan\lista.html:1221
 msgid "Arrastra tu Excel aquí"
 msgstr "Drag your Excel file here"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1165
+#: .\mto_app\templates\mto_app\plan\lista.html:1222
 #: .\paros_app\templates\paros_app\equipos\importar_equipos.html:77
 #: .\paros_app\templates\paros_app\equipos\importar_equipos_por_area.html:60
 #: .\paros_app\templates\paros_app\fallas\importar_fallas.html:90
@@ -8149,394 +8333,403 @@ msgstr "Drag your Excel file here"
 msgid "o"
 msgstr "or"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1165
+#: .\mto_app\templates\mto_app\plan\lista.html:1222
 msgid "elige un archivo"
 msgstr "choose a file"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1166
+#: .\mto_app\templates\mto_app\plan\lista.html:1223
 msgid ".xlsx · hasta 5 MB"
 msgstr ".xlsx · up to 5 MB"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1172
-#: .\mto_app\templates\mto_app\plan\lista.html:1619
+#: .\mto_app\templates\mto_app\plan\lista.html:1229
+#: .\mto_app\templates\mto_app\plan\lista.html:1679
 msgid "Suelta el archivo para subirlo"
 msgstr "Drop the file to upload it"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1182
+#: .\mto_app\templates\mto_app\plan\lista.html:1239
 msgid "Ej. Primera carga de la rutina"
 msgstr "E.g. First load of the routine"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1217
+#: .\mto_app\templates\mto_app\plan\lista.html:1274
 msgid "Eliminar rutina"
 msgstr "Delete routine"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1239
+#: .\mto_app\templates\mto_app\plan\lista.html:1296
 msgid "Calculando planes..."
 msgstr "Calculating plans..."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1240
+#: .\mto_app\templates\mto_app\plan\lista.html:1297
 msgid "Esto puede tomar unos segundos"
 msgstr "This may take a few seconds"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1293
+#: .\mto_app\templates\mto_app\plan\lista.html:1350
 msgid "Ligado a"
 msgstr "Linked to"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1394
+#: .\mto_app\templates\mto_app\plan\lista.html:1451
 msgid "Tienes cambios sin guardar en este seguimiento."
 msgstr "You have unsaved changes in this follow-up."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1427
-#: .\mto_app\templates\mto_app\plan\lista.html:1781
+#: .\mto_app\templates\mto_app\plan\lista.html:1484
+#: .\mto_app\templates\mto_app\plan\lista.html:1841
 msgid "vence hoy"
 msgstr "due today"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1428
-#: .\mto_app\templates\mto_app\plan\lista.html:1782
+#: .\mto_app\templates\mto_app\plan\lista.html:1485
+#: .\mto_app\templates\mto_app\plan\lista.html:1842
 msgid "vencida"
 msgstr "overdue"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1429
+#: .\mto_app\templates\mto_app\plan\lista.html:1486
 #, python-brace-format
 msgid "La fecha compromiso no puede ser anterior a la creación ({f})"
 msgstr "The due date cannot be earlier than the creation date ({f})"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1434
-#: .\mto_app\templates\mto_app\plan\lista.html:1802
+#: .\mto_app\templates\mto_app\plan\lista.html:1491
+#: .\mto_app\templates\mto_app\plan\lista.html:1862
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:739
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:823
 msgid "Máximo 4 imágenes por seguimiento"
 msgstr "Maximum 4 images per follow-up"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1435
-#: .\mto_app\templates\mto_app\plan\registro_form.html:445
+#: .\mto_app\templates\mto_app\plan\lista.html:1492
+#: .\mto_app\templates\mto_app\plan\registro_form.html:461
 #: .\mto_app\views\registro_ejecucion.py:151
 msgid "Solo JPG o PNG de hasta 5 MB"
 msgstr "Only JPG or PNG up to 5 MB"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1438
-#: .\mto_app\templates\mto_app\plan\lista.html:1787
+#: .\mto_app\templates\mto_app\plan\lista.html:1495
+#: .\mto_app\templates\mto_app\plan\lista.html:1847
 msgid "Acción correctiva ligada al plan"
 msgstr "Corrective action linked to the plan"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1439
+#: .\mto_app\templates\mto_app\plan\lista.html:1496
 #, python-brace-format
 msgid "Creado el {fecha} por {usuario}"
 msgstr "Created on {fecha} by {usuario}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1440
+#: .\mto_app\templates\mto_app\plan\lista.html:1497
 #, python-brace-format
 msgid "última edición {cuando}"
 msgstr "last edited {cuando}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1444
-#: .\mto_app\templates\mto_app\plan\lista.html:1790
+#: .\mto_app\templates\mto_app\plan\lista.html:1501
+#: .\mto_app\templates\mto_app\plan\lista.html:1850
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:408
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:555
 #: .\mto_app\views\seguimiento_ot.py:58
 msgid "Describe el problema"
 msgstr "Describe the problem"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1445
-#: .\mto_app\templates\mto_app\plan\lista.html:1791
+#: .\mto_app\templates\mto_app\plan\lista.html:1502
+#: .\mto_app\templates\mto_app\plan\lista.html:1851
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:561
 msgid "Describe la acción realizada"
 msgstr "Describe the action taken"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1446
-#: .\mto_app\templates\mto_app\plan\lista.html:1769
-#: .\mto_app\templates\mto_app\plan\registro_form.html:450
+#: .\mto_app\templates\mto_app\plan\lista.html:1503
+#: .\mto_app\templates\mto_app\plan\lista.html:1829
+#: .\mto_app\templates\mto_app\plan\registro_form.html:466
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:583
 #: .\mto_app\views\registro_ejecucion.py:123
 #: .\mto_app\views\seguimiento_ot.py:60
 msgid "Elige un responsable de la lista"
 msgstr "Choose a responsible person from the list"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1449
-#: .\mto_app\templates\mto_app\plan\lista.html:1801
+#: .\mto_app\templates\mto_app\plan\lista.html:1506
+#: .\mto_app\templates\mto_app\plan\lista.html:1861
 msgid "El seguimiento se guardó, pero no se pudieron subir las imágenes."
 msgstr "The follow-up was saved, but the images could not be uploaded."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1450
-#: .\mto_app\templates\mto_app\plan\registro_form.html:459
+#: .\mto_app\templates\mto_app\plan\lista.html:1507
+#: .\mto_app\templates\mto_app\plan\registro_form.html:475
 msgid "Error de red. Intenta de nuevo."
 msgstr "Network error. Please try again."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1451
-#: .\mto_app\templates\mto_app\plan\lista.html:1568
-#: .\mto_app\templates\mto_app\plan\lista.html:1792
+#: .\mto_app\templates\mto_app\plan\lista.html:1508
+#: .\mto_app\templates\mto_app\plan\lista.html:1628
+#: .\mto_app\templates\mto_app\plan\lista.html:1852
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:762
 msgid "Cambios guardados"
 msgstr "Changes saved"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1452
-#: .\mto_app\templates\mto_app\plan\lista.html:1793
+#: .\mto_app\templates\mto_app\plan\lista.html:1509
+#: .\mto_app\templates\mto_app\plan\lista.html:1853
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:761
 #, python-brace-format
 msgid "Seguimiento {orden} creado"
 msgstr "Follow-up {orden} created"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1453
-#: .\mto_app\templates\mto_app\plan\lista.html:1796
+#: .\mto_app\templates\mto_app\plan\lista.html:1510
+#: .\mto_app\templates\mto_app\plan\lista.html:1856
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:763
 #, python-brace-format
 msgid "Seguimiento {orden} eliminado"
 msgstr "Follow-up {orden} deleted"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1454
-#: .\mto_app\templates\mto_app\plan\lista.html:1795
+#: .\mto_app\templates\mto_app\plan\lista.html:1511
+#: .\mto_app\templates\mto_app\plan\lista.html:1855
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:764
 #, python-brace-format
 msgid "¿Eliminar el seguimiento {orden}? Esta acción no se puede deshacer."
 msgstr "Delete follow-up {orden}? This action cannot be undone."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1455
-#: .\mto_app\templates\mto_app\plan\lista.html:1573
-#: .\mto_app\templates\mto_app\plan\lista.html:1627
+#: .\mto_app\templates\mto_app\plan\lista.html:1512
+#: .\mto_app\templates\mto_app\plan\lista.html:1633
+#: .\mto_app\templates\mto_app\plan\lista.html:1687
 msgid "No se pudo eliminar. Intenta de nuevo."
 msgstr "Could not delete. Please try again."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1463
+#: .\mto_app\templates\mto_app\plan\lista.html:1520
 #, python-brace-format
 msgid "Semana {n} · {a}"
 msgstr "Week {n} · {a}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1464
-#: .\mto_app\templates\mto_app\plan\lista.html:1712
+#: .\mto_app\templates\mto_app\plan\lista.html:1521
+#: .\mto_app\templates\mto_app\plan\lista.html:1772
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:766
 #, python-brace-format
 msgid "Semana {n}"
 msgstr "Week {n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1465
+#: .\mto_app\templates\mto_app\plan\lista.html:1522
 msgid "Generando archivo…"
 msgstr "Generating file…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1466
+#: .\mto_app\templates\mto_app\plan\lista.html:1523
 #, python-brace-format
 msgid "Se descargó {archivo}"
 msgstr "Downloaded {archivo}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1467
+#: .\mto_app\templates\mto_app\plan\lista.html:1524
 msgid "No se pudo generar el archivo."
 msgstr "The file could not be generated."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1468
+#: .\mto_app\templates\mto_app\plan\lista.html:1525
+#, python-brace-format
+msgid "No se pudo generar el archivo: {motivo}"
+msgstr "Couldn't generate the file: {motivo}"
+
+#: .\mto_app\templates\mto_app\plan\lista.html:1526
+msgid "La exportación tardó más de 2 minutos."
+msgstr "The export took more than 2 minutes."
+
+#: .\mto_app\templates\mto_app\plan\lista.html:1527
 #, python-brace-format
 msgid "Se eliminaron {n} planes"
 msgstr "{n} plans were deleted"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1469
+#: .\mto_app\templates\mto_app\plan\lista.html:1528
 msgid "Responsable guardado"
 msgstr "Person in charge saved"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1470
+#: .\mto_app\templates\mto_app\plan\lista.html:1529
 msgid "No se pudo guardar el responsable."
 msgstr "The person in charge could not be saved."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1473
+#: .\mto_app\templates\mto_app\plan\lista.html:1532
 msgid "Ver detalle"
 msgstr "View details"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1475
+#: .\mto_app\templates\mto_app\plan\lista.html:1534
 msgid "No hay responsables en esta área."
 msgstr "There are no people in charge in this area."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1476
+#: .\mto_app\templates\mto_app\plan\lista.html:1535
 #, python-brace-format
 msgid "{n} de {t}"
 msgstr "{n} of {t}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1478
+#: .\mto_app\templates\mto_app\plan\lista.html:1537
 msgid "Asignado"
 msgstr "Assigned"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1479
-#: .\mto_app\templates\mto_app\plan\lista.html:1690
+#: .\mto_app\templates\mto_app\plan\lista.html:1538
+#: .\mto_app\templates\mto_app\plan\lista.html:1750
 #, python-brace-format
 msgid "{n} tareas"
 msgstr "{n} tasks"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1480
-#: .\mto_app\templates\mto_app\plan\lista.html:1689
+#: .\mto_app\templates\mto_app\plan\lista.html:1539
+#: .\mto_app\templates\mto_app\plan\lista.html:1749
 msgid "1 tarea"
 msgstr "1 task"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1481
+#: .\mto_app\templates\mto_app\plan\lista.html:1540
 #, python-brace-format
 msgid "{n} personas"
 msgstr "{n} people"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1482
+#: .\mto_app\templates\mto_app\plan\lista.html:1541
 msgid "1 persona"
 msgstr "1 person"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1483
+#: .\mto_app\templates\mto_app\plan\lista.html:1542
 msgid "del total"
 msgstr "of total"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1484
+#: .\mto_app\templates\mto_app\plan\lista.html:1543
 #, python-brace-format
 msgid "de {c} h"
 msgstr "of {c} h"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1485
+#: .\mto_app\templates\mto_app\plan\lista.html:1544
 #, python-brace-format
 msgid "Capacidad de referencia: {c} h por persona"
 msgstr "Reference capacity: {c} h per person"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1486
+#: .\mto_app\templates\mto_app\plan\lista.html:1545
 msgid "Sobrecargado"
 msgstr "Overloaded"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1487
+#: .\mto_app\templates\mto_app\plan\lista.html:1546
 #, python-brace-format
 msgid "Ver las {n} tareas sin responsable"
 msgstr "See all {n} tasks without a person in charge"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1488
+#: .\mto_app\templates\mto_app\plan\lista.html:1547
 #, python-brace-format
 msgid "Asignar responsables de S{n}"
 msgstr "Assign people in charge for W{n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1489
+#: .\mto_app\templates\mto_app\plan\lista.html:1548
 #, python-brace-format
 msgid "{k} grupos · tiempos según la duración de cada plan"
 msgstr "{k} groups · times based on each plan's duration"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1490
+#: .\mto_app\templates\mto_app\plan\lista.html:1549
 msgid "Sin datos para esta semana."
 msgstr "No data for this week."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1495
+#: .\mto_app\templates\mto_app\plan\lista.html:1554
 msgid "Distribución del tiempo"
 msgstr "Time distribution"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1496
+#: .\mto_app\templates\mto_app\plan\lista.html:1555
 #, python-brace-format
 msgid "{n} tareas · {p} personas"
 msgstr "{n} tasks · {p} people"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1499
+#: .\mto_app\templates\mto_app\plan\lista.html:1558
 msgid "Quitar filtro de responsable"
 msgstr "Remove person-in-charge filter"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1521
+#: .\mto_app\templates\mto_app\plan\lista.html:1582
 msgid "No se pudo cargar el historial."
 msgstr "The history could not be loaded."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1540
+#: .\mto_app\templates\mto_app\plan\lista.html:1600
 #: .\mto_app\views\responsables.py:66
 msgid "Gerente"
 msgstr "Manager"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1541
+#: .\mto_app\templates\mto_app\plan\lista.html:1601
 #: .\mto_app\views\responsables.py:67
 msgid "Coordinador"
 msgstr "Coordinator"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1542
+#: .\mto_app\templates\mto_app\plan\lista.html:1602
 #: .\mto_app\views\responsables.py:68
 msgid "Supervisor"
 msgstr "Supervisor"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1543
+#: .\mto_app\templates\mto_app\plan\lista.html:1603
 #: .\mto_app\views\responsables.py:69
 msgid "Líder"
 msgstr "Lead"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1544
+#: .\mto_app\templates\mto_app\plan\lista.html:1604
 #: .\mto_app\views\responsables.py:70
 msgid "Técnico"
 msgstr "Technician"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1545
+#: .\mto_app\templates\mto_app\plan\lista.html:1605
 #: .\mto_app\views\responsables.py:71
 msgid "Auxiliar"
 msgstr "Assistant"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1550
+#: .\mto_app\templates\mto_app\plan\lista.html:1610
 msgid "No se pudo cargar la lista de responsables."
 msgstr "The list of people in charge could not be loaded."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1552
+#: .\mto_app\templates\mto_app\plan\lista.html:1612
 #: .\mto_app\views\responsables.py:164
 msgid "Escribe el número de nómina"
 msgstr "Enter the payroll number"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1553
+#: .\mto_app\templates\mto_app\plan\lista.html:1613
 #: .\mto_app\views\responsables.py:166
 msgid "Escribe el nombre"
 msgstr "Enter the first name"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1554
+#: .\mto_app\templates\mto_app\plan\lista.html:1614
 #: .\mto_app\views\responsables.py:168
 msgid "Escribe los apellidos"
 msgstr "Enter the last name(s)"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1558
+#: .\mto_app\templates\mto_app\plan\lista.html:1618
 msgid "Nuevo responsable"
 msgstr "New Responsible"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1559
+#: .\mto_app\templates\mto_app\plan\lista.html:1619
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:437
 msgid "Editar responsable"
 msgstr "Edit Responsible"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1560
+#: .\mto_app\templates\mto_app\plan\lista.html:1620
 #, python-brace-format
 msgid "Alta {alta} · última edición {edicion}"
 msgstr "Created {alta} · last edited {edicion}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1561
+#: .\mto_app\templates\mto_app\plan\lista.html:1621
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:403
 #: .\paros_app\templates\paros_app\responsables\catalogo_responsables.html:455
 msgid "Nombre del responsable"
 msgstr "Responsible name"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1562
+#: .\mto_app\templates\mto_app\plan\lista.html:1622
 #, python-brace-format
 msgid "Nómina {nomina} · {puesto} · {estado}"
 msgstr "Payroll {nomina} · {puesto} · {estado}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1563
+#: .\mto_app\templates\mto_app\plan\lista.html:1623
 msgid "Sin puesto"
 msgstr "No position"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1565
+#: .\mto_app\templates\mto_app\plan\lista.html:1625
 #: .\mto_app\templates\mto_app\responsables\_modal.html:80
 msgid "Inactivo"
 msgstr "Inactive"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1566
+#: .\mto_app\templates\mto_app\plan\lista.html:1626
 msgid "Elige un área para agregar responsables."
 msgstr "Choose an area to add people in charge."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1567
+#: .\mto_app\templates\mto_app\plan\lista.html:1627
 msgid "Responsable agregado"
 msgstr "Person in charge added"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1569
+#: .\mto_app\templates\mto_app\plan\lista.html:1629
 #, python-brace-format
 msgid "{nombre} se desactivó"
 msgstr "{nombre} was deactivated"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1570
+#: .\mto_app\templates\mto_app\plan\lista.html:1630
 #, python-brace-format
 msgid "{nombre} se reactivó"
 msgstr "{nombre} was reactivated"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1571
+#: .\mto_app\templates\mto_app\plan\lista.html:1631
 #, python-brace-format
 msgid "¿Eliminar a {nombre}?"
 msgstr "Delete {nombre}?"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1572
+#: .\mto_app\templates\mto_app\plan\lista.html:1632
 #, python-brace-format
 msgid "{nombre} se eliminó"
 msgstr "{nombre} was deleted"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1575
+#: .\mto_app\templates\mto_app\plan\lista.html:1635
 #, python-brace-format
 msgid ""
 "Tiene {n} registros asignados. Se conservarán tal como están, con su nombre. "
@@ -8546,32 +8739,32 @@ msgstr ""
 "name. The person will no longer appear in the lists and can no longer be "
 "assigned."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1576
+#: .\mto_app\templates\mto_app\plan\lista.html:1636
 #, python-brace-format
 msgid "{nombre} se recuperó con su historial"
 msgstr "{nombre} was restored with their history"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1595
+#: .\mto_app\templates\mto_app\plan\lista.html:1655
 msgid "No se pudo cargar las rutinas."
 msgstr "The routines could not be loaded."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1596
+#: .\mto_app\templates\mto_app\plan\lista.html:1656
 msgid "Elige un área para importar rutinas."
 msgstr "Choose an area to import routines."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1597
+#: .\mto_app\templates\mto_app\plan\lista.html:1657
 msgid "Elige el número de plan…"
 msgstr "Choose the plan number…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1599
+#: .\mto_app\templates\mto_app\plan\lista.html:1659
 msgid "Importando…"
 msgstr "Importing…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1600
+#: .\mto_app\templates\mto_app\plan\lista.html:1660
 msgid "Reemplazar rutina"
 msgstr "Replace routine"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1601
+#: .\mto_app\templates\mto_app\plan\lista.html:1661
 #, python-brace-format
 msgid ""
 "Ya existe {codigo} con {n} pasos. ¿Reemplazarla? Se borrarán sus pasos "
@@ -8580,130 +8773,130 @@ msgstr ""
 "{codigo} already exists with {n} steps. Replace it? Its current steps will "
 "be deleted and the ones from the file will be loaded."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1602
+#: .\mto_app\templates\mto_app\plan\lista.html:1662
 msgid "Revisando…"
 msgstr "Checking…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1603
+#: .\mto_app\templates\mto_app\plan\lista.html:1663
 #, python-brace-format
 msgid "{tamano} · subido"
 msgstr "{tamano} · uploaded"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1604
+#: .\mto_app\templates\mto_app\plan\lista.html:1664
 #, python-brace-format
 msgid "{n} pasos detectados (Seq {min}–{max})"
 msgstr "{n} steps detected (Seq {min}–{max})"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1605
+#: .\mto_app\templates\mto_app\plan\lista.html:1665
 #, python-brace-format
 msgid "Código {codigo} · {area}"
 msgstr "Code {codigo} · {area}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1606
+#: .\mto_app\templates\mto_app\plan\lista.html:1666
 #, python-brace-format
 msgid "Ya existe {codigo} con {n} pasos: se reemplazará"
 msgstr "{codigo} already exists with {n} steps: it will be replaced"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1607
+#: .\mto_app\templates\mto_app\plan\lista.html:1667
 msgid "Ver vista previa"
 msgstr "View preview"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1608
+#: .\mto_app\templates\mto_app\plan\lista.html:1668
 msgid "Ocultar vista previa"
 msgstr "Hide preview"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1609
+#: .\mto_app\templates\mto_app\plan\lista.html:1669
 msgid "Cambiar archivo"
 msgstr "Change file"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1610
+#: .\mto_app\templates\mto_app\plan\lista.html:1670
 msgid "Elegir otro archivo"
 msgstr "Choose another file"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1612
+#: .\mto_app\templates\mto_app\plan\lista.html:1672
 msgid "No se puede importar"
 msgstr "Cannot import"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1613
+#: .\mto_app\templates\mto_app\plan\lista.html:1673
 #, python-brace-format
 msgid "y {k} más…"
 msgstr "and {k} more…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1614
+#: .\mto_app\templates\mto_app\plan\lista.html:1674
 msgid "Quitar archivo"
 msgstr "Remove file"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1615
+#: .\mto_app\templates\mto_app\plan\lista.html:1675
 msgid "Sin detalle"
 msgstr "No detail"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1616
+#: .\mto_app\templates\mto_app\plan\lista.html:1676
 #, python-brace-format
 msgid "Archivo listo: {n} pasos detectados"
 msgstr "File ready: {n} steps detected"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1617
+#: .\mto_app\templates\mto_app\plan\lista.html:1677
 #, python-brace-format
 msgid "No se puede importar: {k} errores"
 msgstr "Cannot import: {k} errors"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1618
+#: .\mto_app\templates\mto_app\plan\lista.html:1678
 msgid "Solo archivos de Excel"
 msgstr "Excel files only"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1620
+#: .\mto_app\templates\mto_app\plan\lista.html:1680
 msgid "No se pudo revisar el archivo. Intenta de nuevo."
 msgstr "The file could not be checked. Please try again."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1621
+#: .\mto_app\templates\mto_app\plan\lista.html:1681
 #, python-brace-format
 msgid "Ya existe {codigo} con {m} pasos. ¿Reemplazarla por {n} pasos?"
 msgstr "{codigo} already exists with {m} steps. Replace it with {n} steps?"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1622
+#: .\mto_app\templates\mto_app\plan\lista.html:1682
 msgid "¿Descartar la importación?"
 msgstr "Discard the import?"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1623
+#: .\mto_app\templates\mto_app\plan\lista.html:1683
 #: .\mto_app\views\rutinas.py:578
 msgid "Elige el número de plan"
 msgstr "Choose the plan number"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1624
+#: .\mto_app\templates\mto_app\plan\lista.html:1684
 #: .\mto_app\views\rutinas.py:496 .\mto_app\views\rutinas.py:580
 msgid "Elige el archivo de Excel"
 msgstr "Choose the Excel file"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1625
+#: .\mto_app\templates\mto_app\plan\lista.html:1685
 #: .\mto_app\views\rutinas.py:582 .\mto_app\views\rutinas.py:624
 msgid "Escribe el motivo"
 msgstr "Enter the reason"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1626
+#: .\mto_app\templates\mto_app\plan\lista.html:1686
 msgid "No se pudo importar. Intenta de nuevo."
 msgstr "The import failed. Please try again."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1628
+#: .\mto_app\templates\mto_app\plan\lista.html:1688
 #, python-brace-format
 msgid "Rutina {codigo} importada · {n} pasos"
 msgstr "Routine {codigo} imported · {n} steps"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1629
+#: .\mto_app\templates\mto_app\plan\lista.html:1689
 #, python-brace-format
 msgid "Rutina {codigo} eliminada"
 msgstr "Routine {codigo} deleted"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1630
+#: .\mto_app\templates\mto_app\plan\lista.html:1690
 #, python-brace-format
 msgid "¿Eliminar la rutina {codigo}?"
 msgstr "Delete routine {codigo}?"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1631
+#: .\mto_app\templates\mto_app\plan\lista.html:1691
 #, python-brace-format
 msgid "Se borran sus {n} pasos. Esta acción no se puede deshacer."
 msgstr "Its {n} steps will be deleted. This action cannot be undone."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1632
+#: .\mto_app\templates\mto_app\plan\lista.html:1692
 #, python-brace-format
 msgid ""
 "Se borran sus {n} pasos. Los planes que la usan ({k}) se quedarán sin "
@@ -8712,337 +8905,337 @@ msgstr ""
 "Its {n} steps will be deleted. The plans that use it ({k}) will be left "
 "without a routine. This action cannot be undone."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1633
+#: .\mto_app\templates\mto_app\plan\lista.html:1693
 #, python-brace-format
 msgid "Escribe {codigo} para confirmar"
 msgstr "Type {codigo} to confirm"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1634
+#: .\mto_app\templates\mto_app\plan\lista.html:1694
 #, python-brace-format
 msgid "{n} en orden de ejecución"
 msgstr "{n} in execution order"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1635
+#: .\mto_app\templates\mto_app\plan\lista.html:1695
 #, python-brace-format
 msgid "{m} de {n} con punto crítico {v} ({nombre})"
 msgstr "{m} of {n} with critical point {v} ({nombre})"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1636
+#: .\mto_app\templates\mto_app\plan\lista.html:1696
 msgid "1 fila vacía omitida"
 msgstr "1 empty row skipped"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1637
+#: .\mto_app\templates\mto_app\plan\lista.html:1697
 #, python-brace-format
 msgid "{k} filas vacías omitidas"
 msgstr "{k} empty rows skipped"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1638
+#: .\mto_app\templates\mto_app\plan\lista.html:1698
 #, python-brace-format
 msgid "Documento {doc}"
 msgstr "Document {doc}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1639
+#: .\mto_app\templates\mto_app\plan\lista.html:1699
 #, python-brace-format
 msgid "Prioridad {p}"
 msgstr "Priority {p}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1640
+#: .\mto_app\templates\mto_app\plan\lista.html:1700
 #, python-brace-format
 msgid "Creador {c}"
 msgstr "Author {c}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1641
+#: .\mto_app\templates\mto_app\plan\lista.html:1701
 #, python-brace-format
 msgid "{k} pasos con punto crítico"
 msgstr "{k} steps with a critical point"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1646
+#: .\mto_app\templates\mto_app\plan\lista.html:1706
 #: .\mto_app\templates\mto_app\rutinas\_rutinas_modal.html:119
 msgid "SEQ."
 msgstr "SEQ."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1647
+#: .\mto_app\templates\mto_app\plan\lista.html:1707
 #: .\mto_app\templates\mto_app\rutinas\_rutinas_modal.html:119
 msgid "PASO Y DETALLE"
 msgstr "STEP AND DETAILS"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1648
+#: .\mto_app\templates\mto_app\plan\lista.html:1708
 #: .\mto_app\templates\mto_app\rutinas\_rutinas_modal.html:119
 msgid "PUNTOS CRÍTICOS"
 msgstr "CRITICAL POINTS"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1649
+#: .\mto_app\templates\mto_app\plan\lista.html:1709
 #: .\mto_app\views\rutinas.py:152
 msgid "Obligatoria"
 msgstr "Mandatory"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1649
+#: .\mto_app\templates\mto_app\plan\lista.html:1709
 #: .\mto_app\views\rutinas.py:154
 msgid "Secuencia obligatoria"
 msgstr "Mandatory sequence"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1649
+#: .\mto_app\templates\mto_app\plan\lista.html:1709
 #: .\mto_app\views\rutinas.py:156
 msgid "Seguridad"
 msgstr "Safety"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1663
+#: .\mto_app\templates\mto_app\plan\lista.html:1723
 #, python-brace-format
 msgid "Persona: {nombre}"
 msgstr "Person: {nombre}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1667
+#: .\mto_app\templates\mto_app\plan\lista.html:1727
 #, python-brace-format
 msgid "Responsable: {nombre}. Cambiar"
 msgstr "Responsible: {nombre}. Change"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1668
+#: .\mto_app\templates\mto_app\plan\lista.html:1728
 #, python-brace-format
 msgid "{n} tareas esta semana · {h}"
 msgstr "{n} tasks this week · {h}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1670
+#: .\mto_app\templates\mto_app\plan\lista.html:1730
 #, python-brace-format
 msgid "Asignar a {nombre}"
 msgstr "Assign to {nombre}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1671
+#: .\mto_app\templates\mto_app\plan\lista.html:1731
 msgid "✓ Responsable guardado"
 msgstr "✓ Responsible saved"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1674
+#: .\mto_app\templates\mto_app\plan\lista.html:1734
 #, python-brace-format
 msgid "Cargar {n} más · quedan {m}"
 msgstr "Load {n} more · {m} left"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1676
+#: .\mto_app\templates\mto_app\plan\lista.html:1736
 #, python-brace-format
 msgid "Programadas {anio}"
 msgstr "Scheduled {anio}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1677
+#: .\mto_app\templates\mto_app\plan\lista.html:1737
 #, python-brace-format
 msgid "{n} · {k} hechas"
 msgstr "{n} · {k} done"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1678
+#: .\mto_app\templates\mto_app\plan\lista.html:1738
 msgid "Esta tarea no tiene semanas programadas en este año."
 msgstr "This task has no scheduled weeks this year."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1679
+#: .\mto_app\templates\mto_app\plan\lista.html:1739
 #, python-brace-format
 msgid "Semana {n}, {estado}"
 msgstr "Week {n}, {estado}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1680
+#: .\mto_app\templates\mto_app\plan\lista.html:1740
 msgid "seleccionada"
 msgstr "selected"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1681
+#: .\mto_app\templates\mto_app\plan\lista.html:1741
 msgid "completada"
 msgstr "completed"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1682
+#: .\mto_app\templates\mto_app\plan\lista.html:1742
 msgid "pendiente"
 msgstr "pending"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1683
+#: .\mto_app\templates\mto_app\plan\lista.html:1743
 msgid "reagendada"
 msgstr "rescheduled"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1684
+#: .\mto_app\templates\mto_app\plan\lista.html:1744
 msgid "cancelada"
 msgstr "cancelled"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1685
+#: .\mto_app\templates\mto_app\plan\lista.html:1745
 msgid "sin generar"
 msgstr "not generated"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1686
-#: .\mto_app\templates\mto_app\plan\lista.html:1742
+#: .\mto_app\templates\mto_app\plan\lista.html:1746
+#: .\mto_app\templates\mto_app\plan\lista.html:1802
 #, python-brace-format
 msgid "Semana {n} · {rango} {anio}"
 msgstr "Week {n} · {rango} {anio}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1687
-#: .\mto_app\templates\mto_app\plan\lista.html:1744
+#: .\mto_app\templates\mto_app\plan\lista.html:1747
+#: .\mto_app\templates\mto_app\plan\lista.html:1804
 #, python-brace-format
 msgid "Guardar S{n}"
 msgstr "Save W{n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1688
+#: .\mto_app\templates\mto_app\plan\lista.html:1748
 #, python-brace-format
 msgid "✓ S{n} guardada"
 msgstr "✓ W{n} saved"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1691
+#: .\mto_app\templates\mto_app\plan\lista.html:1751
 #, python-format, python-brace-format
 msgid "{p}%% del total"
 msgstr "{p}%% of total"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1692
+#: .\mto_app\templates\mto_app\plan\lista.html:1752
 msgid "No hay tareas programadas en esta semana."
 msgstr "No tasks scheduled this week."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1701
+#: .\mto_app\templates\mto_app\plan\lista.html:1761
 #, python-brace-format
 msgid "Semana {n}, {rango}, {estado}"
 msgstr "Week {n}, {rango}, {estado}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1702
+#: .\mto_app\templates\mto_app\plan\lista.html:1762
 #, python-brace-format
 msgid "Cumplimiento {anio}"
 msgstr "Compliance {anio}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1703
+#: .\mto_app\templates\mto_app\plan\lista.html:1763
 #, python-format, python-brace-format
 msgid "{h} de {e} · {p}%%"
 msgstr "{h} of {e} · {p}%%"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1704
+#: .\mto_app\templates\mto_app\plan\lista.html:1764
 msgid "1 ocurrencia programada"
 msgstr "1 scheduled occurrence"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1705
+#: .\mto_app\templates\mto_app\plan\lista.html:1765
 #, python-brace-format
 msgid "{n} ocurrencias programadas"
 msgstr "{n} scheduled occurrences"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1706
+#: .\mto_app\templates\mto_app\plan\lista.html:1766
 #, python-brace-format
 msgid "1 abierto · {orden}"
 msgstr "1 open · {orden}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1707
+#: .\mto_app\templates\mto_app\plan\lista.html:1767
 #, python-brace-format
 msgid "{n} abiertos · {orden}"
 msgstr "{n} open · {orden}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1708
+#: .\mto_app\templates\mto_app\plan\lista.html:1768
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:245
 msgid "Sin seguimientos"
 msgstr "No follow-ups"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1709
+#: .\mto_app\templates\mto_app\plan\lista.html:1769
 #, python-brace-format
 msgid "Abiertos · {n}"
 msgstr "Open · {n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1710
+#: .\mto_app\templates\mto_app\plan\lista.html:1770
 #, python-brace-format
 msgid "Todos · {n}"
 msgstr "All · {n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1711
+#: .\mto_app\templates\mto_app\plan\lista.html:1771
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:294
 msgid "Sin seguimientos para mostrar."
 msgstr "No follow-ups to show."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1713
+#: .\mto_app\templates\mto_app\plan\lista.html:1773
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:281
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:213
 msgid "Cumplido"
 msgstr "Fulfilled"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1714
+#: .\mto_app\templates\mto_app\plan\lista.html:1774
 #, python-brace-format
 msgid "Vencido {n} d"
 msgstr "Overdue {n} d"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1715
+#: .\mto_app\templates\mto_app\plan\lista.html:1775
 #, python-brace-format
 msgid "Compromiso {f}"
 msgstr "Due {f}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1717
+#: .\mto_app\templates\mto_app\plan\lista.html:1777
 #, python-brace-format
 msgid "{n} ocurrencias · {v} vencidas sin registro"
 msgstr "{n} occurrences · {v} overdue with no record"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1719
+#: .\mto_app\templates\mto_app\plan\lista.html:1779
 #, python-brace-format
 msgid "Completadas · {n}"
 msgstr "Completed · {n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1720
+#: .\mto_app\templates\mto_app\plan\lista.html:1780
 #, python-brace-format
 msgid "Pendientes · {n}"
 msgstr "Pending · {n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1721
+#: .\mto_app\templates\mto_app\plan\lista.html:1781
 #, python-brace-format
 msgid "Canceladas · {n}"
 msgstr "Cancelled · {n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1722
+#: .\mto_app\templates\mto_app\plan\lista.html:1782
 #, python-brace-format
 msgid "Sin registro · {n}"
 msgstr "No record · {n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1723
+#: .\mto_app\templates\mto_app\plan\lista.html:1783
 #, python-brace-format
 msgid "Próximas · {n}"
 msgstr "Upcoming · {n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1725
+#: .\mto_app\templates\mto_app\plan\lista.html:1785
 #, python-brace-format
 msgid "Ejecutada {f}"
 msgstr "Executed {f}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1726
+#: .\mto_app\templates\mto_app\plan\lista.html:1786
 #, python-brace-format
 msgid "{n} sem. de atraso"
 msgstr "{n} wk. late"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1730
+#: .\mto_app\templates\mto_app\plan\lista.html:1790
 #, python-brace-format
 msgid "Rechazado: {m}"
 msgstr "Rejected: {m}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1731
+#: .\mto_app\templates\mto_app\plan\lista.html:1791
 #, python-brace-format
 msgid "Fotos ({n})"
 msgstr "Photos ({n})"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1733
+#: .\mto_app\templates\mto_app\plan\lista.html:1793
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:353
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:354
 msgid "Ver semana"
 msgstr "View week"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1739
+#: .\mto_app\templates\mto_app\plan\lista.html:1799
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:342
-#: .\mto_app\views\planes.py:812
+#: .\mto_app\views\planes.py:873
 msgid "Sin registro · vencida"
 msgstr "No record · overdue"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1743
+#: .\mto_app\templates\mto_app\plan\lista.html:1803
 #, python-brace-format
 msgid "editado por {u}"
 msgstr "edited by {u}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1745
+#: .\mto_app\templates\mto_app\plan\lista.html:1805
 #, python-brace-format
 msgid "Eliminar registro de S{n}"
 msgstr "Delete record for W{n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1746
+#: .\mto_app\templates\mto_app\plan\lista.html:1806
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:814
 msgid "Elegir responsable"
 msgstr "Choose responsible"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1747
-#: .\mto_app\templates\mto_app\plan\registro_form.html:333
+#: .\mto_app\templates\mto_app\plan\lista.html:1807
+#: .\mto_app\templates\mto_app\plan\registro_form.html:349
 msgid "Validado por…"
 msgstr "Validated by…"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1750
-#: .\mto_app\templates\mto_app\plan\registro_form.html:433
+#: .\mto_app\templates\mto_app\plan\lista.html:1810
+#: .\mto_app\templates\mto_app\plan\registro_form.html:449
 #: .\mto_app\views\registro_ejecucion.py:116
 msgid "La fecha de ejecución no puede ser futura"
 msgstr "The execution date cannot be in the future"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1751
+#: .\mto_app\templates\mto_app\plan\lista.html:1811
 #, python-brace-format
 msgid ""
 "Se registrará como <b>ejecutada con {n} semana de atraso</b> (programada en "
@@ -9050,7 +9243,7 @@ msgid ""
 msgstr ""
 "It will be recorded as <b>executed {n} week late</b> (scheduled in W{y})."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1752
+#: .\mto_app\templates\mto_app\plan\lista.html:1812
 #, python-brace-format
 msgid ""
 "Se registrará como <b>ejecutada con {n} semanas de atraso</b> (programada en "
@@ -9058,122 +9251,122 @@ msgid ""
 msgstr ""
 "It will be recorded as <b>executed {n} weeks late</b> (scheduled in W{y})."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1760
-#: .\mto_app\templates\mto_app\plan\registro_form.html:444
+#: .\mto_app\templates\mto_app\plan\lista.html:1820
+#: .\mto_app\templates\mto_app\plan\registro_form.html:460
 msgid "Máximo 4 fotos por registro"
 msgstr "Maximum 4 photos per record"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1761
+#: .\mto_app\templates\mto_app\plan\lista.html:1821
 msgid "Solo se aceptan imágenes de hasta 5 MB"
 msgstr "Only images up to 5 MB are accepted"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1762
+#: .\mto_app\templates\mto_app\plan\lista.html:1822
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:405
 #, python-brace-format
 msgid "Fotos de la S{n}"
 msgstr "Photos of W{n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1763
+#: .\mto_app\templates\mto_app\plan\lista.html:1823
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:406
 #, python-brace-format
 msgid "Foto {i} de {n}"
 msgstr "Photo {i} of {n}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1764
-#: .\mto_app\templates\mto_app\plan\registro_form.html:446
+#: .\mto_app\templates\mto_app\plan\lista.html:1824
+#: .\mto_app\templates\mto_app\plan\registro_form.html:462
 msgid "Disponible al marcar como Completada"
 msgstr "Available when marked as Completed"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1765
-#: .\mto_app\templates\mto_app\plan\registro_form.html:447
+#: .\mto_app\templates\mto_app\plan\lista.html:1825
+#: .\mto_app\templates\mto_app\plan\registro_form.html:463
 msgid "Revisa la evidencia antes de validar"
 msgstr "Review the evidence before validating"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1766
-#: .\mto_app\templates\mto_app\plan\registro_form.html:448
+#: .\mto_app\templates\mto_app\plan\lista.html:1826
+#: .\mto_app\templates\mto_app\plan\registro_form.html:464
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:222
 msgid "No tienes permiso para validar"
 msgstr "You don't have permission to validate"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1767
+#: .\mto_app\templates\mto_app\plan\lista.html:1827
 #, python-brace-format
 msgid "hoy {f}"
 msgstr "today {f}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1768
-#: .\mto_app\templates\mto_app\plan\registro_form.html:449
+#: .\mto_app\templates\mto_app\plan\lista.html:1828
+#: .\mto_app\templates\mto_app\plan\registro_form.html:465
 msgid "Elige un estado"
 msgstr "Choose a state"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1770
-#: .\mto_app\templates\mto_app\plan\registro_form.html:451
+#: .\mto_app\templates\mto_app\plan\lista.html:1830
+#: .\mto_app\templates\mto_app\plan\registro_form.html:467
 #: .\mto_app\views\registro_ejecucion.py:102
 msgid ""
 "Esta semana aún no tiene responsable. Pide a un supervisor que lo asigne."
 msgstr "This week has no assignee yet. Ask a supervisor to assign one."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1771
-#: .\mto_app\templates\mto_app\plan\registro_form.html:452
+#: .\mto_app\templates\mto_app\plan\lista.html:1831
+#: .\mto_app\templates\mto_app\plan\registro_form.html:468
 #: .\mto_app\views\registro_ejecucion.py:118
 msgid "La fecha de ejecución es obligatoria"
 msgstr "The execution date is required"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1772
-#: .\mto_app\templates\mto_app\plan\registro_form.html:453
+#: .\mto_app\templates\mto_app\plan\lista.html:1832
+#: .\mto_app\templates\mto_app\plan\registro_form.html:469
 #: .\mto_app\views\registro_ejecucion.py:127
 msgid "Indica el motivo de la cancelación"
 msgstr "Enter the cancellation reason"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1773
-#: .\mto_app\templates\mto_app\plan\registro_form.html:454
+#: .\mto_app\templates\mto_app\plan\lista.html:1833
+#: .\mto_app\templates\mto_app\plan\registro_form.html:470
 #: .\mto_app\views\registro_ejecucion.py:133
 msgid "Elige la semana a la que se reagenda"
 msgstr "Choose the week to reschedule to"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1774
-#: .\mto_app\templates\mto_app\plan\registro_form.html:455
+#: .\mto_app\templates\mto_app\plan\lista.html:1834
+#: .\mto_app\templates\mto_app\plan\registro_form.html:471
 #: .\mto_app\views\registro_ejecucion.py:177
 msgid "Elige quién valida"
 msgstr "Choose who validates"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1775
-#: .\mto_app\templates\mto_app\plan\registro_form.html:456
+#: .\mto_app\templates\mto_app\plan\lista.html:1835
+#: .\mto_app\templates\mto_app\plan\registro_form.html:472
 #: .\mto_app\views\registro_ejecucion.py:181
 msgid "Indica el motivo del rechazo"
 msgstr "Enter the rejection reason"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1778
+#: .\mto_app\templates\mto_app\plan\lista.html:1838
 #, python-brace-format
 msgid "¿Eliminar el registro de la S{n}? Se borrarán también sus fotos."
 msgstr "Delete the record for W{n}? Its photos will be deleted too."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1779
+#: .\mto_app\templates\mto_app\plan\lista.html:1839
 #, python-brace-format
 msgid "Registro de S{n} eliminado"
 msgstr "W{n} record deleted"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1780
+#: .\mto_app\templates\mto_app\plan\lista.html:1840
 msgid "Disponible cuando la ejecución de la semana está Completada"
 msgstr "Available when the week's execution is Completed"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1783
+#: .\mto_app\templates\mto_app\plan\lista.html:1843
 #, python-brace-format
 msgid "La fecha compromiso no puede ser anterior a {f}"
 msgstr "The due date cannot be earlier than {f}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1786
+#: .\mto_app\templates\mto_app\plan\lista.html:1846
 #, python-brace-format
 msgid "Creado el {f} por {u}"
 msgstr "Created on {f} by {u}"
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1798
-#: .\mto_app\templates\mto_app\plan\registro_form.html:460
+#: .\mto_app\templates\mto_app\plan\lista.html:1858
+#: .\mto_app\templates\mto_app\plan\registro_form.html:476
 #: .\mto_app\views\registro_ejecucion.py:82
 msgid "No tienes permiso para registrar ejecuciones."
 msgstr "You don't have permission to record executions."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1799
-#: .\mto_app\templates\mto_app\plan\registro_form.html:461
+#: .\mto_app\templates\mto_app\plan\lista.html:1859
+#: .\mto_app\templates\mto_app\plan\registro_form.html:477
 #: .\mto_app\views\registro_ejecucion.py:81
 msgid ""
 "Este registro ya fue llenado. Para modificarlo necesitas permiso de edición."
@@ -9181,8 +9374,8 @@ msgstr ""
 "This record has already been filled in. To change it you need edit "
 "permission."
 
-#: .\mto_app\templates\mto_app\plan\lista.html:1800
-#: .\mto_app\templates\mto_app\plan\registro_form.html:462
+#: .\mto_app\templates\mto_app\plan\lista.html:1860
+#: .\mto_app\templates\mto_app\plan\registro_form.html:478
 msgid "Solo puedes cambiar la validación de este registro."
 msgstr "You can only change the validation of this record."
 
@@ -9274,7 +9467,7 @@ msgstr[1] "Overdue %(n)s days"
 
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:286
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:351
-#: .\mto_app\views\bitacora.py:462 .\mto_app\views\planes.py:802
+#: .\mto_app\views\bitacora.py:462 .\mto_app\views\planes.py:863
 #: .\mto_app\views\seguimientos_exportar.py:41
 msgid "Fotos"
 msgstr "Photos"
@@ -9314,7 +9507,7 @@ msgid "cumplimiento %(h)s de %(e)s (%(p)s%%)"
 msgstr "compliance %(h)s of %(e)s (%(p)s%%)"
 
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:331
-#: .\mto_app\views\planes.py:801
+#: .\mto_app\views\planes.py:862
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:309
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:311
 #: .\paros_app\templates\paros_app\indicadores_produccion.html:313
@@ -9322,7 +9515,7 @@ msgid "Fechas"
 msgstr "Dates"
 
 #: .\mto_app\templates\mto_app\plan\modal_calendario.html:332
-#: .\mto_app\views\planes.py:801
+#: .\mto_app\views\planes.py:862
 msgid "Ejecutada"
 msgstr "Executed"
 
@@ -9363,38 +9556,42 @@ msgid ""
 "Disponible cuando la ejecución de la semana seleccionada está Completada"
 msgstr "Available when the selected week's execution is Completed"
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:300
+#: .\mto_app\templates\mto_app\plan\registro_form.html:229
+msgid "Mismo número que el Excel de la semana"
+msgstr "Same number as the week's Excel"
+
+#: .\mto_app\templates\mto_app\plan\registro_form.html:316
 msgid "Describe lo realizado, materiales usados, anomalías detectadas…"
 msgstr "Describe what was done, materials used, anomalies found…"
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:310
+#: .\mto_app\templates\mto_app\plan\registro_form.html:326
 msgid "Arrastra, pega (Ctrl + V) o haz clic · JPG o PNG hasta 5 MB · máximo 4"
 msgstr "Drag, paste (Ctrl + V) or click · JPG or PNG up to 5 MB · max. 4"
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:335
+#: .\mto_app\templates\mto_app\plan\registro_form.html:351
 msgid "Quitar"
 msgstr "Remove"
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:366
+#: .\mto_app\templates\mto_app\plan\registro_form.html:382
 msgid "Guardar ejecución"
 msgstr "Save execution"
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:380
+#: .\mto_app\templates\mto_app\plan\registro_form.html:396
 #, python-format
 msgid "Tienes cambios sin guardar en la semana %(semana)s."
 msgstr "You have unsaved changes in week %(semana)s."
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:411
+#: .\mto_app\templates\mto_app\plan\registro_form.html:427
 #, python-format
 msgid "¿Eliminar el registro de la S%(semana)s? Se borrarán también sus fotos."
 msgstr "Delete the record for W%(semana)s? Its photos will be deleted too."
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:425
+#: .\mto_app\templates\mto_app\plan\registro_form.html:441
 #, python-format
 msgid "Ejecución de S%(semana)s guardada"
 msgstr "W%(semana)s execution saved"
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:434
+#: .\mto_app\templates\mto_app\plan\registro_form.html:450
 #, python-brace-format
 msgid ""
 "La fecha de ejecución (S{x}) es posterior a la semana programada (S{y}). Se "
@@ -9403,7 +9600,7 @@ msgstr ""
 "The execution date (W{x}) is after the scheduled week (W{y}). It will be "
 "recorded as executed {n} week late."
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:435
+#: .\mto_app\templates\mto_app\plan\registro_form.html:451
 #, python-brace-format
 msgid ""
 "La fecha de ejecución (S{x}) es posterior a la semana programada (S{y}). Se "
@@ -9412,7 +9609,7 @@ msgstr ""
 "The execution date (W{x}) is after the scheduled week (W{y}). It will be "
 "recorded as executed {n} weeks late."
 
-#: .\mto_app\templates\mto_app\plan\registro_form.html:436
+#: .\mto_app\templates\mto_app\plan\registro_form.html:452
 #, python-brace-format
 msgid "opcional · {n} / 1000"
 msgstr "optional · {n} / 1000"
@@ -9784,213 +9981,216 @@ msgid "Elige una rutina de la lista."
 msgstr "Choose a routine from the list."
 
 #: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:4
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:22
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:23
 msgid "Backlog de seguimientos"
 msgstr "Follow-Up Backlog"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:23
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:24
 msgid "Órdenes con fecha de compromiso vencida — pendientes y en proceso"
 msgstr "Work Orders with Overdue Due Dates — Pending and In Progress"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:27
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:172
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:28
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:187
 msgid "Semana de compromiso"
 msgstr "Due week"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:31
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:62
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:191
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:204
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:275
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:32
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:63
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:206
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:219
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:290
 msgid "Correctivos"
 msgstr "Correctives"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:51
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:52
 #, python-format
 msgid "de %(n)s responsable"
 msgid_plural "de %(n)s responsables"
 msgstr[0] "across %(n)s assignee"
 msgstr[1] "across %(n)s assignees"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:55
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:187
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:274
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:56
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:202
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:289
 msgid "Seguimiento de OTs"
 msgstr "Work Order Tracking"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:58
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:65
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:59
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:66
 #, python-format
 msgid "%(pct)s%% del backlog"
 msgstr "%(pct)s%% of the backlog"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:69
 #: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:70
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:84
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:71
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:85
 msgid "Antigüedad"
 msgstr "Age"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:82
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:83
 msgid "Distribución del backlog"
 msgstr "Backlog breakdown"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:83
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:84
 msgid "Ver distribución por"
 msgstr "View breakdown by"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:94
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:95
 msgid "vencidas"
 msgstr "overdue"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:107
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:108
 msgid "Carga por responsable"
 msgstr "Load by responsible"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:108
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:109
 msgid "Ordenado por vencidas"
 msgstr "Sorted by overdue"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:120
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:121
 msgid "Buscar folio o descripción"
 msgstr "Search folio or description"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:127
-#: .\mto_app\views\backlog.py:413
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:128
+#: .\mto_app\views\backlog.py:421
 msgid "Folio"
 msgstr "Folio"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:132
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:234
-#: .\mto_app\views\backlog.py:414
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:133
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:249
+#: .\mto_app\views\backlog.py:422
 msgid "Vencía"
 msgstr "Was due"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:150
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:250
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:165
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:265
 msgid "Sin atrasos"
 msgstr "No delays"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:151
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:251
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:166
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:266
 msgid "Todos los seguimientos están al día."
 msgstr "All follow-ups are up to date."
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:163
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:178
 msgid "Órdenes con compromiso vencido"
 msgstr "Orders past their due date"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:165
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:180
 msgid "Más acciones: idioma"
 msgstr "More actions: language"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:176
-#: .\mto_app\views\planes.py:1268 .\mto_app\views\seguimientos_exportar.py:154
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:191
+#: .\mto_app\views\planes.py:1329 .\mto_app\views\seguimientos_exportar.py:154
 #: .\mto_app\views\seguimientos_exportar.py:157
 #: .\paros_app\templates\paros_app\dashboard.html:532
 msgid "Resumen"
 msgstr "Summary"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:179
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:194
 msgid "orden vencida"
 msgid_plural "órdenes vencidas"
 msgstr[0] "overdue order"
 msgstr[1] "overdue orders"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:179
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:194
 #, python-format
 msgid "%(n)s responsable"
 msgid_plural "%(n)s responsables"
 msgstr[0] "%(n)s person responsible"
 msgstr[1] "%(n)s people responsible"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:181
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:196
 #, python-format
 msgid "%(n)s seguimiento de OT"
 msgid_plural "%(n)s seguimientos de OTs"
 msgstr[0] "%(n)s WO follow-up"
 msgstr[1] "%(n)s WO follow-ups"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:181
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:196
 #: .\mto_app\views\rutinas.py:171
 msgid "y"
 msgstr "and"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:181
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:196
 #, python-format
 msgid "%(n)s correctivo"
 msgid_plural "%(n)s correctivos"
 msgstr[0] "%(n)s corrective"
 msgstr[1] "%(n)s correctives"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:196
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:211
 #, python-format
 msgid "%(n)s con más de 6 meses"
 msgid_plural "%(n)s con más de 6 meses"
 msgstr[0] "%(n)s older than 6 months"
 msgstr[1] "%(n)s older than 6 months"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:197
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:212
 #, python-format
 msgid "Más antigua: %(n)s día"
 msgid_plural "Más antigua: %(n)s días"
 msgstr[0] "Oldest: %(n)s day"
 msgstr[1] "Oldest: %(n)s days"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:231
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:287
-#: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:790
-#: .\mto_app\views\backlog.py:423
-msgid "OT"
-msgstr "WO"
-
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:238
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:253
 msgctxt "atraso"
 msgid "día"
 msgid_plural "días"
 msgstr[0] "day"
 msgstr[1] "days"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:276
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:291
 msgid "Otros"
 msgstr "Others"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:277
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:292
 msgid "Todos los responsables"
 msgstr "All assignees"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:279
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:294
 msgid "máx 1 día"
 msgstr "max 1 day"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:280
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:295
 #, python-brace-format
 msgid "máx {n} días"
 msgstr "max {n} days"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:281
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:296
 msgid "1 día"
 msgstr "1 day"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:282
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:297
 #: .\paros_app\templates\paros_app\bitacora_agv.html:713
 #, python-brace-format
 msgid "{n} días"
 msgstr "{n} days"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:285
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:298
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:300
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:318
 msgid "1 correctivo"
 msgstr "1 corrective"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:286
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:299
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:301
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:319
 #, python-brace-format
 msgid "{n} correctivos"
 msgstr "{n} correctives"
 
-#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:289
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:304
 msgid "Sin órdenes que coincidan"
 msgstr "No matching orders"
+
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:305
+#, python-brace-format
+msgid "Mostrando {a}–{b} de {n}"
+msgstr "Showing {a}–{b} of {n}"
+
+#: .\mto_app\templates\mto_app\seguimientos\backlog_seguimientos.html:306
+#, python-brace-format
+msgid "Página {n}"
+msgstr "Page {n}"
 
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:4
 #: .\mto_app\templates\mto_app\seguimientos\lista_seguimientos.html:21
@@ -10350,59 +10550,59 @@ msgstr "View {n} follow-ups"
 msgid "Seguir con el seguimiento"
 msgstr "Keep working on the follow-up"
 
-#: .\mto_app\views\backlog.py:33
+#: .\mto_app\views\backlog.py:34
 #, python-format
 msgid "S%(num)s/%(anio)s"
 msgstr "W%(num)s/%(anio)s"
 
-#: .\mto_app\views\backlog.py:283
+#: .\mto_app\views\backlog.py:291
 msgid "1 semana"
 msgstr "1 week"
 
-#: .\mto_app\views\backlog.py:283
+#: .\mto_app\views\backlog.py:291
 msgid "2 semanas"
 msgstr "2 weeks"
 
-#: .\mto_app\views\backlog.py:283
+#: .\mto_app\views\backlog.py:291
 msgid "3 semanas"
 msgstr "3 weeks"
 
-#: .\mto_app\views\backlog.py:283 .\mto_app\views\backlog.py:284
+#: .\mto_app\views\backlog.py:291 .\mto_app\views\backlog.py:292
 msgid "1 mes"
 msgstr "1 month"
 
-#: .\mto_app\views\backlog.py:283
+#: .\mto_app\views\backlog.py:291
 msgid "Más de 1 mes"
 msgstr "Over 1 month"
 
-#: .\mto_app\views\backlog.py:284
+#: .\mto_app\views\backlog.py:292
 msgid "1 sem"
 msgstr "1 wk"
 
-#: .\mto_app\views\backlog.py:284
+#: .\mto_app\views\backlog.py:292
 msgid "2 sem"
 msgstr "2 wk"
 
-#: .\mto_app\views\backlog.py:284
+#: .\mto_app\views\backlog.py:292
 msgid "3 sem"
 msgstr "3 wk"
 
-#: .\mto_app\views\backlog.py:284
+#: .\mto_app\views\backlog.py:292
 msgid ">1 mes"
 msgstr ">1 mo"
 
-#: .\mto_app\views\backlog.py:293
+#: .\mto_app\views\backlog.py:301
 #, python-format
 msgid "%(n)s vencida"
 msgid_plural "%(n)s vencidas"
 msgstr[0] "%(n)s overdue"
 msgstr[1] "%(n)s overdue"
 
-#: .\mto_app\views\backlog.py:293
+#: .\mto_app\views\backlog.py:301
 msgid "Sin vencidas"
 msgstr "None overdue"
 
-#: .\mto_app\views\backlog.py:414
+#: .\mto_app\views\backlog.py:422
 msgid "Atraso (días)"
 msgstr "Delay (days)"
 
@@ -10583,51 +10783,74 @@ msgstr "You must choose a destination folder."
 msgid "Documento '{nombre}' movido a '{destino}'."
 msgstr "Document '{nombre}' moved to '{destino}'."
 
-#: .\mto_app\views\exportacion.py:438
+#: .\mto_app\views\exportacion.py:309
+msgid "La plantilla no tiene hojas de órdenes."
+msgstr "The template has no work order sheets."
+
+#: .\mto_app\views\exportacion.py:466
+#, python-brace-format
+msgid "No hay planes para la semana {semana}/{anio}."
+msgstr "There are no plans for week {semana}/{anio}."
+
+#: .\mto_app\views\exportacion.py:492
+msgid "No se encontró la exportación; vuelve a intentarlo."
+msgstr "The export wasn't found; please try again."
+
+#: .\mto_app\views\exportacion.py:504
 msgid "Archivo no disponible o aún generándose."
 msgstr "File not available or still being generated."
 
-#: .\mto_app\views\planes.py:274
+#: .\mto_app\views\planes.py:291
 msgid "Sin asignar aún"
 msgstr "Unassigned"
 
-#: .\mto_app\views\planes.py:413 .\mto_app\views\planes.py:947
+#: .\mto_app\views\planes.py:456
+#, python-brace-format
+msgid "Máximo {n} caracteres"
+msgstr "Maximum {n} characters"
+
+#: .\mto_app\views\planes.py:473
+#, python-brace-format
+msgid "Semana no válida para {anio}"
+msgstr "Invalid week for {anio}"
+
+#: .\mto_app\views\planes.py:474
+msgid "Elige la primera semana"
+msgstr "Choose the first week"
+
+#: .\mto_app\views\planes.py:490
+#, python-brace-format
+msgid "Ya existe una tarea con el código {x}"
+msgstr "A task with code {x} already exists"
+
+#: .\mto_app\views\planes.py:516 .\mto_app\views\planes.py:1008
 msgid "No tienes permiso para editar planes de mantenimiento."
 msgstr "You do not have permission to edit maintenance plans."
 
-#: .\mto_app\views\planes.py:444
-msgid "Todos los campos marcados son obligatorios."
-msgstr "All marked fields are required."
+#: .\mto_app\views\planes.py:533
+msgid "No tienes permiso para eliminar planes de mantenimiento."
+msgstr "You don't have permission to delete maintenance plans."
 
-#: .\mto_app\views\planes.py:450
-#, python-brace-format
-msgid "Plan '{codigo}' actualizado."
-msgstr "Plan '{codigo}' updated."
-
-#: .\mto_app\views\planes.py:453
-msgid "Plan de mantenimiento creado."
-msgstr "Maintenance plan created."
-
-#: .\mto_app\views\planes.py:479
+#: .\mto_app\views\planes.py:540
 #, python-brace-format
 msgid "Plan '{codigo}' eliminado."
 msgstr "Plan '{codigo}' deleted."
 
-#: .\mto_app\views\planes.py:482
+#: .\mto_app\views\planes.py:543
 #, python-brace-format
 msgid "No se puede eliminar '{codigo}' porque tiene registros asociados."
 msgstr "'{codigo}' cannot be deleted because it has associated records."
 
-#: .\mto_app\views\planes.py:493
+#: .\mto_app\views\planes.py:554
 msgid "No tienes permiso para eliminar todos los planes del área."
 msgstr ""
 "You do not have permission to delete all maintenance plans in this area."
 
-#: .\mto_app\views\planes.py:499
+#: .\mto_app\views\planes.py:560
 msgid "Escribe ELIMINAR para confirmar."
 msgstr "Type ELIMINAR to confirm."
 
-#: .\mto_app\views\planes.py:506
+#: .\mto_app\views\planes.py:567
 #, python-brace-format
 msgid ""
 "Se eliminaron los {cantidad} planes de mantenimiento del área '{area}' y su "
@@ -10636,60 +10859,60 @@ msgstr ""
 "{cantidad} maintenance plan(s) from area '{area}' and their execution "
 "history were deleted."
 
-#: .\mto_app\views\planes.py:520 .\mto_app\views\planes.py:1244
+#: .\mto_app\views\planes.py:581 .\mto_app\views\planes.py:1305
 msgid "No tienes permiso para exportar planes de mantenimiento."
 msgstr "You do not have permission to export maintenance plans."
 
-#: .\mto_app\views\planes.py:814
+#: .\mto_app\views\planes.py:875
 #, python-format
 msgid "Rechazado: %(m)s"
 msgstr "Rejected: %(m)s"
 
-#: .\mto_app\views\planes.py:957
+#: .\mto_app\views\planes.py:1018
 msgid "Debes seleccionar un archivo y un area."
 msgstr "You must select a file and an area."
 
-#: .\mto_app\views\planes.py:1013
+#: .\mto_app\views\planes.py:1074
 #, python-brace-format
 msgid "Fila {n} ({codigo}): falta {campos}"
 msgstr "Row {n} ({codigo}): missing {campos}"
 
-#: .\mto_app\views\planes.py:1054
+#: .\mto_app\views\planes.py:1115
 #, python-brace-format
 msgid "Código '{codigo}' ya existía en esta área — se actualizó."
 msgstr "Code '{codigo}' already existed in this area — it was updated."
 
-#: .\mto_app\views\planes.py:1068
+#: .\mto_app\views\planes.py:1129
 #, python-brace-format
 msgid "Fila con codigo '{codigo}': {error}"
 msgstr "Row with code '{codigo}': {error}"
 
-#: .\mto_app\views\planes.py:1075
+#: .\mto_app\views\planes.py:1136
 #, python-brace-format
 msgid ""
 "{creados} creado(s), {actualizados} actualizado(s), {omitidos} omitido(s)."
 msgstr "{creados} created, {actualizados} updated, {omitidos} skipped."
 
-#: .\mto_app\views\planes.py:1077
+#: .\mto_app\views\planes.py:1138
 #, python-brace-format
 msgid "Importacion con advertencias — {resumen}"
 msgstr "Import with warnings — {resumen}"
 
-#: .\mto_app\views\planes.py:1081
+#: .\mto_app\views\planes.py:1142
 #, python-brace-format
 msgid "Importacion con avisos — {resumen}"
 msgstr "Import with notices — {resumen}"
 
-#: .\mto_app\views\planes.py:1085
+#: .\mto_app\views\planes.py:1146
 #, python-brace-format
 msgid "Importacion exitosa — {resumen}"
 msgstr "Import successful — {resumen}"
 
-#: .\mto_app\views\planes.py:1269
+#: .\mto_app\views\planes.py:1330
 msgid "Horas"
 msgstr "Hours"
 
-#: .\mto_app\views\planes.py:1269
+#: .\mto_app\views\planes.py:1330
 #: .\paros_app\templates\paros_app\analisis_paros.html:255
 #: .\paros_app\templates\paros_app\analisis_paros.html:591
 #: .\paros_app\templates\paros_app\dashboard.html:425
@@ -14206,106 +14429,3 @@ msgstr "Downtime updated successfully."
 #: .\paros_project\settings.py:140
 msgid "English"
 msgstr "English"
-
-#~ msgid "Ya existe un servicio con ese No. item."
-#~ msgstr "A service with that item no. already exists."
-
-#~ msgid "Exportar antes de eliminar"
-#~ msgstr "Export before deleting"
-
-#, python-format
-#~ msgid "actualizado %(f)s"
-#~ msgstr "updated %(f)s"
-
-#, python-format
-#~ msgid "Plan nº %(n)s · %(a)s"
-#~ msgstr "Plan no. %(n)s · %(a)s"
-
-#~ msgid "DE SEGURIDAD"
-#~ msgstr "SAFETY"
-
-#, python-format
-#~ msgid "%(n)s (pasos %(p)s)"
-#~ msgstr "%(n)s (steps %(p)s)"
-
-#~ msgid "Bloqueo LOTO"
-#~ msgstr "LOTO lockout"
-
-#, python-format
-#~ msgid "%(n)s pasos"
-#~ msgstr "%(n)s steps"
-
-#~ msgid "Mantenimiento mecánico a transportador"
-#~ msgstr "Mechanical maintenance of conveyor"
-
-#~ msgid "Seguridades"
-#~ msgstr "Safety checks"
-
-#~ msgid "Revisar EPP y colocar candado de bloqueo."
-#~ msgstr "Check PPE and apply the lockout padlock."
-
-#~ msgid "Preparación de la actividad"
-#~ msgstr "Activity preparation"
-
-#~ msgid "Dejar vacío el equipo."
-#~ msgstr "Leave the equipment empty."
-
-#~ msgid "Lubricación"
-#~ msgstr "Lubrication"
-
-#~ msgid "Aplicar aceite por goteo."
-#~ msgstr "Apply oil by drip."
-
-#~ msgid "Seguimiento de solicitudes de servicio: PR, PO y SR"
-#~ msgstr "Monitoring of service requests: PR, PO and SR"
-
-#~ msgid "Ej: 001"
-#~ msgstr "e.g.: 001"
-
-#~ msgid "Buscar nombre..."
-#~ msgstr "Search name..."
-
-#~ msgid "pendiente de generar PO"
-#~ msgstr "Pending PO Generation"
-
-#~ msgid "con orden de compra"
-#~ msgstr "with purchase order"
-
-#~ msgid "Selecciona..."
-#~ msgstr "Select..."
-
-#~ msgid "máx. 200 caracteres"
-#~ msgstr "max. 200 characters"
-
-#~ msgid "Existentes"
-#~ msgstr "Existing"
-
-#~ msgid "Buscar refacción (No. Item o Nombre)"
-#~ msgstr "Search for spare part (No. Item or Name)"
-
-#~ msgid "Escribe para buscar..."
-#~ msgstr "Write to search..."
-
-#~ msgid "No. Item seleccionado"
-#~ msgstr "Selected Item No."
-
-#~ msgid "Nombre seleccionado"
-#~ msgstr "Selected Name"
-
-#~ msgid "Catálogo de refacciones, stock y ubicación en almacén"
-#~ msgstr "Spare parts catalog, stock and warehouse location"
-
-#~ msgid "No. Item o nombre..."
-#~ msgstr "Item No. or name..."
-
-#~ msgid "registradas en el área"
-#~ msgstr "registered in the area"
-
-#~ msgid "Bajo stock mínimo"
-#~ msgstr "Low minimum stock"
-
-#~ msgid "requieren reabasto"
-#~ msgstr "they require resupply"
-
-#~ msgid "Costo unit."
-#~ msgstr "Unit cost."

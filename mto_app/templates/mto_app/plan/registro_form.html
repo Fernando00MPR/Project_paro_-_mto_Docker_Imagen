@@ -80,6 +80,12 @@
         color:var(--rf-success); border-radius:999px; padding:3px 10px; font-size:11.5px; font-weight:600; white-space:nowrap;
     }
     .rf-chip-semana-actual .rf-dot { width:6px; height:6px; border-radius:50%; background:var(--rf-success-dot); }
+        /* No. de OT de la semana: misma fuente y color que el código del plan */
+    .rf-chip-ot {
+        display:inline-flex; align-items:center; gap:6px; background:var(--rf-primary-tint); border:1px solid var(--rf-primary-tint-border);
+        color:var(--rf-primary-hover); border-radius:999px; padding:3px 10px; font-size:11.5px; font-weight:600; white-space:nowrap;
+    }
+    .rf-chip-ot b { font-family:'JetBrains Mono', ui-monospace, Consolas, monospace; font-size:12px; font-weight:700; }
 
     .rf2-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:24px; }
     .rf2-col { display:flex; flex-direction:column; gap:16px; min-width:0; }
@@ -219,11 +225,21 @@
     <div class="rf2-head">
         <h3>{% trans "Registrar ejecución" %}</h3>
         <span class="sub">{% trans "Semana" %} {{ semana }} &middot; {{ lunes|date:"d M" }} &ndash; {{ domingo|date:"d M Y" }}</span>
+        {% if no_ot %}
+            <span class="rf-chip-ot" title="{% trans 'Mismo número que el Excel de la semana' %}">
+                {% trans "No. OT" %} <b>{{ no_ot }}</b>
+            </span>
+        {% endif %}
         {% if semana == hoy_semana and anio == hoy_anio %}
-        <span class="rf-chip-semana-actual"><span class="rf-dot"></span>{% trans "Semana actual" %}</span>
+            <span class="rf-chip-semana-actual">
+                <span class="rf-dot"></span>
+                {% trans "Semana actual" %}
+            </span>
         {% endif %}
         {% if registro and editor_nombre %}
-        <span class="ult">{% trans "Última edición" %}: {{ editor_nombre }} &middot; {{ registro.modificado|date:"d/m/Y" }}</span>
+            <span class="ult">
+                {% trans "Última edición" %}: {{ editor_nombre }} &middot; {{ registro.modificado|date:"d/m/Y" }}
+            </span>
         {% endif %}
     </div>
 

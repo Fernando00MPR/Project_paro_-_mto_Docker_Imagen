@@ -12,7 +12,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 
-from ..models import SeguimientoOT, SeguimientoManual, RegistroEjecucion, Area
+from ..models import SeguimientoOT, SeguimientoManual, RegistroEjecucion, Area, PlanMantenimiento
+from .utils import numeros_ot_semana
 
 # Atraso (días) del atajo "Más de 6 meses" y del chip de celular "con más de 6 meses".
 ATRASO_ALTO  = 180
@@ -177,14 +178,21 @@ def _datos_backlog(request, area_id=None, semana_filtro=None):
             **_semana_de_fecha(seg.fecha_compromiso),
         })
 
-    contadores_reg = {}
-    for reg in qs_registros:
-        semana = reg.semana_num
-        mes    = f"{reg.semana_inicio.month:02d}"
-        aa     = str(reg.semana_inicio.year)[2:]
-        key    = f"{semana:02d}{mes}{aa}"
-        contadores_reg[key] = contadores_reg.get(key, 100) + 1
-        no_orden = f"{semana:02d}{mes}{aa}{contadores_reg[key]}"
+    # No. de OT igual que el Plan de mantenimiento y el Excel de la semana: posición del plan entre todos los
+    # planes activos de su área que tocan esa semana (área → locación → actividad → código). Los planes de las
+    # áreas del backlog se traen en una sola consulta y se numeran en memoria por área y semana.
+    registros = list(qs_registros)
+    planes_por_area = defaultdict(list)
+    for p in PlanMantenimiento.objects.select_related('area').filter(
+            activo=True, area_id__in={r.plan.area_id for r in registros}):
+        planes_por_area[p.area_id].append(p)
+    numeros = {}   # (área, lunes) → {plan_id: No. de OT}
+    for reg in registros:
+        clave = (reg.plan.area_id, reg.semana_inicio)
+        if clave not in numeros:
+            numeros[clave] = numeros_ot_semana(planes_por_area[clave[0]], reg.semana_inicio)
+        no_orden = numeros[clave].get(reg.plan_id, '—')   # '—' = fuera de frecuencia o plan inactivo (no sale en el Excel)
+
 
         nombre = ''
         if reg.responsable:

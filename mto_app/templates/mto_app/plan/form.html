@@ -1,192 +1,177 @@
-{% extends "menu_app/base_menu.html" %}
 {% load i18n %}
-{% block title %}{% if plan %}{% trans "Editar" %}{% else %}{% trans "Nueva" %}{% endif %} {% trans "tarea" %}{% endblock %}
-{% block extra_css %}
-<style>
-    /* Flecha nativa del select pegada al borde → chevron propio con espacio.
-       Mismo tono que el texto (--text): hex literal porque no se puede meter
-       var() dentro del data URI. */
-    .form-field select {
-        padding-right: 34px;
-        appearance: none; -webkit-appearance: none;
-        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%231E1B4B' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        background-size: 14px;
-    }
-    [data-theme="dark"] .form-field select {
-        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23E2E0FF' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    }
-</style>
-{% endblock %}
-{% block content %}
-<div class="card" style="max-width:680px;">
-    <div class="card-header">
-        <div>
-            <div class="card-title">{% if plan %}{% trans "Editar tarea" %}{% else %}{% trans "Nueva tarea de mantenimiento" %}{% endif %}</div>
-            <div class="card-subtitle">{% trans "Completa todos los campos del plan" %}</div>
-        </div>
-    </div>
-    <form method="post" id="form-plan" onsubmit="return confirmarCambioFrecuencia(event)">
+{% comment %}
+    Modal "Nueva / Editar tarea" del Plan de mantenimiento (17D-b, escritorio). Se incluye en plan/lista.html.
+    Lo maneja plan_tarea.js y sus estilos están en plan_tarea.css (.pt-*). Guarda por AJAX en mto:nuevo_plan / mto:editar_plan.
+{% endcomment %}
+<div class="pt-fondo" id="pt-fondo" hidden
+     data-url-nuevo="{% url 'mto:nuevo_plan' %}" data-url-editar="{% url 'mto:editar_plan' 0 %}" data-url-eliminar="{% url 'mto:eliminar_plan' 0 %}"
+     data-area="{{ filtro_area|default:'' }}" data-puede-eliminar="{{ puede_eliminar_plan|yesno:'1,' }}">
+    <form class="pt-dlg" id="pt-form" role="dialog" aria-modal="true" aria-labelledby="pt-titulo" novalidate>
         {% csrf_token %}
-        <div class="form-grid">
-            <div class="form-field">
-                <label>{% trans "Código" %} *</label>
-                <input type="text" name="codigo" value="{{ plan.codigo|default:'' }}" required>
+        <input type="hidden" name="semana_inicio"><input type="hidden" name="anio_inicio">
+        <input type="hidden" name="tipo_mto"><input type="hidden" name="prioridad">
+
+        <header class="pt-cab">
+            <span class="pt-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M12 13v5M9.5 15.5h5"/></svg></span>
+            <div class="pt-cab-t">
+                <h2 id="pt-titulo"></h2>
+                <p id="pt-sub"></p>
             </div>
-            <div class="form-field">
-                <label>{% trans "N° Plan de trabajo" %} *</label>
-                <input type="text" name="plan_trabajo" value="{{ plan.plan_trabajo|default:'' }}"
-                       placeholder="Ej: PT-2024-001">
+            <button type="button" class="pt-switch" id="pt-activa" role="switch" aria-checked="true"><i aria-hidden="true"></i><span id="pt-activa-t"></span></button>
+            <button type="button" class="pt-x" data-cerrar aria-label="{% trans 'Cerrar' %}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </header>
+
+        <div class="pt-cuerpo">
+            <div class="pt-campos">
+                <section class="pt-sec">
+                    <h3><span>1</span>{% trans "PLAN Y ACTIVIDAD" %}</h3>
+                    <div class="pt-fila pt-fila-3">
+                        <div><label class="pt-lab" for="pt-codigo">{% trans "Código" %} <i>*</i></label><input class="pt-fld pt-mono" id="pt-codigo" name="codigo" maxlength="50" autocomplete="off"><p class="pt-err" data-err="codigo" hidden></p></div>
+                        <div><label class="pt-lab" for="pt-rutina">{% trans "Rutina" %} <i>*</i></label><input class="pt-fld" id="pt-rutina" name="rutina" maxlength="200" placeholder="{% trans 'Descripción de la rutina de mantenimiento' %}"><p class="pt-err" data-err="rutina" hidden></p></div>
+                        <div><label class="pt-lab" for="pt-plan">{% trans "Nº plan de trabajo" %} <i>*</i></label><input class="pt-fld pt-mono" id="pt-plan" name="plan_trabajo" maxlength="100" autocomplete="off" placeholder="{% trans 'Ej: PT-2024-001' %}"><p class="pt-err" data-err="plan_trabajo" hidden></p></div>
+                    </div>
+                    <div><label class="pt-lab" for="pt-actividad">{% trans "Actividad" %} <i>*</i></label><input class="pt-fld" id="pt-actividad" name="actividad" maxlength="255" placeholder="{% trans 'Descriptivo de la actividad del equipo' %}"><p class="pt-err" data-err="actividad" hidden></p></div>
+                </section>
+
+                <section class="pt-sec">
+                    <h3><span>2</span>{% trans "EQUIPO Y UBICACIÓN" %}</h3>
+                    <div class="pt-fila">
+                        <div>
+                            <label class="pt-lab" for="pt-area">{% trans "Área" %} <i>*</i></label>
+                            <select class="pt-fld pt-sel" id="pt-area" name="area">
+                                <option value="">— {% trans "Seleccionar" %} —</option>
+                                {% for a in areas %}<option value="{{ a.pk }}">{{ a.nombre }}</option>{% endfor %}
+                            </select>
+                            <p class="pt-err" data-err="area" hidden></p>
+                        </div>
+                        <div><label class="pt-lab" for="pt-equipo">{% trans "Equipo" %}</label><input class="pt-fld" id="pt-equipo" name="nombre_equipo" maxlength="200" placeholder="{% trans 'Nombre corto del equipo' %}"><p class="pt-err" data-err="nombre_equipo" hidden></p></div>
+                    </div>
+                    <div><label class="pt-lab" for="pt-locacion">{% trans "Locación" %} <i>*</i></label><input class="pt-fld" id="pt-locacion" name="locacion" maxlength="200" placeholder="{% trans 'Ej: Automatic Warehouse' %}"><p class="pt-err" data-err="locacion" hidden></p></div>
+                    <div class="pt-fila">
+                        <div>
+                            <span class="pt-lab" id="pt-tipo-l">{% trans "Tipo de mantenimiento" %}</span>
+                            <div class="pt-seg" role="radiogroup" aria-labelledby="pt-tipo-l" data-seg="tipo_mto">
+                                {% for val, label in tipos_mto %}<button type="button" role="radio" data-valor="{{ val }}" aria-checked="false">{{ label }}</button>{% endfor %}
+                            </div>
+                        </div>
+                        <div>
+                            <span class="pt-lab" id="pt-pri-l">{% trans "Prioridad" %}</span>
+                            <div class="pt-seg" role="radiogroup" aria-labelledby="pt-pri-l" data-seg="prioridad">
+                                {% for val, label in prioridades %}<button type="button" role="radio" data-valor="{{ val }}" aria-checked="false"><i class="pt-dot-{{ val|lower }}" aria-hidden="true"></i>{{ label }}</button>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="pt-sec">
+                    <h3><span>3</span>{% trans "PROGRAMACIÓN" %}</h3>
+                    <div class="pt-fila">
+                        <div>
+                            <label class="pt-lab" for="pt-frecuencia">{% trans "Frecuencia" %} <i>*</i></label>
+                            <select class="pt-fld pt-sel" id="pt-frecuencia" name="frecuencia">
+                                <option value="">— {% trans "Seleccionar" %} —</option>
+                                {% for f in tarea_frecuencias %}<option value="{{ f.valor }}" data-semanas="{{ f.semanas }}">{{ f.label }} · {% if f.semanas == 1 %}{% trans "cada semana" %}{% else %}{% blocktrans with n=f.semanas %}cada {{ n }} semanas{% endblocktrans %}{% endif %}</option>{% endfor %}
+                            </select>
+                            <p class="pt-err" data-err="frecuencia" hidden></p>
+                        </div>
+                        <div class="pt-sem-wrap">
+                            <span class="pt-lab" id="pt-sem-l">{% trans "Primera semana" %} <i>*</i></span>
+                            <button type="button" class="pt-fld pt-sem-btn" id="pt-sem-btn" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="pt-sem-l pt-sem-t">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+                                <span class="pt-sem-t" id="pt-sem-t"></span>
+                            </button>
+                            <div class="pt-sem-pop" id="pt-sem-pop" role="dialog" aria-label="{% trans 'Elegir semana' %}" hidden></div>
+                            <p class="pt-err" data-err="semana_inicio" hidden></p>
+                        </div>
+                    </div>
+                    <div class="pt-fila" id="pt-fila-dur">
+                        <div>
+                            <label class="pt-lab" for="pt-dur">{% trans "Duración estimada" %} <i>*</i></label>
+                            <div class="pt-dur"><input class="pt-fld" id="pt-dur" name="duracion_minutos" type="number" min="1" max="1440" step="1"><span>{% trans "min" %}</span></div>
+                            <p class="pt-err" data-err="duracion_minutos" hidden></p>
+                        </div>
+                        <div>
+                            <span class="pt-lab pt-lab-suave">{% trans "Equivale a" %}</span>
+                            <div class="pt-equiv" aria-live="polite">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/></svg>
+                                <b id="pt-equiv"></b><span>{% trans "por OT" %}</span>
+                            </div>
+                        </div>
+                        <div id="pt-estatus-c" hidden>
+                            <label class="pt-lab" for="pt-estatus">{% trans "Estatus" %}</label>
+                            <select class="pt-fld pt-sel" id="pt-estatus" name="estatus">
+                                {% for val, label in status_opts %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </section>
             </div>
-            <div class="form-field">
-                <label>{% trans "Área" %} *</label>
-                <select name="area" required>
-                    <option value="">— {% trans "Seleccionar" %} —</option>
-                    {% for a in areas %}
-                    <option value="{{ a.pk }}" {% if plan.area_id == a.pk %}selected{% endif %}>
-                        {{ a.nombre }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-field">
-                <label>{% trans "Frecuencia" %} *</label>
-                <select name="frecuencia" id="select-frecuencia" data-original="{{ plan.frecuencia|default:'' }}" required>
-                    <option value="">— {% trans "Seleccionar" %} —</option>
-                    {% for val, label in frecuencias %}
-                    <option value="{{ val }}" {% if plan.frecuencia == val %}selected{% endif %}>
-                        {{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-field full">
-                <label>{% trans "Actividad" %} *</label>
-                <input type="text" name="actividad" value="{{ plan.actividad|default:'' }}" required
-                       placeholder="Descriptivo de la actividad del equipo">
-            </div>
-            <div class="form-field full">
-                <label>{% trans "Rutina" %} *</label>
-                <input type="text" name="rutina" value="{{ plan.rutina|default:'' }}" required
-                       placeholder="Descripción de la rutina de mantenimiento">
-            </div>
-            <div class="form-field">
-                <label>{% trans "Duración estimada (minutos)" %} *</label>
-                <input type="number" name="duracion_minutos" min="5" step="5"
-                    value="{{ plan.duracion_minutos|default:'60' }}" required>
-                <span class="help">Ejemplo: 30 min, 60 min, 120 min (2 h)</span>
-            </div>
-            <div class="form-field">
-                <label>{% trans "Equipo" %}</label>
-                <input type="text" name="nombre_equipo"
-                    value="{{ plan.nombre_equipo|default:'' }}"
-                    placeholder="Nombre corto del equipo">
-            </div>
-            <div class="form-field">
-                <label>{% trans "Locación" %} *</label>
-                <input type="text" name="locacion"
-                    value="{{ plan.locacion|default:'' }}" required
-                    placeholder="Ej: Automatic Warehouse">
-            </div>
-            <div class="form-field">
-                <label>{% trans "Tipo de mantenimiento" %}</label>
-                <select name="tipo_mto">
-                    {% for val, label in tipos_mto %}
-                    <option value="{{ val }}" {% if plan.tipo_mto == val %}selected{% endif %}>
-                        {{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-field">
-                <label>{% trans "Prioridad" %}</label>
-                <select name="prioridad">
-                    {% for val, label in prioridades %}
-                    <option value="{{ val }}" {% if plan.prioridad == val %}selected{% endif %}>
-                        {{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-field">
-                <label>{% trans "Estatus" %}</label>
-                <select name="estatus">
-                    {% for val, label in status_opts %}
-                    <option value="{{ val }}" {% if plan.estatus == val %}selected{% endif %}>
-                        {{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-field">
-                <label>{% trans "Semana de inicio" %} *</label>
-                <input type="number" name="semana_inicio" min="1" max="52"
-                    value="{{ plan.semana_inicio|default:'' }}" required
-                    placeholder="Ej: 1, 15, 32">
-                <span class="help">{% trans "Numero de semana del año (1 al 52)" %}</span>
-            </div>
-            <div class="form-field">
-                <label>{% trans "Año de inicio" %} *</label>
-                <input type="number" name="anio_inicio" min="2020" max="2099"
-                    value="{{ plan.anio_inicio|default:'' }}" required
-                    placeholder="Ej: 2025">
-            </div>
-            <div class="form-field">
-                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                    <input type="checkbox" name="activo"
-                           {% if not plan or plan.activo %}checked{% endif %}
-                           style="accent-color:var(--indigo);">
-                    {% trans "Tarea activa" %}
-                </label>
-            </div>
+
+            <aside class="pt-res" aria-label="{% trans 'Resumen de programación' %}">
+                <h3>{% trans "Así quedará en el plan" %}</h3>
+                <div class="pt-res-datos">
+                    <div><small id="pt-r-en-l"></small><b id="pt-r-en"></b></div>
+                    <div><small>{% trans "OTS POR AÑO" %}</small><b id="pt-r-anio"></b></div>
+                    <div class="ancho"><small>{% trans "TIEMPO AL AÑO" %}</small><b id="pt-r-tiempo"></b><span id="pt-r-tiempo-s"></span></div>
+                </div>
+                <div>
+                    <div class="pt-res-t" id="pt-r-sem-l"></div>
+                    <div class="pt-tira" id="pt-tira"></div>
+                    <div class="pt-tira-ley"><span><i class="con"></i>{% trans "Con OT" %}</span><span><i class="act"></i>{% trans "Semana actual" %}</span></div>
+                </div>
+                <div>
+                    <div class="pt-res-t">{% trans "Próximas OTs" %}</div>
+                    <div class="pt-prox" id="pt-prox"></div>
+                </div>
+            </aside>
         </div>
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
-            <a href="{% url 'mto:lista_plan' %}" class="btn btn-ghost">{% trans "Cancelar" %}</a>
+
+        <p class="pt-aviso" id="pt-aviso" hidden></p>
+        <footer class="pt-pie">
+            <button type="button" class="pt-eliminar" id="pt-eliminar" hidden>{% trans "Eliminar tarea" %}</button>
+            <span class="pt-atajo">{% trans "Ctrl + Enter para guardar" %}</span>
+            <button type="button" class="pt-btn" data-cerrar>{% trans "Cancelar" %}</button>
+            <button type="submit" class="pt-btn pt-btn-pri" id="pt-guardar">{% trans "Guardar tarea" %}</button>
+        </footer>
+
+        <div class="pt-conf" id="pt-conf" hidden>
+            <div role="alertdialog" aria-modal="true" aria-labelledby="pt-conf-t">
+                <h3 id="pt-conf-t">{% trans "¿Descartar la tarea?" %}</h3>
+                <p>{% trans "Los cambios que hiciste se perderán." %}</p>
+                <div>
+                    <button type="button" class="pt-btn" id="pt-conf-no">{% trans "Seguir editando" %}</button>
+                    <button type="button" class="pt-btn pt-btn-rojo" id="pt-conf-si">{% trans "Descartar" %}</button>
+                </div>
+            </div>
         </div>
     </form>
 </div>
-
-
-<!-- ── Aviso: cambiar frecuencia de un plan con registros ya guardados ── -->
-<div id="modal-aviso-frecuencia"
-     style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
-            z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:var(--white); border-radius:14px; padding:28px 32px;
-                min-width:320px; max-width:440px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Esta tarea ya tiene registros guardados" %}</div>
-        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">
-            {% trans 'Cambiar la frecuencia puede hacer que algunas semanas ya completadas dejen de calzar con el nuevo patrón (quedarán marcadas como "Fuera de frecuencia" en vez de desaparecer). ¿Confirmas el cambio?' %}
-        </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button type="button" onclick="cerrarAvisoFrecuencia()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-            <button type="button" onclick="confirmarGuardarFrecuencia()" class="btn btn-primary">{% trans "Sí, cambiar frecuencia" %}</button>
-        </div>
-    </div>
-</div>
-
-{% block extra_js %}
-<script>
-function confirmarCambioFrecuencia(e) {
-    const tieneRegistros = {{ tiene_registros|yesno:"true,false" }};
-    const sel = document.getElementById('select-frecuencia');
-    if (!tieneRegistros || !sel || sel.value === sel.dataset.original) return true;
-    e.preventDefault();
-    document.getElementById('modal-aviso-frecuencia').style.display = 'flex';
-    return false;
-}
-function confirmarGuardarFrecuencia() {
-    document.getElementById('modal-aviso-frecuencia').style.display = 'none';
-    document.getElementById('form-plan').submit();
-}
-function cerrarAvisoFrecuencia() {
-    document.getElementById('modal-aviso-frecuencia').style.display = 'none';
-}
-document.getElementById('modal-aviso-frecuencia').addEventListener('click', function(e) {
-    if (e.target === this) cerrarAvisoFrecuencia();
-});
-</script>
-{% endblock %}
-
-{% endblock %}
+<script type="application/json" id="pt-i18n">{
+    "nueva":       "{% trans 'Nueva tarea de mantenimiento' %}",
+    "nuevaSub":    "{% trans 'Se agrega al Plan de mantenimiento y genera sus OTs por semana' %}",
+    "editar":      "{% trans 'Editar tarea' %}",
+    "activa":      "{% trans 'Activa' %}",
+    "inactiva":    "{% trans 'Inactiva' %}",
+    "obligatorio": "{% trans 'Campo obligatorio' %}",
+    "eligeFrec":   "{% trans 'Elige una frecuencia' %}",
+    "durMal":      "{% trans 'Escribe los minutos (ej. 60)' %}",
+    "guardando":   "{% trans 'Guardando…' %}",
+    "guardar":     "{% trans 'Guardar tarea' %}",
+    "creada":      "{% trans 'Tarea {codigo} creada · {n} OTs en {anio}' %}",
+    "actualizada": "{% trans 'Tarea {codigo} actualizada' %}",
+    "errorRed":    "{% trans 'No se pudo guardar. Revisa tu conexión.' %}",
+    "errorCargar": "{% trans 'No se pudo cargar la tarea.' %}",
+    "avisoSemanas":"{% trans 'Cambian las semanas de las OTs, también las pasadas. Las semanas con registro que dejen de calzar quedarán como «Fuera de frecuencia», y los No. de OT se vuelven a numerar.' %}",
+    "avisoDur":    "{% trans 'La nueva duración aplica a todas las OTs de esta tarea, también a las pasadas.' %}",
+    "otsEn":       "{% trans 'OTS EN {anio}' %}",
+    "semanasDe":   "{% trans 'Semanas de {anio}' %}",
+    "semana":      "{% trans 'S{n} · {anio}' %}",
+    "semanaN":     "{% trans 'S{n}' %}",
+    "conOt":       "{% trans 'OT' %}",
+    "otsX":        "{% trans '{n} OTs × {dur}' %}",
+    "h":           "{% trans '{h} h' %}",
+    "hMin":        "{% trans '{h} h {m} min' %}",
+    "min":         "{% trans '{m} min' %}",
+    "anioAnt":     "{% trans 'Año anterior' %}",
+    "anioSig":     "{% trans 'Año siguiente' %}"
+}</script>

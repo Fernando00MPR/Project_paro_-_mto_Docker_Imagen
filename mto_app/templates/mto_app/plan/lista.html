@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="{% static 'mto_app/css/rutinas_modal.css' %}">
 <link rel="stylesheet" href="{% static 'mto_app/css/seguimientos_escritorio.css' %}">
 <link rel="stylesheet" href="{% static 'mto_app/css/distribucion_ots.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/plan_tarea.css' %}">
 <script>
 /* Celular: siempre se trabaja sobre una semana y un estado (Pendientes por defecto). Si faltan en la
    URL se redirige aquí, antes de pintar; antes lo hacía plan_movil.js al final y la página parpadeaba. */
@@ -74,10 +75,10 @@
             {% endif %}
 
             {% if puede_editar_plan %}
-             <a href="{% url 'mto:nuevo_plan' %}" class="pe-btn pe-btn-primario">
-                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-                 {% trans "Nueva tarea" %}
-             </a>
+                <a href="{% url 'mto:nuevo_plan' %}" class="pe-btn pe-btn-primario" data-abrir-tarea>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                    {% trans "Nueva tarea" %}
+                </a>
             {% endif %}
 
             <div class="pe-opc" id="pe-opc">
@@ -150,17 +151,52 @@
             {% endif %}
         </button>
 
-        <div class="pe-seg" id="pe-frec" role="radiogroup" aria-label="{% trans 'Frecuencia' %}">
-            <button type="button" class="pe-seg-op" role="radio" data-frec="" aria-checked="{% if not filtro_frec %}true{% else %}false{% endif %}">{% trans "Todas" %} <span class="pe-seg-n">{{ total_sin_frec }}</span></button>
-            {% for f in frecuencias_conteo %}
-            <button type="button" class="pe-seg-op" role="radio" data-frec="{{ f.valor }}" aria-checked="{% if filtro_frec == f.valor %}true{% else %}false{% endif %}">{{ f.label }} <span class="pe-seg-n">{{ f.n }}</span></button>
-            {% endfor %}
+        {% trans "Todas" as txt_todas %}
+        {% with frec_valor=frec_elegida.label|default:txt_todas %}
+        <div class="fs pe-fs{% if frec_elegida %} pe-fs-activo{% endif %}" id="pe-frec" data-fs>
+            <input type="hidden" value="{{ filtro_frec|default:'' }}">
+            <div class="fs-ctl">
+                <button type="button" class="fs-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="pe-frec-lista"
+                        aria-label="{% blocktrans with v=frec_valor %}Filtrar por frecuencia: {{ v }}{% endblocktrans %}">
+                    <span class="pe-fs-l">{% trans "Frecuencia" %}</span>
+                    <span class="pe-fs-v">{{ frec_valor }}</span>
+                    <span class="pe-fs-n">{% if frec_elegida %}{{ frec_elegida.n }}{% else %}{{ total_sin_frec }}{% endif %}</span>
+                    <svg class="fs-chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+            </div>
+            <div class="fs-capa" hidden>
+                <div class="fs-menu">
+                    <ul class="fs-lista" id="pe-frec-lista" role="listbox" tabindex="-1" aria-label="{% trans 'Frecuencia' %}">
+                        <li class="fs-op" role="option" id="pe-frec-op-todas" data-value="" aria-selected="{% if frec_elegida %}false{% else %}true{% endif %}">
+                            <span class="pe-fs-ok" aria-hidden="true">✓</span>
+                            <span class="fs-nombre">{{ txt_todas }}</span>
+                            <span class="fs-meta">{{ total_sin_frec }}</span>
+                        </li>
+                        {% for f in frecuencias_conteo %}
+                        <li class="fs-op" role="option" id="pe-frec-op-{{ forloop.counter }}" data-value="{{ f.valor }}" aria-selected="{% if f.valor == filtro_frec %}true{% else %}false{% endif %}">
+                            <span class="pe-fs-ok" aria-hidden="true">✓</span>
+                            <span class="fs-nombre">{{ f.label }}</span>
+                            <span class="fs-meta">{{ f.n }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
+        {% endwith %}
 
         <label class="pe-buscar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="search" id="pe-q" value="{{ busqueda }}" placeholder="{% trans 'Código, equipo o rutina' %}" aria-label="{% trans 'Buscar' %}" autocomplete="off">
+            <input type="search" id="pe-q" value="{{ busqueda }}" placeholder="{% trans 'Código, rutina o responsable' %}" title="{% trans 'Código, actividad, rutina o responsable' %}" aria-label="{% trans 'Buscar' %}" autocomplete="off">
         </label>
+
+        {% if filtro_frec or busqueda or filtro_orden %}
+        <button type="button" class="pe-hoy pe-limpiar" id="pe-limpiar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            {% trans "Limpiar filtros" %}
+        </button>
+        {% endif %}
+
 
         {% if puede_eliminar_todos_planes and filtro_area and total_planes_area %}
         <span class="pe-sep" aria-hidden="true"></span>
@@ -223,6 +259,11 @@
                 <div class="pe-pop pe-cols-pop" id="col-picker" role="dialog" aria-label="{% trans 'Mostrar columnas' %}" hidden>
                     <div class="pe-cols-cab"><b>{% trans "Mostrar columnas" %}</b><span id="pe-cols-n"></span></div>
                     <div class="pe-cols-cuerpo">
+                        {% if filtro_semana %}
+                            <label class="pe-col-op" data-col="col-ot">
+                                <input type="checkbox"> {% trans "No. OT" %}
+                            </label>
+                        {% endif %}
                         <div class="pe-cols-grupo">{% trans "Plan" %}</div>
                         <label class="pe-col-op pe-col-fija"><input type="checkbox" checked disabled> {% trans "Código" %} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></label>
                         <label class="pe-col-op" data-col="col-rutina"><input type="checkbox"> {% trans "Rutina" %}</label>
@@ -255,6 +296,11 @@
                 <thead>
                     <tr>
                         <th class="pe-th-barra"></th>
+                        {% if filtro_semana %}
+                            <th class="col-ot">
+                                {% trans "No. OT" %}
+                            </th>
+                        {% endif %}
                         <th class="col-codigo">
                             <a class="pe-orden{% if filtro_orden == 'codigo' or filtro_orden == '-codigo' %} activo{% endif %}"
                                href="?{% for k,v in request.GET.items %}{% if k != 'orden' and k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}orden={% if filtro_orden == 'codigo' %}-codigo{% else %}codigo{% endif %}">{% trans "Código" %}
@@ -282,9 +328,18 @@
                 </thead>
                 <tbody>
                     {% for p in planes %}
-                    <tr ondblclick="filaClickVer(event, {{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')">
+                    <tr data-plan="{{ p.pk }}" ondblclick="filaClickVer(event, {{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')">
                         <td class="pe-td-barra pe-est-{% if filtro_semana %}{% firstof p.registro_semana.estado 'pendiente' %}{% else %}ninguno{% endif %}"
                             {% if filtro_semana %}title="{% if p.registro_semana.estado == 'completada' %}{% trans 'Completada' %}{% elif p.registro_semana.estado == 'reagendada' %}{% trans 'Reagendada' %}{% elif p.registro_semana.estado == 'cancelada' %}{% trans 'Cancelada' %}{% else %}{% trans 'Pendiente' %}{% endif %} — S{{ filtro_semana }}"{% endif %}></td>
+                        {% if filtro_semana %}
+                            <td class="col-ot">
+                                {% if p.no_ot %}
+                                    <span class="pe-ot">{{ p.no_ot }}</span>
+                                {% else %}
+                                    <span class="pe-vacio" title="{% trans 'Fuera de frecuencia: no sale en el Excel de la semana' %}">—</span>
+                                {% endif %}
+                            </td>
+                        {% endif %}
                         <td class="col-codigo"><span class="pe-cod">{{ p.codigo }}</span><span class="col-rutina pe-rutina">{{ p.rutina }}</span></td>
                         <td class="col-actividad"><span class="pe-act" title="{{ p.actividad }}">{{ p.actividad }}</span>{% if p.plan_trabajo %}<span class="col-plan pe-plan">{% trans "Plan" %} {{ p.plan_trabajo }}</span>{% endif %}</td>
                         <td class="col-frecuencia"><span class="pe-frec">{{ p.get_frecuencia_display }}</span></td>
@@ -324,7 +379,7 @@
                                 <button type="button" class="pe-btn pe-btn-primario pe-btn-chico"
                                         onclick="abrirModal({{ p.pk }}, '{{ filtro_semana|default:"" }}', '{{ filtro_anio|default:anio_actual }}')">{% trans "Registrar" %}</button>
                                 {% if puede_editar_plan %}
-                                <a class="row-act row-act--edit" href="{% url 'mto:editar_plan' p.pk %}" title="{% trans 'Editar' %}" aria-label="{% trans 'Editar' %} {{ p.codigo }}">
+                                <a class="row-act row-act--edit" data-editar-tarea="{{ p.pk }}" href="{% url 'mto:editar_plan' p.pk %}" title="{% trans 'Editar' %}" aria-label="{% trans 'Editar' %} {{ p.codigo }}">
                                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
                                 </a>
                                 {% endif %}
@@ -338,7 +393,7 @@
                     </tr>
                     {% empty %}
                     <tr class="pe-vacia">
-                        <td colspan="15">{% trans "No hay tareas registradas." %}{% if puede_editar_plan %} <a href="{% url 'mto:nuevo_plan' %}">{% trans "Agregar primera tarea" %}</a>{% endif %}</td>
+                        <td colspan="16">{% trans "No hay tareas registradas." %}{% if puede_editar_plan %} <a href="{% url 'mto:nuevo_plan' %}" data-abrir-tarea>{% trans "Agregar primera tarea" %}</a>{% endif %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -394,7 +449,7 @@
     <label class="pm-buscar">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input type="search" id="pm-buscar" value="{{ busqueda }}" enterkeyhint="search"
-               placeholder="{% trans 'Código, equipo o rutina' %}" aria-label="{% trans 'Buscar' %}">
+                placeholder="{% trans 'Código, actividad, rutina o responsable' %}" aria-label="{% trans 'Buscar' %}">
     </label>
     <div class="pm-pildoras">
         <button type="button" id="pm-btn-persona" class="pm-pildora pm-pildora-persona" onclick="pmAbrirHoja('pm-sheet-persona', event)">
@@ -1114,6 +1169,8 @@
 </div>
 {% endif %}
 
+{% if puede_editar_plan %}{% include 'mto_app/plan/form.html' %}{% endif %}
+
 {% include 'mto_app/plan/_distribucion_ots.html' %}
 
 {% if puede_ver_historial %}
@@ -1465,6 +1522,8 @@ window.PE_I18N = {
     exportando:    "{% trans 'Generando archivo…' %}",
     descargado:    "{% trans 'Se descargó {archivo}' %}",
     errorArchivo:  "{% trans 'No se pudo generar el archivo.' %}",
+    errorDetalle:  "{% trans 'No se pudo generar el archivo: {motivo}' %}",
+    errorTiempo:   "{% trans 'La exportación tardó más de 2 minutos.' %}",
     eliminados:    "{% trans 'Se eliminaron {n} planes' %}",
     responsableOk: "{% trans 'Responsable guardado' %}",
     errorResp:     "{% trans 'No se pudo guardar el responsable.' %}",
@@ -1511,8 +1570,10 @@ window.PE_CFG = {
 };
 </script>
 <script src="{% static 'menu_app/js/page_size_toggle.js' %}"></script>
+<script src="{% static 'mto_app/js/plan_tarea.js' %}"></script>
 <script src="{% static 'mto_app/js/plan_escritorio.js' %}?v=1"></script>
 <script src="{% static 'mto_app/js/distribucion_ots.js' %}"></script>
+<script src="{% static 'mto_app/js/filter_select.js' %}"></script>
 {% if puede_ver_historial %}
 <script>
 window.HA_CFG = { url: "{% url 'mto:historial_acciones' %}", area: "{{ filtro_area }}" };
@@ -1521,7 +1582,6 @@ window.HA_I18N = {
     error:    "{% trans 'No se pudo cargar el historial.' %}"
 };
 </script>
-<script src="{% static 'mto_app/js/filter_select.js' %}"></script>
 <script src="{% static 'menu_app/js/date_range_picker.js' %}"></script>
 <script src="{% static 'mto_app/js/historial_acciones.js' %}"></script>
 {% endif %}

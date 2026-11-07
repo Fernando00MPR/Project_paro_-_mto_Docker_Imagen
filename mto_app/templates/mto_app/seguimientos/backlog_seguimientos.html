@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="{% static 'mto_app/css/filter_select.css' %}">
 <link rel="stylesheet" href="{% static 'mto_app/css/week_select.css' %}">
 <link rel="stylesheet" href="{% static 'mto_app/css/backlog_escritorio.css' %}">
+<link rel="stylesheet" href="{% static 'menu_app/css/page_size_toggle.css' %}">
 <link rel="stylesheet" href="{% static 'mto_app/css/backlog_movil.css' %}">
 {% endblock %}
 {% block content %}
@@ -135,6 +136,19 @@
                     </thead>
                     <tbody id="bkd-tbody"></tbody>
                 </table>
+            </div>
+            {% comment %} Paginación en el navegador (backlog_escritorio.js): la tabla ya trae todas las órdenes {% endcomment %}
+            <div class="bkd-pag-pie">
+                <span class="bkd-pag-txt" id="bkd-pag-txt"></span>
+                <div class="pst">
+                    <span class="pst-label" id="bkd-tam-lab">{% trans "Filas por página" %}</span>
+                    <div class="pst-riel" id="bkd-tam" role="radiogroup" aria-labelledby="bkd-tam-lab">
+                        <button type="button" class="pst-op" role="radio" data-value="10">10</button>
+                        <button type="button" class="pst-op" role="radio" data-value="25">25</button>
+                        <button type="button" class="pst-op" role="radio" data-value="50">50</button>
+                    </div>
+                </div>
+                <nav class="bkd-pag" id="bkd-pag" aria-label="{% trans 'Paginación' %}" hidden></nav>
             </div>
         </section>
     </div>
@@ -287,6 +301,11 @@ window.BACKLOG_ESCRITORIO = {
         ot:           "{% trans 'OT' %}",
         correctivo:   "{% trans 'Correctivo' %}",
         sinResultados:"{% trans 'Sin órdenes que coincidan' %}",
+        mostrando:    "{% trans 'Mostrando {a}–{b} de {n}' %}",
+        pagina:       "{% trans 'Página {n}' %}",
+        pagAnt:       "{% trans 'Página anterior' %}",
+        pagSig:       "{% trans 'Página siguiente' %}",
+
     },
 };
 </script>

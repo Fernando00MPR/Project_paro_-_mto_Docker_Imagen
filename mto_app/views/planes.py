@@ -22,10 +22,10 @@ from django.db.models import Count
 from django.http import HttpResponse
 from ..models import Area, PlanMantenimiento, RegistroEjecucion, Responsable, SeguimientoOT
 from django.urls import reverse
-from .utils import _planes_que_tocan, lunes_de_semana, INTERVALO, _frecuencia_desde_excel, _aplicar_orden_plan, _orden_por_plan_trabajo
+from .utils import _planes_que_tocan, lunes_de_semana, INTERVALO, _frecuencia_desde_excel, _aplicar_orden_plan, _orden_por_plan_trabajo, numeros_ot_semana
 
 
-CAPACIDAD_HORAS_PERSONA = 12   # referencia semanal por persona (el modal "Tiempo por persona")
+CAPACIDAD_HORAS_PERSONA = 24   # referencia semanal por persona (el modal "Tiempo por persona")
 
 
 def carga_por_persona(items):
@@ -105,10 +105,6 @@ def lista_plan(request):
 
     if area_id:
         planes = planes.filter(area_id=area_id)
-    if busqueda:
-        planes = (planes.filter(actividad__icontains=busqueda) |
-                planes.filter(codigo__icontains=busqueda) |
-                planes.filter(rutina__icontains=busqueda))
 
     planes = _aplicar_orden_plan(planes, request.GET)
     
@@ -144,9 +140,29 @@ def lista_plan(request):
         except Exception:
             lunes_busq_pre = None
 
+    # Buscador: el responsable es de la semana, por eso se filtra ya con sus registros cargados
+    if busqueda:
+        buscado = busqueda.lower()
+        def _coincide(p):
+            reg = registros_semana_pre.get(p.id)
+            textos = (p.actividad, p.codigo, p.rutina, reg.nombre_responsable() if reg else '')
+            return any(buscado in (t or '').lower() for t in textos)
+        planes_list = [p for p in planes_list if _coincide(p)]
+
+    # No. de OT igual que Exportar Excel: se numera con TODOS los planes activos del área esa semana
+    # (sin buscador ni frecuencia), así el número de cada OT no cambia al filtrar u ordenar la lista
+    numeros_ot = {}
+    if lunes_busq_pre:
+        base_ot = PlanMantenimiento.objects.select_related('area').filter(activo=True)
+        if area_id:
+            base_ot = base_ot.filter(area_id=area_id)
+        numeros_ot = numeros_ot_semana(list(base_ot), lunes_busq_pre)
+
+
     planes_con_datos = []
 
     for plan in planes_list:
+        plan.no_ot                 = numeros_ot.get(plan.id, '')   # '' = fuera de frecuencia (no sale en el Excel)
         plan.proximo               = None
         plan.semana_inicio_lunes   = None
         plan.semana_inicio_domingo = None
@@ -219,6 +235,7 @@ def lista_plan(request):
         for v, l in PlanMantenimiento.FRECUENCIA_CHOICES if conteo_frec.get(v, 0) or v == frecuencia
     ]
     total_sin_frec = len(planes_con_datos)
+    frec_elegida = next((f for f in frecuencias_conteo if f['valor'] == frecuencia), None)
     if frecuencia:
         planes_con_datos = [p for p in planes_con_datos if p.frecuencia == frecuencia]
 
@@ -344,28 +361,33 @@ def lista_plan(request):
     q_pag.pop('page', None)
 
     ctx = {
-        'planes':                planes_page,
-        'paginas':               paginas,
-        'qs_pag':                q_pag.urlencode(),
-        'anio_actual':           hoy.year,
-        'areas':                 areas_mto,
-        'areas_menu':            areas_mto,
-        'frecuencias':           PlanMantenimiento.FRECUENCIA_CHOICES,
-        'filtro_area':           area_id,
-        'filtro_frec':           frecuencia,
-        'filtro_semana':         filtro_semana,
-        'ver_todo':              ver_todo,
-        'puede_ver_historial':   puede_mto(request.user, 'ver_rutinas'),
+        'planes':                    planes_page,
+        'paginas':                   paginas,
+        'qs_pag':                    q_pag.urlencode(),
+        'anio_actual':               hoy.year,
+        'areas':                     areas_mto,
+        'areas_menu':                areas_mto,
+        'frecuencias':               PlanMantenimiento.FRECUENCIA_CHOICES,
+        # Modal "Nueva / Editar tarea" (plan/form.html)
+        'tarea_frecuencias':         [{'valor': v, 'label': l, 'semanas': INTERVALO.get(v, 1)} for v, l in PlanMantenimiento.FRECUENCIA_CHOICES],
+        'tipos_mto':                 PlanMantenimiento.TIPO_MTO_CHOICES,
+        'prioridades':               PlanMantenimiento.PRIORIDAD_CHOICES,
+        'status_opts':               PlanMantenimiento.STATUS_CHOICES,
+        'filtro_area':               area_id,
+        'filtro_frec':               frecuencia,
+        'filtro_semana':             filtro_semana,
+        'ver_todo':                  ver_todo,
+        'puede_ver_historial':       puede_mto(request.user, 'ver_rutinas'),
         'puede_ver_responsables':    puede_mto(request.user, 'ver_responsables'),
         'puede_editar_responsables': puede_mto(request.user, 'editar_responsables'),
-        'filtro_orden':          orden,
-        'busqueda':              busqueda,
-        'filtro_semana':         filtro_semana,
-        'filtro_anio':           anio_filtro,
-        'stats_semana':          stats_semana,
-        'per_page':              per_page,
-        'perpage_opts':          [10, 25, 50],
-        'usuarios':              User.objects.filter(is_active=True).order_by('first_name'),
+        'filtro_orden':              orden,
+        'busqueda':                  busqueda,
+        'filtro_semana':             filtro_semana,
+        'filtro_anio':               anio_filtro,
+        'stats_semana':              stats_semana,
+        'per_page':                  per_page,
+        'perpage_opts':              [10, 25, 50],
+        'usuarios':                  User.objects.filter(is_active=True).order_by('first_name'),
         'responsables_por_area': {
             str(a.pk): responsables_por_area_dict[a.id]
             for a in areas_mto
@@ -387,6 +409,7 @@ def lista_plan(request):
         ),
         'frecuencias_conteo':     frecuencias_conteo,
         'total_sin_frec':         total_sin_frec,
+        'frec_elegida':           frec_elegida,
         'indicadores':            indicadores,
         'carga_persona':          carga_persona,
         'area_nombre':            next((a.nombre for a in areas_mto if str(a.pk) == str(area_id)), ''),
@@ -407,71 +430,109 @@ def lista_plan(request):
     return render(request, 'mto_app/plan/lista.html', ctx)
 
 
+_LIMITES_TAREA = {'codigo': 50, 'rutina': 200, 'plan_trabajo': 100, 'actividad': 255, 'nombre_equipo': 200, 'locacion': 200}
+
+
+def _tarea_json(plan):
+    """Datos de una tarea para llenar el modal "Editar tarea"."""
+    return {
+        'pk': plan.pk, 'codigo': plan.codigo, 'rutina': plan.rutina, 'plan_trabajo': plan.plan_trabajo,
+        'actividad': plan.actividad or '', 'area': plan.area_id, 'nombre_equipo': plan.nombre_equipo,
+        'locacion': plan.locacion, 'tipo_mto': plan.tipo_mto, 'prioridad': plan.prioridad, 'estatus': plan.estatus,
+        'frecuencia': plan.frecuencia, 'semana_inicio': plan.semana_inicio, 'anio_inicio': plan.anio_inicio,
+        'duracion_minutos': plan.duracion_minutos, 'activo': plan.activo,
+    }
+
+
+def _guardar_tarea_ajax(request, plan):
+    """Modal "Nueva / Editar tarea": valida y guarda; responde JSON con los errores por campo."""
+    P = request.POST
+    errores = {}
+    datos = {c: P.get(c, '').strip() for c in _LIMITES_TAREA}
+    for campo, limite in _LIMITES_TAREA.items():
+        if campo != 'nombre_equipo' and not datos[campo]:
+            errores[campo] = _("Campo obligatorio")
+        elif len(datos[campo]) > limite:
+            errores[campo] = _("Máximo {n} caracteres").format(n=limite)
+
+    area = areas_permitidas_mto(request).filter(pk=P['area']).first() if P.get('area', '').isdigit() else None
+    if not area:
+        errores['area'] = _("Campo obligatorio")
+
+    frecuencia = P.get('frecuencia', '')
+    if frecuencia not in dict(PlanMantenimiento.FRECUENCIA_CHOICES):
+        errores['frecuencia'] = _("Elige una frecuencia")
+
+    semana = anio = None
+    try:
+        semana, anio = int(P.get('semana_inicio', '')), int(P.get('anio_inicio', ''))
+        if not 2000 <= anio <= 2100:
+            raise ValueError
+        lunes_de_semana(anio, semana)   # solo acepta S53 en los años que la tienen
+    except ValueError:
+        errores['semana_inicio'] = (_("Semana no válida para {anio}").format(anio=anio) if anio
+                                    else _("Elige la primera semana"))
+
+    try:
+        duracion = int(P.get('duracion_minutos', ''))
+        if not 0 < duracion <= 1440:
+            raise ValueError
+    except ValueError:
+        duracion = None
+        errores['duracion_minutos'] = _("Escribe los minutos (ej. 60)")
+
+    # El código se puede repetir en otras áreas, pero no dentro de la misma (igual que Importar Excel)
+    if area and datos['codigo'] and 'codigo' not in errores:
+        repetido = PlanMantenimiento.objects.filter(area=area, codigo=datos['codigo'])
+        if plan:
+            repetido = repetido.exclude(pk=plan.pk)
+        if repetido.exists():
+            errores['codigo'] = _("Ya existe una tarea con el código {x}").format(x=datos['codigo'])
+
+    if errores:
+        return JsonResponse({'ok': False, 'errores': errores}, status=400)
+
+    tipo, prioridad, estatus = P.get('tipo_mto'), P.get('prioridad'), P.get('estatus')
+    objeto = plan or PlanMantenimiento()
+    for campo, valor in datos.items():
+        setattr(objeto, campo, valor)
+    objeto.area, objeto.frecuencia, objeto.duracion_minutos = area, frecuencia, duracion
+    objeto.semana_inicio, objeto.anio_inicio = semana, anio
+    objeto.tipo_mto = tipo if tipo in dict(PlanMantenimiento.TIPO_MTO_CHOICES) else 'Preventivo'
+    objeto.prioridad = prioridad if prioridad in dict(PlanMantenimiento.PRIORIDAD_CHOICES) else 'Baja'
+    objeto.activo = P.get('activo') == '1'
+    if plan and estatus in dict(PlanMantenimiento.STATUS_CHOICES):   # al crear siempre nace Abierta (default)
+        objeto.estatus = estatus
+    objeto.save()
+    return JsonResponse({'ok': True, 'pk': objeto.pk, 'codigo': objeto.codigo})
+
+
 @login_required
 def form_plan(request, pk=None):
+    """Nueva / Editar tarea. El formulario es un modal de la lista del Plan (plan/form.html): por AJAX, GET da los
+    datos y POST guarda. La dirección normal lleva a la lista y el JS abre el modal con el fragmento (#nueva)."""
+    es_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
     if not puede_mto(request.user, 'editar_plan_mantenimiento'):
-        messages.error(request, _("No tienes permiso para editar planes de mantenimiento."))
+        msg = _("No tienes permiso para editar planes de mantenimiento.")
+        if es_ajax:
+            return JsonResponse({'ok': False, 'errores': {'general': msg}}, status=403)
+        messages.error(request, msg)
         return redirect('mto:lista_plan')
-    
-    plan  = get_object_or_404(PlanMantenimiento, pk=pk) if pk else None
-    areas = areas_permitidas_mto(request)
 
-    if request.method == 'POST':
-        try:
-            semana_inicio = request.POST.get('semana_inicio', '').strip() or None
-            anio_inicio   = request.POST.get('anio_inicio', '').strip() or None
-
-            datos = {
-                'area':             get_object_or_404(Area, pk=request.POST.get('area')),
-                'codigo':           request.POST.get('codigo', '').strip(),
-                'actividad':        request.POST.get('actividad', '').strip(),
-                'rutina':           request.POST.get('rutina', '').strip(),
-                'plan_trabajo':     request.POST.get('plan_trabajo', '').strip(),
-                'frecuencia':       request.POST.get('frecuencia', ''),
-                'duracion_minutos': int(request.POST.get('duracion_minutos', 60) or 60),
-                'semana_inicio':    int(semana_inicio) if semana_inicio else None,
-                'anio_inicio':      int(anio_inicio)   if anio_inicio   else None,
-                'nombre_equipo':    request.POST.get('nombre_equipo', '').strip(),
-                'locacion':         request.POST.get('locacion', '').strip(),
-                'tipo_mto':         request.POST.get('tipo_mto', 'Preventivo'),
-                'prioridad':        request.POST.get('prioridad', 'Baja'),
-                'estatus':          request.POST.get('estatus', 'Abierta'),
-                'activo':           'activo' in request.POST,
-            }
-
-            if not all([datos['codigo'], datos['actividad'], datos['locacion'], datos['rutina'], datos['frecuencia']]):
-
-                raise ValueError(_("Todos los campos marcados son obligatorios."))
-
-            if plan:
-                for k, v in datos.items():
-                    setattr(plan, k, v)
-                plan.save()
-                messages.success(request, _("Plan '{codigo}' actualizado.").format(codigo=plan.codigo))
-            else:
-                PlanMantenimiento.objects.create(**datos)
-                messages.success(request, _("Plan de mantenimiento creado."))
-            return redirect('mto:lista_plan')
-
-        except ValueError as e:
-            messages.error(request, str(e))
-        except Exception as e:
-            messages.error(request, _("Error al guardar: {error}").format(error=e))
-
-    ctx = {
-        'plan':             plan,
-        'areas':            areas,
-        'frecuencias':      PlanMantenimiento.FRECUENCIA_CHOICES,
-        'tipos_mto':        PlanMantenimiento.TIPO_MTO_CHOICES,
-        'prioridades':      PlanMantenimiento.PRIORIDAD_CHOICES,
-        'status_opts':      PlanMantenimiento.STATUS_CHOICES,
-        'tiene_registros':  plan.registros.exists() if plan else False,
-    }
-    return render(request, 'mto_app/plan/form.html', ctx)
+    plan = get_object_or_404(PlanMantenimiento, pk=pk) if pk else None
+    if es_ajax and request.method == 'POST':
+        return _guardar_tarea_ajax(request, plan)
+    if es_ajax and plan:
+        return JsonResponse(_tarea_json(plan))
+    return redirect(reverse('mto:lista_plan') + (f'#editar-{plan.pk}' if plan else '#nueva'))
 
 
 @login_required
 def eliminar_plan(request, pk):
+    if not puede_mto(request.user, 'eliminar_plan_mantenimiento'):
+        messages.error(request, _("No tienes permiso para eliminar planes de mantenimiento."))
+        return redirect('mto:lista_plan')
+    
     plan = get_object_or_404(PlanMantenimiento, pk=pk)
     if request.method == 'POST':
         try:

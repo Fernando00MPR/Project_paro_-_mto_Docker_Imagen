@@ -295,6 +295,62 @@
     const buscar = document.getElementById('bkd-q');
     const expo   = document.getElementById('bkd-exportar');
 
+    
+    // ── Paginación (en el navegador). Filas por página recordadas en localStorage ──
+    const TAMANOS = [10, 25, 50];
+    const pagNav  = document.getElementById('bkd-pag');
+    const pagTxt  = document.getElementById('bkd-pag-txt');
+    const tamOps  = [...document.querySelectorAll('#bkd-tam [role="radio"]')];
+    let pagina = 1, tam = 10;
+    try { const g = parseInt(localStorage.getItem('pageSize:backlog'), 10); if (TAMANOS.includes(g)) tam = g; } catch (e) { /* sin almacenamiento */ }
+    function pintarTam() {
+        tamOps.forEach(o => { const on = +o.dataset.value === tam; o.setAttribute('aria-checked', String(on)); o.tabIndex = on ? 0 : -1; });
+    }
+    function ponerTam(n) {
+        tam = n;
+        try { localStorage.setItem('pageSize:backlog', n); } catch (e) { /* sin almacenamiento */ }
+        pintarTam();
+        pintarTabla();   // vuelve a la página 1
+    }
+    tamOps.forEach((op, i) => {
+        op.addEventListener('click', () => ponerTam(+op.dataset.value));
+        op.addEventListener('keydown', e => {
+            const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+            if (!d) return;
+            e.preventDefault();
+            const sig = tamOps[(i + d + tamOps.length) % tamOps.length];
+            ponerTam(+sig.dataset.value);
+            sig.focus();
+        });
+    });
+    pintarTam();
+
+    // "Mostrando a–b de n" y botones ‹ 1 … 4 5 6 … 9 › (la primera, la última y las vecinas de la actual)
+    function pintarPaginas(n, paginas, ini, enPagina) {
+        pagTxt.textContent = n ? t('mostrando', { a: ini + 1, b: ini + enPagina, n: n }) : '';
+        const nums = [...new Set([1, paginas, pagina - 1, pagina, pagina + 1])].filter(x => x >= 1 && x <= paginas).sort((a, b) => a - b);
+        let h = `<button type="button" class="bkd-pag-b ant" data-p="${pagina - 1}"${pagina === 1 ? ' disabled' : ''} aria-label="${esc(t('pagAnt'))}">‹</button>`;
+        nums.forEach((x, i) => {
+            if (i && x - nums[i - 1] > 1) h += '<span class="bkd-pag-e" aria-hidden="true">…</span>';
+            h += x === pagina
+                ? `<span class="bkd-pag-b act" aria-current="page">${x}</span>`
+                : `<button type="button" class="bkd-pag-b" data-p="${x}" aria-label="${esc(t('pagina', { n: x }))}">${x}</button>`;
+        });
+        h += `<button type="button" class="bkd-pag-b sig" data-p="${pagina + 1}"${pagina === paginas ? ' disabled' : ''} aria-label="${esc(t('pagSig'))}">›</button>`;
+        pagNav.innerHTML = h;
+        pagNav.hidden = paginas <= 1;
+    }
+    pagNav.addEventListener('click', e => {
+        const b = e.target.closest('button[data-p]');
+        if (!b || b.disabled) return;
+        const flecha = b.classList.contains('ant') ? '.ant' : b.classList.contains('sig') ? '.sig' : null;
+        pagina = +b.dataset.p;
+        pintarTabla(true);
+        const f = flecha && pagNav.querySelector(flecha + ':not([disabled])');   // el foco se queda en la flecha
+        if (f) f.focus();
+    });
+
+
     const valor = (o, col) => col === 'semana' ? o.skey : o[col];
     function comparar(a, b) {
         const va = valor(a, estado.col), vb = valor(b, estado.col);
@@ -302,7 +358,7 @@
         return (estado.dir === 'asc' ? r : -r) || b.dias - a.dias;
     }
 
-    function pintarTabla() {
+        function pintarTabla(mantenerPagina) {   // sin argumento (cambió filtro, búsqueda u orden) vuelve a la página 1
         const q = estado.q.toLowerCase();
         const filas = porTipo()
             .filter(o => estado.resp === null || o.resp === estado.resp)
@@ -311,8 +367,13 @@
         const conResp = estado.resp === null;
         thResp.hidden = !conResp;
         quien.textContent = conResp ? t('todos') : estado.resp;
+        
+        if (!mantenerPagina) pagina = 1;
+        const paginas = Math.max(1, Math.ceil(filas.length / tam));
+        pagina = Math.min(pagina, paginas);
+        const ini = (pagina - 1) * tam, vista = filas.slice(ini, ini + tam);
 
-        tbody.innerHTML = filas.length ? filas.map(o => {
+        tbody.innerHTML = vista.length ? vista.map(o => {
             const folio = o.url
                 ? `<a class="folio" href="${esc(o.url)}">${esc(o.folio || '—')}</a>`
                 : `<span class="folio">${esc(o.folio || '—')}</span>`;
@@ -326,7 +387,8 @@
                 <td class="der"><span class="bkd-atraso ${rango(o.dias)}">${esc(o.dias === 1 ? t('unDia') : t('dias', { n: o.dias }))}</span></td>
             </tr>`;
         }).join('') : `<tr><td class="sin" colspan="${conResp ? 7 : 6}">${esc(t('sinResultados'))}</td></tr>`;
-
+        
+        pintarPaginas(filas.length, paginas, ini, vista.length);
         // Exportar = lo mismo que se ve: Área y Semana de la URL + tipo, responsable y búsqueda.
         const p = new URLSearchParams(location.search);
         ['tipo', 'resp', 'q'].forEach(k => p.delete(k));

@@ -18,12 +18,63 @@ import tempfile
 import re
 import html
 import zipfile
+import logging
+import json
+import time
+
+
+logger = logging.getLogger(__name__)
 
 from ..models import PlanMantenimiento, RegistroEjecucion, PasoRutina, Responsable
 from .utils import lunes_de_semana, _planes_que_tocan
 
-# token → {'status': 'pending'|'ready'|'error', 'path': str, 'filename': str, 'error': str}
-_jobs: dict = {}
+
+# Estado de cada exportación de la semana en un archivo JSON de la carpeta temporal, junto a su Excel:
+# con gunicorn --workers 3 el proceso que inicia el Excel no siempre es el que atiende "¿ya está?" ni la
+# descarga, y la memoria no se comparte entre procesos; la carpeta temporal sí.
+# Estado: {'status': 'pending'|'ready'|'error', 'path': str, 'filename': str, 'error': str, 'pid': int}
+_DIR_TRABAJOS = os.path.join(tempfile.gettempdir(), 'exportar_semana')
+_RE_TOKEN = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+
+
+def _ruta_trabajo(token):
+    """Archivo de estado del trabajo (None si el token no tiene forma de uuid: no se arma ninguna ruta con él)."""
+    return os.path.join(_DIR_TRABAJOS, token + '.json') if _RE_TOKEN.match(token or '') else None
+
+
+def _guardar_trabajo(token, datos):
+    """Escribe el estado de forma atómica: los otros procesos nunca leen un archivo a medias."""
+    os.makedirs(_DIR_TRABAJOS, exist_ok=True)
+    ruta = _ruta_trabajo(token)
+    with open(ruta + '.tmp', 'w', encoding='utf-8') as f:
+        json.dump(datos, f)
+    os.replace(ruta + '.tmp', ruta)
+
+
+def _leer_trabajo(token):
+    ruta = _ruta_trabajo(token)
+    try:
+        with open(ruta, encoding='utf-8') as f:
+            return json.load(f)
+    except (TypeError, OSError, ValueError):
+        return None
+
+
+def _limpiar_trabajos(horas=6):
+    """Borra estados y Excel de trabajos viejos que nadie descargó."""
+    limite = time.time() - horas * 3600
+    try:
+        nombres = os.listdir(_DIR_TRABAJOS)
+    except OSError:
+        return
+    for n in nombres:
+        ruta = os.path.join(_DIR_TRABAJOS, n)
+        try:
+            if os.path.getmtime(ruta) < limite:
+                os.unlink(ruta)
+        except OSError:
+            pass
+
 
 MESES_ES = {
     1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
@@ -84,7 +135,8 @@ def _poner_iconos(path, ext_xml, hojas):
 
 
 def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir):
-    """Genera el Excel en background y guarda el resultado en _jobs."""
+    """Genera el Excel en background y deja el resultado en su archivo de estado (_guardar_trabajo)."""
+
     try:
         domingo    = lunes + timedelta(days=6)
         ultimo_dia = domingo.day
@@ -253,7 +305,8 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
             None
         )
         if not hoja_base_nombre:
-            _jobs[token] = {'status': 'error', 'error': 'La plantilla no tiene hojas de órdenes.'}
+            logger.error("Exportar semana %s/%s (trabajo %s): la plantilla no tiene hojas de órdenes", semana, anio, token)
+            _guardar_trabajo(token, {'status': 'error', 'error': _("La plantilla no tiene hojas de órdenes.")})
             return
 
         hoja_base = wb[hoja_base_nombre]
@@ -378,19 +431,22 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
             ws.page_setup.fitToHeight = 0
             ws.page_setup.scale       = 100
 
-        tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsm')
-        wb.save(tmp)
-        tmp.close()
-        _poner_iconos(tmp.name, ext_iconos, [h.title for h in hojas_ordenes])
+        archivo = os.path.join(_DIR_TRABAJOS, token + '.xlsm')   # en la carpeta compartida por los procesos
+        wb.save(archivo)
+        _poner_iconos(archivo, ext_iconos, [h.title for h in hojas_ordenes])
 
-        _jobs[token] = {
+        _guardar_trabajo(token, {
             'status':   'ready',
-            'path':     tmp.name,
+            'path':     archivo,
             'filename': f"OTs_Semana_{semana}_{anio}.xlsm",
-        }
+        })
+
 
     except Exception as e:
-        _jobs[token] = {'status': 'error', 'error': str(e)}
+        logger.exception("Exportar semana %s/%s (trabajo %s): falló la generación", semana, anio, token)   # con traceback
+        _guardar_trabajo(token, {'status': 'error', 'error': '%s: %s' % (type(e).__name__, e)})
+
+
 
 
 @login_required
@@ -407,14 +463,17 @@ def exportar_semana_excel(request):
 
     if not planes_semana:
         return JsonResponse(
-            {'error': f'No hay planes para la semana {semana}/{anio}.'},
+            {'error': _("No hay planes para la semana {semana}/{anio}.").format(semana=semana, anio=anio)},
             status=404
         )
 
     creador    = request.user.get_full_name() or request.user.username
     static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'static', 'mto_app')
     token      = str(uuid.uuid4())
-    _jobs[token] = {'status': 'pending'}
+
+    _limpiar_trabajos()
+    _guardar_trabajo(token, {'status': 'pending', 'pid': os.getpid()})
+
 
     threading.Thread(
         target=_run_exportar,
@@ -427,14 +486,21 @@ def exportar_semana_excel(request):
 
 @login_required
 def exportar_semana_status(request, token):
-    job = _jobs.get(token, {'status': 'error', 'error': 'Token no encontrado'})
+    job = _leer_trabajo(token)
+    if job is None:   # no hay archivo de estado: token inválido, ya se descargó o se borró por viejo
+        logger.error("Exportar semana: no existe el estado del trabajo %s (pid %s)", token, os.getpid())
+        job = {'status': 'error', 'error': _("No se encontró la exportación; vuelve a intentarlo.")}
+
     return JsonResponse({'status': job['status'], 'error': job.get('error', '')})
 
 
 @login_required
 def exportar_semana_download(request, token):
-    job = _jobs.pop(token, None)
+    job = _leer_trabajo(token)
+    
     if not job or job['status'] != 'ready':
+        logger.error("Exportar semana: descarga del trabajo %s no disponible en este proceso (pid %s): %s",
+                     token, os.getpid(), job and job.get('status'))
         messages.error(request, _('Archivo no disponible o aún generándose.'))
         return redirect('mto:lista_plan')
 
@@ -442,7 +508,11 @@ def exportar_semana_download(request, token):
     filename = job['filename']
     with open(path, 'rb') as f:
         content = f.read()
-    os.unlink(path)
+    for r in (path, _ruta_trabajo(token)):   # ya se entregó: se borran el Excel y su estado
+        try:
+            os.unlink(r)
+        except OSError:
+            pass
 
     response = HttpResponse(
         content,

@@ -9,7 +9,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.clickjacking import xframe_options_exempt
 
 from login_app.permisos import puede_mto
-from .utils import lunes_de_semana, puede_asignar_responsable
+from .utils import lunes_de_semana, puede_asignar_responsable, numeros_ot_semana
 from ..models import ImagenRegistro, PlanMantenimiento, RegistroEjecucion, Responsable
 
 MAX_FOTOS = 4
@@ -240,6 +240,10 @@ def registro_ejecucion(request, plan_pk, semana, anio):
         ''')
 
     hoy = date.today()
+    # No. de OT de esta semana: el mismo que la columna "No. OT" del Plan, el Backlog y el Excel
+    # ('' si la semana no calza con la frecuencia o el plan está inactivo: no sale en el Excel)
+    planes_area = list(PlanMantenimiento.objects.select_related('area').filter(activo=True, area=plan.area))
+    no_ot = numeros_ot_semana(planes_area, lunes).get(plan.pk, '')
 
     def _persona(r):
         return {'id': r.pk, 'nombre': f'{r.nombre} {r.apellidos}'.strip(), 'nomina': r.nomina_visible(),
@@ -293,6 +297,7 @@ def registro_ejecucion(request, plan_pk, semana, anio):
         'anio':          anio,
         'lunes':         lunes,
         'domingo':       lunes + timedelta(days=6),
+        'no_ot':         no_ot,
         'registro':      registro,
         'responsables':  responsables,
         'estados':       RegistroEjecucion.ESTADO_CHOICES,

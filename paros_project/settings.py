@@ -165,9 +165,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        # Hora y proceso: con gunicorn --workers 3 permite ver qué proceso atendió cada petición
+        'detalle': {'format': '%(asctime)s [pid %(process)d] %(levelname)s %(name)s: %(message)s'},
+    },
     'handlers': {
         'console': {
-            'class': 'logging.StreamHandler',
+            'class':     'logging.StreamHandler',
+            'formatter': 'detalle',
         },
     },
     'root': {

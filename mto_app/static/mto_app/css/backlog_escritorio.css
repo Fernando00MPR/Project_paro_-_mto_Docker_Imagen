@@ -230,6 +230,19 @@
 .bkd-buscar input:focus { outline: none; }
 
 .bkd-tabla-scroll { overflow-x: auto; }
+/* Pie de la tabla: "Mostrando a–b de n", filas por página y páginas */
+.bkd-pag-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 18px; }
+.bkd-pag-txt { font-size: 13px; color: var(--bkd-muted); }
+.bkd-pag-pie .pst { margin-left: auto; }
+.bkd-pag { display: flex; align-items: center; gap: 4px; }
+.bkd-pag[hidden] { display: none; }
+.bkd-pag-b { min-width: 32px; height: 32px; padding: 0 8px; border: 1px solid var(--bkd-borde); border-radius: 8px; background: var(--white); color: var(--text); font: inherit; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.bkd-pag-b:hover:not(:disabled):not(.act) { border-color: var(--bkd-azul-bd); color: var(--bkd-azul-txt); }
+.bkd-pag-b.act { background: var(--bkd-azul); border-color: var(--bkd-azul); color: #fff; font-weight: 600; cursor: default; }
+.bkd-pag-b:disabled { opacity: .4; cursor: default; }
+.bkd-pag-b:focus-visible { outline: 2px solid var(--bkd-azul); outline-offset: 2px; }
+.bkd-pag-e { padding: 0 2px; color: var(--bkd-muted); }
+
 /* base_menu fija table-layout:fixed para todas las tablas; aquí las columnas se ajustan al contenido. */
 .bkd-tabla { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
 .bkd-tabla th {

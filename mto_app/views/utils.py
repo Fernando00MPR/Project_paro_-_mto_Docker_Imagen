@@ -67,6 +67,17 @@ def _planes_que_tocan(planes, lunes):
     return resultado
 
 
+def numero_ot(lunes, consecutivo):
+    """No. de OT como en el Excel de la semana: semana ISO + mes y año del lunes + 100 + consecutivo (101, 102…)."""
+    return f"{lunes.isocalendar()[1]:02d}{lunes.strftime('%m')}{lunes.strftime('%y')}{100 + consecutivo}"
+
+
+def numeros_ot_semana(planes, lunes):
+    """{plan_id: No. de OT} de los planes que tocan esa semana, numerados en el orden en que vienen (el del
+    modelo: área, locación, actividad y código), igual que Exportar Excel."""
+    return {p.id: numero_ot(lunes, i) for i, p in enumerate(_planes_que_tocan(planes, lunes), start=1)}
+
+
 def _frecuencia_desde_excel(valor):
     """Convierte frecuencia del Excel (16S, 4S, 2M...) al choice del modelo."""
     if not valor:

@@ -13,9 +13,9 @@
     const lang = (document.documentElement.lang || 'es').slice(0, 2);
     const mes = d => new Intl.DateTimeFormat(lang, { month: 'short', timeZone: 'UTC' }).format(d).replace('.', '');
 
-    function avisar(msg) {
-        if (typeof window.showToast === 'function') window.showToast(msg);
-        else if (typeof window.mostrarToast === 'function') window.mostrarToast(msg);
+    function avisar(msg, tipo) {
+        if (typeof window.showToast === 'function') window.showToast(msg, tipo);
+        else if (typeof window.mostrarToast === 'function') window.mostrarToast(msg, tipo);
     }
     try {   // avisos que sobreviven a una recarga (asignar responsable, eliminar todos)
         const pend = sessionStorage.getItem('pe-toast');
@@ -87,6 +87,10 @@
         else ir({ todo: '1', semana: '', anio: '', resp: ''});
     });
 
+    // Limpiar filtros: misma semana y área, sin frecuencia, búsqueda ni orden por columna
+    const btnLimpiar = $('pe-limpiar');
+    if (btnLimpiar) btnLimpiar.addEventListener('click', () => ir({ frecuencia: '', q: '', orden: '' }));
+
     let anioPop = anio;
     // Nº de OTs por semana (globo de cada semana): se piden por año y se guardan
     const conteos = {};
@@ -147,19 +151,18 @@
         if (d) { e.preventDefault(); const j = Math.min(g.length - 1, Math.max(0, i + d)); g[j].focus(); }
     });
 
-    // ── Frecuencia (control segmentado) ─────────────────────────────────────
-    const seg = $('pe-frec'), ops = Array.from(seg.querySelectorAll('[role="radio"]'));
-    ops.forEach((op, i) => {
-        op.tabIndex = op.getAttribute('aria-checked') === 'true' ? 0 : -1;
-        op.addEventListener('click', () => { if (op.getAttribute('aria-checked') !== 'true') ir({ frecuencia: op.dataset.frec }); });
-        op.addEventListener('keydown', e => {
-            const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-            if (!d) return;
-            e.preventDefault();
-            ops[(i + d + ops.length) % ops.length].click();
-        });
+    // ── Frecuencia (menú desplegable; teclado y ARIA en filter_select.js) ───
+    const frec = $('pe-frec');
+    frec.addEventListener('fs:cambio', e => {
+        try { sessionStorage.setItem('pe-foco-frec', '1'); } catch (er) { /* sin storage */ }
+        ir({ frecuencia: e.detail.value });
     });
-    if (!ops.some(o => o.tabIndex === 0)) ops[0].tabIndex = 0;
+    try {   // la página se recarga al filtrar: el foco regresa al botón
+        if (sessionStorage.getItem('pe-foco-frec')) {
+            sessionStorage.removeItem('pe-foco-frec');
+            frec.querySelector('.fs-btn').focus({ preventScroll: true });
+        }
+    } catch (er) { /* sin storage */ }
 
     // ── Búsqueda (debounce 250 ms; vive en la URL) ──────────────────────────
     const q = $('pe-q'); let tq;
@@ -185,7 +188,9 @@
     async function bajar(url, def) {
         const r = await fetch(url, { credentials: 'same-origin' });
         const ct = r.headers.get('Content-Type') || '';
-        if (!r.ok || ct.indexOf('text/html') === 0 || ct.indexOf('json') !== -1) throw new Error('descarga');
+        if (!r.ok || ct.indexOf('text/html') === 0 || ct.indexOf('json') !== -1)
+            throw new Error('HTTP ' + r.status + ' · ' + (ct.split(';')[0] || '?'));   // ej. "HTTP 200 · text/html" = redirigió a una página
+
         const nombre = nombreDe(r, def), blob = await r.blob();
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob); a.download = nombre;
@@ -199,7 +204,10 @@
         btn.setAttribute('aria-busy', 'true');
         if (ico) ico.outerHTML = '<span class="pe-giro" aria-hidden="true"></span>';
         try { avisar(fmt(I.descargado, { archivo: await tarea() })); }
-        catch (e) { avisar(I.errorArchivo); }
+        catch (e) {
+            console.error('Exportar:', e);   // detalle completo en la consola (F12)
+            avisar(e && e.message ? fmt(I.errorDetalle, { motivo: e.message }) : I.errorArchivo, 'error');
+        }
         finally {
             btn.removeAttribute('aria-busy');
             const g = btn.querySelector('.pe-giro'); if (g && html) g.outerHTML = html;
@@ -221,13 +229,13 @@
             if (st.status === 'ready') return bajar(base + '/download/' + d.token + '/', 'semana_' + semana + '.xlsm');
             if (st.status === 'error') throw new Error(st.error);
         }
-        throw new Error('tiempo');
+        throw new Error(I.errorTiempo);
     }));
 
     // ── Selector de columnas ────────────────────────────────────────────────
-    const COLS = ['col-rutina', 'col-actividad', 'col-plan', 'col-duracion', 'col-frecuencia', 'col-sinicio', 'col-proximo',
+    const COLS = ['col-ot', 'col-rutina', 'col-actividad', 'col-plan', 'col-duracion', 'col-frecuencia', 'col-sinicio', 'col-proximo',
                   'col-resp', 'col-area', 'col-nombre-equipo', 'col-locacion', 'col-tipo', 'col-prioridad', 'col-estatus'];
-    const VISIBLES = ['col-rutina', 'col-actividad', 'col-plan', 'col-duracion', 'col-frecuencia', 'col-proximo', 'col-resp'];
+    const VISIBLES = ['col-ot', 'col-rutina', 'col-actividad', 'col-plan', 'col-duracion', 'col-frecuencia', 'col-proximo', 'col-resp'];
     const tabla = raiz.querySelector('.pe-tabla'), picker = $('col-picker'), btnCols = $('pe-cols-btn');
     let prefs = {};
     try { prefs = JSON.parse(localStorage.getItem('pe_cols') || '{}') || {}; } catch (e) { prefs = {}; }
