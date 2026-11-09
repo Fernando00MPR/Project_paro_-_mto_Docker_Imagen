@@ -15,9 +15,9 @@ function previsualizarImagenes(input) {
 
     if (nuevos.length > disponibles) {
         const i18n = window.CREAR_PARO_I18N || {};
-        const msg = i18n.maxImagenes || 'Máximo {max} imágenes. Solo puedes agregar {disponibles} más.';
-
-        showToast(msg.replace('{max}', MAX_IMGS).replace('{disponibles}', disponibles), 'warning');
+        const msg = i18n.maxImagenes || 'Solo puedes agregar {disponibles} más (máximo {max})';
+        showToast({ title: i18n.maxImagenesTit || 'Límite de fotos',
+                    description: msg.replace('{max}', MAX_IMGS).replace('{disponibles}', disponibles) }, 'warning');
         input.value = '';
         return;
     }
@@ -127,7 +127,8 @@ function _renderPreviews() {
     // navegador), así que se revisa directo el valor que se va a enviar.
     hiddenFecha.closest('form').addEventListener('submit', function (e) {
         if (!hiddenFecha.value) {
-            alert('Selecciona una fecha.');
+            const tx = window.CREAR_PARO_I18N || {};
+            showToast({ title: tx.faltaFecha || 'Falta la fecha', description: tx.selecFecha || 'Selecciona una fecha' }, 'warning');
             e.preventDefault();
             return;
         }

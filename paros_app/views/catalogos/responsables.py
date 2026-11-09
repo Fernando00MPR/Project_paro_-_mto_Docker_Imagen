@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
+from menu_app.avisos import aviso
 
 from ...models import Area, CatalogoResponsable
 from ...views.utils import _excel_response, _estilo_cabecera, _nombre_bilingue
@@ -55,7 +56,7 @@ def catalogo_responsables_general(request):
 def limpiar_responsables_area(request, area_id):
     area = get_object_or_404(Area, id=area_id)
     CatalogoResponsable.objects.filter(area=area).delete()
-    messages.success(request, _("Catálogo de responsables de '{area}' eliminado.").format(area=area.nombre))
+    messages.success(request, aviso(_("Catálogo eliminado"), _("Responsables de {area}").format(area=area.nombre)))
     return redirect('paros:catalogo_responsables')
 
 
@@ -302,9 +303,9 @@ def agregar_responsables(request, area_id):
         resp_es     = request.POST.get('responsable_es', '').strip()
         resp_en     = request.POST.get('responsable_en', '').strip()
         if not codigo or not resp_es:
-            messages.error(request, _("Código y responsable en español son obligatorios."))
+            messages.error(request, aviso(_("Faltan datos"), _("El código y el responsable en español son obligatorios")))
         elif CatalogoResponsable.objects.filter(area=area, codigo=codigo).exists():
-            messages.error(request, _("Ya existe un responsable con el código '{codigo}' en esta área.").format(codigo=codigo))
+            messages.error(request, aviso(_("Código repetido"), _("Ya existe un responsable con el código '{codigo}' en esta área").format(codigo=codigo)))
         else:
             CatalogoResponsable.objects.create(
                 area=area, codigo=codigo,
@@ -312,7 +313,7 @@ def agregar_responsables(request, area_id):
                 responsable_es=resp_es,
                 responsable_en=resp_en,
             )
-            messages.success(request, _("Responsable '{resp}' agregado correctamente.").format(resp=_nombre_bilingue(resp_es, resp_en)))
+            messages.success(request, aviso(_("Responsable agregado"), _nombre_bilingue(resp_es, resp_en)))
     return redirect('paros:catalogo_responsables')
 
 @login_required
@@ -324,14 +325,14 @@ def editar_responsable(request, responsable_id):
         resp_es = request.POST.get('responsable_es', '').strip()
         resp_en = request.POST.get('responsable_en', '').strip()
         if not codigo or not resp_es:
-            messages.error(request, _("Código y responsable en español son obligatorios."))
+            messages.error(request, aviso(_("Faltan datos"), _("El código y el responsable en español son obligatorios")))
         elif CatalogoResponsable.objects.filter(area=resp.area, codigo=codigo).exclude(id=resp.id).exists():
-            messages.error(request, _("Ya existe un responsable con el código '{codigo}'.").format(codigo=codigo))
+            messages.error(request, aviso(_("Código repetido"), _("Ya existe un responsable con el código '{codigo}'").format(codigo=codigo)))
         else:
             resp.codigo          = codigo
             resp.responsable     = resp_es
             resp.responsable_es  = resp_es
             resp.responsable_en  = resp_en
             resp.save()
-            messages.success(request, _("Responsable '{resp}' actualizado correctamente.").format(resp=_nombre_bilingue(resp_es, resp_en)))
+            messages.success(request, aviso(_("Responsable actualizado"), _nombre_bilingue(resp_es, resp_en)))
     return redirect('paros:catalogo_responsables')

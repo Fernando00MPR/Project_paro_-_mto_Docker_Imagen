@@ -64,7 +64,7 @@
             sel = elegir || (a === hoy.anio ? hoy.semana : S.reduce((m, s) => (s.t > m.t ? s : m), S[0]).s);
             pintarResumen(); pintarGraf(); pintarDetalle();
         } catch (e) {
-            if (mio === pedido && typeof window.showToast === 'function') window.showToast(T.error, 'error');
+            if (mio === pedido && typeof window.showToast === 'function') window.showToast({ title: T.error, description: window.TXT_REVISA_CONEXION }, 'error');
         } finally {
             if (mio === pedido) $('dot-cuerpo').classList.remove('cargando');
         }

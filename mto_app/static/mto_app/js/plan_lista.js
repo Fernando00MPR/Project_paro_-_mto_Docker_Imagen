@@ -53,8 +53,21 @@ window.addEventListener('message', function(e) {
 
 // ── Modal eliminar ────────────────────────────────────────────────────────────
 function confirmarEliminar(url) {
+    const modal = document.getElementById('modal-eliminar'), det = document.getElementById('modal-eliminar-detalle');
+    
     document.getElementById('form-eliminar').action = url;
-    document.getElementById('modal-eliminar').style.display = 'flex';
+    det.hidden = true; det.textContent = '';
+    modal.style.display = 'flex';
+    // Cuánto historial se borra junto con la tarea (planes.eliminar_plan por AJAX): se avisa antes de confirmar
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => {
+            if (!d || !d.registros) return;
+            det.textContent = modal.dataset.txtHistorial.replace('{r}', d.registros).replace('{f}', d.fotos)
+                .replace('{s}', d.seguimientos).replace('{fs}', d.fotos_seg);
+            det.hidden = false;
+        })
+        .catch(() => {});
 }
 
 function cerrarModalEliminar() {
@@ -65,12 +78,9 @@ document.getElementById('modal-eliminar').addEventListener('click', function(e) 
     if (e.target === this) cerrarModalEliminar();
 });
 
-function mostrarToast(msg) {
-    const toast = document.getElementById('toast-global');
-    toast.textContent = msg;
-    toast.style.display = 'flex';
-    clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 2000);
+// Avisos del Plan (los usa plan_movil.js): el componente común de base_menu.html.
+function mostrarToast(msg, tipo) {
+    if (typeof window.showToast === 'function') window.showToast(msg, tipo || 'success');
 }
 
 // ── Abrir directo una tarea (?abrir=<pk>), p. ej. desde el Backlog ─────────────

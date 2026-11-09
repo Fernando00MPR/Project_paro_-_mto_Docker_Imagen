@@ -1,7 +1,7 @@
 /* seguimientos_escritorio.js — Lista y modal Nuevo/Editar de "Seguimientos correctivos"
    (escritorio). El celular usa seguimientos_movil.js y no depende de este archivo.
    Requiere (definidos en el template): CSRF_SM, AREA_ID_SM, URL_SM_ADD, URL_SM_EDIT,
-   URL_SM_DEL, SM_MAX_IMAGENES, SM_LIMITE_IMAGENES_TPL, SM_ERROR_TPL, SM_ERROR_CONEXION,
+   URL_SM_DEL, SM_LIMITE_FOTOS, SM_MAX_IMAGENES, SM_LIMITE_IMAGENES_TPL, SM_ERROR_GUARDAR, SM_ERROR_ELIMINAR,
    window.SGE_I18N, y el visor de lista_seguimientos.js (lightbox). */
 (function () {
     const $ = id => document.getElementById(id);
@@ -223,7 +223,7 @@
             url.searchParams.set('formato', formato);
             url.searchParams.set('alcance', alcance);
             btn.disabled = true; btn.setAttribute('aria-busy', 'true'); txt.textContent = t('descargando');
-            const aviso = setTimeout(() => showToast(t('preparando'), 'warning'), 400);
+            const aviso = setTimeout(() => showToast(t('preparando'), 'info'), 400);
             try {
                 const r = await fetch(url, { credentials: 'same-origin' });
                 if (!r.ok) throw new Error('http ' + r.status);
@@ -235,9 +235,9 @@
                 a.download = m ? m[1] : 'seguimientos.' + formato;
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-                showToast(t('descargados', { n }), 'success');
+                showToast({ title: t('descargados'), description: t('descargadosDet', { n }) }, 'success');
             } catch (e) {
-                showToast(t('errorDescarga'), 'error');
+                showToast({ title: t('errorDescarga'), description: window.TXT_REVISA_CONEXION }, 'error');
             } finally {
                 clearTimeout(aviso);
                 btn.disabled = false; btn.removeAttribute('aria-busy'); txt.textContent = textoBoton;
@@ -246,15 +246,16 @@
     })();
 
     window.toggleValidadoManual = function (id, btn) {
-        if (btn.getAttribute('aria-disabled') === 'true') { showToast(t('noValidable'), 'warning'); return; }
+        if (btn.getAttribute('aria-disabled') === 'true') { showToast({ title: t('noValidableTit'), description: t('noValidable') }, 'warning'); return; }
         fetch(`/mto/seguimiento/validar-manual/${id}/`, { method: 'POST', headers: { 'X-CSRFToken': CSRF_SM } })
             .then(r => r.json())
             .then(data => {
-                if (!data.ok) { showToast(data.error || t('errorDescarga'), 'error'); return;};
+                if (!data.ok) { showToast({ title: t('errorValidar'), description: data.error || window.TXT_REVISA_CONEXION }, 'error'); return; }
                 btn.classList.toggle('ok', !!data.validado);
                 btn.querySelector('span').textContent = data.validado ? t('validado') : t('porValidar');
                 btn.querySelector('path').setAttribute('d', data.validado ? 'm5 12 5 5 9-10' : 'M12 7v5l3 2');
-            });
+            })
+            .catch(() => showToast({ title: t('errorValidar'), description: window.TXT_REVISA_CONEXION }, 'error'));
     };
 
     window.verFotosFila = function (event, id) {
@@ -398,7 +399,7 @@
         fetch(`/mto/bitacora/buscar-responsables/?q=${encodeURIComponent(q)}&area_id=${encodeURIComponent(AREA_ID_SM || '')}`)
             .then(r => r.json())
             .then(items => { if (mio === rPedido) { rItems = items; pintarLista(q); } })
-            .catch(() => { if (mio === rPedido && typeof showToast === 'function') showToast(t('errorBuscar'), 'error'); });
+            .catch(() => { if (mio === rPedido && typeof showToast === 'function') showToast({ title: t('errorBuscar'), description: window.TXT_REVISA_CONEXION }, 'error'); });
     }
     rInput.addEventListener('input', () => {
         clearTimeout(rTimer);
@@ -465,13 +466,13 @@
         if (!st) return;
         const validos = [];
         archivos.forEach(f => {
-            if (f.type !== 'image/jpeg' && f.type !== 'image/png') { showToast(t('tipoImg'), 'warning'); return; }
-            if (f.size > 5 * 1024 * 1024) { showToast(t('tamImg'), 'warning'); return; }
+            if (f.type !== 'image/jpeg' && f.type !== 'image/png') { showToast({ title: t('fotoNoValida'), description: t('tipoImg') }, 'warning'); return; }
+            if (f.size > 5 * 1024 * 1024) { showToast({ title: t('fotoPesada'), description: t('tamImg') }, 'warning'); return; }
             validos.push(f);
         });
         const disponibles = 4 - (visibles().length + st.nuevas.length);
-        if (disponibles <= 0) { if (validos.length) showToast(SM_MAX_IMAGENES, 'warning'); return; }
-        if (validos.length > disponibles) showToast(SM_LIMITE_IMAGENES_TPL.replace('{n}', disponibles), 'warning');
+        if (disponibles <= 0) { if (validos.length) showToast({ title: SM_LIMITE_FOTOS, description: SM_MAX_IMAGENES }, 'warning'); return; }
+        if (validos.length > disponibles) showToast({ title: SM_LIMITE_FOTOS, description: SM_LIMITE_IMAGENES_TPL.replace('{n}', disponibles) }, 'warning');
         validos.slice(0, disponibles).forEach(f => st.nuevas.push({ file: f, url: URL.createObjectURL(f) }));
         pintarImagenes();
     }
@@ -591,7 +592,7 @@
                 }),
             });
             const data = await r.json();
-            if (!data.ok) { showToast(SM_ERROR_TPL.replace('{error}', data.error), 'error'); btn.disabled = false; btn.textContent = t(editar ? 'guardar' : 'crear'); return; }
+            if (!data.ok) { showToast({ title: SM_ERROR_GUARDAR, description: data.error || window.TXT_REVISA_CONEXION }, 'error'); btn.disabled = false; btn.textContent = t(editar ? 'guardar' : 'crear'); return; }
             const segId = data.id;
             if (st.nuevas.length) {
                 const fd = new FormData();
@@ -605,7 +606,7 @@
             st.inicial = valores();       // ya se guardó: no pedir confirmación al cerrar
             window.location.reload();
         } catch (e) {
-            showToast(SM_ERROR_CONEXION, 'error');
+            showToast({ title: SM_ERROR_GUARDAR, description: window.TXT_REVISA_CONEXION }, 'error');
             btn.disabled = false; btn.textContent = t(editar ? 'guardar' : 'crear');
         }
     }
@@ -631,12 +632,12 @@
         fetch(`${URL_SM_DEL}${id}/`, { method: 'POST', headers: { 'X-CSRFToken': CSRF_SM } })
             .then(r => r.json())
             .then(data => {
-                if (!data.ok) return;
+                if (!data.ok) { showToast({ title: SM_ERROR_ELIMINAR, description: data.error || window.TXT_REVISA_CONEXION }, 'error'); return; }
                 guardarAviso(t('eliminadoToast', { orden }), '');
                 if (st) st.inicial = valores();
                 window.location.reload();
             })
-            .catch(() => showToast(SM_ERROR_CONEXION, 'error'));
+            .catch(() => showToast({ title: SM_ERROR_ELIMINAR, description: window.TXT_REVISA_CONEXION }, 'error'));
     };
     $('modal-confirm-del').addEventListener('mousedown', e => { if (e.target === $('modal-confirm-del')) window.cerrarModalDel(); });
 

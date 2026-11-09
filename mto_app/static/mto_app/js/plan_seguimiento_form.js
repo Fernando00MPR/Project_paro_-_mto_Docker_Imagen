@@ -347,7 +347,7 @@
             if (nuevas.length) {
                 const fd = new FormData();
                 nuevas.forEach(f => fd.append('imagenes', f.file, f.file.name));
-                try { await post('/mto/seguimiento/ot/' + data.id + '/imagenes/subir/', fd, false); } catch (e) { toast(t('errorFotos'), 'warning'); }
+                try { await post('/mto/seguimiento/ot/' + data.id + '/imagenes/subir/', fd, false); } catch (e) { toast({ title: t('errorFotos'), description: t('errorFotosDet') }, 'warning'); }
             }
             inicial = firma();
             cerrarYa();

@@ -681,22 +681,46 @@
             }
         }
 
-        /* ── Toast ── */
-        #toast-container {
+        /* ── Avisos (toast) · "Suave de color": fondo claro del tipo, borde, círculo con ícono, título y detalle.
+            Escritorio: abajo a la derecha, máx. 3; celular: arriba al centro, máx. 2. JS: showToast (al final). ── */
+        #toast-container {     
             position: fixed; bottom: 24px; right: 24px; z-index: 100100;
-            display: flex; flex-direction: column; gap: 8px;
+            display: flex; flex-direction: column-reverse; gap: 10px;   /* escritorio: el nuevo arriba del anterior */
+            width: 380px; max-width: calc(100vw - 32px);
+            pointer-events: none;                       /* solo los avisos reciben clics, no el hueco entre ellos */
         }
         .toast {
-            padding: 12px 18px; border-radius: 8px; font-size: 13px;
-            font-weight: 500; color: #fff; box-shadow: var(--shadow-md);
-            animation: slide-in .25s ease; max-width: 300px;
+            --t-bg: #E3F3E9; --t-bd: #B9E0C8; --t-c: #2E8B57; --t-fg: #22663F;   /* éxito */
+            pointer-events: auto; cursor: pointer;
+            display: flex; gap: 12px; align-items: flex-start;
+            padding: 12px 14px; border-radius: 14px;
+            background: var(--t-bg); border: 1px solid var(--t-bd); color: var(--t-fg);
+            box-shadow: 0 6px 18px rgba(30,32,51,.08);
+            font-family: 'Lexend', system-ui, sans-serif; text-align: left;
+            animation: toast-entra 180ms ease-out;
+            transition: opacity 150ms ease-out;
         }
-        .toast-success { background: var(--green); }
-        .toast-error   { background: var(--red); }
-        .toast-warning { background: #D97706; }
-        @keyframes slide-in {
-            from { transform: translateX(80px); opacity: 0; }
-            to   { transform: translateX(0);    opacity: 1; }
+        .toast-info    { --t-bg: var(--indigo-lt); --t-bd: color-mix(in srgb, var(--indigo) 28%, var(--indigo-lt));
+                         --t-c: var(--indigo); --t-fg: var(--indigo-dk); }          /* el primario del tema */
+        .toast-warning { --t-bg: #FCEFD6; --t-bd: #F2D9A6; --t-c: #D9A23B; --t-fg: #8A5A08; }
+        .toast-error   { --t-bg: #FBE4E2; --t-bd: #F0C4C0; --t-c: #D9534F; --t-fg: #A8322A; }
+        .toast-ic  { width: 28px; height: 28px; flex: none; border-radius: 14px; background: var(--t-c);
+                     display: flex; align-items: center; justify-content: center; }
+        .toast-txt { flex: 1; min-width: 0; }
+        .toast-tit { display: block; font-size: 14px; font-weight: 600; line-height: 1.35; }
+        .toast-det { display: block; margin-top: 1px; font-size: 13px; line-height: 1.45; opacity: .85;
+                     max-height: calc(2 * 1.45em); overflow: hidden; }   /* máx. 2 líneas, cortado entre palabras */
+        .toast:focus-visible { outline: 2px solid var(--t-c); outline-offset: 2px; }
+        .toast-sale { opacity: 0; }
+        @keyframes toast-entra  { from { opacity: 0; transform: translateX(8px); }  to { opacity: 1; transform: none; } }
+        @keyframes toast-baja   { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+        @keyframes toast-aparece { from { opacity: 0; } to { opacity: 1; } }
+        @media (max-width: 767px) {
+            #toast-container { top: calc(8px + env(safe-area-inset-top)); bottom: auto; left: 16px; right: 16px; width: auto; max-width: none; flex-direction: column; }
+            .toast { animation-name: toast-baja; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .toast { animation-name: toast-aparece; }
         }
 
         /* ── Formularios ── */
@@ -901,6 +925,20 @@
 
 </style>
 <link rel="stylesheet" href="{% static 'menu_app/css/language_selector.css' %}">
+<script>
+/* Mensajes de Django de esta respuesta, leídos en el <head>: así una página que se reemplaza antes de pintarse
+   (el Plan en celular, lista.html) puede pasarlos a la siguiente con avisarAlCargar. */
+window.AVISOS_DJANGO = [{% for m in messages %}["{{ m|escapejs }}", "{% if m.level_tag == 'error' %}error{% elif m.level_tag == 'warning' %}warning{% elif m.level_tag == 'info' %}info{% else %}success{% endif %}"]{% if not forloop.last %},{% endif %}{% endfor %}];
+/* Guarda avisos [[texto u {title, description}, tipo], …] para mostrarlos al cargar la siguiente página
+   (recarga o redirección). Sin sessionStorage el aviso se pierde, como antes. */
+window.TXT_REVISA_CONEXION = "{% trans 'Revisa tu conexión e inténtalo de nuevo' %}";   /* detalle común de los errores de red */
+window.avisarAlCargar = function (avisos) {
+    try {
+        const previos = JSON.parse(sessionStorage.getItem('avisos_pendientes') || '[]');
+        sessionStorage.setItem('avisos_pendientes', JSON.stringify(previos.concat(avisos)));
+    } catch (e) { /* sin sessionStorage */ }
+};
+</script>
 {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -1544,28 +1582,105 @@
 
 <div id="toast-container"></div>
 
-{% if messages %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    {% for message in messages %}
-    showToast(
-        "{{ message|escapejs }}",
-        "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}"
-    );
-    {% endfor %}
+/* Avisos al cargar: los que dejó la página anterior (avisarAlCargar) y los mensajes de Django de esta respuesta. */
+document.addEventListener('DOMContentLoaded', function () {
+    let pendientes = [];
+    try {
+        pendientes = JSON.parse(sessionStorage.getItem('avisos_pendientes') || '[]');
+        sessionStorage.removeItem('avisos_pendientes');
+    } catch (e) { /* sin sessionStorage */ }
+    pendientes.concat(window.AVISOS_DJANGO || []).forEach(a => showToast(a[0], a[1]));
 });
 </script>
-{% endif %}
 
 <script>
-/* ── Toast ── */
-function showToast(msg, type='success') {
-    const t = document.createElement('div');
-    t.className = `toast toast-${type}`;
-    t.textContent = msg;
-    document.getElementById('toast-container').appendChild(t);
-    setTimeout(() => t.remove(), 5000);
-}
+/* ── Avisos (toast) ──
+    showToast(texto, tipo) o showToast({ title, description }, tipo); tipo: success | info | warning | error.
+    Un texto con salto de línea se parte en título (1.ª línea) y detalle (el resto): así lo usan también los
+    messages de Django. Sin botones: se cierra solo a los 5 s, se pausa con el mouse o el foco, y se cierra con
+    clic, Esc (el más reciente) o deslizando hacia arriba en celular. Uno idéntico al visible no se repite. */
+(function () {
+    const TIPOS = {
+        success: { ms: 5000, rol: 'status', icono: 'M5 12l5 5 9-10' },
+        info:    { ms: 5000, rol: 'status', icono: 'M12 8h.01M11 12h1v5h1' },
+        warning: { ms: 5000, rol: 'alert',  icono: 'M12 8v5M12 16.5h.01' },
+        error:   { ms: 5000, rol: 'alert',  icono: 'M7 7l10 10M17 7 7 17' },
+    };
+    const caja   = () => document.getElementById('toast-container');
+    const vivos  = () => [...(caja() || { children: [] }).children].filter(t => !t.dataset.saliendo);
+    const maximo = () => (window.matchMedia('(max-width: 767px)').matches ? 2 : 3);
+
+    function cerrar(t) {
+        if (!t || t.dataset.saliendo) return;
+        t.dataset.saliendo = '1';
+        clearTimeout(t._timer);
+        t.classList.add('toast-sale');
+        setTimeout(() => t.remove(), 150);
+    }
+    function correr(t) {                       // (re)inicia la cuenta con lo que le queda
+        clearTimeout(t._timer);
+        t._inicio = Date.now();
+        t._timer = setTimeout(() => cerrar(t), t._resta);
+    }
+    function pausar(t) {
+        if (!t._timer) return;
+        clearTimeout(t._timer);
+        t._timer = null;
+        t._resta = Math.max(t._resta - (Date.now() - t._inicio), 800);
+    }
+
+    window.showToast = function (msg, type) {
+        const tipo = TIPOS[type] ? type : 'success', cfg = TIPOS[tipo];
+        let titulo, detalle;
+        if (msg && typeof msg === 'object') {
+            titulo = String(msg.title || '').trim(); detalle = String(msg.description || '').trim();
+        } else {
+            const partes = String(msg == null ? '' : msg).split('\n');
+            titulo = partes.shift().trim(); detalle = partes.join(' ').trim();
+        }
+        const c = caja();
+        if (!c || !titulo) return;
+
+        const clave = tipo + '|' + titulo + '|' + detalle;
+        const igual = vivos().find(t => t.dataset.clave === clave);
+        if (igual) { igual._resta = cfg.ms; correr(igual); return; }   // no se duplica: se reinicia su tiempo
+
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + tipo;
+        t.dataset.clave = clave;
+        t.tabIndex = 0;                                                  // enfocable para pausarlo; nunca se enfoca solo
+        t.setAttribute('role', cfg.rol);
+        t.setAttribute('aria-live', cfg.rol === 'alert' ? 'assertive' : 'polite');
+        t.innerHTML = '<span class="toast-ic" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" '
+            + 'stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="' + cfg.icono + '"/></svg></span>'
+            + '<span class="toast-txt"><span class="toast-tit"></span><span class="toast-det"></span></span>';
+        t.querySelector('.toast-tit').textContent = titulo;
+        if (detalle) t.querySelector('.toast-det').textContent = detalle;
+        else t.querySelector('.toast-det').remove();
+        c.appendChild(t);
+
+        const v = vivos();
+        v.slice(0, Math.max(v.length - maximo(), 0)).forEach(cerrar);   // al llegar el 4.º (2.º+1 en celular) se va el más viejo
+
+        t._resta = cfg.ms;
+        correr(t);
+        t.addEventListener('mouseenter', () => pausar(t));
+        t.addEventListener('mouseleave', () => correr(t));
+        t.addEventListener('focusin',    () => pausar(t));
+        t.addEventListener('focusout',   () => correr(t));
+        t.addEventListener('click',      () => cerrar(t));
+        let y0 = null;                                                   // celular: deslizar hacia arriba lo cierra
+        t.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; }, { passive: true });
+        t.addEventListener('touchend',   e => { if (y0 !== null && y0 - e.changedTouches[0].clientY > 30) cerrar(t); y0 = null; });
+    };
+
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        const v = vivos();
+        if (v.length) cerrar(v[v.length - 1]);
+    });
+})();
 
 /* ── Sidebar collapse ── */
 const sidebar     = document.getElementById('sidebar');

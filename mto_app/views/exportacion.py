@@ -1,15 +1,3 @@
-from datetime import date, timedelta
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
-from django.contrib import messages
-from django.http import HttpResponse, JsonResponse
-from django.utils.translation import gettext as _
-from openpyxl import load_workbook
-from openpyxl.styles import Border, Side, Alignment, Font
-from openpyxl.worksheet.properties import WorksheetProperties, PageSetupProperties
-from openpyxl.drawing.image import Image
-from openpyxl.drawing.spreadsheet_drawing import AbsoluteAnchor
-from openpyxl.drawing.xdr import XDRPoint2D, XDRPositiveSize2D
 import os
 import io
 import uuid
@@ -22,20 +10,34 @@ import logging
 import json
 import time
 
-
-logger = logging.getLogger(__name__)
+from datetime import date, timedelta
+from django.contrib.auth.decorators import login_required
+from django.db import connection
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.http import HttpResponse, JsonResponse
+from django.utils.translation import gettext as _
+from openpyxl import load_workbook
+from openpyxl.styles import Border, Side, Alignment, Font
+from openpyxl.worksheet.properties import WorksheetProperties, PageSetupProperties
+from openpyxl.drawing.image import Image
+from openpyxl.drawing.spreadsheet_drawing import AbsoluteAnchor
+from openpyxl.drawing.xdr import XDRPoint2D, XDRPositiveSize2D
 
 from ..models import PlanMantenimiento, RegistroEjecucion, PasoRutina, Responsable
-from .utils import lunes_de_semana, _planes_que_tocan
+from .utils import lunes_de_semana, _planes_que_tocan, numero_ot, puede_ver_plan, area_del_plan
+from menu_app.avisos import aviso
 
+logger = logging.getLogger(__name__)
 
 # Estado de cada exportación de la semana en un archivo JSON de la carpeta temporal, junto a su Excel:
 # con gunicorn --workers 3 el proceso que inicia el Excel no siempre es el que atiende "¿ya está?" ni la
 # descarga, y la memoria no se comparte entre procesos; la carpeta temporal sí.
-# Estado: {'status': 'pending'|'ready'|'error', 'path': str, 'filename': str, 'error': str, 'pid': int}
+# Estado: {'status': 'pending'|'ready'|'error', 'path': str, 'filename': str, 'error': str, 'pid': int,
+#          'usuario': id de quien exporta, 'inicio': time.time() al iniciar}
 _DIR_TRABAJOS = os.path.join(tempfile.gettempdir(), 'exportar_semana')
 _RE_TOKEN = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
-
+_PENDIENTE_MAX_SEG = 180   # "pending" por más de esto = su hilo murió (p. ej. se reinició el worker)
 
 def _ruta_trabajo(token):
     """Archivo de estado del trabajo (None si el token no tiene forma de uuid: no se arma ninguna ruta con él)."""
@@ -43,9 +45,12 @@ def _ruta_trabajo(token):
 
 
 def _guardar_trabajo(token, datos):
-    """Escribe el estado de forma atómica: los otros procesos nunca leen un archivo a medias."""
+    """Escribe el estado de forma atómica (los otros procesos nunca leen un archivo a medias). Conserva lo que ya
+       tenía (usuario, inicio) y agrega o cambia lo de `datos`."""
+    
     os.makedirs(_DIR_TRABAJOS, exist_ok=True)
-    ruta = _ruta_trabajo(token)
+    ruta  = _ruta_trabajo(token)
+    datos = {**(_leer_trabajo(token) or {}), **datos}
     with open(ruta + '.tmp', 'w', encoding='utf-8') as f:
         json.dump(datos, f)
     os.replace(ruta + '.tmp', ruta)
@@ -336,9 +341,7 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
                 col_dim.hidden = False
 
             duracion_h = round(plan.duracion_minutos / 60, 1)
-            mes        = lunes.strftime('%m')
-            aa         = lunes.strftime('%y')
-            no_orden   = f"{semana:02d}{mes}{aa}{100 + idx}"
+            no_orden   = numero_ot(lunes, idx, plan.area.prefijo_ot)   # igual que el Plan y el Backlog
 
             ws['D6']  = semana
             ws['D7']  = no_orden
@@ -445,20 +448,32 @@ def _run_exportar(token, planes_semana, semana, anio, lunes, creador, static_dir
     except Exception as e:
         logger.exception("Exportar semana %s/%s (trabajo %s): falló la generación", semana, anio, token)   # con traceback
         _guardar_trabajo(token, {'status': 'error', 'error': '%s: %s' % (type(e).__name__, e)})
+    finally:
+        connection.close()   # el hilo abrió su propia conexión a la BD: se cierra al terminar
 
 
 
 
 @login_required
 def exportar_semana_excel(request):
-    semana  = int(request.GET.get('semana', date.today().isocalendar()[1]))
-    anio    = int(request.GET.get('anio',   date.today().isocalendar()[0]))
-    area_id = request.GET.get('area')
+    """Inicia en un hilo el Excel de la semana del área del Plan (area_del_plan: nunca otra área ni todas
+       juntas, así el No. de OT es el mismo que en el Plan) y devuelve su token."""
+   
+    if not puede_ver_plan(request):
+         return JsonResponse({'error': _("No tienes permiso para exportar planes de mantenimiento.")}, status=403)
+    area_id = area_del_plan(request)
+    if not area_id:
+         return JsonResponse({'error': _("No tienes áreas asignadas.")}, status=403)
 
-    lunes         = lunes_de_semana(anio, semana)
-    planes_qs     = PlanMantenimiento.objects.select_related('area').filter(activo=True)
-    if area_id:
-        planes_qs = planes_qs.filter(area_id=area_id)
+    hoy = date.today()
+    try:
+        semana = int(request.GET.get('semana') or hoy.isocalendar()[1])
+        anio   = int(request.GET.get('anio')   or hoy.isocalendar()[0])
+        lunes  = lunes_de_semana(anio, semana)   # ValueError si la semana no existe en ese año
+    except ValueError:
+        return JsonResponse({'error': _("Semana no válida.")}, status=400)
+
+    planes_qs     = PlanMantenimiento.objects.select_related('area').filter(activo=True, area_id=area_id)
     planes_semana = _planes_que_tocan(list(planes_qs), lunes)
 
     if not planes_semana:
@@ -472,7 +487,7 @@ def exportar_semana_excel(request):
     token      = str(uuid.uuid4())
 
     _limpiar_trabajos()
-    _guardar_trabajo(token, {'status': 'pending', 'pid': os.getpid()})
+    _guardar_trabajo(token, {'status': 'pending', 'pid': os.getpid(), 'usuario': request.user.pk, 'inicio': time.time()})
 
 
     threading.Thread(
@@ -484,30 +499,48 @@ def exportar_semana_excel(request):
     return JsonResponse({'token': token})
 
 
+def _trabajo_del_usuario(request, token):
+    """Estado del trabajo solo si lo inició quien pregunta (None si no existe o es de otro usuario)."""
+    
+    job = _leer_trabajo(token)
+    return job if job and job.get('usuario') == request.user.pk else None
+
+
 @login_required
 def exportar_semana_status(request, token):
-    job = _leer_trabajo(token)
+    job = _trabajo_del_usuario(request, token)
     if job is None:   # no hay archivo de estado: token inválido, ya se descargó o se borró por viejo
         logger.error("Exportar semana: no existe el estado del trabajo %s (pid %s)", token, os.getpid())
         job = {'status': 'error', 'error': _("No se encontró la exportación; vuelve a intentarlo.")}
+    elif job['status'] == 'pending' and time.time() - job.get('inicio', 0) > _PENDIENTE_MAX_SEG:
+        logger.error("Exportar semana: el trabajo %s lleva más de %s s sin terminar (¿se reinició el worker?)",
+                      token, _PENDIENTE_MAX_SEG)
+        job = {'status': 'error', 'error': _("La exportación no terminó; vuelve a intentarlo.")}
 
     return JsonResponse({'status': job['status'], 'error': job.get('error', '')})
 
 
 @login_required
 def exportar_semana_download(request, token):
-    job = _leer_trabajo(token)
+    job = _trabajo_del_usuario(request, token)
     
     if not job or job['status'] != 'ready':
         logger.error("Exportar semana: descarga del trabajo %s no disponible en este proceso (pid %s): %s",
                      token, os.getpid(), job and job.get('status'))
-        messages.error(request, _('Archivo no disponible o aún generándose.'))
+        messages.error(request, aviso(_('Archivo no disponible'), _('Todavía se está generando o ya se descargó')))
         return redirect('mto:lista_plan')
 
     path     = job['path']
     filename = job['filename']
-    with open(path, 'rb') as f:
-        content = f.read()
+    
+    try:
+        with open(path, 'rb') as f:
+            content = f.read()
+    except OSError:   # otro clic ya lo descargó y lo borró, o lo borró la limpieza
+        logger.error("Exportar semana: el archivo del trabajo %s ya no existe", token)
+        messages.error(request, aviso(_('Archivo no disponible'), _('Todavía se está generando o ya se descargó')))
+        return redirect('mto:lista_plan')
+    
     for r in (path, _ruta_trabajo(token)):   # ya se entregó: se borran el Excel y su estado
         try:
             os.unlink(r)

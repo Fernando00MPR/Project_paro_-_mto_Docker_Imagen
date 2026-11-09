@@ -9,19 +9,6 @@
 
 {% block content %}
 
-{% if messages %}
-<div style="margin-bottom:12px;">
-    {% for msg in messages %}
-    <div style="padding:10px 16px; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:6px;
-                background:{% if msg.tags == 'error' %}var(--red-lt){% else %}#D1FAE5{% endif %};
-                color:{% if msg.tags == 'error' %}var(--red){% else %}#065F46{% endif %};
-                border:1px solid {% if msg.tags == 'error' %}var(--red){% else %}#6EE7B7{% endif %};">
-        {{ msg }}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-
 <div class="card-header" style="margin-bottom:0; padding-bottom:16px; border-bottom:1px solid var(--border);">
     <div>
         <div class="card-title">
@@ -1079,17 +1066,21 @@
         PendienteTitulo:     "{% trans 'Pendiente → Aceptado' %}",
         AceptadoTitulo:      "{% trans 'Aceptado → Rechazado' %}",
         estatusActualizado:  "{% trans 'Estatus actualizado' %}",
-        errorEstatus:        "{% trans 'Error al cambiar estatus' %}",
+        errorEstatus:        "{% trans 'No se pudo cambiar el estatus' %}",
         imagenDe:            "{% trans 'Imagen {n} de {total}' %}",
-        campoActualizado:    "{% trans 'Campo actualizado' %}",
-        errorGuardar:        "{% trans 'Error al guardar' %}",
-        errorRed:            "{% trans 'Error de red' %}",
-        minutosInvalidos:    "{% trans 'Ingresa un número válido de minutos.' %}",
-        fechaInvalida:       "{% trans 'Formato inválido. Usa dd/mm/yy (ej. 18/04/26)' %}",
-        horaInvalida:        "{% trans 'Formato inválido. Usa HH:MM (ej. 14:30)' %}",
+        campoActualizado:    "{% trans 'Cambio guardado' %}",
+        errorGuardar:        "{% trans 'No se pudo guardar' %}",
+        errorRed:            "{% trans 'Sin conexión' %}",
+        revisaConexion:      "{% trans 'Revisa tu conexión e inténtalo de nuevo' %}",
+        minutosInvalidos:    "{% trans 'Minutos no válidos' %}",
+        minutosAyuda:        "{% trans 'Escribe un número entero de minutos' %}",
+        fechaInvalida:       "{% trans 'Fecha no válida' %}",
+        fechaAyuda:          "{% trans 'Usa dd/mm/aa (ej. 18/04/26)' %}",
+        horaInvalida:        "{% trans 'Hora no válida' %}",
+        horaAyuda:           "{% trans 'Usa HH:MM (ej. 14:30)' %}",
         turnoActualizado:    "{% trans 'Turno actualizado' %}",
-        errorGenerico:       "{% trans 'Error' %}",
-        errorCargarMas:      "{% trans 'Error al cargar más paros' %}",
+        errorTurno:          "{% trans 'No se pudo cambiar el turno' %}",
+        errorCargarMas:      "{% trans 'No se pudieron cargar más paros' %}",
         mostrando:           "{% trans 'mostrando' %}",
         sinComentarios:      "{% trans 'Sin comentarios' %}",
         semanaCorta:         "{% trans 'Sem' %}",

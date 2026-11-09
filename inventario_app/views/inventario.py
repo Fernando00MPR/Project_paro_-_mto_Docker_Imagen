@@ -7,7 +7,8 @@ from django.http import JsonResponse, HttpResponse
 from django.db import transaction
 from django.db.models import Count, Q
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext
+from menu_app.avisos import aviso
 from collections import Counter
 from decimal import Decimal, InvalidOperation
 from django.utils.timesince import timesince
@@ -25,6 +26,7 @@ import io
 from mto_app.models import Area
 from login_app.permisos import puede_mto, get_perfil
 from ..models import Refaccion, CategoriaRefaccion, ImagenRefaccion
+from paros_app.models import imagen_subida_valida
 
 
 def _redirect_lista_refacciones(request, area_fallback=''):
@@ -66,7 +68,7 @@ def _barra_stock(r):
 @login_required
 def lista_refacciones(request):
     if not puede_mto(request.user, 'ver_inventario'):
-        messages.error(request, _("No tienes permiso para ver esta sección."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver esta sección")))
         return redirect('mto:dashboard')
 
     area_id       = request.GET.get('area', '')
@@ -244,7 +246,7 @@ def detalle_refaccion(request, pk):
     """Celular: detalle de una refacción (ruta propia para que el "atrás" del
     teléfono regrese a la lista). ?lista= trae los filtros de la lista."""
     if not puede_mto(request.user, 'ver_inventario'):
-        messages.error(request, _("No tienes permiso para ver esta sección."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver esta sección")))
         return redirect('mto:dashboard')
 
     r = get_object_or_404(Refaccion.objects.select_related('area', 'categoria').prefetch_related('imagenes'), pk=pk)
@@ -366,7 +368,8 @@ def _guardar_refaccion_ajax(request, refaccion):
 
     quitar = {int(i) for i in P.getlist('imagenes_quitar') if i.isdigit()}
     nuevas = request.FILES.getlist('imagenes')
-    if any(f.content_type not in ('image/jpeg', 'image/png') or f.size > 5 * 1024 * 1024 for f in nuevas):
+    
+    if any(f.size > 5 * 1024 * 1024 or not imagen_subida_valida(f) for f in nuevas):
         errores['imagenes'] = _("Solo fotos JPG o PNG de hasta 5 MB.")
     actuales = refaccion.imagenes.exclude(pk__in=quitar).count() if refaccion else 0
     if actuales + len(nuevas) > 2:
@@ -401,7 +404,7 @@ def form_refaccion(request, pk=None):
     if not puede_mto(request.user, 'editar_inventario'):
         if es_ajax:
             return JsonResponse({'ok': False, 'errores': {'general': _("No tienes permiso para editar el inventario.")}}, status=403)
-        messages.error(request, _("No tienes permiso para editar el inventario."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para editar el inventario")))
         return redirect('inventario:lista_refacciones')
 
     refaccion = get_object_or_404(Refaccion, pk=pk) if pk else None
@@ -438,29 +441,36 @@ def form_refaccion(request, pk=None):
                 for k, v in datos.items():
                     setattr(refaccion, k, v)
                 refaccion.save()
-                messages.success(request, _("Refacción '{item}' actualizada.").format(item=refaccion.no_item))
+                messages.success(request, aviso(_("Refacción actualizada"), refaccion.no_item))
             else:
                 refaccion = Refaccion.objects.create(**datos)
-                messages.success(request, _("Refacción creada."))
+                messages.success(request, aviso(_("Refacción creada"), refaccion.no_item))
 
-            imagenes_nuevas = request.FILES.getlist('imagenes')
+            subidas = request.FILES.getlist('imagenes')
+            # solo JPG o PNG reales
+            imagenes_nuevas = [f for f in subidas if imagen_subida_valida(f)]
+            if len(imagenes_nuevas) < len(subidas):
+                messages.warning(request, 
+                                 aviso(_("Archivos ignorados"), ngettext("{n} archivo no es una foto JPG o PNG", "{n} archivos no son fotos JPG o PNG",
+                                                                 len(subidas) - len(imagenes_nuevas)).format(n=len(subidas) - len(imagenes_nuevas))))
             existentes      = refaccion.imagenes.count()
             disponibles     = 2 - existentes
 
             if imagenes_nuevas and disponibles <= 0:
-                messages.warning(request, _("Ya se alcanzó el máximo de 2 imágenes; no se agregaron las nuevas."))
+                messages.warning(request, aviso(_("No se agregaron fotos"), _("Ya tiene 2, el máximo")))
             else:
                 for imagen in imagenes_nuevas[:max(disponibles, 0)]:
                     ImagenRefaccion.objects.create(refaccion=refaccion, imagen=imagen)
                 if len(imagenes_nuevas) > disponibles:
-                    messages.warning(request, _("Solo se guardaron {n} imagen(es); límite de 2 alcanzado.").format(n=max(disponibles, 0)))
+                    messages.warning(request, aviso(ngettext("Solo se guardó {n} foto", "Solo se guardaron {n} fotos", max(disponibles, 0)).format(n=max(disponibles, 0)),
+                                                    _("Se alcanzó el máximo de 2")))
 
             return _redirect_lista_refacciones(request, area_pk)
 
         except ValueError as e:
-            messages.error(request, str(e))
+            messages.error(request, aviso(_("No se pudo guardar la refacción"), str(e).rstrip(".")))
         except Exception as e:
-            messages.error(request, _("Error al guardar: {error}").format(error=e))
+            messages.error(request, aviso(_("No se pudo guardar la refacción"), str(e)))
 
         area_id = request.POST.get('area', '')
         return _redirect_lista_refacciones(request, area_id)
@@ -471,24 +481,21 @@ def form_refaccion(request, pk=None):
 @login_required
 def eliminar_refaccion(request, pk):
     if not puede_mto(request.user, 'eliminar_inventario'):
-        messages.error(request, _("No tienes permiso para eliminar refacciones."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para eliminar refacciones")))
         return redirect('inventario:lista_refacciones')
 
     refaccion = get_object_or_404(Refaccion, pk=pk)
     if request.method == 'POST':
         cantidad_seguimientos = refaccion.seguimientos.count()
         if cantidad_seguimientos > 0:
-            messages.error(
-                request,
-                _("No se puede eliminar '{item}' porque tiene {n} seguimiento(s) de compra "
-                  "asociado(s). Elimina primero esos seguimientos.").format(
-                    item=refaccion.no_item, n=cantidad_seguimientos,
-                )
-            )
+            messages.error(request, aviso(
+                _("No se eliminó {item}").format(item=refaccion.no_item),
+                ngettext("Tiene {n} seguimiento de compra; elimínalo primero",
+                         "Tiene {n} seguimientos de compra; elimínalos primero", cantidad_seguimientos).format(n=cantidad_seguimientos)))
         else:
             area_id = refaccion.area_id
             refaccion.delete()
-            messages.success(request, _("Refacción '{item}' eliminada.").format(item=refaccion.no_item))
+            messages.success(request, aviso(_("Refacción eliminada"), refaccion.no_item))
             return _redirect_lista_refacciones(request, area_id)
     return _redirect_lista_refacciones(request, refaccion.area_id)
 
@@ -499,7 +506,7 @@ def eliminar_todas_refacciones_area(request):
         request.user.is_superuser or (get_perfil(request.user) and get_perfil(request.user).es_admin)
     )
     if not es_admin_total:
-        messages.error(request, _("No tienes permiso para eliminar todas las refacciones del área."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para eliminar todas las refacciones del área")))
         return redirect('inventario:lista_refacciones')
 
     area_id = request.POST.get('area')
@@ -513,12 +520,12 @@ def eliminar_todas_refacciones_area(request):
         eliminables.delete()
 
         if bloqueadas:
-            messages.warning(request,
-                _("{bloqueadas} refacción(es) no se eliminaron porque tienen seguimientos de compra asociados.").format(bloqueadas=bloqueadas)
-            )
-        messages.success(request,
-            _("Se eliminaron {cantidad} refacción(es) del área '{area}'.").format(cantidad=cantidad, area=area.nombre)
-        )
+            messages.warning(request, aviso(
+                ngettext("{n} refacción no se eliminó", "{n} refacciones no se eliminaron", bloqueadas).format(n=bloqueadas),
+                _("Tienen seguimientos de compra")))
+        messages.success(request, aviso(
+            _("Refacciones eliminadas"),
+            ngettext("{n} de {area}", "{n} de {area}", cantidad).format(n=cantidad, area=area.nombre)))
     return redirect(f"{reverse('inventario:lista_refacciones')}?area={area_id}")
 
 
@@ -530,7 +537,7 @@ def crear_categoria_refaccion(request):
     if not puede_mto(request.user, 'editar_inventario'):
         if es_ajax:
             return JsonResponse({'ok': False, 'error': _("No tienes permiso para gestionar categorías.")}, status=403)
-        messages.error(request, _("No tienes permiso para gestionar categorías."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para gestionar categorías")))
         return redirect('inventario:lista_refacciones')
 
     nombre_es = request.POST.get('nombre_es', '').strip()
@@ -541,7 +548,7 @@ def crear_categoria_refaccion(request):
         error = _("El nombre en español es obligatorio.")
         if es_ajax:
             return JsonResponse({'ok': False, 'error': error}, status=400)
-        messages.error(request, error)
+        messages.error(request, aviso(_("No se guardó la categoría"), error.rstrip(".")))
     else:
         nombre_en = nombre_en or nombre_es
         existe = CategoriaRefaccion.objects.filter(
@@ -552,12 +559,12 @@ def crear_categoria_refaccion(request):
             error = _("Ya existe una categoría llamada '{nombre}'.").format(nombre=nombre_es)
             if es_ajax:
                 return JsonResponse({'ok': False, 'error': error}, status=400)
-            messages.error(request, error)
+            messages.error(request, aviso(_("No se guardó la categoría"), error.rstrip(".")))
         else:
             cat = CategoriaRefaccion.objects.create(nombre_es=nombre_es, nombre_en=nombre_en)
             if es_ajax:
                 return JsonResponse({'ok': True, 'id': cat.pk, 'es': cat.nombre_es, 'en': cat.nombre_en})
-            messages.success(request, _("Categoría '{nombre}' creada.").format(nombre=nombre_es))
+            messages.success(request, aviso(_("Categoría creada"), nombre_es))
 
     return _redirect_lista_refacciones(request, area_id)
 
@@ -571,7 +578,7 @@ def editar_categoria_refaccion(request, pk):
         if es_ajax:
             return JsonResponse({'ok': False, 'error': _("No tienes permiso para gestionar categorías.")}, status=403)
     if not puede_mto(request.user, 'editar_inventario'):
-        messages.error(request, _("No tienes permiso para gestionar categorías."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para gestionar categorías")))
         return redirect('inventario:lista_refacciones')
 
     categoria = get_object_or_404(CategoriaRefaccion, pk=pk)
@@ -583,7 +590,7 @@ def editar_categoria_refaccion(request, pk):
         error = _("El nombre en español es obligatorio.")
         if es_ajax:
             return JsonResponse({'ok': False, 'error': error}, status=400)
-        messages.error(request, error)
+        messages.error(request, aviso(_("No se guardó la categoría"), error.rstrip(".")))
     else:
         nombre_en = nombre_en or nombre_es
         existe = CategoriaRefaccion.objects.exclude(pk=categoria.pk).filter(
@@ -594,7 +601,7 @@ def editar_categoria_refaccion(request, pk):
             error = _("Ya existe otra categoría llamada '{nombre}'.").format(nombre=nombre_es)
             if es_ajax:
                 return JsonResponse({'ok': False, 'error': error}, status=400)
-            messages.error(request, error)
+            messages.error(request, aviso(_("No se guardó la categoría"), error.rstrip(".")))
         else:
             # Sin update_fields: modeltranslation sincroniza 'nombre' (idioma por
             # defecto) al guardar y con update_fields esa columna se quedaría fuera.
@@ -603,7 +610,7 @@ def editar_categoria_refaccion(request, pk):
             categoria.save()
             if es_ajax:
                 return JsonResponse({'ok': True, 'id': categoria.pk, 'es': categoria.nombre_es, 'en': categoria.nombre_en})
-            messages.success(request, _("Categoría '{nombre}' actualizada.").format(nombre=nombre_es))
+            messages.success(request, aviso(_("Categoría actualizada"), nombre_es))
 
     return _redirect_lista_refacciones(request, area_id)   
 
@@ -630,6 +637,10 @@ def subir_imagenes_refaccion(request, refaccion_pk):
 
     refaccion = get_object_or_404(Refaccion, pk=refaccion_pk)
     imagenes  = request.FILES.getlist('imagenes')
+    
+    if not all(imagen_subida_valida(f) for f in imagenes):
+        return JsonResponse({'ok': False, 'error': _("Solo fotos JPG o PNG de hasta 5 MB.")}, status=400)
+    
     existentes  = refaccion.imagenes.count()
     disponibles = 2 - existentes
 
@@ -693,7 +704,7 @@ def buscar_refacciones(request):
 @login_required
 def importar_stock(request):
     if not puede_mto(request.user, 'editar_inventario'):
-        messages.error(request, _("No tienes permiso para importar inventario."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para importar inventario")))
         return redirect('inventario:lista_refacciones')
 
     area_id = request.GET.get('area', '') or request.POST.get('area', '')
@@ -703,7 +714,7 @@ def importar_stock(request):
         area_id = request.POST.get('area', '').strip()
 
         if not archivo or not area_id:
-            messages.error(request, _("Debes seleccionar un área y subir un archivo."))
+            messages.error(request, aviso(_("Faltan datos"), _("Elige un área y sube un archivo")))
             return redirect(f"{reverse('inventario:importar_stock')}?area={area_id}")
 
         try:
@@ -752,13 +763,13 @@ def importar_stock(request):
             if a_actualizar:
                 Refaccion.objects.bulk_update(a_actualizar, ['stock_actual', 'ubicacion'])
 
-            messages.success(request, _("Importación completada: {actualizados} actualizado(s), {ignorados} ignorado(s).").format(
+            messages.success(request, aviso(_("Stock importado"), _("{actualizados} actualizadas · {ignorados} ignoradas").format(
                 actualizados=actualizados, ignorados=ignorados,
-            ))
+            )))
             return redirect(f"{reverse('inventario:lista_refacciones')}?area={area.pk}")
 
         except Exception as e:
-            messages.error(request, _("Error al leer el archivo: {error}").format(error=e))
+            messages.error(request, aviso(_("No se pudo leer el archivo"), str(e)))
             return redirect(f"{reverse('inventario:importar_stock')}?area={area_id}")
 
     ctx = {
@@ -806,7 +817,7 @@ _UNIDAD_CODIGOS = {codigo for codigo, label in Refaccion.UNIDAD_CHOICES}
 @login_required
 def importar_completo(request):
     if not puede_mto(request.user, 'editar_inventario'):
-        messages.error(request, _("No tienes permiso para importar inventario."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para importar inventario")))
         return redirect('inventario:lista_refacciones')
 
     area_id = request.GET.get('area', '') or request.POST.get('area', '')
@@ -816,7 +827,7 @@ def importar_completo(request):
         area_id = request.POST.get('area', '').strip()
 
         if not archivo or not area_id:
-            messages.error(request, _("Debes seleccionar un área y subir un archivo."))
+            messages.error(request, aviso(_("Faltan datos"), _("Elige un área y sube un archivo")))
             return redirect(f"{reverse('inventario:importar_completo')}?area={area_id}")
 
         try:
@@ -927,17 +938,17 @@ def importar_completo(request):
             creados      = len(nuevos_dict)
             actualizados = len(ids_actualizados)
 
-            resumen = _("Importación completada: {creados} creada(s), {actualizados} actualizada(s).").format(creados=creados, actualizados=actualizados)
-            if errores:
-                resumen += " " + _("{n} advertencia(s).").format(n=len(errores))
-            messages.success(request, resumen)
-            for e in errores[:15]:
-                messages.warning(request, e)
+            messages.success(request, aviso(_("Inventario importado"),
+                                            _("{creados} creadas · {actualizados} actualizadas").format(creados=creados, actualizados=actualizados)))
+            if errores:   # un solo aviso (antes salía uno por fila, hasta 15): el número y las primeras
+                messages.warning(request, aviso(
+                    ngettext("{n} fila con advertencia", "{n} filas con advertencias", len(errores)).format(n=len(errores)),
+                    " · ".join(str(e) for e in errores[:2])))
 
             return redirect(f"{reverse('inventario:lista_refacciones')}?area={area.pk}")
 
         except Exception as e:
-            messages.error(request, _("Error al leer el archivo: {error}").format(error=e))
+            messages.error(request, aviso(_("No se pudo leer el archivo"), str(e)))
             return redirect(f"{reverse('inventario:importar_completo')}?area={area_id}")
 
     ctx = {
@@ -982,7 +993,7 @@ def descargar_plantilla_completa(request):
 @login_required
 def exportar_refacciones(request):
     if not puede_mto(request.user, 'ver_inventario'):
-        messages.error(request, _("No tienes permiso para exportar."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para exportar")))
         return redirect('inventario:lista_refacciones')
 
     area_id       = request.GET.get('area', '')

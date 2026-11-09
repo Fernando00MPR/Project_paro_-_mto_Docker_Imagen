@@ -1,6 +1,7 @@
 import os
 import io
 import logging
+import uuid
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _ 
@@ -489,6 +490,29 @@ def comprimir_imagen_pil(archivo):
         )
         archivo.seek(0)
         return None, None
+
+
+def imagen_subida_valida(archivo, formatos=('JPEG', 'PNG')):
+    """True si el archivo subido es de verdad una imagen JPG o PNG. No basta el tipo que manda el navegador
+    (content_type): se puede falsificar y subir, por ejemplo, una página .html que quedaría publicada en /media/.
+    Pillow lee el contenido real; si es válida, el archivo recibe un nombre seguro con su extensión verdadera
+    (.jpg o .png). La usan todas las subidas de fotos del proyecto."""
+
+    try:
+        archivo.seek(0)
+        with Image.open(archivo) as img:
+            formato = img.format
+            img.verify()
+    except Exception:
+        return False
+    finally:
+        archivo.seek(0)
+    if formato not in formatos:
+        return False
+    
+    archivo.name = f"{uuid.uuid4().hex[:12]}.{'jpg' if formato == 'JPEG' else 'png'}"
+
+    return True
 
 
 class ImagenParo(models.Model):

@@ -10,6 +10,7 @@ from django.db.models import Count
 from django.http import HttpResponse, HttpResponseForbidden
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from login_app.permisos import puede_mto
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -201,10 +202,7 @@ def _csv(filas, cols):
 
 @login_required
 def seguimientos_exportar(request):
-    perfil = request.user.perfil if hasattr(request.user, 'perfil') else None
-    es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
-    acceso = getattr(request.user, 'acceso_mto', None)
-    if not (es_admin or (acceso and acceso.ver_seguimiento)):
+    if not puede_mto(request.user, 'ver_seguimiento'):
         return HttpResponseForbidden()
 
     formato = 'csv' if request.GET.get('formato') == 'csv' else 'xlsx'

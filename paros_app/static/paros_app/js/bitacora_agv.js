@@ -169,11 +169,11 @@ function enviarValorAgv(td, valor, comentario) {
             if (document.getElementById('chartCumplimiento')) cargarCumplimiento();
             return true;
         } else {
-            alert('Error: ' + (data.error || 'No se pudo guardar'));
+            showToast({ title: (cfgAgv.i18n || {}).noSeGuardo || 'No se pudo guardar', description: data.error || window.TXT_REVISA_CONEXION }, 'error');
             return false;
         }
     })
-    .catch(() => { alert('Error de conexión'); return false; });
+    .catch(() => { showToast({ title: (cfgAgv.i18n || {}).noSeGuardo || 'No se pudo guardar', description: window.TXT_REVISA_CONEXION }, 'error'); return false; });
 }
 
 // ── Gráfico de cumplimiento ─────────────────────────────────────────────────────
@@ -219,8 +219,9 @@ function limitarRangoEf(dpIdCambiado) {
         desdeEl.dispatchEvent(new Event('change', { bubbles: true }));
     }
     _efAjustandoRango = false;
-    const msg = (cfgAgv.i18n && cfgAgv.i18n.rangoMaxDias) || 'El rango máximo es de {dias} días; se ajustó automáticamente.';
-    showToast(msg.replace('{dias}', EF_LIMITE_DIAS), 'warning');
+    const tx  = cfgAgv.i18n || {};
+    showToast({ title: tx.rangoAjustado || 'Rango ajustado',
+                description: (tx.rangoMaxDias || 'El máximo es de {dias} días').replace('{dias}', EF_LIMITE_DIAS) }, 'warning');
     return true;
 }
 
@@ -414,7 +415,7 @@ function guardarTargetAgv() {
             aplicarColoresCeldas(targetInternaId);
             cargarCumplimiento();
         } else {
-            alert('Error al guardar: ' + (res.error || 'desconocido'));
+            showToast({ title: (cfgAgv.i18n || {}).noSeGuardoMeta || 'No se pudo guardar la meta', description: res.error || window.TXT_REVISA_CONEXION }, 'error');
         }
     });
 }
@@ -496,13 +497,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // limitarRangoEf() recorta el rango si excede EF_LIMITE_DIAS; si lo hizo,
     // ya disparó su propia carga (vía el 'change' del campo que corrigió) y
     // no hay que llamar cargarCumplimiento() de nuevo aquí.
-    document.querySelector('#dp-ef-desde .dp-value').addEventListener('change', function () {
-        if (limitarRangoEf('dp-ef-desde')) return;
-        cargarCumplimiento();
-    });
-    document.querySelector('#dp-ef-hasta .dp-value').addEventListener('change', function () {
-        if (limitarRangoEf('dp-ef-hasta')) return;
-        cargarCumplimiento();
+    // Sin áreas con gráfico no existen los campos del rango: no hay nada que enganchar.
+    ['dp-ef-desde', 'dp-ef-hasta'].forEach(id => {
+        const campo = document.querySelector('#' + id + ' .dp-value');
+        if (!campo) return;
+        campo.addEventListener('change', function () {
+            if (limitarRangoEf(id)) return;
+            cargarCumplimiento();
+        });
     });
 });
 

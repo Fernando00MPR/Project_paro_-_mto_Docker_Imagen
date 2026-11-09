@@ -157,7 +157,7 @@
         fetch(fondo.dataset.urlEditar.replace('/0/', '/' + pk + '/'), { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
             .then(d => { llenar(d); mostrar(origen); })
-            .catch(() => toast(T.errorCargar, 'error'));
+            .catch(() => toast({ title: T.errorCargar, description: window.TXT_REVISA_CONEXION }, 'error'));
     }
     function cerrar(forzar) {
         if (fondo.hidden) return;
@@ -285,7 +285,8 @@
                 listo();
                 if (j.ok) {
                     try {
-                        sessionStorage.setItem('pe-toast', plan ? t('actualizada', { codigo: j.codigo }) : t('creada', { codigo: j.codigo, n: otsVista, anio: anioVista }));
+                        avisarAlCargar([[plan ? { title: t('actualizada'), description: j.codigo }
+                                              : { title: t('creada'), description: t('creadaDet', { codigo: j.codigo, n: otsVista, anio: anioVista }) }, 'success']]);
                         sessionStorage.setItem('pt-resaltar', String(j.pk));
                     } catch (er) { /* sin almacenamiento */ }
                     inicial = firma();
@@ -297,7 +298,7 @@
                 const m = form.querySelector('.mal');
                 if (m) m.focus();
             })
-            .catch(() => { listo(); toast(T.errorRed, 'error'); });
+            .catch(() => { listo(); toast({ title: T.errorRed, description: window.TXT_REVISA_CONEXION }, 'error'); });
     });
 
     // ── Teclado: Esc, Ctrl + Enter y foco atrapado ──

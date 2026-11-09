@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.timezone import localtime
 from django.utils.translation import gettext as _
+from menu_app.avisos import aviso
 
 from ..models import Carpeta, Documento, MAX_PROFUNDIDAD_CARPETAS, EXTENSIONES_DOCUMENTO_PERMITIDAS
 
@@ -149,7 +150,7 @@ def _indice_movil(raiz_id, ruta_base, hijos_de):
 def documentos_generales(request):
     permisos = _permisos_documentacion(request)
     if not permisos['puede_ver']:
-        messages.error(request, _("No tienes permiso para ver esta sección."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver esta sección")))
         return redirect('mto:dashboard')
 
     por_id, hijos_de = _construir_arbol_carpetas()
@@ -178,7 +179,7 @@ def documentos_generales(request):
 def carpeta_detalle(request, pk):
     permisos = _permisos_documentacion(request)
     if not permisos['puede_ver']:
-        messages.error(request, _("No tienes permiso para ver esta sección."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver esta sección")))
         return redirect('mto:dashboard')
 
     por_id, hijos_de = _construir_arbol_carpetas()
@@ -220,14 +221,14 @@ def carpeta_detalle(request, pk):
 def crear_carpeta(request, parent_id=None):
     permisos = _permisos_documentacion(request)
     if not permisos['puede_editar']:
-        messages.error(request, _("No tienes permiso para crear carpetas."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para crear carpetas")))
         return redirect('mto:documentos_generales')
 
     parent = None
     if parent_id is not None:
         parent = get_object_or_404(Carpeta, pk=parent_id)
         if parent.nivel + 1 >= MAX_PROFUNDIDAD_CARPETAS:
-            messages.error(request, _("Se alcanzó el máximo de {n} niveles de carpetas.").format(n=MAX_PROFUNDIDAD_CARPETAS))
+            messages.error(request, aviso(_("No se creó la carpeta"), _("Se alcanzó el máximo de {n} niveles de carpetas").format(n=MAX_PROFUNDIDAD_CARPETAS)))
             return redirect('mto:carpeta_detalle', pk=parent_id)
 
     def _volver():
@@ -239,22 +240,22 @@ def crear_carpeta(request, parent_id=None):
     nombre = request.POST.get('nombre', '').strip()
 
     if parent is None and (not codigo or not nombre):
-        messages.error(request, _("El código y el nombre son obligatorios."))
+        messages.error(request, aviso(_("Faltan datos"), _("El código y el nombre son obligatorios")))
         return _volver()
     if not nombre:
-        messages.error(request, _("El nombre es obligatorio."))
+        messages.error(request, aviso(_("Faltan datos"), _("El nombre es obligatorio")))
         return _volver()
 
     if Carpeta.objects.filter(parent=parent, nombre__iexact=nombre).exists():
-        messages.error(request, _("Ya existe una carpeta llamada '{nombre}' en este nivel.").format(nombre=nombre))
+        messages.error(request, aviso(_("Nombre repetido"), _("Ya existe una carpeta llamada '{nombre}' en este nivel").format(nombre=nombre)))
         return _volver()
 
     if codigo and Carpeta.objects.filter(parent=parent, codigo__iexact=codigo).exists():
-        messages.error(request, _("Ya existe una carpeta con el código '{codigo}' en este nivel.").format(codigo=codigo))
+        messages.error(request, aviso(_("Código repetido"), _("Ya existe una carpeta con el código '{codigo}' en este nivel").format(codigo=codigo)))
         return _volver()
 
     Carpeta.objects.create(parent=parent, codigo=codigo, nombre=nombre, creado_por=request.user)
-    messages.success(request, _("Carpeta creada."))
+    messages.success(request, aviso(_("Carpeta creada"), nombre))
     return _volver()
 
 
@@ -263,7 +264,7 @@ def crear_carpeta(request, parent_id=None):
 def editar_carpeta(request, pk):
     permisos = _permisos_documentacion(request)
     if not permisos['puede_editar']:
-        messages.error(request, _("No tienes permiso para editar carpetas."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para editar carpetas")))
         return redirect('mto:documentos_generales')
 
     carpeta = get_object_or_404(Carpeta, pk=pk)
@@ -275,24 +276,24 @@ def editar_carpeta(request, pk):
     nombre = request.POST.get('nombre', '').strip()
 
     if carpeta.parent_id is None and (not codigo or not nombre):
-        messages.error(request, _("El código y el nombre son obligatorios."))
+        messages.error(request, aviso(_("Faltan datos"), _("El código y el nombre son obligatorios")))
         return _volver()
     if not nombre:
-        messages.error(request, _("El nombre es obligatorio."))
+        messages.error(request, aviso(_("Faltan datos"), _("El nombre es obligatorio")))
         return _volver()
 
     if Carpeta.objects.filter(parent=carpeta.parent, nombre__iexact=nombre).exclude(pk=pk).exists():
-        messages.error(request, _("Ya existe una carpeta llamada '{nombre}' en este nivel.").format(nombre=nombre))
+        messages.error(request, aviso(_("Nombre repetido"), _("Ya existe una carpeta llamada '{nombre}' en este nivel").format(nombre=nombre)))
         return _volver()
 
     if codigo and Carpeta.objects.filter(parent=carpeta.parent, codigo__iexact=codigo).exclude(pk=pk).exists():
-        messages.error(request, _("Ya existe una carpeta con el código '{codigo}' en este nivel.").format(codigo=codigo))
+        messages.error(request, aviso(_("Código repetido"), _("Ya existe una carpeta con el código '{codigo}' en este nivel").format(codigo=codigo)))
         return _volver()
 
     carpeta.codigo = codigo
     carpeta.nombre = nombre
     carpeta.save()
-    messages.success(request, _("Carpeta actualizada."))
+    messages.success(request, aviso(_("Carpeta actualizada"), nombre))
     return _volver()
 
 
@@ -358,14 +359,14 @@ def renombrar_documento(request, pk):
 def eliminar_carpeta(request, pk):
     permisos = _permisos_documentacion(request)
     if not permisos['puede_eliminar']:
-        messages.error(request, _("No tienes permiso para eliminar carpetas."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para eliminar carpetas")))
         return redirect('mto:documentos_generales')
 
     carpeta = get_object_or_404(Carpeta, pk=pk)
     parent_id = carpeta.parent_id
     nombre = carpeta.nombre
     carpeta.delete()
-    messages.success(request, _("Carpeta '{nombre}' y su contenido eliminados.").format(nombre=nombre))
+    messages.success(request, aviso(_("Carpeta eliminada"), _("{nombre} y su contenido").format(nombre=nombre)))
     if parent_id:
         return redirect('mto:carpeta_detalle', pk=parent_id)
     return redirect('mto:documentos_generales')
@@ -382,7 +383,7 @@ def subir_documento(request, carpeta_id):
     if not permisos['puede_editar']:
         if es_ajax:
             return JsonResponse({'ok': False, 'error': _("No tienes permiso para subir documentos.")}, status=403)
-        messages.error(request, _("No tienes permiso para subir documentos."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para subir documentos")))
         return redirect('mto:documentos_generales')
 
     carpeta = get_object_or_404(Carpeta, pk=carpeta_id)
@@ -397,7 +398,7 @@ def subir_documento(request, carpeta_id):
     if not archivo or not nombre:
         if es_ajax:
             return JsonResponse({'ok': False, 'error': _("Debes indicar un nombre y seleccionar un archivo.")}, status=400)
-        messages.error(request, _("Debes indicar un nombre y seleccionar un archivo."))
+        messages.error(request, aviso(_("Faltan datos"), _("Indica un nombre y selecciona un archivo")))
         return _volver()
 
     documento = Documento(
@@ -412,12 +413,12 @@ def subir_documento(request, carpeta_id):
         documento.save()
         if es_ajax:
             return JsonResponse({'ok': True, 'id': documento.pk})
-        messages.success(request, _("Documento subido correctamente."))
+        messages.success(request, aviso(_("Documento subido"), nombre))
     except ValidationError as e:
         error = " ".join(sum(e.message_dict.values(), [])) if hasattr(e, 'message_dict') else str(e)
         if es_ajax:
             return JsonResponse({'ok': False, 'error': error}, status=400)
-        messages.error(request, error)
+        messages.error(request, aviso(_("No se pudo subir el documento"), error))
 
     return _volver()
 
@@ -427,13 +428,13 @@ def subir_documento(request, carpeta_id):
 def eliminar_documento(request, pk):
     permisos = _permisos_documentacion(request)
     if not permisos['puede_eliminar']:
-        messages.error(request, _("No tienes permiso para eliminar documentos."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para eliminar documentos")))
         return redirect('mto:documentos_generales')
 
     documento = get_object_or_404(Documento, pk=pk)
     carpeta_id = documento.carpeta_id
     documento.delete()
-    messages.success(request, _("Documento eliminado."))
+    messages.success(request, aviso(_("Documento eliminado")))
     return redirect('mto:carpeta_detalle', pk=carpeta_id)
 
 
@@ -447,7 +448,7 @@ def _redirect_volver(request, alternativa):
 def mover_carpeta(request, pk):
     permisos = _permisos_documentacion(request)
     if not permisos['puede_editar']:
-        messages.error(request, _("No tienes permiso para mover carpetas."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para mover carpetas")))
         return redirect('mto:documentos_generales')
 
     carpeta = get_object_or_404(Carpeta, pk=pk)
@@ -461,29 +462,29 @@ def mover_carpeta(request, pk):
         )
 
     if destino is not None and destino.pk == carpeta.pk:
-        messages.error(request, _("No puedes mover una carpeta dentro de sí misma."))
+        messages.error(request, aviso(_("No se movió la carpeta"), _("No puedes moverla dentro de sí misma")))
         return _volver()
 
     if destino is not None and carpeta in destino.ruta_ancestros():
-        messages.error(request, _("No puedes mover una carpeta dentro de una de sus propias subcarpetas."))
+        messages.error(request, aviso(_("No se movió la carpeta"), _("No puedes moverla dentro de una de sus subcarpetas")))
         return _volver()
 
     por_id, hijos_de = _construir_arbol_carpetas()
     nueva_profundidad_raiz = (destino.nivel + 1) if destino else 0
     altura = _altura_subarbol(carpeta.pk, hijos_de)
     if nueva_profundidad_raiz + altura >= MAX_PROFUNDIDAD_CARPETAS:
-        messages.error(request, _("Mover la carpeta ahí superaría el máximo de {n} niveles.").format(n=MAX_PROFUNDIDAD_CARPETAS))
+        messages.error(request, aviso(_("No se movió la carpeta"), _("Superaría el máximo de {n} niveles").format(n=MAX_PROFUNDIDAD_CARPETAS)))
         return _volver()
 
     if Carpeta.objects.filter(parent=destino, nombre__iexact=carpeta.nombre).exclude(pk=carpeta.pk).exists():
-        messages.error(request, _("Ya existe una carpeta llamada '{nombre}' en el destino.").format(nombre=carpeta.nombre))
+        messages.error(request, aviso(_("No se movió la carpeta"), _("Ya existe una carpeta llamada '{nombre}' en el destino").format(nombre=carpeta.nombre)))
         return _volver()
 
     nombre = carpeta.nombre
     destino_nombre = destino.nombre if destino else _("Documentos Generales")
     carpeta.parent = destino
     carpeta.save()
-    messages.success(request, _("Carpeta '{nombre}' movida a '{destino}'.").format(nombre=nombre, destino=destino_nombre))
+    messages.success(request, aviso(_("Carpeta movida"), _("{nombre} → {destino}").format(nombre=nombre, destino=destino_nombre)))
     return _redirect_volver(
         request,
         redirect('mto:carpeta_detalle', pk=destino.pk) if destino else redirect('mto:documentos_generales'),
@@ -495,7 +496,7 @@ def mover_carpeta(request, pk):
 def mover_documento(request, pk):
     permisos = _permisos_documentacion(request)
     if not permisos['puede_editar']:
-        messages.error(request, _("No tienes permiso para mover documentos."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para mover documentos")))
         return redirect('mto:documentos_generales')
 
     documento = get_object_or_404(Documento, pk=pk)
@@ -506,13 +507,13 @@ def mover_documento(request, pk):
         return _redirect_volver(request, redirect('mto:carpeta_detalle', pk=carpeta_actual_id))
 
     if not destino_id:
-        messages.error(request, _("Debes elegir una carpeta de destino."))
+        messages.error(request, aviso(_("No se movió el documento"), _("Elige una carpeta de destino")))
         return _volver()
 
     destino = get_object_or_404(Carpeta, pk=destino_id)
     nombre = documento.nombre
     documento.carpeta = destino
     documento.save()
-    messages.success(request, _("Documento '{nombre}' movido a '{destino}'.").format(nombre=nombre, destino=destino.nombre))
+    messages.success(request, aviso(_("Documento movido"), _("{nombre} → {destino}").format(nombre=nombre, destino=destino.nombre)))
     return _redirect_volver(request, redirect('mto:carpeta_detalle', pk=destino.pk))
 

@@ -19,20 +19,6 @@
 
 {% block content %}
 
-{% if messages %}
-<div style="margin-bottom:12px;">
-    {% for msg in messages %}
-    <div style="padding:10px 16px; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:6px;
-                background:{% if msg.tags == 'error' %}var(--red-lt){% else %}#D1FAE5{% endif %};
-                color:{% if msg.tags == 'error' %}var(--red){% else %}#065F46{% endif %};
-                border:1px solid {% if msg.tags == 'error' %}var(--red){% else %}#6EE7B7{% endif %};">
-        {{ msg }}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-
-
 <!-- ═══ Vista de escritorio (≥768px) — ver bitacora_escritorio.css / .js ═══ -->
 <div class="bd bm-desktop-only" id="bd-raiz" data-area="{{ filtro_area }}">
 
@@ -765,10 +751,12 @@ window.BITACORA_CFG = {
     urlEliminarImagenBase: "/mto/bitacora/imagen/",
     maxImagenes:           2,
     i18n: {
-        selecFecha:     "{% trans 'Selecciona una fecha.' %}",
+        faltaFecha:     "{% trans 'Falta la fecha' %}",
+        selecFecha:     "{% trans 'Selecciona una fecha' %}",
         nuevoRegistro:  "{% trans 'Nuevo registro' %}",
         editarRegistro: "{% trans 'Editar registro' %}",
-        maxImagenes:    "{% trans 'Máximo {max} imágenes. Solo puedes agregar {n} más.' %}",
+        limiteFotos:    "{% trans 'Límite de fotos' %}",
+        maxImagenes:    "{% trans 'Solo puedes agregar {n} más (máximo {max})' %}",
         eliminarImagen: "{% trans '¿Eliminar esta imagen?' %}",
         limiteImagenes: "{% trans 'Límite de {max} imágenes alcanzado' %}",
         clicImagenes:   "{% trans 'Haz clic para seleccionar imágenes' %}"
@@ -790,7 +778,7 @@ window.BD_CFG = {
     urlBuscarResponsables: "{% url 'mto:buscar_responsables_bitacora' %}",
     urlImagenesBase:       "/mto/bitacora/",
     urlEliminarImagenBase: "/mto/bitacora/imagen/",
-    maxImagenes:           2
+    maxImagenes:           2,
 };
 window.BD_I18N = {
     tituloNuevo:      "{% trans 'Nuevo registro de bitácora' %}",
@@ -834,7 +822,7 @@ window.BITACORA_MOVIL = {
         cerrado:              "{% trans 'Cerrado' %}",
         verFoto:              "{% trans 'Ver foto {n}' %}",
         cargarN:              "{% trans 'Cargar {n} más' %}",
-        errorCargar:          "{% trans 'No se pudieron cargar más registros.' %}",
+        errorCargar:          "{% trans 'No se pudieron cargar más registros' %}",
         salirNuevoTitulo:     "{% trans '¿Salir sin guardar?' %}",
         salirNuevoTexto:      "{% trans 'Este registro todavía no se ha guardado. Si sales ahora, perderás lo que escribiste y las fotos.' %}",
         salirNuevoSeguir:     "{% trans 'Seguir con el registro' %}",

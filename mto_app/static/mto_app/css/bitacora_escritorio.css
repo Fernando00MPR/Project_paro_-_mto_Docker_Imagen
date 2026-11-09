@@ -157,6 +157,7 @@ a.bd-pag-b:hover { background: var(--surface); color: var(--text); }
 .bdm-lista li.activa, .bdm-lista li:hover { background: var(--surface); }
 .bdm-lista li small { margin-left: auto; color: var(--text-3); font-size: 12px; }
 .bdm-lista li.vacio { color: var(--text-3); cursor: default; }
+.bdm-lista li.aviso, .bdm-lista li.aviso:hover { display: block; cursor: default; background: var(--bd-pend-bg); color: var(--bd-pend-fg); font-size: 12.5px; line-height: 1.45; }
 
 /* Imágenes */
 .bdm-imgs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; border-radius: 12px; }

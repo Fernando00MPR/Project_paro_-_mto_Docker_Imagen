@@ -597,21 +597,9 @@ function datosDeFila(tr) {
     };
 }
 
-// ── Toast ─────────────────────────────────────────────────────
-function mostrarToast(msg, ok) {
-    let t = document.getElementById('acc-toast');
-    if (!t) {
-        t = document.createElement('div');
-        t.id = 'acc-toast';
-        t.style.cssText = 'position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;transition:opacity .3s;';
-        document.body.appendChild(t);
-    }
-    t.textContent      = msg;
-    t.style.background = ok ? '#DCFCE7' : '#FEE2E2';
-    t.style.color      = ok ? '#15803D' : '#991B1B';
-    t.style.opacity    = '1';
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+// ── Avisos: el componente común (showToast, base_menu.html) ───
+function mostrarToast(aviso, ok) {
+    if (typeof window.showToast === 'function') window.showToast(aviso, ok ? 'success' : 'error');
 }
 
 // ── Guardar fila vía AJAX ─────────────────────────────────────
@@ -625,10 +613,10 @@ function guardarFila(tr) {
     })
     .then(r => r.json())
     .then(d => {
-        if (d.ok) mostrarToast(d.msg, true);
-        else      mostrarToast('Error: ' + d.error, false);
+        if (d.ok) mostrarToast(d.created ? window.TXT_ACCION_GUARDADA : window.TXT_ACCION_ACTUALIZADA, true);
+        else      mostrarToast({ title: window.TXT_ERROR_ACCION, description: d.error }, false);
     })
-    .catch(() => mostrarToast('Error de conexión', false));
+    .catch(() => mostrarToast({ title: window.TXT_ERROR_ACCION, description: window.TXT_REVISA_CONEXION }, false));
 }
 
 // ── Cargar datos guardados en una fila ────────────────────────

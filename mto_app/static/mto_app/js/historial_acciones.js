@@ -38,7 +38,7 @@
             }
         } catch (e) {
             if (mio === pedido && !cuerpo.querySelector('.ha')) cuerpo.innerHTML = '<div class="ha-cargando">' + I.error + '</div>';
-            else if (typeof window.showToast === 'function') window.showToast(I.error, 'error');
+            else if (typeof window.showToast === 'function') window.showToast({ title: I.error, description: window.TXT_REVISA_CONEXION }, 'error');
         } finally {
             if (mio === pedido) cuerpo.classList.remove('ocupado');
         }

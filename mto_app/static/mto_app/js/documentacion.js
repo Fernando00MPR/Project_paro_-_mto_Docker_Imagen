@@ -293,7 +293,7 @@ function guardarRenombreElemento(tipo, id) {
                 aplicarOrdenActual();
             }
             if (typeof showToast === 'function') {
-                showToast(docI18n.renombrarExito || 'Renombrado correctamente')
+                showToast(docI18n.renombrarExito || 'Nombre cambiado');
             }
         } else {
             const err = wrap.querySelector('.doc-rename-error');

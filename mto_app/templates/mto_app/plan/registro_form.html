@@ -190,6 +190,9 @@
     .rf2-val-by[hidden], .rf2-val-rech[hidden], .rf2-reset[hidden] { display:none; }
     .rf2-val-by .rf2-combo { height:40px; }
     .rf2-val-fecha { height:40px; border:1px solid var(--rf-border); border-radius:10px; background:#fff; display:flex; align-items:center; gap:8px; padding:0 10px; font-size:13px; color:var(--rf-text-soft); }
+    .rf2-val-fecha.edita { padding:0; }
+    .rf2-val-fecha.edita:focus-within { border-color:var(--rf-primary); }
+    .rf2-val-fecha.edita .dp-control { height:38px; border:0; background:transparent; box-shadow:none; font-size:13px; }
     .rf2-val-rech { margin-top:10px; }
     .rf2-val-rech .rf2-ta { border-color:var(--rf-danger-border); min-height:60px; }
     .rf2-reset { margin-top:10px; padding:8px 10px; border-radius:10px; background:var(--rf-warn-bg); color:var(--rf-warn); font-size:12px; }
@@ -353,9 +356,16 @@
                             </div>
                             <div class="rf2-err" id="rf-err-validado_por" hidden></div>
                         </div>
-                        <div class="rf2-val-fecha">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>
-                            <span id="rf-val-fecha"></span>
+                        <div>
+                            <div class="rf2-val-fecha{% if rf_cfg.puedeFechaVal %} edita{% endif %}">
+                                {% if rf_cfg.puedeFechaVal %}
+                                {% include 'menu_app/_date_picker.html' with name='fecha_validacion' initial=rf_cfg.fechaValIso dp_id='dp-fecha-validacion' %}
+                                {% else %}
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>
+                                <span id="rf-val-fecha"></span>
+                                {% endif %}
+                            </div>
+                            <div class="rf2-err" id="rf-err-fecha_validacion" hidden></div>
                         </div>
                     </div>
                     <div class="rf2-val-rech" id="rf-val-rechazo" hidden>
@@ -432,13 +442,21 @@
     </div>
 </div>
 
-<!-- Toast -->
-<div id="toast-ok"
-     style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-            background:#065F46; color:#fff; padding:10px 20px; border-radius:8px;
-            font-size:13px; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.2);
-            align-items:center; gap:8px; z-index:9999; white-space:nowrap;">
-    ✓ {% blocktrans %}Ejecución de S{{ semana }} guardada{% endblocktrans %}
+{% comment %}Aviso al guardar: mismo diseño que showToast (base_menu.html), tipo éxito con título y detalle. Va aquí
+porque este formulario (iframe) no carga base_menu; registro_form.js lo muestra con display:flex.{% endcomment %}
+<div id="toast-ok" role="status" aria-live="polite"
+     style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:9999;
+            gap:12px; align-items:flex-start; width:380px; max-width:calc(100vw - 32px); box-sizing:border-box;
+            padding:12px 14px; border-radius:14px; background:#E3F3E9; border:1px solid #B9E0C8; color:#22663F;
+            box-shadow:0 6px 18px rgba(30,32,51,.08); font-family:'Lexend', system-ui, sans-serif; text-align:left;">
+    <span aria-hidden="true" style="width:28px; height:28px; flex:none; border-radius:14px; background:#2E8B57;
+                                    display:flex; align-items:center; justify-content:center;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>
+    </span>
+    <span style="flex:1; min-width:0;">
+        <span style="display:block; font-size:14px; font-weight:600; line-height:1.35;">{% trans "Ejecución guardada" %}</span>
+        <span style="display:block; margin-top:1px; font-size:13px; line-height:1.45; opacity:.85;">{% blocktrans %}Semana {{ semana }}{% endblocktrans %}</span>
+    </span>
 </div>
 
 {{ rf_cfg|json_script:"rf-cfg" }}
@@ -475,7 +493,9 @@ window.RF_I18N = {
     errorRed:          "{% trans 'Error de red. Intenta de nuevo.' %}",
     avisoLectura:      "{% trans 'No tienes permiso para registrar ejecuciones.' %}",
     avisoYaLlenado:    "{% trans 'Este registro ya fue llenado. Para modificarlo necesitas permiso de edición.' %}",
-    avisoSoloValidar:  "{% trans 'Solo puedes cambiar la validación de este registro.' %}"
+    avisoSoloValidar:  "{% trans 'Solo puedes cambiar la validación de este registro.' %}",
+    fechaValFutura:    "{% trans 'La fecha de validación no puede ser futura' %}",
+    fechaValAntes:     "{% trans 'La fecha de validación no puede ser anterior a la de ejecución' %}"
 };
 </script>
 <script src="{% static 'menu_app/js/date_picker.js' %}"></script>

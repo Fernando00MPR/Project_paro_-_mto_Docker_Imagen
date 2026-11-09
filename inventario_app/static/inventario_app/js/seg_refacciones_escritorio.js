@@ -425,11 +425,11 @@
                 return;
             }
             const errores = j.errores || {};
-            Object.keys(errores).forEach(c => (c === 'general' ? window.showToast && showToast(errores[c], 'error') : error(c, errores[c])));
+            Object.keys(errores).forEach(c => (c === 'general' ? window.showToast && showToast({ title: T.errorGuardarTit, description: errores[c] }, 'error') : error(c, errores[c])));
             const m = form.querySelector('.mal'); if (m) m.focus();
         }).catch(() => {
             listo();
-            if (window.showToast) showToast(T.errorRed, 'error');
+            if (window.showToast) showToast({ title: T.errorGuardarTit, description: window.TXT_REVISA_CONEXION }, 'error');
         });
     }
     form.addEventListener('submit', e => {

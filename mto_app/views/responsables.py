@@ -1,50 +1,52 @@
+import json
+
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
+from django.shortcuts import render, get_object_or_404
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.db.models import Count, Q
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.views.decorators.http import require_POST
-import json
+from django.http import JsonResponse
+
+
 from collections import Counter
 from login_app.permisos import puede_mto
-from .utils import requiere_acceso_mto
-from ..models import Area, Responsable, RegistroEjecucion
-from .utils import areas_permitidas_mto, areas_visibles_mto
-from django.http import JsonResponse
-from django.db import transaction
+from ..models import Responsable, RegistroEjecucion
+from .utils import areas_visibles_mto
 
 
 @login_required
 def buscar_responsables_mto(request):
-    from django.db import models
+    """Autocompletado de personas de Mantenimiento. Con ?area_id= (área de Paros: "Atendió" de un paro) busca en
+    el área de Mantenimiento del mismo nombre; sin él (formulario de seguimiento del Plan), en las áreas del usuario."""
+    
     q       = request.GET.get('q', '').strip()
     area_id = request.GET.get('area_id', '').strip()
 
     qs = Responsable.objects.select_related('area').filter(activo=True)
 
     if area_id:
-        try:
-            from paros_app.models import Area as AreaParos
-            area_paros = AreaParos.objects.get(pk=area_id)
-            nombres_posibles = set(filter(None, [
-                getattr(area_paros, 'nombre_es', None),
-                getattr(area_paros, 'nombre_en', None),
-                area_paros.nombre,
-            ]))
-        except Exception:
-            nombres_posibles = set()
+        from paros_app.models import Area as AreaParos
+        area_paros = AreaParos.objects.filter(pk=area_id).first() if area_id.isdigit() else None
+        nombres_posibles = set(filter(None, [
+            getattr(area_paros, 'nombre_es', None),
+            getattr(area_paros, 'nombre_en', None),
+            getattr(area_paros, 'nombre', None),
+        ]))
 
         if nombres_posibles:
             from mto_app.models import Area as AreaMto
-            q_nombres = models.Q()
+            q_nombres = Q()
             for nombre in nombres_posibles:
-                q_nombres |= models.Q(nombre__iexact=nombre)
+                q_nombres |= Q(nombre__iexact=nombre)
             area_mto = AreaMto.objects.filter(q_nombres).first()
             qs = qs.filter(area=area_mto) if area_mto else qs.none()
         else:
             qs = qs.none()
+    else:
+        qs = qs.filter(area__in=areas_visibles_mto(request))   # no personas de áreas que el usuario no ve
 
     if q:
         qs = (qs.filter(nombre__icontains=q) | qs.filter(apellidos__icontains=q))
@@ -162,10 +164,16 @@ def responsable_guardar(request, pk=None):
     errores = {}
     if not nomina:
         errores['nomina'] = _("Escribe el número de nómina")
+    elif len(nomina) > 20:
+        errores['nomina'] = _("La nómina admite máximo 20 caracteres")
     if not nombre:
         errores['nombre'] = _("Escribe el nombre")
+    elif len(nombre) > 100:
+        errores['nombre'] = _("El nombre admite máximo 100 caracteres")
     if not apellidos:
         errores['apellidos'] = _("Escribe los apellidos")
+    elif len(apellidos) > 100:
+        errores['apellidos'] = _("Los apellidos admiten máximo 100 caracteres")
     if errores:
         return JsonResponse({'ok': False, 'error': next(iter(errores.values())), 'errores': errores}, status=400)
 

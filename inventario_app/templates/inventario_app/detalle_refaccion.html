@@ -11,12 +11,6 @@
     eliminar reutilizan los modales de escritorio (_modales_refacciones.html).
 {% endcomment %}
 
-{% if messages %}
-<div class="iv-mensajes">
-    {% for msg in messages %}<div class="iv-mensaje {{ msg.tags }}">{{ msg }}</div>{% endfor %}
-</div>
-{% endif %}
-
 <div id="iv-detalle" class="iv-det"
      data-pk="{{ r.pk }}" data-no-item="{{ r.no_item }}" data-nombre="{{ r.nombre }}" data-area="{{ r.area_id }}"
      data-area-nombre="{{ r.area.nombre }}" data-categoria="{{ r.categoria_id|default:'' }}" data-unidad="{{ r.unidad }}"

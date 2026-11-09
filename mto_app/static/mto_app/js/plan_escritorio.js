@@ -17,10 +17,6 @@
         if (typeof window.showToast === 'function') window.showToast(msg, tipo);
         else if (typeof window.mostrarToast === 'function') window.mostrarToast(msg, tipo);
     }
-    try {   // avisos que sobreviven a una recarga (asignar responsable, eliminar todos)
-        const pend = sessionStorage.getItem('pe-toast');
-        if (pend) { sessionStorage.removeItem('pe-toast'); setTimeout(() => avisar(pend), 300); }
-    } catch (e) { /* sin storage */ }
 
     // ── Semana ISO ──────────────────────────────────────────────────────────
     function semanaIso(d) {
@@ -203,10 +199,10 @@
         const ico = btn.querySelector('svg'), html = ico ? ico.outerHTML : '';
         btn.setAttribute('aria-busy', 'true');
         if (ico) ico.outerHTML = '<span class="pe-giro" aria-hidden="true"></span>';
-        try { avisar(fmt(I.descargado, { archivo: await tarea() })); }
+        try { avisar({ title: I.descargado, description: await tarea() }); }
         catch (e) {
             console.error('Exportar:', e);   // detalle completo en la consola (F12)
-            avisar(e && e.message ? fmt(I.errorDetalle, { motivo: e.message }) : I.errorArchivo, 'error');
+            avisar({ title: I.errorArchivo, description: (e && e.message) || window.TXT_REVISA_CONEXION }, 'error');
         }
         finally {
             btn.removeAttribute('aria-busy');
@@ -325,9 +321,9 @@
             body: 'responsable=' + encodeURIComponent(id)
         }).then(r => {
             if (!r.ok) throw new Error('resp');
-            try { sessionStorage.setItem('pe-toast', I.responsableOk); } catch (e) { /* sin storage */ }
+            avisarAlCargar([[I.responsableOk, 'success']]);
             window.location.reload();
-        }).catch(() => avisar(I.errorResp));
+        }).catch(() => avisar({ title: I.errorResp, description: window.TXT_REVISA_CONEXION }, 'error'));
     }
     raiz.addEventListener('click', e => {
         const br = e.target.closest('.pe-resp');
@@ -388,7 +384,6 @@
         exp.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); exp.click(); } });
         $('pe-elim-form').addEventListener('submit', e => {
             if (inp.value !== 'ELIMINAR') { e.preventDefault(); return; }
-            try { sessionStorage.setItem('pe-toast', fmt(I.eliminados, { n: btnElim.dataset.total })); } catch (er) { /* sin storage */ }
         });
         fondoElim._cerrar = cerrarElim;
     }

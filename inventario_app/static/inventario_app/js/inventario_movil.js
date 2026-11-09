@@ -119,7 +119,7 @@
                     const sig = doc.getElementById('iv-cargar-mas');
                     if (sig) { btnMas.dataset.next = sig.dataset.next; btnMas.dataset.fin = sig.dataset.fin; etiquetar(); btnMas.disabled = false; }
                     else btnMas.remove();
-                }).catch(() => { btnMas.disabled = false; aviso(t('errorCargar'), 'error'); });
+                }).catch(() => { btnMas.disabled = false; aviso({ title: t('errorCargarTit'), description: window.TXT_REVISA_CONEXION }, 'error'); });
             });
         }
 
@@ -399,7 +399,7 @@
                 cerrarHoja('iv-sheet-foto', false);
                 fetch(`/inventario/${d.pk}/imagenes/subir/`, { method: 'POST', headers: { 'X-CSRFToken': CSRF }, body: fd })
                     .then(r => r.json()).then(data => { if (!data.ok) throw new Error(); window.location.reload(); })
-                    .catch(() => aviso(t('errorGuardar'), 'error'));
+                    .catch(() => aviso({ title: t('errorGuardarTit'), description: window.TXT_REVISA_CONEXION }, 'error'));
             }));
         }
 
@@ -444,7 +444,7 @@
             guardar.disabled = true;
             post(d.urlStock, { stock: nuevo })
                 .then(data => { pintarStock(data.stock); input.value = data.stock; pintarPreview(); aviso(t('stockActualizado')); })
-                .catch(e => { aviso(e.message || t('errorGuardar'), 'error'); pintarPreview(); });
+                .catch(e => { aviso({ title: t('errorGuardarTit'), description: e.message || window.TXT_REVISA_CONEXION }, 'error'); pintarPreview(); });
         });
         pintarPreview();
     }

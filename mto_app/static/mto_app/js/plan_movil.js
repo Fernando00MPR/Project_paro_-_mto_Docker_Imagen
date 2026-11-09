@@ -228,7 +228,7 @@
                         btnMas.remove();
                     }
                 })
-                .catch(() => { btnMas.disabled = false; mostrarToast(t('errorCargar')); });
+                .catch(() => { btnMas.disabled = false; mostrarToast({ title: t('errorCargarTit'), description: window.TXT_REVISA_CONEXION }, 'error'); });
         });
     }
 
@@ -327,7 +327,7 @@
                 cerrarHoja('pm-sheet-asignar');
                 mostrarToast(t('respGuardado'));
             })
-            .catch(() => { btnAsignar.disabled = false; mostrarToast(t('errorGuardar')); });
+            .catch(() => { btnAsignar.disabled = false; mostrarToast({ title: t('errorGuardarTit'), description: window.TXT_REVISA_CONEXION }, 'error'); });
     });
 
     // ── Horas por persona ───────────────────────────────────────────────────
@@ -552,7 +552,7 @@
                 fb.addEventListener('click', () => {
                     fetch(`/mto/seguimiento/ot/${s.id}/imagenes/`, { credentials: 'same-origin' }).then(r => r.json())
                         .then(d => { if ((d.imagenes || []).length) abrirVisor(d.imagenes.map(i => ({ url: i.url, etiqueta: '' })), null, 0); })
-                        .catch(() => mostrarToast(t('errorCargar')));
+                        .catch(() => mostrarToast({ title: t('errorCargarTit'), description: window.TXT_REVISA_CONEXION }, 'error'));
                 });
                 fila.appendChild(fb);
             }
@@ -932,7 +932,7 @@
             const r = await fetch(`/mto/equipos/${det.pk}/registro/${s.semana}/${det.data.anio}/`, { method: 'POST', headers: { 'X-CSRFToken': csrf }, body: fd, credentials: 'same-origin' });
             if (r.ok) {
                 det.sucio = false; det.huboCambio = true;
-                mostrarToast(t('registroGuardado', { n: s.semana }));
+                mostrarToast({ title: t('registroGuardado'), description: t('registroSemana', { n: s.semana }) });
                 cargarDetalle(siguientePendiente(s.semana), false);
                 return;
             }
@@ -960,8 +960,8 @@
         const s = semanaSel(); if (!s) return;
         pedirEliminar(td('eliminarRegistro'), td('elimRegTexto', { n: s.semana }), () => {
             fetch(`/mto/equipos/${det.pk}/registro/${s.semana}/${det.data.anio}/eliminar/`, { method: 'POST', headers: { 'X-CSRFToken': csrf }, credentials: 'same-origin' })
-                .then(r => { if (!r.ok) throw new Error(); det.sucio = false; det.huboCambio = true; mostrarToast(td('registroEliminado', { n: s.semana })); cargarDetalle(s.semana, false); })
-                .catch(() => mostrarToast(t('errorGuardar')));
+                .then(r => { if (!r.ok) throw new Error(); det.sucio = false; det.huboCambio = true; mostrarToast({ title: td('registroEliminado'), description: td('registroSemana', { n: s.semana }) }); cargarDetalle(s.semana, false); })
+                .catch(() => mostrarToast({ title: t('errorGuardarTit'), description: window.TXT_REVISA_CONEXION }, 'error'));
         }, e);
     });
 
@@ -1013,7 +1013,7 @@
     }
     $('pm-btn-dar').addEventListener('click', e => {
         const s = semanaSel();
-        if (!s || s.estado !== 'completada') { mostrarToast(td('darNoDisponible')); return; }
+        if (!s || s.estado !== 'completada') { mostrarToast({ title: td('darNoDisponibleTit'), description: td('darNoDisponible') }, 'info'); return; }
         abrirSeg(null, s, e);
     });
 
@@ -1128,7 +1128,8 @@
             }
             sf.sucio = false; det.huboCambio = true;
             cerrarHoja('pm-seg', false);
-            mostrarToast(falloFotos ? td('errorFotosSeg') : (sf.modo === 'editar' ? td('segGuardado') : td('segCreado', { orden: d.orden })));
+            if (falloFotos) mostrarToast({ title: td('errorFotosSeg'), description: td('errorFotosSegDet') }, 'warning');
+            else mostrarToast(sf.modo === 'editar' ? td('segGuardado') : td('segCreado', { orden: d.orden }));
             cargarDetalle(det.sel, false, { abrirSeg: true, resaltar: d.id });
         } catch (e) {
             error('pm-seg-err-general', t('errorGuardar'));
@@ -1139,7 +1140,7 @@
             fetch(`/mto/seguimiento/eliminar/${sf.id}/`, { method: 'POST', headers: { 'X-CSRFToken': csrf }, credentials: 'same-origin' })
                 .then(r => r.json()).then(d => { if (!d.ok) throw new Error(); sf.sucio = false; det.huboCambio = true; cerrarHoja('pm-seg', false);
                     mostrarToast(td('segEliminado', { orden: sf.orden })); cargarDetalle(det.sel, false, { abrirSeg: true }); })
-                .catch(() => mostrarToast(t('errorGuardar')));
+                .catch(() => mostrarToast({ title: t('errorGuardarTit'), description: window.TXT_REVISA_CONEXION }, 'error'));
         }, e);
     });
 

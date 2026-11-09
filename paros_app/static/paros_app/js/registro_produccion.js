@@ -106,7 +106,7 @@ function editarEquipo(td) {
             renderDt(regId, data.planeado, data.muerto, data.downtime);
             showToast(TXT_REGISTRO_ACTUALIZADO, 'success');
         } else {
-            showToast(data.error || TXT_ERROR_TURNO, 'error');
+            showToast({ title: TXT_ERROR_ACTUALIZAR, description: data.error || TXT_REVISA_CONEXION }, 'error');
             td.textContent    = actual;
             tr.dataset.equipo = actual;
         }
@@ -147,7 +147,7 @@ function editarTurno(td) {
                 renderDt(regId, data.planeado, data.muerto, data.downtime); 
                 showToast(TXT_REGISTRO_ACTUALIZADO, 'success'); 
             } else { 
-                showToast(data.error || TXT_ERROR_TURNO, 'error');
+                showToast({ title: TXT_ERROR_TURNO, description: data.error || TXT_REVISA_CONEXION }, 'error');
                 tr.dataset.turno = actual;
                 td.innerHTML = `<span class="badge ${actual===1?'badge-t1':'badge-t2'}">Turno ${actual}</span>`;
             }
@@ -177,7 +177,7 @@ function editarHora(td, tipo) {
         const val    = input.value.trim();
         const valido = /^([01]\d|2[0-3]):([0-5]\d)$/.test(val);
         if (!valido) {
-            showToast(TXT_FORMATO_HORA_INVALIDO, 'error');
+            showToast({ title: TXT_FORMATO_HORA_INVALIDO, description: TXT_HORA_AYUDA }, 'error');
             td.textContent = actual;
             return;
         }
@@ -198,7 +198,7 @@ function editarHora(td, tipo) {
                 renderDt(regId, data.planeado, data.muerto, data.downtime); 
                 showToast(TXT_REGISTRO_ACTUALIZADO, 'success'); 
             } else { 
-                showToast(data.error, 'error');
+                showToast({ title: TXT_ERROR_ACTUALIZAR, description: data.error || TXT_REVISA_CONEXION }, 'error');
                 td.textContent = actual;
                 if (tipo === 'inicio') tr.dataset.inicio = actual;
                 else tr.dataset.fin = actual;
@@ -263,7 +263,7 @@ function editarMolde(td) {
         const molde = MOLDES_DATA.find(m => m.nombre_molde === nombre);
         if (!molde) {
             td.textContent = actualNombre || '—';
-            if (nombre) showToast(TXT_MOLDE_INVALIDO, 'error');
+            if (nombre) showToast({ title: TXT_MOLDE_INVALIDO, description: TXT_MOLDE_AYUDA }, 'error');
             return;
         }
 
@@ -281,7 +281,7 @@ function editarMolde(td) {
             renderDt(regId, data.planeado, data.muerto, data.downtime);
             showToast(TXT_REGISTRO_ACTUALIZADO, 'success');
         } else {
-            showToast(data.error || TXT_ERROR_MOLDE, 'error');
+            showToast({ title: TXT_ERROR_MOLDE, description: data.error || TXT_REVISA_CONEXION }, 'error');
             td.textContent       = actualNombre || '—';
             numeroTd.textContent = actualNumero || '—';
         }
@@ -309,8 +309,8 @@ async function agregarRegistro(areaId) {
     const numero_molde = moldeSel ? moldeSel.value : '';
     const nombre_molde = moldeNombre ? moldeNombre.value : '';
 
-    if (!horaIni || !horaFin) { showToast(TXT_HORA_REQUERIDA, 'error'); return; }
-    if (moldeNombre && !numero_molde) { showToast(TXT_MOLDE_INVALIDO, 'error'); return; }
+    if (!horaIni || !horaFin) { showToast({ title: TXT_HORA_REQUERIDA, description: TXT_HORA_REQ_AYUDA }, 'error'); return; }
+    if (moldeNombre && !numero_molde) { showToast({ title: TXT_MOLDE_INVALIDO, description: TXT_MOLDE_AYUDA }, 'error'); return; }
     
     const res = await fetch(URL_AGR, {
         method: 'POST',
@@ -319,10 +319,10 @@ async function agregarRegistro(areaId) {
     });
     const data = await res.json();
     if (data.ok) {
-        showToast(TXT_REGISTRO_GUARDADO, 'success');
-        setTimeout(() => window.location.reload(), 300);
+        avisarAlCargar([[{ title: TXT_REGISTRO_GUARDADO }, 'success']]);   // se muestra después de recargar
+        window.location.reload();
     } else {
-        showToast(TXT_ERROR_TPL.replace('{error}', data.error), 'error');
+        showToast({ title: TXT_ERROR_GUARDAR, description: data.error || TXT_REVISA_CONEXION }, 'error');
     }
 }
 
@@ -358,7 +358,7 @@ document.getElementById('btn-confirmar-eliminar').onclick = async () => {
         showToast(TXT_REGISTRO_ELIMINADO, 'success');
         document.getElementById('row-' + idBorrado).remove();
     } else {
-        showToast(TXT_ERROR_ELIMINAR, 'error');
+        showToast({ title: TXT_ERROR_ELIMINAR, description: data.error || TXT_REVISA_CONEXION }, 'error');
         if (trigger) trigger.focus();
     }
 };
@@ -565,7 +565,7 @@ async function persistirOrden(tbody, ordenPrevio) {
     } catch (err) { /* data.ok se queda en false */ }
     if (!data.ok) {
         aplicarOrden(tbody, ordenPrevio);
-        showToast(TXT_ERROR_ORDEN, 'error');
+        showToast({ title: TXT_ERROR_ORDEN, description: TXT_REVISA_CONEXION }, 'error');
     }
 }
 

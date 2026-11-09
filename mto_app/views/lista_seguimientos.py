@@ -1,20 +1,23 @@
 import unicodedata
 from types import SimpleNamespace
-from datetime import timedelta
+from datetime import date, timedelta
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404, render
+from django.db.models import Count
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from ..models import SeguimientoOT, SeguimientoManual, Area, ImagenSeguimiento, Responsable
+from ..models import SeguimientoOT, SeguimientoManual, ImagenSeguimiento, Responsable
+from paros_app.models import imagen_subida_valida
 from login_app.permisos import puede_mto
-from .utils import areas_visibles_mto, areas_ids_restringidas, requiere_permiso_json
+from .utils import areas_visibles_mto, areas_ids_restringidas, requiere_permiso_json, area_visible, seguimiento_o_404
+from menu_app.avisos import aviso
 
 
 def _en_alcance(qs, area_id, areas_ids, campo='area_id'):
@@ -70,6 +73,15 @@ def _qs(params, *excluir):
     return p.urlencode()
 
 
+def _fecha_iso(texto):
+    """'AAAA-MM-DD' si es una fecha válida; si no, '' (el filtro se ignora en vez de dar error 500)."""
+    texto = (texto or '').strip()
+    try:
+        return date.fromisoformat(texto).isoformat() if texto else ''
+    except ValueError:
+        return ''
+
+
 def _consulta(request):
     """Filtros, conteos y orden de Seguimientos correctivos a partir del GET.
     La usan la lista (que luego pagina) y la exportación (que toma todas las filas)."""
@@ -84,8 +96,8 @@ def _consulta(request):
     filtro_problema = request.GET.get('problema', '').strip()
     filtro_accion   = request.GET.get('accion', '').strip()
     filtro_validado = request.GET.get('validado', '')
-    filtro_fecha_desde = request.GET.get('fecha_desde', '').strip()
-    filtro_fecha_hasta = request.GET.get('fecha_hasta', '').strip()
+    filtro_fecha_desde = _fecha_iso(request.GET.get('fecha_desde'))
+    filtro_fecha_hasta = _fecha_iso(request.GET.get('fecha_hasta'))
     orden_por  = request.GET.get('orden_por', 'fecha_creacion')
     direccion  = request.GET.get('direccion', 'desc')
     # Buscador único (orden OR problema OR acción OR notas) y "Solo vencidos" (celular).
@@ -116,7 +128,8 @@ def _consulta(request):
     def _base():
         """Correctivos con todos los filtros EXCEPTO estatus y chip de Atención
         (así se pueden contar los chips de ambos grupos por separado)."""
-        qs = _en_alcance(SeguimientoManual.objects.select_related('area', 'creado_por'), area_id, areas_ids)
+        qs = _en_alcance(SeguimientoManual.objects.select_related('area', 'creado_por')
+                        .annotate(n_fotos=Count('imagenes')), area_id, areas_ids)
 
         if filtro_problema:
             qs = qs.filter(problema__icontains=filtro_problema)
@@ -213,14 +226,8 @@ def _consulta(request):
 @login_required
 def lista_seguimientos(request):
 
-    perfil   = request.user.perfil if hasattr(request.user, 'perfil') else None
-    es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
-
-    acceso = getattr(request.user, 'acceso_mto', None)
-    puede_ver = es_admin or (acceso and acceso.ver_seguimiento)
-    if not puede_ver:
-        messages.error(request, _("No tienes permiso para ver esta sección."))
-        from django.shortcuts import redirect
+    if not puede_mto(request.user, 'ver_seguimiento'):
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver esta sección")))
         return redirect('mto:dashboard')
 
     c = _consulta(request)
@@ -260,12 +267,11 @@ def lista_seguimientos(request):
         anio, sem, _dia = (s.fecha_compromiso or timezone.localtime(s.fecha_creacion).date()).isocalendar()
         s.semana = f"S{sem}/{anio}"
         # Escritorio.
-        s.dias_vencido = dias_vencido(s, hoy)
+        s.dias_vencido   = dias_vencido(s, hoy)
         s.vencido_fuerte = s.dias_vencido > 30
-        s.iniciales = _iniciales(s.responsable)
-        s.fotos = s.imagenes.count()
+        s.iniciales      = _iniciales(s.responsable)
+        s.fotos          = s.n_fotos
 
-    seguimientos_pagina          = []
     seguimientos_manuales_pagina = list(combinados_page)
 
     areas = areas_visibles_mto(request)
@@ -311,7 +317,6 @@ def lista_seguimientos(request):
     total_seguimientos = _en_alcance(SeguimientoManual.objects.all(), area_id, c.areas_ids).count()
 
     return render(request, 'mto_app/seguimientos/lista_seguimientos.html', {
-        'seguimientos':               seguimientos_pagina,
         'seguimientos_manuales':      seguimientos_manuales_pagina,
         'combinados_page':            combinados_page,
         'per_page':                   per_page,
@@ -327,12 +332,11 @@ def lista_seguimientos(request):
         'orden_por':                  orden_por,
         'direccion':                  direccion,
         'areas':                      areas,
-        'estatus_choices':            SeguimientoOT.ESTATUS_CHOICES,
         'area_nombre':                area_nombre,
-        'puede_editar_seguimiento':   (es_admin or (acceso and acceso.editar_seguimiento)),
-        'puede_eliminar_seguimiento': (es_admin or (acceso and acceso.eliminar_seguimiento)),
-        'puede_validar_seguimiento':  (es_admin or (acceso and acceso.validar_seguimiento)),
-        'puede_llenar_seguimiento':   (es_admin or (acceso and (acceso.llenar_seguimiento or acceso.editar_seguimiento))),
+        'puede_editar_seguimiento':   puede_mto(request.user, 'editar_seguimiento'),
+        'puede_eliminar_seguimiento': puede_mto(request.user, 'eliminar_seguimiento'),
+        'puede_validar_seguimiento':  puede_mto(request.user, 'validar_seguimiento'),
+        'puede_llenar_seguimiento':   puede_mto(request.user, 'llenar_seguimiento') or puede_mto(request.user, 'editar_seguimiento'),
         # Vista de celular
         'filtro_q':                   filtro_q,
         'filtro_vencidos':            filtro_vencidos,
@@ -365,12 +369,8 @@ def lista_seguimientos(request):
 @require_POST
 def subir_imagenes_seguimiento(request, tipo, seg_pk):
     """tipo: 'ot' o 'manual'"""
-    if tipo == 'ot':
-        seg = get_object_or_404(SeguimientoOT, pk=seg_pk)
-        campo = {'seguimiento_ot': seg}
-    else:
-        seg = get_object_or_404(SeguimientoManual, pk=seg_pk)
-        campo = {'seguimiento_manual': seg}
+    seg   = seguimiento_o_404(request, SeguimientoOT if tipo == 'ot' else SeguimientoManual, seg_pk)
+    campo = {'seguimiento_ot': seg} if tipo == 'ot' else {'seguimiento_manual': seg}
 
     # Llenar solo permite agregar imágenes a un seguimiento que la misma persona creó; cualquier otro caso pide Editar.
     if not (puede_mto(request.user, 'editar_seguimiento')
@@ -378,6 +378,8 @@ def subir_imagenes_seguimiento(request, tipo, seg_pk):
         return JsonResponse({'ok': False, 'error': _('No tienes permiso para realizar esta acción.')}, status=403)
 
     imagenes = request.FILES.getlist('imagenes')
+    if not all(imagen_subida_valida(f) for f in imagenes):
+        return JsonResponse({'ok': False, 'error': _("Solo fotos JPG o PNG de hasta 5 MB.")}, status=400)
     existentes = seg.imagenes.count()
     disponibles = 4 - existentes
 
@@ -391,10 +393,9 @@ def subir_imagenes_seguimiento(request, tipo, seg_pk):
 
 @login_required
 def imagenes_seguimiento(request, tipo, seg_pk):
-    if tipo == 'ot':
-        seg = get_object_or_404(SeguimientoOT, pk=seg_pk)
-    else:
-        seg = get_object_or_404(SeguimientoManual, pk=seg_pk)
+    """Fotos de un correctivo de un área del usuario (las ve el Plan y la lista de Seguimientos)."""
+    seg = seguimiento_o_404(request, SeguimientoOT if tipo == 'ot' else SeguimientoManual, seg_pk)
+      
     imagenes = [{'id': img.id, 'url': img.imagen.url} for img in seg.imagenes.all()]
     return JsonResponse({'imagenes': imagenes})
 
@@ -403,7 +404,9 @@ def imagenes_seguimiento(request, tipo, seg_pk):
 @require_POST
 @requiere_permiso_json('editar_seguimiento')
 def eliminar_imagen_seguimiento(request, imagen_id):
-    imagen = get_object_or_404(ImagenSeguimiento, id=imagen_id)
-    imagen.imagen.delete()
-    imagen.delete()
+    imagen = get_object_or_404(ImagenSeguimiento.objects.select_related('seguimiento_ot__registro__plan', 'seguimiento_manual'),                                id=imagen_id)
+    area_id = imagen.seguimiento_ot.registro.plan.area_id if imagen.seguimiento_ot_id else imagen.seguimiento_manual.area_id
+    if not area_visible(request, area_id):
+        raise Http404
+    imagen.delete()   # el archivo lo borra la señal post_delete
     return JsonResponse({'ok': True})

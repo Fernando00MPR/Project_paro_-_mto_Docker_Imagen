@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
+from menu_app.avisos import aviso
 
 from ...models import Area, CatalogoEquipo
 from ...views.utils import _excel_response, _estilo_cabecera, _nombre_bilingue
@@ -56,7 +57,7 @@ def catalogo_equipos_general(request):
 def limpiar_equipos_area(request, area_id):
     area = get_object_or_404(Area, id=area_id)
     CatalogoEquipo.objects.filter(area=area).delete()
-    messages.success(request, _("Catálogo de equipos de '{area}' eliminado.").format(area=area.nombre))
+    messages.success(request, aviso(_("Catálogo eliminado"), _("Equipos de {area}").format(area=area.nombre)))
     return redirect('paros:catalogo_equipos')
 
 
@@ -310,16 +311,16 @@ def agregar_equipos(request, area_id):
         sub_area_es = request.POST.get('sub_area_es', '').strip()
         sub_area_en = request.POST.get('sub_area_en', '').strip()
         if not codigo or not equipo_es:
-            messages.error(request, _("Código y equipo en español son obligatorios."))
+            messages.error(request, aviso(_("Faltan datos"), _("El código y el equipo en español son obligatorios")))
         elif CatalogoEquipo.objects.filter(area=area, codigo=codigo).exists():
-            messages.error(request, _("Ya existe un equipo con el código '{codigo}' en esta área.").format(codigo=codigo))
+            messages.error(request, aviso(_("Código repetido"), _("Ya existe un equipo con el código '{codigo}' en esta área").format(codigo=codigo)))
         else:
             CatalogoEquipo.objects.create(
                 area=area, codigo=codigo,
                 equipo=equipo_es, equipo_es=equipo_es, equipo_en=equipo_en,
                 sub_area=sub_area_es, sub_area_es=sub_area_es, sub_area_en=sub_area_en,
             )
-            messages.success(request, _("Equipo '{equipo}' agregado correctamente.").format(equipo=_nombre_bilingue(equipo_es, equipo_en)))
+            messages.success(request, aviso(_("Equipo agregado"), _nombre_bilingue(equipo_es, equipo_en)))
     return redirect('paros:catalogo_equipos')
 
 @login_required
@@ -333,9 +334,9 @@ def editar_equipo(request, equipo_id):
         sub_area_es = request.POST.get('sub_area_es', '').strip()
         sub_area_en = request.POST.get('sub_area_en', '').strip()
         if not codigo or not equipo_es:
-            messages.error(request, _("Código y equipo en español son obligatorios."))
+            messages.error(request, aviso(_("Faltan datos"), _("El código y el equipo en español son obligatorios")))
         elif CatalogoEquipo.objects.filter(area=equipo.area, codigo=codigo).exclude(id=equipo.id).exists():
-            messages.error(request, _("Ya existe un equipo con el código '{codigo}'.").format(codigo=codigo))
+            messages.error(request, aviso(_("Código repetido"), _("Ya existe un equipo con el código '{codigo}'").format(codigo=codigo)))
         else:
             equipo.codigo      = codigo
             equipo.equipo      = equipo_es
@@ -345,5 +346,5 @@ def editar_equipo(request, equipo_id):
             equipo.sub_area_es = sub_area_es
             equipo.sub_area_en = sub_area_en
             equipo.save()
-            messages.success(request, _("Equipo '{equipo}' actualizado correctamente.").format(equipo=_nombre_bilingue(equipo_es, equipo_en)))
+            messages.success(request, aviso(_("Equipo actualizado"), _nombre_bilingue(equipo_es, equipo_en)))
     return redirect('paros:catalogo_equipos')

@@ -30,7 +30,7 @@ function cambiarEstatus(paroId, btn) {
             showToast(i18n.estatusActualizado);
         }
     })
-    .catch(() => showToast(i18n.errorEstatus, 'error'));
+    .catch(() => showToast({ title: i18n.errorEstatus, description: i18n.revisaConexion }, 'error'));
 }
 
 // ── Dropdown exportar ─────────────────────────────────────────────────────────
@@ -106,10 +106,10 @@ function enviarCampo(paroId, campo, valor, cell, original, onSuccess) {
             showToast(i18n.campoActualizado);
         } else {
             cell.innerHTML = original;
-            showToast(data.error || i18n.errorGuardar, 'error');
+            showToast({ title: i18n.errorGuardar, description: data.error || i18n.revisaConexion }, 'error');
         }
     })
-    .catch(() => { cell.innerHTML = original; showToast(i18n.errorRed,'error'); });
+    .catch(() => { cell.innerHTML = original; showToast({ title: i18n.errorRed, description: i18n.revisaConexion }, 'error'); });
 }
 
 // ── Edición inline — texto (tiempo_minutos y comentarios) ─────────────────────
@@ -134,7 +134,7 @@ document.querySelectorAll('.editable').forEach(cell => {
                 const val = input.value.trim();
                 const valido = /^\d+$/.test(val) && parseInt(val) >= 0;
                 if (!valido) {
-                    showToast(i18n.minutosInvalidos, 'error');
+                    showToast({ title: i18n.minutosInvalidos, description: i18n.minutosAyuda }, 'error');
                     this.innerHTML = original;
                     return;
                 }
@@ -195,7 +195,7 @@ document.querySelectorAll('.editable-fecha').forEach(cell => {
             if (!val) { this.innerHTML = displayOriginal; return; }
             const match = val.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
             if (!match) {
-                showToast(i18n.fechaInvalida, 'error');
+                showToast({ title: i18n.fechaInvalida, description: i18n.fechaAyuda }, 'error');
                 this.innerHTML = displayOriginal;
                 return;
             }
@@ -242,7 +242,7 @@ document.querySelectorAll('.editable-hora').forEach(cell => {
             const val = input.value.trim();
             const valido = /^([01]\d|2[0-3]):([0-5]\d)$/.test(val);
             if (!valido) {
-                showToast(i18n.horaInvalida, 'error');
+                showToast({ title: i18n.horaInvalida, description: i18n.horaAyuda }, 'error');
                 this.innerHTML = original;
                 return;
             }
@@ -290,8 +290,9 @@ document.querySelectorAll('[data-campo="turno"]').forEach(cell => {
             .then(r => r.json())
             .then(data => {
                 if (data.success) showToast(i18n.turnoActualizado);
-                else showToast(data.error || i18n.errorGenerico, 'error');
-            });
+                else showToast({ title: i18n.errorTurno, description: data.error || i18n.revisaConexion }, 'error');
+            })
+            .catch(() => showToast({ title: i18n.errorTurno, description: i18n.revisaConexion }, 'error'));
         };
         sel.addEventListener('blur', save);
         sel.addEventListener('keydown', e => { if (e.key==='Enter') sel.blur(); });

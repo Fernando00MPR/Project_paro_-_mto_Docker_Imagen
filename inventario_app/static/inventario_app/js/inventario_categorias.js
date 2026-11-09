@@ -181,7 +181,7 @@
         enviar(url('urlEliminar', c.id), {}).then(d => {
             $('ive-cats-conf-si').disabled = false;
             conf.hidden = true; porEliminar = botonEliminar = null;
-            if (!d.ok) { if (window.showToast) showToast(d.error || T.errorRed, 'error'); return; }
+            if (!d.ok) { if (window.showToast) showToast({ title: T.errorGuardarTit, description: d.error || window.TXT_REVISA_CONEXION }, 'error'); return; }
             cats = cats.filter(x => x.id !== c.id);
             cambios = true;
             pintar();

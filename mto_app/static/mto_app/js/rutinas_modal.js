@@ -53,7 +53,7 @@
             }
         } catch (e) {
             if (mio === pedido && !cuerpo.querySelector('.rt')) cuerpo.innerHTML = '<div class="rt-cargando">' + I.error + '</div>';
-            else toast(I.error, 'error');
+            else toast({ title: I.error, description: window.TXT_REVISA_CONEXION }, 'error');
         } finally {
             if (mio === pedido) cuerpo.classList.remove('ocupado');
         }
@@ -290,7 +290,7 @@
 
     
     function abrirImportar() {
-        if (!CFG.area) { toast(I.sinArea, 'warning'); return; }
+        if (!CFG.area) { toast({ title: I.sinAreaTit, description: I.sinArea }, 'warning'); return; }
         let planes = [];
         try { planes = JSON.parse($('rt-planes-json').textContent) || []; } catch (e) { planes = []; }
         selPlan.innerHTML = '<option value="">' + esc(I.eligePlan) + '</option>' +
@@ -344,7 +344,7 @@
                 return;
             }
             ri.hidden = true;
-            toast(fmt(I.toastImportada, { codigo: d.codigo || selPlan.value, n: d.n }));
+            toast({ title: I.toastImportada, description: fmt(I.toastImportadaDet, { codigo: d.codigo || selPlan.value, n: d.n }) });
             params.delete('q'); params.set('rutina', d.clave);
             cargar();
         } catch (e) {

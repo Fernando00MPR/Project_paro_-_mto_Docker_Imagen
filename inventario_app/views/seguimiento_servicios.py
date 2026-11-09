@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
+from menu_app.avisos import aviso
 from django.views.decorators.http import require_POST
 
 from mto_app.models import Area
@@ -99,7 +100,7 @@ def _preparar_servicio(s, hoy):
 @login_required
 def lista_seguimientos_servicio(request):
     if not _puede(request, 'ver_seguimiento_servicio'):
-        messages.error(request, _("No tienes permiso para ver esta sección."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver esta sección")))
         return redirect('mto:dashboard')
 
     lista, filtros = _filtrar_seguimientos(request)
@@ -287,7 +288,7 @@ def guardar_seguimiento_servicio(request, pk=None):
     if not _puede(request, 'editar_seguimiento_servicio'):
         if es_ajax:
             return JsonResponse({'ok': False, 'errores': {'general': _("No tienes permiso para editar seguimientos de servicios.")}}, status=403)
-        messages.error(request, _("No tienes permiso para editar seguimientos de servicios."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para editar seguimientos de servicios")))
         return redirect('inventario:lista_seguimientos_servicio')
 
     seguimiento = get_object_or_404(SeguimientoServicio, pk=pk) if pk else None
@@ -330,17 +331,17 @@ def guardar_seguimiento_servicio(request, pk=None):
                 for k, v in datos.items():
                     setattr(seguimiento, k, v)
                 seguimiento.save()
-                messages.success(request, _("Seguimiento de servicio actualizado."))
+                messages.success(request, aviso(_("Seguimiento actualizado")))
             else:
                 SeguimientoServicio.objects.create(**datos)
-                messages.success(request, _("Seguimiento de servicio creado."))
+                messages.success(request, aviso(_("Seguimiento creado")))
 
             return _redirect_lista_seguimientos_servicio(request, area_obj.pk)
 
         except ValueError as e:
-            messages.error(request, str(e))
+            messages.error(request, aviso(_("No se pudo guardar el seguimiento"), str(e).rstrip(".")))
         except Exception as e:
-            messages.error(request, _("Error al guardar: {error}").format(error=e))
+            messages.error(request, aviso(_("No se pudo guardar el seguimiento"), str(e)))
 
     area_id = request.POST.get('area', '') or request.GET.get('area', '')
     return _redirect_lista_seguimientos_servicio(request, area_id)
@@ -349,21 +350,21 @@ def guardar_seguimiento_servicio(request, pk=None):
 @login_required
 def eliminar_seguimiento_servicio(request, pk):
     if not _puede(request, 'eliminar_seguimiento_servicio'):
-        messages.error(request, _("No tienes permiso para eliminar seguimientos de servicios."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para eliminar seguimientos de servicios")))
         return redirect('inventario:lista_seguimientos_servicio')
 
     seguimiento = get_object_or_404(SeguimientoServicio, pk=pk)
     area_id = seguimiento.area_id
     if request.method == 'POST':
         seguimiento.delete()
-        messages.success(request, _("Seguimiento de servicio eliminado."))
+        messages.success(request, aviso(_("Seguimiento eliminado")))
     return _redirect_lista_seguimientos_servicio(request, area_id)
 
 
 @login_required
 def exportar_seguimientos_servicio(request):
     if not _puede(request, 'ver_seguimiento_servicio'):
-        messages.error(request, _("No tienes permiso para exportar."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para exportar")))
         return redirect('inventario:lista_seguimientos_servicio')
 
     # Mismos filtros que la lista (buscador, tipo, fecha de registro y tarjeta de estatus)

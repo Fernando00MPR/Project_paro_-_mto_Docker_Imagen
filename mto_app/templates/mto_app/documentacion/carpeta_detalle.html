@@ -7,19 +7,6 @@
 {% endblock %}
 {% block content %}
 
-{% if messages %}
-<div style="margin-bottom:12px;">
-    {% for msg in messages %}
-    <div style="padding:10px 16px; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:6px;
-                background:{% if msg.tags == 'error' %}var(--red-lt){% else %}#D1FAE5{% endif %};
-                color:{% if msg.tags == 'error' %}var(--red){% else %}#065F46{% endif %};
-                border:1px solid {% if msg.tags == 'error' %}var(--red){% else %}#6EE7B7{% endif %};">
-        {{ msg }}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-
 <div class="dcm-desktop-only" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12.5px; color:var(--text-3); margin-bottom:10px;">
     <a href="{% url 'mto:documentos_generales' %}" style="color:var(--text-3); text-decoration:none;"
        onmouseover="this.style.color='var(--indigo)'" onmouseout="this.style.color='var(--text-3)'">{% trans "Documentos Generales" %}</a>
@@ -571,7 +558,7 @@
 {% trans "Documentos Generales" as i18n_raiz_documentos %}
 {% trans "Guardar" as i18n_renombrar_guardar %}
 {% trans "Cancelar" as i18n_renombrar_cancelar %}
-{% trans "Renombrado correctamente" as i18n_renombrar_exito %}
+{% trans "Nombre cambiado" as i18n_renombrar_exito %}
 
 
 window.DOC_CFG = {

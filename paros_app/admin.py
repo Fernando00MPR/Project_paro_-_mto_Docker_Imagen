@@ -1,10 +1,22 @@
 from django.contrib import admin
+from django.db.models import Exists, OuterRef, Q
+from django.utils.translation import gettext_lazy
+from mto_app.models import Area as AreaMto
 from .models import Area, Paro, CatalogoFalla, CatalogoEquipo, CatalogoResponsable, TargetIndicador, AccionDia, ConfiguracionMoldes, ConfiguracionHoraHora, ConfiguracionAgv
 
 @admin.register(Area)
 class AreaAdmin(admin.ModelAdmin):
-    list_display   = ('id', 'nombre')
+    list_display   = ('id', 'nombre', 'en_mto')
     search_fields  = ('nombre',)
+
+    def get_queryset(self, request):
+        # "¿Existe en Mantenimiento?": la Bitácora de mantenimiento empata las áreas por nombre (es o en)
+        pareja = AreaMto.objects.filter(Q(nombre__iexact=OuterRef('nombre_es')) | Q(nombre__iexact=OuterRef('nombre_en')))
+        return super().get_queryset(request).annotate(tiene_pareja=Exists(pareja))
+
+    @admin.display(boolean=True, description=gettext_lazy("¿Existe en Mantenimiento?"), ordering='tiene_pareja')
+    def en_mto(self, obj):
+        return obj.tiene_pareja
 
 
 @admin.register(ConfiguracionMoldes)

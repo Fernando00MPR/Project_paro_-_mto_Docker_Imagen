@@ -359,7 +359,7 @@
                 .catch(() => {
                     cargando = false;
                     if (centinela) centinela.querySelector('td').textContent = t('errorCargar');
-                    if (typeof showToast === 'function') showToast(t('errorCargar'), 'error');
+                    if (typeof showToast === 'function') showToast({ title: t('errorCargarTit'), description: window.TXT_REVISA_CONEXION }, 'error');
                 });
         }
 

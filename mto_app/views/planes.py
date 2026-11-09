@@ -1,32 +1,44 @@
 import io
 import json
+import logging
+
 from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 from django.utils import timezone
 from login_app.permisos import puede_mto
 from .utils import puede_llenar_mto
 from django.views.decorators.clickjacking import xframe_options_exempt
-from openpyxl import load_workbook, Workbook
+from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from django.utils.translation import gettext as _
 
 from collections import Counter, defaultdict
-from .utils import areas_permitidas_mto, puede_asignar_responsable
 from django.db.models import Count
 from django.http import HttpResponse
-from ..models import Area, PlanMantenimiento, RegistroEjecucion, Responsable, SeguimientoOT
+from ..models import Area, PlanMantenimiento, RegistroEjecucion, Responsable, SeguimientoOT, ImagenRegistro, ImagenSeguimiento
 from django.urls import reverse
-from .utils import _planes_que_tocan, lunes_de_semana, INTERVALO, _frecuencia_desde_excel, _aplicar_orden_plan, _orden_por_plan_trabajo, numeros_ot_semana
+from .utils import areas_visibles_mto, area_del_plan, puede_ver_plan, puede_asignar_responsable
+from .utils import _planes_que_tocan, lunes_de_semana, INTERVALO, _aplicar_orden_plan, _orden_por_plan_trabajo, numeros_ot_semana, numero_ot
+from menu_app.avisos import aviso
+
+logger = logging.getLogger(__name__)
 
 
-CAPACIDAD_HORAS_PERSONA = 24   # referencia semanal por persona (el modal "Tiempo por persona")
+# referencia semanal por persona (el modal "Tiempo por persona")
+CAPACIDAD_HORAS_PERSONA = 24   
 
+# Columnas del Excel del plan: las comparten Exportar plan y la plantilla, en el orden que lee planes_importar.py
+ENCABEZADOS_EXCEL_PLAN = [
+    '', 'CODIGO', 'RUTINA', 'EQUIPO (descripcion tarea)', 'Duracion (horas)',
+    'Frecuencia', 'Plan de Trabajo', 'Equipo (nombre corto)', 'Locacion',
+    'Tipo de mantenimiento', 'Prioridad', 'Status', 'Semana inicio', 'Anio inicio'
+    ]
+ANCHOS_EXCEL_PLAN = [5, 14, 18, 40, 16, 12, 14, 30, 25, 22, 12, 12, 14, 12]
 
 def carga_por_persona(items):
     """items: [(plan, registro_o_None)] de UNA semana → horas programadas por responsable.
@@ -62,17 +74,15 @@ def carga_por_persona(items):
 
 @login_required
 def lista_plan(request):
+    """Plan de mantenimiento: tareas del área que tocan en la semana elegida (o todas con ?todo=1), con buscador,
+    filtro de frecuencia, orden, KPIs, carga por persona y la vista de celular. Siempre en un área del usuario
+    (area_del_plan). Diagrama: docs/flujos/01-plan-mantenimiento.md"""
+
     acceso = getattr(request.user, 'acceso_mto', None)
-    puede_ver = (
-        request.user.is_superuser or
-        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
-        (acceso and acceso.ver_plan_mantenimiento)
-    )
-    if not puede_ver:
-        messages.error(request, _("No tienes permiso para ver esta sección."))
+    if not puede_ver_plan(request):
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver esta sección")))
         return redirect('mto:dashboard')
     
-    area_id        = request.GET.get('area')
     frecuencia     = request.GET.get('frecuencia')
     busqueda       = request.GET.get('q', '').strip()
     filtro_semana  = request.GET.get('semana', '').strip()
@@ -98,26 +108,20 @@ def lista_plan(request):
 
     planes = PlanMantenimiento.objects.select_related('area').filter(activo=True)
 
-    if area_id:
-        request.session['lista_plan_area_id'] = area_id
-    else:
-        area_id = request.session.get('lista_plan_area_id', '')
-
-    if area_id:
-        planes = planes.filter(area_id=area_id)
-
+    # Siempre un área del usuario (nunca otra por URL, ni todas mezcladas): ver area_del_plan
+    area_id = area_del_plan(request)
+    request.session['lista_plan_area_id'] = area_id
+    planes = planes.filter(area_id=area_id) if area_id else planes.none()
     planes = _aplicar_orden_plan(planes, request.GET)
-    
+
     hoy         = date.today()
-    anio_filtro = int(filtro_anio) if filtro_anio else hoy.year
+    anio_filtro = int(filtro_anio) if filtro_anio.isdigit() else hoy.year
 
     planes_list = list(planes)
-    areas_mto   = list(areas_permitidas_mto(request))
+    areas_mto   = list(areas_visibles_mto(request))
 
-    responsables_por_area_map  = defaultdict(list)
     responsables_por_area_dict = defaultdict(list)
     for r in Responsable.objects.filter(activo=True).order_by('apellidos', 'nombre'):
-        responsables_por_area_map[r.area_id].append(r)
         responsables_por_area_dict[r.area_id].append({
             'pk':            r.pk, 
             'nombre':        r.nombre, 
@@ -169,7 +173,6 @@ def lista_plan(request):
         plan.registro_semana       = None
         plan.semana_actual         = None
         plan.fuera_de_frecuencia   = False
-        plan.responsables_area     = responsables_por_area_map[plan.area_id]
 
         if plan.semana_inicio and plan.anio_inicio:
             try:
@@ -225,7 +228,6 @@ def lista_plan(request):
         planes_con_datos.append(plan)
 
     # Conteos del control segmentado de frecuencia (sobre la semana, sin filtrar por frecuencia)
-    orden_frec = [v for v, _l in PlanMantenimiento.FRECUENCIA_CHOICES]
     conteo_frec = defaultdict(int)
     for p in planes_con_datos:
         conteo_frec[p.frecuencia] += 1
@@ -275,44 +277,6 @@ def lista_plan(request):
                 reg = registros_semana_pre.get(p.pk)
                 return str(reg.responsable_id) if reg and reg.responsable_id else 'ninguno'
             planes_con_datos = [p for p in planes_con_datos if _resp_de(p) == filtro_resp]
-
-    stats_semana = None
-    if filtro_semana and lunes_busq_pre:
-            
-            total         = len(planes_con_datos)
-            completadas_s = sum(1 for p in planes_con_datos
-                                if registros_semana_pre.get(p.pk) and registros_semana_pre[p.pk].estado == 'completada')
-            pendientes_s  = total - completadas_s
-            minutos_total = sum(p.duracion_minutos or 0 for p in planes_con_datos)
-            
-            minutos_por_resp = defaultdict(int)
-            for p in planes_con_datos:
-                reg    = registros_semana_pre.get(p.pk)
-                nombre = reg.nombre_responsable() if reg and reg.responsable_id else _("Sin asignar aún")
-                minutos_por_resp[nombre] += p.duracion_minutos or 0
-
-            por_responsable = sorted(
-                (
-                    {
-                    'nombre':        nombre, 
-                    'minutos':       m,
-                    'horas':         m // 60,
-                    'minutos_resto': m % 60
-                    }
-                    for nombre, m in minutos_por_resp.items()
-                ),
-                key=lambda x:x['minutos'], reverse=True,
-            )
-            
-            stats_semana  = {
-                'total':           total,
-                'completadas':     completadas_s,
-                'pendientes':      pendientes_s,
-                'minutos_total':   minutos_total,
-                'horas':           minutos_total // 60,
-                'minutos_resto':   minutos_total % 60,
-                'por_responsable': por_responsable,
-            }
 
     planes_con_datos = _orden_por_plan_trabajo(planes_con_datos, orden)
 
@@ -382,12 +346,9 @@ def lista_plan(request):
         'puede_editar_responsables': puede_mto(request.user, 'editar_responsables'),
         'filtro_orden':              orden,
         'busqueda':                  busqueda,
-        'filtro_semana':             filtro_semana,
         'filtro_anio':               anio_filtro,
-        'stats_semana':              stats_semana,
         'per_page':                  per_page,
         'perpage_opts':              [10, 25, 50],
-        'usuarios':                  User.objects.filter(is_active=True).order_by('first_name'),
         'responsables_por_area': {
             str(a.pk): responsables_por_area_dict[a.id]
             for a in areas_mto
@@ -455,7 +416,7 @@ def _guardar_tarea_ajax(request, plan):
         elif len(datos[campo]) > limite:
             errores[campo] = _("Máximo {n} caracteres").format(n=limite)
 
-    area = areas_permitidas_mto(request).filter(pk=P['area']).first() if P.get('area', '').isdigit() else None
+    area = areas_visibles_mto(request).filter(pk=P['area']).first() if P.get('area', '').isdigit() else None
     if not area:
         errores['area'] = _("Campo obligatorio")
 
@@ -516,10 +477,16 @@ def form_plan(request, pk=None):
         msg = _("No tienes permiso para editar planes de mantenimiento.")
         if es_ajax:
             return JsonResponse({'ok': False, 'errores': {'general': msg}}, status=403)
-        messages.error(request, msg)
+        messages.error(request, aviso(_("Sin permiso"), msg.rstrip('.')))
         return redirect('mto:lista_plan')
 
     plan = get_object_or_404(PlanMantenimiento, pk=pk) if pk else None
+    if plan and not puede_ver_plan(request, plan):
+        msg = _("No tienes acceso a las tareas de esta área.")
+        if es_ajax:
+            return JsonResponse({'ok': False, 'errores': {'general': msg}}, status=403)
+        messages.error(request, aviso(_("Sin acceso a esta área"), msg.rstrip('.')))
+        return redirect('mto:lista_plan')
     if es_ajax and request.method == 'POST':
         return _guardar_tarea_ajax(request, plan)
     if es_ajax and plan:
@@ -529,76 +496,77 @@ def form_plan(request, pk=None):
 
 @login_required
 def eliminar_plan(request, pk):
+    """Elimina una tarea del Plan (POST; permiso Eliminar plan y área del usuario). Borra en cascada todo su
+    historial: registros de ejecución, sus fotos y sus seguimientos de OT. Por AJAX (GET) responde cuánto historial
+    tiene, para que la confirmación lo advierta antes de borrar."""
     if not puede_mto(request.user, 'eliminar_plan_mantenimiento'):
-        messages.error(request, _("No tienes permiso para eliminar planes de mantenimiento."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para eliminar planes de mantenimiento")))
         return redirect('mto:lista_plan')
-    
+
     plan = get_object_or_404(PlanMantenimiento, pk=pk)
+    if not puede_ver_plan(request, plan):
+        messages.error(request, aviso(_("Sin acceso a esta área"), _("No tienes acceso a sus tareas")))
+        return redirect('mto:lista_plan')
+
+    if request.method == 'GET' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'registros':      RegistroEjecucion.objects.filter(plan=plan).count(),
+            'fotos':          ImagenRegistro.objects.filter(registro__plan=plan).count(),
+            'seguimientos':   SeguimientoOT.objects.filter(registro__plan=plan).count(),
+            'fotos_seg':      ImagenSeguimiento.objects.filter(seguimiento_ot__registro__plan=plan).count(),
+        })
+
     if request.method == 'POST':
-        try:
-            plan.delete()
-            messages.success(request, _("Plan '{codigo}' eliminado.").format(codigo=plan.codigo))
-        except Exception:
-            messages.error(request,
-                _("No se puede eliminar '{codigo}' porque tiene registros asociados.").format(codigo=plan.codigo))
+        codigo = plan.codigo
+        plan.delete()
+        messages.success(request, aviso(_("Tarea eliminada"), codigo))
     return redirect('mto:lista_plan')
 
 
 @login_required
 def eliminar_todos_planes_area(request):
+    """Borra todas las tareas del área y su historial (POST; solo superusuario o administrador; hay que escribir
+    ELIMINAR para confirmar)."""
+
     es_admin_total = (
         request.user.is_superuser or
         (hasattr(request.user, 'perfil') and request.user.perfil.es_admin)
     )
     if not es_admin_total:
-        messages.error(request, _("No tienes permiso para eliminar todos los planes del área."))
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para eliminar todos los planes del área")))
         return redirect('mto:lista_plan')
 
     area_id = request.POST.get('area')
     if request.method == 'POST' and area_id:
         if request.POST.get('confirmacion', '').strip() != 'ELIMINAR':
-            messages.error(request, _("Escribe ELIMINAR para confirmar."))
+            messages.error(request, aviso(_("No se eliminó nada"), _("Escribe ELIMINAR para confirmar")))
             return redirect(f"{reverse('mto:lista_plan')}?area={area_id}")
         area = get_object_or_404(Area, pk=area_id)
         cantidad = PlanMantenimiento.objects.filter(area=area).count()
         PlanMantenimiento.objects.filter(area=area).delete()
-        messages.success(
-            request,
-            _("Se eliminaron los {cantidad} planes de mantenimiento del área '{area}' y su historial de ejecuciones.").format(cantidad=cantidad, area=area.nombre)
-        )
+        messages.success(request, aviso(_("Tareas eliminadas"),
+                                        _("{cantidad} de {area}, con su historial").format(cantidad=cantidad, area=area.nombre)))
     return redirect(f"{reverse('mto:lista_plan')}?area={area_id}")
 
 
 @login_required
 def exportar_plan(request):
-    acceso = getattr(request.user, 'acceso_mto', None)
-    puede_ver = (
-        request.user.is_superuser or
-        (hasattr(request.user, 'perfil') and request.user.perfil.es_admin) or
-        (acceso and acceso.ver_plan_mantenimiento)
-    )
-    if not puede_ver:
-        messages.error(request, _("No tienes permiso para exportar planes de mantenimiento."))
+    """Excel con las tareas activas del área, con las mismas columnas que la plantilla para poder reimportarlo."""
+    if not puede_ver_plan(request):
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para exportar planes de mantenimiento")))
         return redirect('mto:lista_plan')
 
-    area_id = request.GET.get('area') or request.session.get('lista_plan_area_id', '')
+    area_id = area_del_plan(request)
     planes  = PlanMantenimiento.objects.select_related('area').filter(activo=True)
-    if area_id:
-        planes = planes.filter(area_id=area_id)
+    planes  = planes.filter(area_id=area_id) if area_id else planes.none()
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Plan de mantenimiento"
 
-    # Mismas columnas que descargar_plantilla, en el mismo orden que lee importar_plan.
-    headers = [
-        '', 'CODIGO', 'RUTINA', 'EQUIPO (descripcion tarea)', 'Duracion (horas)',
-        'Frecuencia', 'Plan de Trabajo', 'Equipo (nombre corto)', 'Locacion',
-        'Tipo de mantenimiento', 'Prioridad', 'Status', 'Semana inicio', 'Anio inicio'
-    ]
     ws.append([])  # Fila 1
     ws.append([])  # Fila 2
-    ws.append(headers)  # Fila 3
+    ws.append(ENCABEZADOS_EXCEL_PLAN)  # Fila 3
 
     # orden del modelo: área, actividad y código
     for plan in planes: 
@@ -631,15 +599,13 @@ def exportar_plan(request):
         for cell in row:
             cell.alignment = Alignment(horizontal='center', vertical='center')
 
-    anchos = [5, 14, 18, 40, 16, 12, 14, 30, 25, 22, 12, 12, 14, 12]
-    for i, ancho in enumerate(anchos, 1):
+    for i, ancho in enumerate(ANCHOS_EXCEL_PLAN, 1):
         ws.column_dimensions[get_column_letter(i)].width = ancho
 
     buffer = io.BytesIO()
     wb.save(buffer)
     buffer.seek(0)
 
-    from django.http import HttpResponse
     nombre_area = Area.objects.filter(id=area_id).first() if area_id else None
     slug = (nombre_area.nombre.replace(' ', '_') if nombre_area else 'todas')
     filename = f"plan_{slug}_{date.today().isoformat()}.xlsx"
@@ -719,7 +685,8 @@ def _fechas_del_plan(plan, anio, hoy):
 
             fechas.sort(key=lambda f: f['fecha'])
         except Exception:
-            pass
+            # El calendario sale vacío, pero queda en el log para encontrar la causa
+            logger.exception('Calendario del plan %s (%s): no se pudo armar', plan.pk, anio)
     return fechas
 
 
@@ -782,9 +749,17 @@ def _cumplimiento(fechas):
 @login_required
 @xframe_options_exempt
 def modal_plan(request, pk):
+    """Detalle de una tarea (página dentro de un <iframe>): calendario del año, cumplimiento, historial y
+    seguimientos; abre "Registrar ejecución" en la semana de la lista (?semana=) o en la actual."""
+    
     plan = get_object_or_404(PlanMantenimiento, pk=pk)
+    if not puede_ver_plan(request, plan):
+        return HttpResponseForbidden(_("No tienes acceso a las tareas de esta área."))
     hoy  = date.today()
-    anio = int(request.GET.get('anio', hoy.year))
+    try:
+        anio = int(request.GET.get('anio', hoy.year))
+    except ValueError:
+        anio = hoy.year
 
     fechas  = _enriquecer_fechas(_fechas_del_plan(plan, anio, hoy), hoy)
     proxima = next((f for f in fechas if not f['pasada']), None)
@@ -849,6 +824,8 @@ def modal_plan(request, pk):
 def historial_plan_exportar(request, pk):
     """Excel con el historial del año del plan (la tabla "Historial del año" del modal)."""
     plan = get_object_or_404(PlanMantenimiento, pk=pk)
+    if not puede_ver_plan(request, plan):
+        return HttpResponseForbidden(_("No tienes acceso a las tareas de esta área."))
     hoy  = date.today()
     try:
         anio = int(request.GET.get('anio', hoy.year))
@@ -904,6 +881,8 @@ def plan_detalle_json(request, pk):
     modal de escritorio (_fechas_del_plan) + responsables del área. El guardado
     sigue usando registro_ejecucion / asignar_responsable."""
     plan = get_object_or_404(PlanMantenimiento.objects.select_related('area'), pk=pk)
+    if not puede_ver_plan(request, plan):
+        return JsonResponse({'error': _("No tienes acceso a las tareas de esta área.")}, status=403)
     hoy  = date.today()
     try:
         anio = int(request.GET.get('anio', hoy.year))
@@ -1002,178 +981,21 @@ def plan_detalle_json(request, pk):
     })
 
 
-@login_required
-def importar_plan(request):
-    if not puede_mto(request.user, 'editar_plan_mantenimiento'):
-        messages.error(request, _("No tienes permiso para editar planes de mantenimiento."))
-        return redirect('mto:lista_plan')
-    
-    areas = areas_permitidas_mto(request)
-
-    if request.method == 'POST':
-        archivo = request.FILES.get('archivo')
-        area_id = request.POST.get('area')
-
-        if not archivo or not area_id:
-            messages.error(request, _("Debes seleccionar un archivo y un area."))
-            return render(request, 'mto_app/plan/importar.html', {'areas': areas})
-
-        try:
-            area = Area.objects.get(pk=area_id)
-            wb   = load_workbook(archivo, data_only=True)
-            ws   = wb.active
-
-            creados = actualizados = omitidos = 0
-            errores = []
-            avisos  = []
-
-            # El mismo código SÍ puede repetirse en otras áreas (son planes
-            # independientes); solo nos importa si ya existe dentro de esta
-            # misma área, en cuyo caso se actualiza en vez de duplicarlo.
-
-            planes_del_area   = {p.codigo: p for p in PlanMantenimiento.objects.filter(area=area)}
-            nuevos_por_codigo = {}
-            a_actualizar_por_pk = {}
-            campos_actualizables = [
-                'area', 'actividad', 'rutina', 'duracion_minutos', 'frecuencia', 'plan_trabajo',
-                'nombre_equipo', 'locacion', 'tipo_mto', 'prioridad', 'estatus', 'activo',
-                'semana_inicio', 'anio_inicio',
-            ]
-
-            for n, row in enumerate(ws.iter_rows(min_row=4, values_only=True), start=4):
-                if not row or not row[1]:
-                    continue
-                if str(row[1]).strip().upper() in ('CODIGO', '#', 'NONE', ''):
-                    continue
-
-                try:
-                    codigo        = str(row[1]).strip()
-                    rutina        = str(row[2]).strip()   if row[2]                     else ''
-                    actividad     = str(row[3]).strip()   if row[3]                     else ''
-                    duracion_raw  = row[4]
-                    frecuencia_raw= row[5]
-                    plan_trabajo  = str(row[6]).strip()   if len(row) > 6  and row[6]  else ''
-                    nombre_equipo = str(row[7]).strip()   if len(row) > 7  and row[7]  else ''
-                    locacion      = str(row[8]).strip()   if len(row) > 8  and row[8]  else ''
-                    tipo_mto      = str(row[9]).strip()   if len(row) > 9  and row[9]  else 'Preventivo'
-                    prioridad     = str(row[10]).strip()  if len(row) > 10 and row[10] else 'Baja'
-                    estatus       = str(row[11]).strip()  if len(row) > 11 and row[11] else 'Abierta'
-
-                    try:
-                        semana_inicio = int(float(str(row[12]))) if len(row) > 12 and row[12] and str(row[12]).strip() not in ('', 'None') else None
-                    except Exception:
-                        semana_inicio = None
-                    try:
-                        anio_inicio = int(float(str(row[13]))) if len(row) > 13 and row[13] and str(row[13]).strip() not in ('', 'None') else None
-                    except Exception:
-                        anio_inicio = None
-
-                    faltan = [c for c, v in ((_("Actividad"), actividad), (_("Locación"), locacion)) if not v]
-                    if faltan: 
-                        omitidos += 1
-                        errores.append(_("Fila {n} ({codigo}): falta {campos}").format(n=n, codigo=codigo, campos=', '.join(faltan)))
-                        continue
-
-                    try:
-                        duracion_h       = float(str(duracion_raw).replace(',', '.')) if duracion_raw else 1.0
-                        duracion_minutos = max(5, int(duracion_h * 60))
-                    except Exception:
-                        duracion_minutos = 60
-
-                    frecuencia = _frecuencia_desde_excel(frecuencia_raw)
-
-                    if tipo_mto not in [t[0] for t in PlanMantenimiento.TIPO_MTO_CHOICES]:
-                        tipo_mto = 'Preventivo'
-                    if prioridad not in [p[0] for p in PlanMantenimiento.PRIORIDAD_CHOICES]:
-                        prioridad = 'Baja'
-                    if estatus not in [s[0] for s in PlanMantenimiento.STATUS_CHOICES]:
-                        estatus = 'Abierta'
-
-                    defaults = {
-                        'area':             area,
-                        'actividad':        actividad,
-                        'rutina':           rutina,
-                        'duracion_minutos': duracion_minutos,
-                        'frecuencia':       frecuencia,
-                        'plan_trabajo':     plan_trabajo,
-                        'nombre_equipo':    nombre_equipo,
-                        'locacion':         locacion,
-                        'tipo_mto':         tipo_mto,
-                        'prioridad':        prioridad,
-                        'estatus':          estatus,
-                        'activo':           True,
-                    }
-                    if semana_inicio:
-                        defaults['semana_inicio'] = semana_inicio
-                    if anio_inicio:
-                        defaults['anio_inicio'] = anio_inicio
-
-                    plan_existente = planes_del_area.get(codigo)
-                    ya_pendiente    = nuevos_por_codigo.get(codigo)
-
-                    if plan_existente:
-                        avisos.append(_("Código '{codigo}' ya existía en esta área — se actualizó.").format(codigo=codigo))
-                        for campo, valor in defaults.items():
-                            setattr(plan_existente, campo, valor)
-                        a_actualizar_por_pk[plan_existente.pk] = plan_existente
-                        actualizados += 1
-                    elif ya_pendiente:
-                        # Mismo código repetido en el archivo — la última fila gana, sin contarlo dos veces.
-                        for campo, valor in defaults.items():
-                            setattr(ya_pendiente, campo, valor)
-                    else:
-                        nuevos_por_codigo[codigo] = PlanMantenimiento(codigo=codigo, **defaults)
-                        creados += 1
-
-                except Exception as e:
-                    errores.append(_("Fila con codigo '{codigo}': {error}").format(codigo=row[1], error=e))
-
-            if nuevos_por_codigo:
-                PlanMantenimiento.objects.bulk_create(nuevos_por_codigo.values())
-            if a_actualizar_por_pk:
-                PlanMantenimiento.objects.bulk_update(a_actualizar_por_pk.values(), campos_actualizables)
-
-            resumen = _("{creados} creado(s), {actualizados} actualizado(s), {omitidos} omitido(s).").format(creados=creados, actualizados=actualizados, omitidos=omitidos)
-            if errores:
-                messages.warning(request, _("Importacion con advertencias — {resumen}").format(resumen=resumen))
-                for err in errores[:5]:
-                    messages.error(request, err)
-            elif avisos:
-                messages.warning(request, _("Importacion con avisos — {resumen}").format(resumen=resumen))
-                for aviso in avisos[:5]:
-                    messages.warning(request, aviso)
-            else:
-                messages.success(request, _("Importacion exitosa — {resumen}").format(resumen=resumen))
-
-            return redirect('mto:dashboard')
-
-        except Exception as e:
-            messages.error(request, _("Error al leer el archivo: {error}").format(error=e))
-
-    return render(request, 'mto_app/plan/importar.html', {'areas': areas})
-
 
 @login_required
 def descargar_plantilla(request):
+    """Excel de ejemplo para Importar plan (mismas columnas que Exportar plan)."""
     
     wb = Workbook()
     ws = wb.active
     ws.title = "Plan de mantenimiento"
 
-    # Estas columnas deben coincidir exactamente, en orden, con los índices que
-    # lee importar_plan() (row[1]=codigo, row[2]=rutina, ... row[13]=anio_inicio).
-    headers = [
-        '', 'CODIGO', 'RUTINA', 'EQUIPO (descripcion tarea)', 'Duracion (horas)',
-        'Frecuencia', 'Plan de Trabajo', 'Equipo (nombre corto)', 'Locacion',
-        'Tipo de mantenimiento', 'Prioridad', 'Status', 'Semana inicio', 'Anio inicio'
-    ]
-
     ws.append([])  # Fila 1
     ws.append([])  # Fila 2
-    ws.append(headers)
+    ws.append(ENCABEZADOS_EXCEL_PLAN)
     ws.append([
         '', 'SWC-001', 'RMAS001-00P', 'Mantenimiento Mecanico a Transportador # 1',
-        1.0, '16S', '1', 'Mesa Fija Conveyor # 01', 'Automatic Warehouse',
+        1.0, '17S', '1', 'Mesa Fija Conveyor # 01', 'Automatic Warehouse',
         'Preventivo', 'Baja', 'Abierta', 1, 2025
     ])
 
@@ -1191,15 +1013,13 @@ def descargar_plantilla(request):
 
     ws.row_dimensions[3].height = 30
 
-    anchos = [5, 14, 18, 40, 16, 12, 14, 30, 25, 22, 12, 12, 14, 12]
-    for i, ancho in enumerate(anchos, 1):
+    for i, ancho in enumerate(ANCHOS_EXCEL_PLAN, 1):
         ws.column_dimensions[get_column_letter(i)].width = ancho
 
     buffer = io.BytesIO()
     wb.save(buffer)
     buffer.seek(0)
 
-    from django.http import HttpResponse
     response = HttpResponse(
         buffer,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -1212,17 +1032,16 @@ def descargar_plantilla(request):
 def conteo_ots_semanas(request):
     """{semana: nº de OTs} de un año, para los globos del calendario de semanas del Plan. Mismo criterio que
     Exportar Excel: planes activos del área cuya frecuencia toca esa semana."""
-    if not puede_mto(request.user, 'ver_plan_mantenimiento'):
+    if not puede_ver_plan(request):
         return JsonResponse({}, status=403)
     try:
         anio = int(request.GET.get('anio'))
         ini, fin = lunes_de_semana(anio, 1), lunes_de_semana(anio + 1, 1)
     except (TypeError, ValueError):
         return JsonResponse({'error': 'anio'}, status=400)
-    area_id = request.GET.get('area') or request.session.get('lista_plan_area_id', '')
+    area_id = area_del_plan(request)
     planes = PlanMantenimiento.objects.filter(activo=True)
-    if area_id:
-        planes = planes.filter(area_id=area_id)
+    planes = planes.filter(area_id=area_id) if area_id else planes.none()
     conteo = Counter()
     for p in planes.only('frecuencia', 'semana_inicio', 'anio_inicio'):
         if not p.semana_inicio or not p.anio_inicio:
@@ -1246,17 +1065,16 @@ def distribucion_ots(request):
     programa el plan, con el mismo criterio y el mismo No. de orden que Exportar Excel. Completada = estado
     completada (validada si además la validó el supervisor); pendiente, reagendada y cancelada cuentan como
     pendientes."""
-    if not puede_mto(request.user, 'ver_plan_mantenimiento'):
+    if not puede_ver_plan(request):
         return JsonResponse({}, status=403)
     try:
         anio = int(request.GET.get('anio'))
         ini, fin = lunes_de_semana(anio, 1), lunes_de_semana(anio + 1, 1)
     except (TypeError, ValueError):
         return JsonResponse({'error': 'anio'}, status=400)
-    area_id = request.GET.get('area') or request.session.get('lista_plan_area_id', '')
+    area_id = area_del_plan(request)
     planes = PlanMantenimiento.objects.select_related('area').filter(activo=True)
-    if area_id:
-        planes = planes.filter(area_id=area_id)
+    planes = planes.filter(area_id=area_id) if area_id else planes.none()
 
     # Lunes en que toca cada plan dentro del año (se recorren en el orden del Excel: área y código)
     por_semana = defaultdict(list)
@@ -1284,7 +1102,7 @@ def distribucion_ots(request):
             r = regs.get((p.id, lunes))
             hecha = bool(r and r.estado == 'completada')
             ots.append({
-                'no':     f"{s:02d}{lunes.strftime('%m')}{lunes.strftime('%y')}{100 + idx}",   # igual que Exportar Excel
+                'no':     numero_ot(lunes, idx, p.area.prefijo_ot),   # igual que el Plan, el Backlog y Exportar Excel
                 'codigo': p.codigo,
                 'tarea':  p.actividad or p.rutina,
                 'equipo': p.nombre_equipo,
@@ -1301,7 +1119,7 @@ def distribucion_ots(request):
 @login_required
 def exportar_tiempo_personas(request):
     """Excel del modal "Tiempo por persona": una hoja resumen (persona, tareas, horas) y una de detalle."""
-    if not puede_mto(request.user, 'ver_plan_mantenimiento'):
+    if not puede_ver_plan(request):
         return JsonResponse({'error': _("No tienes permiso para exportar planes de mantenimiento.")}, status=403)
     try:
         semana = int(request.GET.get('semana'))
@@ -1309,10 +1127,9 @@ def exportar_tiempo_personas(request):
         lunes  = lunes_de_semana(anio, semana)
     except (TypeError, ValueError):
         return JsonResponse({'error': 'semana'}, status=400)
-    area_id = request.GET.get('area') or request.session.get('lista_plan_area_id', '')
+    area_id = area_del_plan(request)
     planes = PlanMantenimiento.objects.select_related('area').filter(activo=True)
-    if area_id:
-        planes = planes.filter(area_id=area_id)
+    planes = planes.filter(area_id=area_id) if area_id else planes.none()
     frecuencia = request.GET.get('frecuencia')
     toca = _planes_que_tocan(list(planes), lunes)
     if frecuencia:

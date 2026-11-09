@@ -1,151 +1,199 @@
-{% extends "menu_app/base_menu.html" %}
 {% load i18n %}
-{% block title %}{% trans "Importar plan" %}{% endblock %}
-{% block content %}
-
-<div style="width:100%; padding:0 24px;">
-    <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-start;">
-        <div>
-            <div class="card-title">{% trans "Importar plan de mantenimiento" %}</div>
-        </div>
-        <a href="{% url 'mto:lista_plan' %}" class="btn btn-ghost btn-sm">← {% trans "Volver" %}</a>
-    </div>
-
-    <!-- Pasos de progreso -->
-    <div style="display:flex; margin-bottom:20px;">
-        {% if messages %}
-        <div class="imp-step imp-done"><div class="imp-step-num">✓</div><div class="imp-step-lbl">{% trans "Seleccionar" %}</div></div>
-        <div class="imp-step imp-done"><div class="imp-step-num">✓</div><div class="imp-step-lbl">{% trans "Verificar" %}</div></div>
-        <div class="imp-step imp-active"><div class="imp-step-num">3</div><div class="imp-step-lbl">{% trans "Resultado" %}</div></div>
-        {% else %}
-        <div class="imp-step imp-active"><div class="imp-step-num">1</div><div class="imp-step-lbl">{% trans "Seleccionar" %}</div></div>
-        <div class="imp-step"><div class="imp-step-num">2</div><div class="imp-step-lbl">{% trans "Verificar" %}</div></div>
-        <div class="imp-step"><div class="imp-step-num">3</div><div class="imp-step-lbl">{% trans "Resultado" %}</div></div>
-        {% endif %}
-    </div>
-
-    <div class="card" style="margin-bottom:16px;">
-        <form method="post" enctype="multipart/form-data" novalidate>
-            {% csrf_token %}
-
-            <div class="form-field" style="margin-bottom:14px;">
-                <label>{% trans "Área a asignar" %}</label>
-                <select name="area">
-                    <option value="">-- {% trans "Seleccionar área" %} --</option>
-                    {% for a in areas %}
-                    <option value="{{ a.pk }}">{{ a.nombre }}</option>
-                    {% endfor %}
-                </select>
-                <span style="font-size:11px; color:var(--text-3);">{% trans "Opcional. Se usa si la columna G del Excel está vacía." %}</span>
+{% comment %}
+    Modal "Importar plan de mantenimiento" (escritorio). Se incluye en plan/lista.html.
+    3 pasos: 1) área y archivo, 2) revisión fila por fila (el servidor lee el Excel sin guardar), 3) resultado.
+    Lo maneja plan_importar.js; estilos en plan_importar.css (.pi-*). Habla con mto:importar_plan por AJAX.
+{% endcomment %}
+<div class="pi-fondo" id="pi-fondo" hidden data-url="{% url 'mto:importar_plan' %}" data-area="{{ filtro_area|default:'' }}">
+    <div class="pi-dlg" role="dialog" aria-modal="true" aria-labelledby="pi-titulo">
+        {% csrf_token %}
+        <header class="pi-cab">
+            <span class="pi-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9m0 0-4 4m4-4 4 4M5 4h14"/></svg></span>
+            <div class="pi-cab-t">
+                <h2 id="pi-titulo">{% trans "Importar plan de mantenimiento" %}</h2>
+                <p class="pi-sub" id="pi-sub"></p>
             </div>
+            <button type="button" class="pi-x" data-cerrar aria-label="{% trans 'Cerrar' %}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </header>
 
-            <!-- Dropzone -->
-            <div id="dropzone" style="border:1.5px dashed var(--border); border-radius:10px; padding:32px 20px; text-align:center; background:var(--surface); margin-bottom:14px; cursor:pointer;"
-                 onclick="document.getElementById('archivo').click()"
-                 ondragover="event.preventDefault(); this.style.borderColor='var(--indigo)';"
-                 ondragleave="this.style.borderColor='var(--border)';"
-                 ondrop="handleDrop(event)">
-                <div style="width:38px; height:38px; background:var(--indigo-lt); border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px;">
-                    <svg width="18" height="18" fill="none" stroke="var(--indigo)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                </div>
-                <div style="font-size:13px; font-weight:500; color:var(--text); margin-bottom:3px;">{% trans "Arrastra tu archivo aquí" %}</div>
-                <div style="font-size:12px; color:var(--text-3);">o <span style="color:var(--indigo); text-decoration:underline;">{% trans "selecciona un archivo" %}</span> — .xlsx</div>
-            </div>
-            <input type="file" name="archivo" id="archivo" accept=".xlsx" style="display:none;" onchange="mostrarPreview(this)">
+        <div class="pi-cuerpo" id="pi-cuerpo">
+            <ol class="pi-pasos" aria-label="{% trans 'Pasos' %}">
+                <li data-paso="1"><span class="n">1</span><span class="t"><b>{% trans "Seleccionar" %}</b><small>{% trans "Área y archivo" %}</small></span><i aria-hidden="true"></i></li>
+                <li data-paso="2"><span class="n">2</span><span class="t"><b>{% trans "Verificar" %}</b><small>{% trans "Revisa las filas" %}</small></span><i aria-hidden="true"></i></li>
+                <li data-paso="3"><span class="n">3</span><span class="t"><b>{% trans "Resultado" %}</b><small>{% trans "Tareas importadas" %}</small></span></li>
+            </ol>
 
-            <!-- Preview del archivo -->
-            <div id="file-preview" style="display:none; margin-bottom:14px;">
-                <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border:0.5px solid var(--border); border-radius:8px; margin-bottom:10px;">
-                    <div style="width:32px; height:32px; background:var(--indigo-lt); border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                        <svg width="14" height="14" fill="none" stroke="var(--indigo)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            {% comment %} ── Paso 1: área y archivo ── {% endcomment %}
+            <section class="pi-p1" id="pi-p1">
+                <div class="pi-tarjeta">
+                    <label class="pi-lab" for="pi-area">{% trans "Área" %} <i>*</i></label>
+                    <select class="pi-sel" id="pi-area">
+                        <option value="">— {% trans "Seleccionar" %} —</option>
+                        {% for a in areas %}<option value="{{ a.pk }}">{{ a.nombre }}</option>{% endfor %}
+                    </select>
+                    <p class="pi-ayuda">{% trans "Todas las tareas del archivo se importan a esta área. Si un código ya existe en ella, la tarea se actualiza." %}</p>
+
+                    <span class="pi-lab">{% trans "Archivo" %} <i>*</i></span>
+                    <button type="button" class="pi-drop" id="pi-drop">
+                        <span class="pi-drop-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></span>
+                        <b>{% trans "Arrastra tu Excel aquí" %}</b>
+                        <span>{% blocktrans %}o <u>elige un archivo</u> · .xlsx, máximo 10 MB{% endblocktrans %}</span>
+                    </button>
+                    <input type="file" id="pi-file" accept=".xlsx,.xlsm" hidden>
+                    <div class="pi-archivo" id="pi-archivo" hidden>
+                        <span class="pi-xlsx">XLSX</span>
+                        <span class="pi-archivo-t"><b id="pi-archivo-n"></b><small id="pi-archivo-s"></small></span>
+                        <button type="button" class="pi-link" id="pi-quitar">{% trans "Quitar" %}</button>
                     </div>
-                    <div>
-                        <div id="file-name" style="font-size:13px; font-weight:500; color:var(--text);"></div>
-                        <div id="file-meta" style="font-size:11px; color:var(--text-3);"></div>
-                    </div>
-                    <button type="button" onclick="limpiarArchivo()" style="margin-left:auto; padding:4px 10px; border:0.5px solid var(--border); border-radius:6px; font-size:11px; background:transparent; color:var(--text-2); cursor:pointer;">× Cambiar</button>
+                    <p class="pi-err" id="pi-err" role="alert" hidden></p>
                 </div>
-                <div style="font-size:12px; font-weight:500; color:var(--text-2); margin-bottom:6px;">{% trans "Vista previa" %}</div>
-                <div style="border:0.5px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:12px;">
-                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                        <thead><tr style="background:var(--surface);">
-                            <th style="padding:6px 10px; text-align:left;   color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border); width:100px;">{% trans "Código" %}</th>
-                            <th style="padding:6px 10px; text-align:left;   color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border); width:130px;">{% trans "Rutina" %}</th>
-                            <th style="padding:6px 10px; text-align:left;   color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border);             ">{% trans "Equipo" %}</th>
-                            <th style="padding:6px 10px; text-align:center; color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border); width:100px;">{% trans "Duración" %}</th>
-                            <th style="padding:6px 10px; text-align:center; color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border); width:100px;">{% trans "Frecuencia" %}</th>
-                            <th style="padding:6px 10px; text-align:center; color:var(--text-3); font-weight:500; border-bottom:0.5px solid var(--border); width:100px;">{% trans "Plan" %}</th>
-                        </tr></thead>
-                        <tbody id="preview-body"></tbody>
+
+                <aside class="pi-tarjeta pi-formato">
+                    <h3>{% trans "Formato esperado" %}</h3>
+                    <p>{% trans "Los datos empiezan en la fila 4. Las filas sin código en la columna B se ignoran." %}</p>
+                    <table>
+                        <tbody>
+                            <tr><th>B</th><td>{% trans "Código" %} <i>*</i></td><td>SWC-001</td></tr>
+                            <tr><th>C</th><td>{% trans "Rutina" %}</td><td>RMAS001-OOP</td></tr>
+                            <tr><th>D</th><td>{% trans "Actividad" %} <i>*</i></td><td>Mantenimiento a Conveyor Mesa 1</td></tr>
+                            <tr><th>E</th><td>{% trans "Duración (horas)" %}</td><td>1.5</td></tr>
+                            <tr><th>F</th><td>{% trans "Frecuencia" %}</td><td>4S</td></tr>
+                            <tr><th>G</th><td>{% trans "Plan de trabajo" %}</td><td>1</td></tr>
+                            <tr><th>H</th><td>{% trans "Equipo" %}</td><td>Conveyor Mesa 1</td></tr>
+                            <tr><th>I</th><td>{% trans "Locación" %} <i>*</i></td><td>Planta 1</td></tr>
+                            <tr><th>J</th><td>{% trans "Tipo de mantenimiento" %}</td><td>Preventivo</td></tr>
+                            <tr><th>K</th><td>{% trans "Prioridad" %}</td><td>Baja</td></tr>
+                            <tr><th>L</th><td>{% trans "Estatus" %}</td><td>Abierta</td></tr>
+                            <tr><th>M</th><td>{% trans "Semana de inicio" %}</td><td>17</td></tr>
+                            <tr><th>N</th><td>{% trans "Año de inicio" %}</td><td>2026</td></tr>
+                        </tbody>
                     </table>
+                    <p class="pi-frecs">{% for f in tarea_frecuencias %}<span><b>{{ f.semanas }}S</b> {{ f.label }}</span>{% endfor %}</p>
+                    <a class="pi-btn" href="{% url 'mto:descargar_plantilla' %}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                        {% trans "Descargar plantilla" %}
+                    </a>
+                </aside>
+            </section>
+
+            {% comment %} ── Paso 2: revisión ── {% endcomment %}
+            <section id="pi-p2" hidden>
+                <div class="pi-tabs" role="tablist" aria-label="{% trans 'Resultado de la revisión' %}">
+                    <button type="button" role="tab" data-f="all" class="pi-tab">
+                        <span class="pi-tab-ico all" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"/></svg></span>
+                        <span><small>{% trans "TAREAS EN EL ARCHIVO" %}</small><b data-n="all"></b> <em id="pi-ignoradas"></em></span>
+                    </button>
+                    <button type="button" role="tab" data-f="ok" class="pi-tab">
+                        <span class="pi-tab-ico ok" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>
+                        <span><small class="ok">{% trans "LISTAS" %}</small><b data-n="ok"></b> <em>{% trans "sin observaciones" %}</em></span>
+                    </button>
+                    <button type="button" role="tab" data-f="warn" class="pi-tab">
+                        <span class="pi-tab-ico warn" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>
+                        <span><small class="warn">{% trans "CON ADVERTENCIAS" %}</small><b data-n="warn"></b> <em>{% trans "se importan" %}</em></span>
+                    </button>
+                    <button type="button" role="tab" data-f="err" class="pi-tab">
+                        <span class="pi-tab-ico err" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5M12 16h.01M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/></svg></span>
+                        <span><small class="err">{% trans "CON ERRORES" %}</small><b data-n="err"></b> <em>{% trans "no se importan" %}</em></span>
+                    </button>
                 </div>
-            </div>
 
-            <div style="display:flex; gap:10px; align-items:center;">
-                <button type="submit" class="btn btn-primary">↑ {% trans "Importar" %}</button>
-                <a href="{% url 'mto:descargar_plantilla' %}" class="btn btn-ghost">↓ {% trans "Plantilla" %}</a>
-            </div>
-        </form>
-    </div>
+                <div class="pi-rev" role="tabpanel">
+                    <div class="pi-rev-cab">
+                        <b>{% trans "Revisión fila por fila" %}</b>
+                        <span id="pi-rev-cnt"></span>
+                        <span class="pi-chips"><span class="nuevas" id="pi-nuevas"></span><span id="pi-actualizan"></span></span>
+                    </div>
+                    <div class="pi-tabla-wrap">
+                        <table class="pi-tabla">
+                            <colgroup><col style="width:72px"><col style="width:118px"><col><col style="width:128px"><col style="width:150px"><col style="width:100px"><col style="width:84px"><col style="width:60px"><col style="width:13%"><col style="width:13%"></colgroup>
+                            <thead><tr>
+                                <th>{% trans "FILA" %}</th><th>{% trans "CÓDIGO" %}</th><th>{% trans "ACTIVIDAD" %}</th><th>{% trans "RUTINA" %}</th><th>{% trans "FRECUENCIA" %}</th>
+                                <th>{% trans "INICIO" %}</th><th class="der">{% trans "DURACIÓN" %}</th><th>{% trans "PLAN" %}</th><th>{% trans "LOCACIÓN" %}</th><th>{% trans "EQUIPO" %}</th>
+                            </tr></thead>
+                            <tbody id="pi-filas"></tbody>
+                        </table>
+                    </div>
+                    <div class="pi-rev-pie">
+                        <span id="pi-rango"></span>
+                        <span class="pi-pag" id="pi-pag"></span>
+                    </div>
+                </div>
+            </section>
 
-    <!-- Formato esperado -->
-    <div class="card" style="padding:16px 20px;">
-        <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--text);">{% trans "Formato esperado" %}</div>
-        <p style="font-size:12px; color:var(--text-3); margin-bottom:12px;">
-            {% trans "El archivo debe tener estas columnas en orden. Las filas sin código en la columna A se ignoran." %}
-        </p>
-        <table style="font-size:12px; width:100%; border-collapse:collapse;">
-            <thead><tr>
-                <th style="background:var(--surface);padding:6px 10px;border:1px solid var(--border);color:var(--text-3);text-align:left;">{% trans "Columna" %}</th>
-                <th style="background:var(--surface);padding:6px 10px;border:1px solid var(--border);color:var(--text-3);text-align:left;">{% trans "Contenido" %}</th>
-                <th style="background:var(--surface);padding:6px 10px;border:1px solid var(--border);color:var(--text-3);text-align:left;">{% trans "Ejemplo" %}</th>
-            </tr></thead>
-            <tbody>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>B</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Código" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">SWC-001</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>C</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Rutina" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">RMAS001-OOP</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>D</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Actividad" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">Mantenimiento a Conveyor Mesa 1</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>E</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Duración de la tarea (horas)" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">1.0</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>F</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Frecuencia" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">16S, 4S, 1S</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>G</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Plan de trabajo" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">1</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>H</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Equipo" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">Mantenimiento Preventivo</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>I</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Locación" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">Planta 1</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>J</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Tipo de mantenimiento" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">Preventivo</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>K</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Prioridad" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">Baja</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>L</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Estatus" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">Abierta</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>M</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Semana de inicio" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">1, 17, 32</td></tr>
-                <tr><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);"><strong>N</strong></td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">{% trans "Año de inicio" %}</td><td style="padding:6px 10px;border:1px solid var(--border);color:var(--text-2);">2025</td></tr>
-            </tbody>
-        </table>
-        <div style="margin-top:12px; padding:10px 12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; font-size:12px; color:var(--text-2);">
-            <strong>{% trans "Mapeo de frecuencias:" %}</strong>
-            1S = {% trans "Semanal" %} &nbsp;·&nbsp;
-            2S = {% trans "Quincenal" %} &nbsp;·&nbsp;
-            4S = {% trans "Mensual" %} &nbsp;·&nbsp;
-            9S = {% trans "Bimestral" %} &nbsp;·&nbsp;
-            13S = {% trans "Trimestral" %} &nbsp;·&nbsp;
-            17S = {% trans "Cuatrimestral" %} &nbsp;·&nbsp;
-            26S = {% trans "Semestral" %} &nbsp;·&nbsp;
-            52S = {% trans "Anual" %}
+            {% comment %} ── Paso 3: resultado ── {% endcomment %}
+            <section id="pi-p3" hidden>
+                <div class="pi-tarjeta pi-res">
+                    <span class="pi-res-ico" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>
+                    <h3 id="pi-res-t"></h3>
+                    <p id="pi-res-s"></p>
+                    <div class="pi-res-datos">
+                        <div><small>{% trans "NUEVAS" %}</small><b id="pi-res-nuevas"></b></div>
+                        <div><small>{% trans "ACTUALIZADAS" %}</small><b id="pi-res-act"></b></div>
+                        <div class="err"><small>{% trans "NO IMPORTADAS" %}</small><b id="pi-res-omit"></b></div>
+                    </div>
+                    <ul class="pi-omitidas" id="pi-omitidas"></ul>
+                </div>
+            </section>
         </div>
+
+        <footer class="pi-pie">
+            <button type="button" class="pi-btn" data-cerrar data-en="1">{% trans "Cancelar" %}</button>
+            <button type="button" class="pi-btn pi-btn-pri" id="pi-revisar" data-en="1" disabled>
+                <span>{% trans "Revisar archivo" %}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
+            </button>
+
+            <button type="button" class="pi-btn" id="pi-cambiar" data-en="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5m5 5-5-5 5-5"/></svg>
+                {% trans "Cambiar archivo" %}
+            </button>
+            <span class="pi-nota" id="pi-nota" data-en="2"></span>
+            <button type="button" class="pi-btn pi-btn-pri" id="pi-importar" data-en="2">
+                <span id="pi-importar-t"></span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
+            </button>
+
+            <button type="button" class="pi-btn" id="pi-otro" data-en="3">{% trans "Importar otro archivo" %}</button>
+            <button type="button" class="pi-btn pi-btn-pri" data-cerrar data-en="3">{% trans "Listo" %}</button>
+        </footer>
     </div>
-
 </div>
-
-<style>
-.imp-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative}
-.imp-step:not(:last-child)::after{content:'';position:absolute;top:11px;left:60%;width:80%;height:1px;background:var(--border);z-index:0}
-.imp-step.imp-done:not(:last-child)::after{background:var(--indigo)}
-.imp-step-num{width:22px;height:22px;border-radius:50%;background:var(--surface);border:1px solid var(--border);color:var(--text-3);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;z-index:1}
-.imp-step.imp-done .imp-step-num{background:var(--indigo);border-color:var(--indigo);color:#fff}
-.imp-step.imp-active .imp-step-num{background:var(--white);border-color:var(--indigo);color:var(--indigo);font-weight:600}
-.imp-step-lbl{font-size:11px;color:var(--text-3)}
-.imp-step.imp-done .imp-step-lbl,.imp-step.imp-active .imp-step-lbl{color:var(--indigo);font-weight:500}
-</style>
-
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-{% load static %}
-<script src="{% static 'mto_app/js/importar_plan.js' %}"></script>
-{% endblock %}
+<script type="application/json" id="pi-i18n">{
+    "subPaso1":      "{% trans 'Elige el área y sube el Excel con las tareas' %}",
+    "areaDe":        "{% trans 'área: {area}' %}",
+    "kb":            "{% trans '{n} KB' %}",
+    "soloExcel":     "{% trans 'Sube un archivo de Excel (.xlsx).' %}",
+    "muyGrande":     "{% trans 'El archivo pesa más de 10 MB.' %}",
+    "errorRed":      "{% trans 'No se pudo conectar. Revisa tu conexión e intenta de nuevo.' %}",
+    "revisando":     "{% trans 'Revisando…' %}",
+    "importando":    "{% trans 'Importando…' %}",
+    "ignoradas1":    "{% trans '· 1 fila sin código ignorada' %}",
+    "ignoradasN":    "{% trans '· {n} filas sin código ignoradas' %}",
+    "primeroMal":    "{% trans '· errores y advertencias primero' %}",
+    "nFilas":        "{% trans '· {n} filas' %}",
+    "nuevas":        "{% trans '{n} nuevas' %}",
+    "actualizan":    "{% trans '{n} actualizan una tarea existente' %}",
+    "actualiza":     "{% trans 'ACTUALIZA' %}",
+    "mostrando":     "{% trans 'Mostrando {a}–{b} de {n}' %}",
+    "sinFilas":      "{% trans 'No hay filas en esta vista.' %}",
+    "vacio":         "{% trans 'El archivo no tiene tareas: revisa que los códigos estén en la columna B, desde la fila 4.' %}",
+    "notaErr1":      "{% trans 'La fila con error no se importará. Corrígela en el Excel y vuelve a subirlo, o continúa sin ella.' %}",
+    "notaErrN":      "{% trans 'Las {n} filas con error no se importarán. Corrígelas en el Excel y vuelve a subirlo, o continúa sin ellas.' %}",
+    "importar1":     "{% trans 'Importar 1 tarea' %}",
+    "importarN":     "{% trans 'Importar {n} tareas' %}",
+    "importar0":     "{% trans 'Nada que importar' %}",
+    "semana":        "{% trans 'S{n} · {anio}' %}",
+    "h":             "{% trans '{h} h' %}",
+    "hMin":          "{% trans '{h} h {m} min' %}",
+    "min":           "{% trans '{m} min' %}",
+    "noValida":      "{% trans 'no válida' %}",
+    "anterior":      "{% trans 'Página anterior' %}",
+    "siguiente":     "{% trans 'Página siguiente' %}",
+    "resT1":         "{% trans 'Se importó 1 tarea' %}",
+    "resTN":         "{% trans 'Se importaron {n} tareas' %}",
+    "resS":          "{% trans 'Al cerrar, el plan se actualiza con los cambios.' %}",
+    "filaN":         "{% trans 'Fila {n}' %}",
+    "toast":         "{% trans 'Plan importado' %}",
+    "toastDet":      "{% trans '{c} tareas agregadas · {a} actualizadas' %}",
+    "errorImportar": "{% trans 'No se pudo importar' %}"
+}</script>

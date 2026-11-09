@@ -682,8 +682,11 @@
     // El widget no acepta value="" con texto interpolado (Desde/Hasta
     // se arman con anio+mes+día en el propio template); se fija en el
     // hidden antes de que el picker se inicialice (ver date_picker.js).
-    document.querySelector('#dp-ef-desde .dp-value').value = "{{ anio }}-{{ mes|stringformat:'02d' }}-01";
-    document.querySelector('#dp-ef-hasta .dp-value').value = "{{ anio }}-{{ mes|stringformat:'02d' }}-{{ dias_mes }}";
+    // Sin áreas con gráfico no se dibuja el rango de eficiencia (ni sus campos).
+    const efDesde = document.querySelector('#dp-ef-desde .dp-value');
+    const efHasta = document.querySelector('#dp-ef-hasta .dp-value');
+    if (efDesde) efDesde.value = "{{ anio }}-{{ mes|stringformat:'02d' }}-01";
+    if (efHasta) efHasta.value = "{{ anio }}-{{ mes|stringformat:'02d' }}-{{ dias_mes }}";
 </script>
 <script>
 window.HORA_HORA_CFG = {
@@ -699,7 +702,10 @@ window.HORA_HORA_CFG = {
     mes:                   {{ mes }},
     mesNombre:             "{% for num, nombre in meses %}{% if mes == num %}{{ nombre }}{% endif %}{% endfor %}",
     i18n: {
-        rangoMaxDias: "{% trans 'El rango máximo es de {dias} días; se ajustó automáticamente.' %}",
+        rangoAjustado:  "{% trans 'Rango ajustado' %}",
+        noSeGuardo:     "{% trans 'No se pudo guardar' %}",
+        noSeGuardoMeta: "{% trans 'No se pudo guardar la meta' %}",
+        rangoMaxDias:   "{% trans 'El máximo es de {dias} días' %}",
     },
 };
 </script>

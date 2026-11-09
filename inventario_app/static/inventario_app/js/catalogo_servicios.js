@@ -195,7 +195,7 @@
         enviar(url('urlEliminar', s.id), {}).then(d => {
             $('ssv-cat-conf-si').disabled = false;
             conf.hidden = true; porEliminar = botonEliminar = null;
-            if (!d.ok) { if (window.showToast) showToast(primerError(d), 'error'); return; }
+            if (!d.ok) { if (window.showToast) showToast({ title: T.errorGuardarTit, description: primerError(d) }, 'error'); return; }
             servicios = servicios.filter(x => x.id !== s.id);
             cambios = true;
             pintar();

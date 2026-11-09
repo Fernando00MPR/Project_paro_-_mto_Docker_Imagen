@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.core.files.base import ContentFile
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from paros_app.models import comprimir_imagen_pil
 
@@ -14,8 +14,31 @@ class Area(models.Model):
     nombre = models.CharField(max_length=100, unique=True, verbose_name=_("Area"))
     activa = models.BooleanField(default=True)
 
+    prefijo_ot = models.CharField(
+        max_length=3, blank=True, default='',
+        validators=[RegexValidator(r'^[A-Za-z]{3}$', _("Escribe exactamente 3 letras (A–Z), o déjalo vacío."))],
+        verbose_name=_("Prefijo del No. de OT"),
+        help_text=_("3 letras que van al inicio del número de OT de esta área, con guion (p. ej. AWH → AWH-451126101). "
+                    "Vacío: el número sale sin prefijo."))
+
     def __str__(self):
         return self.nombre
+
+
+    def save(self, *args, **kwargs):
+        self.prefijo_ot = (self.prefijo_ot or '').strip().upper()   # 'awh' se guarda como 'AWH'
+        super().save(*args, **kwargs)
+
+
+    def area_paros(self):
+        """Área de Paros de Producción con el mismo nombre (en español o en inglés, sin importar mayúsculas).
+        Las dos tablas de áreas no tienen llave entre sí: la Bitácora toma el catálogo de equipos de Paros
+        por este empate de nombre. None si no hay pareja."""
+        from django.db.models import Q
+        from paros_app.models import Area as AreaParos
+        
+        nombre = self.nombre.strip()
+        return AreaParos.objects.filter(Q(nombre_es__iexact=nombre) | Q(nombre_en__iexact=nombre)).first()
 
     class Meta:
         verbose_name = _("Area")

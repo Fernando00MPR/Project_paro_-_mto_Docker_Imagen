@@ -1,10 +1,16 @@
+"""
+Backlog: órdenes vencidas por responsable (OTs del plan, correctivos ligados a una OT y correctivos manuales),
+con filtros de Área y Semana, la página de escritorio y celular, y su exportación a Excel.
+Diagrama: docs/flujos/02-seguimientos-bitacora.md
+"""
 from io import BytesIO
-from datetime import date
+from datetime import date, timedelta
 from collections import defaultdict, Counter
 from urllib.parse import urlencode
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.translation import gettext as _, ngettext
@@ -12,8 +18,10 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 
-from ..models import SeguimientoOT, SeguimientoManual, RegistroEjecucion, Area, PlanMantenimiento
-from .utils import numeros_ot_semana
+from login_app.permisos import puede_mto
+from ..models import SeguimientoOT, SeguimientoManual, RegistroEjecucion, PlanMantenimiento
+from .utils import numeros_ot_semana, lunes_de_semana, INTERVALO, areas_visibles_mto, areas_ids_restringidas
+from menu_app.avisos import aviso
 
 # Atraso (días) del atajo "Más de 6 meses" y del chip de celular "con más de 6 meses".
 ATRASO_ALTO  = 180
@@ -40,14 +48,13 @@ def _semana_de_fecha(fecha):
     return _semana(iso[1], iso[0])
 
 
-def _url_plan(registro):
+def _url_plan(plan, semana_num, anio):
     """Lleva a la OT en el Plan de mantenimiento: su área, semana y código, y
     abre directo su detalle (celular) o su modal (escritorio) con ?abrir=."""
-    plan = registro.plan
     return reverse('mto:lista_plan') + '?' + urlencode({
         'area':   plan.area_id,
-        'semana': registro.semana_num,
-        'anio':   registro.anio,
+        'semana': semana_num,
+        'anio':   anio,
         'q':      plan.codigo,
         'estado': 'todas',
         'abrir':  plan.pk,
@@ -63,221 +70,189 @@ def _url_seguimiento(seg):
     return reverse('mto:lista_seguimientos') + '?' + urlencode(params)
 
 
-def _datos_backlog(request, area_id=None, semana_filtro=None):
-    """Órdenes vencidas por responsable, con los filtros de Área y Semana del
-    GET ya aplicados (o los que se pasen). La usan la página y la exportación."""
-    hoy     = date.today()
-    if area_id is None:
-        area_id = request.GET.get('area', '')
+def _ordenes_backlog(areas_ids, ve_todas):
+    """Todas las órdenes vencidas de esas áreas, sin los filtros de Área ni Semana (los aplica _datos_backlog en
+    memoria, así se calcula una sola vez). Vencida = de una semana que ya terminó o con compromiso ya pasado:
+    - OTs del plan (solo tareas activas): con registro sin completar ni cancelar, y también las semanas del año
+      actual que nunca tuvieron registro (mismo criterio que las "vencidas" del Dashboard);
+    - correctivos ligados a una OT (Pendiente / En proceso): compromiso pasado, o sin compromiso y de una semana
+      ya terminada;
+    - correctivos manuales (Pendiente / En proceso) con compromiso pasado. Los que no tienen área solo los ve
+      quien ve todas las áreas (`ve_todas`)."""
+    hoy          = date.today()
+    lunes_actual = hoy - timedelta(days=hoy.weekday())        # funciona cualquier día, también en el cambio de año
+    inicio_anio  = lunes_de_semana(hoy.isocalendar()[0], 1)   # lunes de la S1 del año (puede caer en diciembre)
+    sin_asignar  = _('Sin asignar')
+    ordenes = []
 
-    perfil   = request.user.perfil if hasattr(request.user, 'perfil') else None
-    es_admin = request.user.is_superuser or (perfil and perfil.es_admin)
-
-    areas_list = list(Area.objects.filter(activa=True))
-
-    semana_actual = hoy.isocalendar()[1]
-    anio_actual   = hoy.year
-    lunes_semana  = date.fromisocalendar(anio_actual, semana_actual, 1)
-
-    areas_ids = None
-    if not es_admin:
-        try:
-            areas_ids = list(request.user.acceso_mto.areas.values_list('id', flat=True))
-        except Exception:
-            areas_ids = []
-
-    # El filtro Área solo ofrece las áreas que el usuario puede ver (las mismas
-    # que limitan las órdenes), y un ?area= de otra área se ignora.
-    if not es_admin:
-        areas_list = [a for a in areas_list if a.id in areas_ids]
-        if area_id and area_id not in {str(a.id) for a in areas_list}:
-            area_id = ''
-
-    qs_ot = SeguimientoOT.objects.select_related(
-        'registro__plan__area'
-    ).filter(
-        estatus__in=['pendiente', 'en_proceso']
-    ).filter(
-        Q(fecha_compromiso__lte=hoy) |
-        Q(registro__semana_inicio__lte=lunes_semana)
-    )
-
-    qs_registros = RegistroEjecucion.objects.select_related(
-        'plan__area', 'responsable'
-    ).filter(
-        semana_inicio__lte=lunes_semana,
-    ).exclude(
-        # Una semana cancelada no queda pendiente (igual que en el dashboard).
-        estado__in=['completada', 'cancelada']
-    )
-
-    if not es_admin:
-        if areas_ids:
-            qs_registros = qs_registros.filter(plan__area__id__in=areas_ids)
-            qs_ot        = qs_ot.filter(registro__plan__area__id__in=areas_ids)
-        else:
-            qs_registros = qs_registros.none()
-            qs_ot        = qs_ot.none()
-
-    if area_id:
-        qs_registros = qs_registros.filter(plan__area__id=area_id)
-        qs_ot        = qs_ot.filter(registro__plan__area__id=area_id)
-
-    qs_manual = SeguimientoManual.objects.filter(
-        fecha_compromiso__lte=hoy,
-        estatus__in=['pendiente', 'en_proceso']
-    )
-    if area_id:
-        qs_manual = qs_manual.filter(area_id=area_id)
-    if not es_admin:
-        if areas_ids:
-            qs_manual = qs_manual.filter(area__id__in=areas_ids)
-        else:
-            qs_manual = qs_manual.none()
-
-    personas = defaultdict(lambda: {'ot': [], 'manual': []})
-
-    for seg in qs_ot:
-        r      = seg.registro
-        semana = r.semana_num
-        mes    = f"{r.semana_inicio.month:02d}"
-        aa     = str(r.semana_inicio.year)[2:]
-        seg.no_orden = f"OT{seg.pk:07d}"
-
-        nombre = seg.responsable or 'Sin asignar'
-        dias = (hoy - seg.fecha_compromiso).days if seg.fecha_compromiso else (hoy - seg.registro.semana_inicio).days
-        personas[nombre]['ot'].append({
-            'id':               seg.id,
-            'no_orden':         seg.no_orden,
+    # ── Correctivos ligados a una OT ──
+    for seg in (SeguimientoOT.objects.select_related('registro__plan__area')
+                .filter(estatus__in=['pendiente', 'en_proceso'], registro__plan__area_id__in=areas_ids)
+                .filter(Q(fecha_compromiso__lt=hoy) | # vencido = la fecha compromiso ya pasó (igual que Seguimientos)
+                        Q(fecha_compromiso__isnull=True, registro__semana_inicio__lt=lunes_actual))):
+        r = seg.registro
+        vence = seg.fecha_compromiso or r.semana_inicio
+        ordenes.append({
+            'no_orden':         f"OT{seg.pk:07d}",
             'problema':         seg.problema,
-            'fecha_compromiso': seg.fecha_compromiso or r.semana_inicio,
-            'dias_atraso':      dias,
-            'estatus':          seg.estatus,
+            'fecha_compromiso': vence,
+            'dias_atraso':      (hoy - vence).days,
             'tipo':             'ot',
             'codigo_plan':      r.plan.codigo,
-            'url_plan':         _url_plan(seg.registro),
+            'url_plan':         _url_plan(r.plan, r.semana_num, r.anio),
             'area_id':          r.plan.area_id,
+            'responsable':      seg.responsable or sin_asignar,
             # Semana de la fecha de compromiso; sin compromiso, la de su registro.
-            **(_semana_de_fecha(seg.fecha_compromiso) if seg.fecha_compromiso
-               else _semana(r.semana_num, r.anio)),
+            **(_semana_de_fecha(seg.fecha_compromiso) if seg.fecha_compromiso else _semana(r.semana_num, r.anio)),
         })
 
-    for seg in qs_manual:
-        nombre = seg.responsable or 'Sin asignar'
-        dias   = (hoy - seg.fecha_compromiso).days
-        personas[nombre]['manual'].append({
-            'id':               seg.id,
+    # ── Correctivos manuales ──
+    del_area = Q(area_id__in=areas_ids) | Q(area__isnull=True) if ve_todas else Q(area_id__in=areas_ids)
+    for seg in SeguimientoManual.objects.filter(del_area, fecha_compromiso__lt=hoy, estatus__in=['pendiente', 'en_proceso']):
+        ordenes.append({
             'no_orden':         seg.no_orden,
             'problema':         seg.problema,
             'fecha_compromiso': seg.fecha_compromiso,
-            'dias_atraso':      dias,
-            'estatus':          seg.estatus,
+            'dias_atraso':      (hoy - seg.fecha_compromiso).days,
             'tipo':             'manual',
             'url_plan':         _url_seguimiento(seg),   # los correctivos abren su formulario en Seguimientos
             'area_id':          seg.area_id,
+            'responsable':      seg.responsable or sin_asignar,
             **_semana_de_fecha(seg.fecha_compromiso),
         })
 
-    # No. de OT igual que el Plan de mantenimiento y el Excel de la semana: posición del plan entre todos los
-    # planes activos de su área que tocan esa semana (área → locación → actividad → código). Los planes de las
-    # áreas del backlog se traen en una sola consulta y se numeran en memoria por área y semana.
-    registros = list(qs_registros)
+    # ── OTs del plan ──
+    # No. de OT igual que el Plan y el Excel de la semana: posición del plan entre todos los planes activos de su
+    # área que tocan esa semana. Los planes se traen en una sola consulta y se numeran en memoria por área y semana.
+    planes = list(PlanMantenimiento.objects.select_related('area').filter(activo=True, area_id__in=areas_ids))
     planes_por_area = defaultdict(list)
-    for p in PlanMantenimiento.objects.select_related('area').filter(
-            activo=True, area_id__in={r.plan.area_id for r in registros}):
+    for p in planes:
         planes_por_area[p.area_id].append(p)
     numeros = {}   # (área, lunes) → {plan_id: No. de OT}
-    for reg in registros:
-        clave = (reg.plan.area_id, reg.semana_inicio)
+
+    def no_ot(plan, lunes):
+        clave = (plan.area_id, lunes)
         if clave not in numeros:
-            numeros[clave] = numeros_ot_semana(planes_por_area[clave[0]], reg.semana_inicio)
-        no_orden = numeros[clave].get(reg.plan_id, '—')   # '—' = fuera de frecuencia o plan inactivo (no sale en el Excel)
+            numeros[clave] = numeros_ot_semana(planes_por_area[plan.area_id], lunes)
+        return numeros[clave].get(plan.id, '—')   # '—' = la semana ya no calza con la frecuencia
 
-
-        nombre = ''
-        if reg.responsable:
-            nombre = reg.nombre_responsable().strip()
-        nombre = nombre or 'Sin asignar'
-
-        dias = (hoy - reg.semana_inicio).days
-
-        personas[nombre]['ot'].append({
-            'id':               reg.id,
-            'no_orden':         no_orden,
-            'problema':         reg.plan.actividad,
-            'fecha_compromiso': reg.semana_inicio,
-            'dias_atraso':      dias,
-            'estatus':          reg.estado,
+    def ot_del_plan(plan, lunes, semana_num, anio, responsable):
+        return {
+            'no_orden':         no_ot(plan, lunes),
+            'problema':         plan.actividad,
+            'fecha_compromiso': lunes,
+            'dias_atraso':      (hoy - lunes).days,
             'tipo':             'ot',
-            'codigo_plan':      reg.plan.codigo,
-            'url_plan':         _url_plan(reg),
-            'area_id':          reg.plan.area_id,
-            **_semana(reg.semana_num, reg.anio),
-        })
+            'codigo_plan':      plan.codigo,
+            'url_plan':         _url_plan(plan, semana_num, anio),
+            'area_id':          plan.area_id,
+            'responsable':      responsable or sin_asignar,
+            **_semana(semana_num, anio),
+        }
 
-    # ── Filtro por semana ──
-    # Las opciones salen de todas las órdenes (antes de filtrar), de la más
-    # reciente a la más antigua, con cuántas órdenes tiene cada una.
-    conteo_semanas = defaultdict(int)
-    for data in personas.values():
-        for o in data['ot'] + data['manual']:
-            conteo_semanas[o['semana_key']] += 1
+    # Con registro sin completar ni cancelar (una semana cancelada no queda pendiente, igual que en el Dashboard)
+    for reg in (RegistroEjecucion.objects.select_related('plan__area', 'responsable')
+                .filter(plan__in=planes, semana_inicio__lt=lunes_actual)
+                .exclude(estado__in=['completada', 'cancelada'])):
+        nombre = reg.nombre_responsable().strip() if reg.responsable_id else ''
+        ordenes.append(ot_del_plan(reg.plan, reg.semana_inicio, reg.semana_num, reg.anio, nombre))
+
+    # Semanas del año que tocaban y nunca tuvieron registro (nadie las asignó ni las llenó)
+    con_registro = set(RegistroEjecucion.objects.filter(
+        plan__in=planes, semana_inicio__gte=inicio_anio, semana_inicio__lt=lunes_actual,
+    ).values_list('plan_id', 'semana_inicio'))
+    for plan in planes:
+        if not plan.semana_inicio or not plan.anio_inicio:
+            continue
+        try:
+            cursor = lunes_de_semana(plan.anio_inicio, plan.semana_inicio)
+        except ValueError:
+            continue
+        paso = timedelta(weeks=INTERVALO.get(plan.frecuencia, 1))
+        if cursor < inicio_anio:   # salta directo a la primera semana del año que calza con la frecuencia
+            cursor += paso * -(-(inicio_anio - cursor).days // paso.days)
+        while cursor < lunes_actual:
+            if (plan.id, cursor) not in con_registro:
+                anio_iso, semana_iso, _dia = cursor.isocalendar()
+                ordenes.append(ot_del_plan(plan, cursor, semana_iso, anio_iso, ''))
+            cursor += paso
+    return ordenes
+
+
+def _agrupar(ordenes):
+    """Agrupa las órdenes por responsable: más vencidas primero; en empate, el mayor atraso."""
+    por_persona = defaultdict(list)
+    for o in ordenes:
+        por_persona[o['responsable']].append(o)
+    personas = []
+    for nombre, suyas in por_persona.items():
+        ot     = [o for o in suyas if o['tipo'] == 'ot']
+        manual = [o for o in suyas if o['tipo'] == 'manual']
+        total  = len(suyas)
+        pct_ot = round(len(ot) / total * 100)
+        # Celular: todas las órdenes juntas, de la más atrasada a la menos.
+        ordenadas = sorted(suyas, key=lambda o: o['dias_atraso'] or 0, reverse=True)
+        personas.append({
+            'nombre':   nombre,
+            'ot':       ot,
+            'manual':   manual,
+            'total':    total,
+            'pct_ot':   pct_ot,
+            'pct_m':    100 - pct_ot,
+            'ordenes':  ordenadas,
+            'max_dias': ordenadas[0]['dias_atraso'] or 0,
+        })
+    personas.sort(key=lambda x: (x['total'], x['max_dias']), reverse=True)
+    return personas
+
+
+def _datos_backlog(request):
+    """Órdenes vencidas por responsable con los filtros de Área y Semana del GET. Las órdenes se calculan una sola
+    vez y se filtran en memoria; también se devuelven las listas que usan los conteos de los selectores (cada
+    selector cuenta con el otro filtro aplicado y sin el suyo). La usan la página y la exportación."""
+    hoy        = date.today()
+    areas_list = list(areas_visibles_mto(request))
+    area_id    = request.GET.get('area', '').strip()
+    if area_id not in {str(a.id) for a in areas_list}:
+        area_id = ''   # un ?area= de otra área se ignora
+    ordenes_todas = _ordenes_backlog([a.id for a in areas_list], ve_todas=areas_ids_restringidas(request) is None)
+
+    # Semana: 'AAAA-SS' (semana ISO de la fecha de compromiso) o 'mas6' (atajo "Más de 6 meses": atraso mayor
+    # a ATRASO_ALTO, sin importar la semana).
+    filtro_semana = request.GET.get('semana', '').strip()
+
+    def en_semana(o):
+        if filtro_semana == 'mas6':
+            return (o['dias_atraso'] or 0) > ATRASO_ALTO
+        return not filtro_semana or o['semana_key'] == filtro_semana
+
+    def en_area(o):
+        return not area_id or str(o['area_id']) == area_id
+
+    sin_filtro_semana = [o for o in ordenes_todas if en_area(o)]
+    sin_filtro_area   = [o for o in ordenes_todas if en_semana(o)]
+
+    # Opciones del filtro Semana: de la más reciente a la más antigua, con cuántas órdenes tiene cada una.
     semanas_disponibles = [
         {'key': k, 'label': _semana(int(k[5:]), int(k[:4]))['semana'], 'n': n}
-        for k, n in sorted(conteo_semanas.items(), reverse=True)
+        for k, n in sorted(Counter(o['semana_key'] for o in sin_filtro_semana).items(), reverse=True)
     ]
-    # Valor: 'AAAA-SS' (semana ISO de la fecha de compromiso) o 'mas6' (atajo
-    # "Más de 6 meses": atraso mayor a ATRASO_ALTO, sin importar la semana).
-    filtro_semana = (request.GET.get('semana', '') if semana_filtro is None else semana_filtro).strip()
-    if filtro_semana == 'mas6':
-        entra = lambda o: (o['dias_atraso'] or 0) > ATRASO_ALTO
-    else:
-        entra = lambda o: o['semana_key'] == filtro_semana
-    if filtro_semana:
-        for data in personas.values():
-            data['ot']     = [o for o in data['ot']     if entra(o)]
-            data['manual'] = [o for o in data['manual'] if entra(o)]
     if filtro_semana == 'mas6':
         filtro_semana_label = _('Más de 6 meses')
     else:
         filtro_semana_label = next((s['label'] for s in semanas_disponibles if s['key'] == filtro_semana), '')
 
-    personas_lista = []
-    for nombre, data in personas.items():
-        total  = len(data['ot']) + len(data['manual'])
-        if total == 0:
-            continue   # se quedó sin órdenes con el filtro de semana
-        pct_ot = round(len(data['ot']) / total * 100) if total > 0 else 0
-        pct_m  = 100 - pct_ot
-        # Celular: todas las órdenes juntas, de la más atrasada a la menos.
-        ordenes = sorted(data['ot'] + data['manual'], key=lambda o: o['dias_atraso'] or 0, reverse=True)
-        for o in ordenes:
-            o['responsable'] = nombre
-        personas_lista.append({
-            'nombre':   nombre,
-            'ot':       data['ot'],
-            'manual':   data['manual'],
-            'total':    total,
-            'pct_ot':   pct_ot,
-            'pct_m':    pct_m,
-            'ordenes':  ordenes,
-            'max_dias': ordenes[0]['dias_atraso'] if ordenes else 0,
-        })
-
-    # Más vencidas primero; en empate, el mayor atraso.
-    personas_lista.sort(key=lambda x: (x['total'], x['max_dias'] or 0), reverse=True)
-
-    area_nombre = next((a.nombre for a in areas_list if str(a.id) == str(area_id)), None) if area_id else None
-
     return {
         'hoy':                 hoy,
         'areas':               areas_list,
         'area_id':             area_id,
-        'area_nombre':         area_nombre,
-        'personas':            personas_lista,
+        'area_nombre':         next((a.nombre for a in areas_list if str(a.id) == area_id), None) if area_id else None,
+        'personas':            _agrupar([o for o in sin_filtro_semana if en_semana(o)]),
         'semanas_disponibles': semanas_disponibles,
         'filtro_semana':       filtro_semana,
         'filtro_semana_label': filtro_semana_label,
+        'sin_filtro_area':     sin_filtro_area,
+        'sin_filtro_semana':   sin_filtro_semana,
     }
 
 
@@ -301,11 +276,10 @@ def _vencidas(n):
     return ngettext('%(n)s vencida', '%(n)s vencidas', n) % {'n': n} if n else _('Sin vencidas')
 
 
-def _areas_filtro(request, datos):
+def _areas_filtro(datos):
     """Opciones del selector de área: color fijo y cuántas vencidas tiene cada
     área con los demás filtros (Semana) aplicados, sin contar el de área."""
-    todas = datos if not datos['area_id'] else _datos_backlog(request, area_id='')
-    por_area = Counter(o['area_id'] for p in todas['personas'] for o in p['ordenes'])
+    por_area = Counter(o['area_id'] for o in datos['sin_filtro_area'])
     return {
         'opciones': [{
             'value': str(a.id),
@@ -317,20 +291,18 @@ def _areas_filtro(request, datos):
     }
 
 
-def _semanas_filtro(request, datos):
+def _semanas_filtro(datos):
     """Datos del selector de semana: vencidas por semana de compromiso (y por
     tipo, para que el selector siga al filtro Tipo), con el filtro de Área y
     sin el de Semana. Semanas ISO, como el Plan de mantenimiento."""
-    todas = datos if not datos['filtro_semana'] else _datos_backlog(request, semana_filtro='')
     conteos = defaultdict(lambda: {'ot': 0, 'manual': 0})
     mas6    = {'ot': 0, 'manual': 0}
     total   = {'ot': 0, 'manual': 0}
-    for p in todas['personas']:
-        for o in p['ordenes']:
-            conteos[o['semana_key']][o['tipo']] += 1
-            total[o['tipo']] += 1
-            if (o['dias_atraso'] or 0) > ATRASO_ALTO:
-                mas6[o['tipo']] += 1
+    for o in datos['sin_filtro_semana']:
+        conteos[o['semana_key']][o['tipo']] += 1
+        total[o['tipo']] += 1
+        if (o['dias_atraso'] or 0) > ATRASO_ALTO:
+            mas6[o['tipo']] += 1
     anio, num, _dia = datos['hoy'].isocalendar()
     return {
         'valor':   datos['filtro_semana'],
@@ -343,6 +315,10 @@ def _semanas_filtro(request, datos):
 
 @login_required
 def backlog_seguimientos(request):
+    """Página del Backlog (escritorio y celular). Permiso: Ver backlog; solo las áreas del usuario."""
+    if not puede_mto(request.user, 'ver_backlog'):
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver el backlog")))
+        return redirect('mto:dashboard')
     datos          = _datos_backlog(request)
     personas_lista = datos['personas']
 
@@ -389,16 +365,18 @@ def backlog_seguimientos(request):
         # Vista de escritorio
         'antiguedad':          antiguedad,
         'ordenes_json':        ordenes_json,
-        'areas_filtro':        _areas_filtro(request, datos),
-        'semanas_filtro':      _semanas_filtro(request, datos),
-
+        'areas_filtro':        _areas_filtro(datos),
+        'semanas_filtro':      _semanas_filtro(datos),
     })
 
 
 @login_required
 def backlog_exportar(request):
     """Excel con las órdenes que muestra la tabla de escritorio: Área y Semana
-    (como la página) más Tipo, Responsable y búsqueda."""
+    (como la página) más Tipo, Responsable y búsqueda. Permiso: Ver backlog."""
+    if not puede_mto(request.user, 'ver_backlog'):
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver el backlog")))
+        return redirect('mto:dashboard')
     datos = _datos_backlog(request)
     tipo  = request.GET.get('tipo', '')
     resp  = request.GET.get('resp', '')

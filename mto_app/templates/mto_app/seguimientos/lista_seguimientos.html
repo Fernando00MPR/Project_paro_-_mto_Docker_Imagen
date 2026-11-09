@@ -318,7 +318,7 @@
                  data-responsable="{{ s.responsable|default:'' }}" data-fecha="{{ s.fecha_compromiso|date:'Y-m-d' }}"
                  data-estatus="{{ s.estatus }}" data-notas="{{ s.notas|default:'' }}"
                  data-creado="{{ s.fecha_creacion|date:'d/m/Y' }}" data-validado="{% if s.validado %}1{% else %}0{% endif %}"
-                 data-nimg="{{ s.imagenes.count }}"
+                 data-nimg="{{ s.fotos }}"
                  data-area="{% if s.es_ot %}{{ s.registro.plan.area.nombre }}{% else %}{{ s.area.nombre|default:'' }}{% endif %}"></article>
         {% endfor %}
     </div>
@@ -732,10 +732,11 @@
     const URL_OT_DEL  = "/mto/seguimiento/eliminar/";
     const CONTADOR_SEG_TPL        = "{% trans 'Imagen {n} de {total}' %}";
     const SM_PROBLEMA_OBLIGATORIO = "{% trans 'El problema es obligatorio.' %}";
-    const SM_ERROR_TPL            = "{% trans 'Error: {error}' %}";
-    const SM_ERROR_CONEXION       = "{% trans 'Error de conexión' %}";
-    const SM_MAX_IMAGENES         = "{% trans 'Máximo 4 imágenes por seguimiento' %}";
-    const SM_LIMITE_IMAGENES_TPL  = "{% trans 'Solo se agregaron {n} imagen(es), límite de 4 alcanzado' %}";
+    const SM_ERROR_GUARDAR        = "{% trans 'No se pudo guardar el seguimiento' %}";
+    const SM_ERROR_ELIMINAR       = "{% trans 'No se pudo eliminar el seguimiento' %}";
+    const SM_LIMITE_FOTOS         = "{% trans 'Límite de fotos' %}";
+    const SM_MAX_IMAGENES         = "{% trans 'Máximo 4 por seguimiento' %}";
+    const SM_LIMITE_IMAGENES_TPL  = "{% trans 'Solo se agregaron {n}; el máximo es 4' %}";
 </script>
 <script src="{% static 'menu_app/js/date_picker.js' %}"></script>
 <script src="{% static 'mto_app/js/filter_select.js' %}"></script>
@@ -744,11 +745,14 @@
 <script>
 /* Textos del JS de escritorio (seguimientos_escritorio.js), mismo patrón que SEG_MOVIL. */
 window.SGE_I18N = {
-    noValidable:   "{% trans 'No se puede validar: la actividad aún no está completada' %}",
+    noValidableTit:"{% trans 'Aún no se puede validar' %}",
+    noValidable:   "{% trans 'La actividad no está completada' %}",
+    errorValidar:  "{% trans 'No se pudo cambiar la validación' %}",
     descargando:   "{% trans 'Descargando…' %}",
-    preparando:    "{% trans 'Preparando archivo…' %}",
-    descargados:   "{% trans 'Se descargaron {n} seguimientos' %}",
-    errorDescarga: "{% trans 'No se pudo generar el archivo. Intenta de nuevo.' %}",
+    preparando:    "{% trans 'Preparando archivo' %}",
+    descargados:   "{% trans 'Archivo descargado' %}",
+    descargadosDet:"{% trans '{n} seguimientos' %}",
+    errorDescarga: "{% trans 'No se pudo generar el archivo' %}",
     nuevoTitulo:   "{% trans 'Nuevo seguimiento' %}",
     editarTitulo:  "{% trans 'Editar seguimiento' %}",
     nuevoSub:      "{% trans 'Acción correctiva independiente de OTs' %}",
@@ -764,11 +768,13 @@ window.SGE_I18N = {
     semana:        "{% trans 'Semana {n}' %}",
     buscando:      "{% trans 'Buscando…' %}",
     sinCoincidencias: "{% trans 'Sin coincidencias' %}",
-    errorBuscar:   "{% trans 'No se pudo buscar. Revisa tu conexión.' %}",
+    errorBuscar:   "{% trans 'No se pudo buscar' %}",
     agregar:       "{% trans 'Agregar' %}",
     quitarImg:     "{% trans 'Quitar imagen' %}",
     verImg:        "{% trans 'Ver imagen' %}",
+    fotoNoValida:  "{% trans 'Foto no válida' %}",
     tipoImg:       "{% trans 'Solo se aceptan imágenes JPG o PNG' %}",
+    fotoPesada:    "{% trans 'Foto muy pesada' %}",
     tamImg:        "{% trans 'Cada imagen debe pesar máximo 5 MB' %}",
     validado:      "{% trans 'Validado' %}",
     porValidar:    "{% trans 'Por validar' %}",
@@ -790,7 +796,9 @@ window.SEG_MOVIL = {
         pendiente:       "{% trans 'Pendiente' %}",
         en_proceso:      "{% trans 'En proceso' %}",
         completado:      "{% trans 'Completado' %}",
-        soloCompletado:  "{% trans 'No se puede validar: la actividad aún no está completada' %}",
+        soloCompletadoTit: "{% trans 'Aún no se puede validar' %}",
+    soloCompletado:  "{% trans 'La actividad no está completada' %}",
+    errorValidar:    "{% trans 'No se pudo cambiar la validación' %}",
         lblProblema:     "{% trans 'Problema' %}",
         lblAccion:       "{% trans 'Acción' %}",
         lblNotas:        "{% trans 'Notas' %}",
@@ -818,12 +826,16 @@ window.SEG_MOVIL = {
         tomarFoto:       "{% trans 'Tomar foto' %}",
         galeria:         "{% trans 'Galería' %}",
         elegirGaleria:   "{% trans 'Elegir de la galería' %}",
-        maxImg:          "{% trans 'Máximo 4 imágenes por seguimiento' %}",
+        limiteFotos:     "{% trans 'Límite de fotos' %}",
+    maxImg:          "{% trans 'Máximo 4 por seguimiento' %}",
         guardando:       "{% trans 'Guardando…' %}",
         guardado:        "{% trans 'Seguimiento guardado' %}",
         eliminado:       "{% trans 'Seguimiento eliminado' %}",
         errorGuardar:    "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
         errorCargar:     "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
+    errorGuardarTit: "{% trans 'No se pudo guardar' %}",
+    errorCargarTit:  "{% trans 'No se pudo cargar' %}",
+    errorEliminarTit:"{% trans 'No se pudo eliminar' %}",
         marcarValidado:  "{% trans 'Marcar como validado' %}",
         quitarValidado:  "{% trans 'Quitar validación' %}",
         unSeg:           "{% trans '1 seguimiento' %}",

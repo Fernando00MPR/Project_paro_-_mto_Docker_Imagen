@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
+from menu_app.avisos import aviso
 
 from ...models import Area, CatalogoFalla
 from ...views.utils import _excel_response, _estilo_cabecera, _nombre_bilingue
@@ -44,7 +45,7 @@ def catalogo_fallas(request, area_id):
     if not (request.user.is_superuser or (perfil and perfil.es_admin)):
         if perfil and perfil.areas_permitidas.exists():
             if not perfil.areas_permitidas.filter(id=area_id).exists():
-                messages.error(request, _("No tienes acceso al catálogo de esta área."))
+                messages.error(request, aviso(_("Sin acceso a esta área"), _("No tienes acceso a su catálogo")))
                 return redirect('paros:catalogo_fallas_general')
     area = get_object_or_404(Area, id=area_id)
     qs   = CatalogoFalla.objects.filter(area=area).order_by('codigo')
@@ -82,7 +83,7 @@ def eliminar_falla(request, falla_id):
 def limpiar_fallas_area(request, area_id):
     area = get_object_or_404(Area, id=area_id)
     CatalogoFalla.objects.filter(area=area).delete()
-    messages.success(request, _("Catálogo de fallas de '{area}' eliminado.").format(area=area.nombre))
+    messages.success(request, aviso(_("Catálogo eliminado"), _("Fallas de {area}").format(area=area.nombre)))
     return redirect('paros:catalogo_fallas_general')
 
 
@@ -340,9 +341,9 @@ def agregar_falla(request, area_id):
         area_origen   = request.POST.get('area_origen', '').strip()
 
         if not codigo or not nombre_es:
-            messages.error(request, _("Código y nombre en español son obligatorios."))
+            messages.error(request, aviso(_("Faltan datos"), _("El código y el nombre en español son obligatorios")))
         elif CatalogoFalla.objects.filter(area=area, codigo=codigo).exists():
-            messages.error(request, _("Ya existe una falla con el código '{codigo}' en esta área.").format(codigo=codigo))
+            messages.error(request, aviso(_("Código repetido"), _("Ya existe una falla con el código '{codigo}' en esta área").format(codigo=codigo)))
         else:
             CatalogoFalla.objects.create(
                 area=area,
@@ -355,7 +356,7 @@ def agregar_falla(request, area_id):
                 tipo_falla_en=tipo_falla_en,
                 area_origen=area_origen,
             )
-            messages.success(request, _("Falla '{nombre}' agregada correctamente.").format(nombre=_nombre_bilingue(nombre_es, nombre_en)))
+            messages.success(request, aviso(_("Falla agregada"), _nombre_bilingue(nombre_es, nombre_en)))
 
     return redirect('paros:catalogo_fallas_general')
 
@@ -371,9 +372,9 @@ def editar_falla(request, falla_id):
         tipo_falla_en = request.POST.get('tipo_falla_en', '').strip()
         area_origen   = request.POST.get('area_origen', '').strip()
         if not codigo or not nombre_es:
-            messages.error(request, _("Código y nombre en español son obligatorios."))
+            messages.error(request, aviso(_("Faltan datos"), _("El código y el nombre en español son obligatorios")))
         elif CatalogoFalla.objects.filter(area=falla.area, codigo=codigo).exclude(id=falla.id).exists():
-            messages.error(request, _("Ya existe una falla con el código '{codigo}'.").format(codigo=codigo))
+            messages.error(request, aviso(_("Código repetido"), _("Ya existe una falla con el código '{codigo}'").format(codigo=codigo)))
         else:
             falla.codigo        = codigo
             falla.nombre        = nombre_es
@@ -384,5 +385,5 @@ def editar_falla(request, falla_id):
             falla.tipo_falla_en = tipo_falla_en
             falla.area_origen   = area_origen
             falla.save()
-            messages.success(request, _("Falla '{nombre}' actualizada correctamente.").format(nombre=_nombre_bilingue(nombre_es, nombre_en)))
+            messages.success(request, aviso(_("Falla actualizada"), _nombre_bilingue(nombre_es, nombre_en)))
     return redirect('paros:catalogo_fallas_general')

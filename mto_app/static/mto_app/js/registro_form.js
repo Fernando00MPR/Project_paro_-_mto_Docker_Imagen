@@ -275,7 +275,7 @@
         $('rf-val-hint').textContent = !completada ? t('valHintNo') : (CFG.puedeValidar ? t('valHintSi') : t('valHintSolo'));
         $('rf-val-validado').hidden = v !== 'validado';
         $('rf-val-rechazo').hidden = v !== 'rechazado';
-        $('rf-val-fecha').textContent = (CFG.validadoEn && CFG.validacionInicial === 'validado') ? CFG.validadoEn : CFG.hoyTxt;
+        if ($('rf-val-fecha')) $('rf-val-fecha').textContent = (CFG.validadoEn && CFG.validacionInicial === 'validado') ? CFG.validadoEn : CFG.hoyTxt;
         pintarReset();
         notificarAltura();
     }
@@ -300,11 +300,14 @@
     }
     F('responsable').addEventListener('change', () => error('responsable', ''));
     F('validado_por').addEventListener('change', () => error('validado_por', ''));
+    if (F('fecha_validacion')) F('fecha_validacion').addEventListener('change', () => error('fecha_validacion', ''));
 
     // ── Cambios sin guardar / cerrar ──
+    // fecha_validacion solo existe para administrador / superusuario
+    const CAMPOS = ['estado', 'responsable', 'fecha_ejecucion', 'observaciones', 'motivo_cancelacion', 'reagendada_anio', 'reagendada_semana',
+                    'validacion', 'validado_por', 'motivo_rechazo'].concat(F('fecha_validacion') ? ['fecha_validacion'] : []);
     const firma = () => JSON.stringify([
-        ['estado', 'responsable', 'fecha_ejecucion', 'observaciones', 'motivo_cancelacion', 'reagendada_anio', 'reagendada_semana',
-         'validacion', 'validado_por', 'motivo_rechazo'].map(n => F(n).value),
+        CAMPOS.map(n => F(n).value),
         fotos.map(f => [f.id || (f.file && f.file.name) || '', f.etiqueta]), quitadas]);
     let inicial = firma();
     const hayCambios = () => firma() !== inicial;
@@ -335,6 +338,9 @@
         }
         if (F('validacion').value === 'validado') {
             if (!F('validado_por').value) falla('validado_por', t('elegirValidador'));
+            const fv = F('fecha_validacion') ? F('fecha_validacion').value : '';
+            if (fv && fv > CFG.hoyIso) falla('fecha_validacion', t('fechaValFutura'));
+            else if (fv && fecha && fv < fecha) falla('fecha_validacion', t('fechaValAntes'));
         }
         if (F('validacion').value === 'rechazado' && CFG.puedeValidar && !F('motivo_rechazo').value.trim()) falla('motivo_rechazo', t('motivoRechazo'));
         if (primero) primero.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -348,8 +354,7 @@
         guardando = true; btn.disabled = true; btn.textContent = t('guardando');
         const fd = new FormData();
         fd.append('csrfmiddlewaretoken', form.elements.csrfmiddlewaretoken.value);
-        ['estado', 'responsable', 'fecha_ejecucion', 'observaciones', 'motivo_cancelacion', 'reagendada_anio', 'reagendada_semana',
-         'validacion', 'validado_por', 'motivo_rechazo'].forEach(n => fd.append(n, F(n).value));
+        CAMPOS.forEach(n => fd.append(n, F(n).value));
         quitadas.forEach(id => fd.append('fotos_quitar', id));
         const etq = {};
         fotos.filter(f => f.id).forEach(f => { etq[f.id] = f.etiqueta; });

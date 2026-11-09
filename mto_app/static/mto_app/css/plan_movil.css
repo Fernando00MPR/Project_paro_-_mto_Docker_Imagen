@@ -503,7 +503,5 @@
     #pm-sheet-resp, #pm-sheet-elimreg, #pm-sheet-salir, #pm-sheet-tarea { z-index: 1200; }
 
     /* ── Modales de escritorio que se siguen usando, como hoja ── */
-    #toast-global { bottom: calc(96px + env(safe-area-inset-bottom)) !important; max-width: calc(100% - 32px); }
-
     @media (prefers-reduced-motion: reduce) { .modal-box.sheet-movil { animation: none !important; } }
 }

@@ -186,7 +186,7 @@ function cambiarEstatusChipMovil(paroId, btn) {
             pintarChipEstatus(btn, data.estatus);
             showToast(i18n.estatusActualizado);
         })
-        .catch(() => showToast(i18n.errorEstatus, 'error'));
+        .catch(() => showToast({ title: i18n.errorEstatus, description: i18n.revisaConexion }, 'error'));
 }
 
 const ESTATUS_SOFT = {
@@ -276,7 +276,7 @@ function fijarEstatusMovil(nuevoEstatus) {
             }
             showToast(i18n.estatusActualizado);
         })
-        .catch(() => showToast(i18n.errorEstatus, 'error'));
+        .catch(() => showToast({ title: i18n.errorEstatus, description: i18n.revisaConexion }, 'error'));
 }
 
 function eliminarDesdeSheet() {
@@ -310,7 +310,7 @@ function cargarMasParos() {
             if (btnNuevo) btn.dataset.nextPage = btnNuevo.dataset.nextPage;
             else btn.remove();
         })
-        .catch(() => showToast(i18n.errorCargarMas, 'error'));
+        .catch(() => showToast({ title: i18n.errorCargarMas, description: i18n.revisaConexion }, 'error'));
 }
 
 document.addEventListener('DOMContentLoaded', function () {

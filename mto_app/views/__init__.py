@@ -12,13 +12,14 @@ from .planes import (
     modal_plan,
     historial_plan_exportar,
     plan_detalle_json,
-    importar_plan,
     descargar_plantilla,
     exportar_plan,
     exportar_tiempo_personas,
     conteo_ots_semanas,
     distribucion_ots,
 )
+
+from .planes_importar import importar_plan
 
 from .rutinas import (
     historial_acciones,

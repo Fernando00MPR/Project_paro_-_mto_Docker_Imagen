@@ -232,7 +232,7 @@
             if (vItems.length >= Math.min(meta, vTotal)) { listo(); return; }
             btnV.disabled = true;
             pedirVencidas().then(listo)
-                .catch(() => { if (typeof showToast === 'function') showToast(t('errorCargar'), 'error'); })
+                .catch(() => { if (typeof showToast === 'function') showToast({ title: t('errorCargarTit'), description: window.TXT_REVISA_CONEXION }, 'error'); })
                 .finally(() => { btnV.disabled = false; });
         });
     }
@@ -247,7 +247,7 @@
             listaV.replaceChildren();
             btnV.hidden = true;
             pedirVencidas().then(pintarVencidas)
-                .catch(() => { if (typeof showToast === 'function') showToast(t('errorCargar'), 'error'); });
+                .catch(() => { if (typeof showToast === 'function') showToast({ title: t('errorCargarTit'), description: window.TXT_REVISA_CONEXION }, 'error'); });
         });
     });
 

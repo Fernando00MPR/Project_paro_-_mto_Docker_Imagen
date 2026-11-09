@@ -46,6 +46,8 @@
     }
     const normalizar = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     const aviso = (msg, tipo) => { if (typeof showToast === 'function') showToast(msg, tipo); };
+    // Detalle de un error: el motivo que mandó el servidor o, sin él (red, código HTTP), "Revisa tu conexión".
+    const motivo = e => (e && e.message && !/^\d+$/.test(e.message)) ? e.message : window.TXT_REVISA_CONEXION;
 
     // ── Navegación con filtros (misma lógica de servidor que escritorio) ────
     function urlCon(cambios) {
@@ -209,12 +211,12 @@
         const chipVal = e.target.closest('.sg-val');
         if (chipVal && chipVal.tagName === 'BUTTON') {
             e.stopPropagation();
-            if (chipVal.getAttribute('aria-disabled') === 'true') { aviso(t('soloCompletado'), 'warning'); return; }
+            if (chipVal.getAttribute('aria-disabled') === 'true') { aviso({ title: t('soloCompletadoTit'), description: t('soloCompletado') }, 'warning'); return; }
             chipVal.disabled = true;
             fetch('/mto/seguimiento/validar-manual/' + card.dataset.id + '/', { method: 'POST', headers: { 'X-CSRFToken': CSRF_SM } })
                 .then(r => r.json())
                 .then(data => {
-                    if (!data.ok) { showToast(data.error || t('soloCompletado'), 'error'); return; }
+                    if (!data.ok) { aviso({ title: t('errorValidar'), description: data.error || window.TXT_REVISA_CONEXION }, 'error'); return; }
                     card.dataset.validado = data.validado ? '1' : '0';
                     chipVal.classList.toggle('ok', !!data.validado);
                     chipVal.innerHTML = data.validado ? SVG_OK : SVG_RELOJ;
@@ -291,7 +293,7 @@
                         btnMas.remove();
                     }
                 })
-                .catch(() => { btnMas.disabled = false; aviso(t('errorCargar'), 'error'); });
+                .catch(() => { btnMas.disabled = false; aviso({ title: t('errorCargarTit'), description: window.TXT_REVISA_CONEXION }, 'error'); });
         });
     }
 
@@ -504,7 +506,7 @@
         input.value = '';
         if (!archivos.length) return;
         const libres = MAX_IMG - (st.existentes.length - st.borrar.length) - st.nuevas.length;
-        if (archivos.length > libres) aviso(t('maxImg'), 'warning');
+        if (archivos.length > libres) aviso({ title: t('limiteFotos'), description: t('maxImg') }, 'warning');
         const listos = await Promise.all(archivos.slice(0, Math.max(libres, 0)).map(comprimir));
         listos.forEach(file => st.nuevas.push({ file, url: URL.createObjectURL(file) }));
         pintarImagenes();
@@ -766,7 +768,7 @@
         } catch (err) {
             f.guardar.disabled = false;
             f.guardar.textContent = form.dataset.textoGuardar;
-            aviso(t('errorGuardar'), 'error');
+            aviso({ title: t('errorGuardarTit'), description: motivo(err) }, 'error');
         }
     });
 
@@ -785,7 +787,7 @@
 
     if (btnValidar) btnValidar.addEventListener('click', () => {
         const card = st.card, d = card.dataset;
-        if (btnValidar.getAttribute('aria-disabled') === 'true') { aviso(t('soloCompletado'), 'warning'); return; }
+        if (btnValidar.getAttribute('aria-disabled') === 'true') { aviso({ title: t('soloCompletadoTit'), description: t('soloCompletado') }, 'warning'); return; }
         const url = d.tipo === 'ot' ? `/mto/seguimiento/validar-ot/${d.id}/` : `/mto/seguimiento/validar-manual/${d.id}/`;
         btnValidar.disabled = true;
         postJson(url)
@@ -795,7 +797,7 @@
                 cerrarHoja('sg-sheet-mas');
                 aviso(data.validado ? t('validado') : t('porValidar'), 'success');
             })
-            .catch(() => aviso(t('errorGuardar'), 'error'))
+            .catch(e => aviso({ title: t('errorValidar'), description: motivo(e) }, 'error'))
             .finally(() => { btnValidar.disabled = false; });
     });
 
@@ -820,7 +822,7 @@
                     ajustarConteo(d.estatus, -1, true);
                     aviso(t('eliminado'), 'success');
                 })
-                .catch(() => aviso(t('errorGuardar'), 'error'))
+                .catch(e => aviso({ title: t('errorEliminarTit'), description: motivo(e) }, 'error'))
                 .finally(() => { ok.disabled = false; });
         });
     }

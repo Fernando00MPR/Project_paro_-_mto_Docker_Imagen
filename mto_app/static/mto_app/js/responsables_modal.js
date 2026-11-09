@@ -29,7 +29,7 @@
             }
         } catch (e) {
             if (mio === pedido && !cuerpo.querySelector('.rs')) cuerpo.innerHTML = '<div class="rs-cargando">' + I.error + '</div>';
-            else toast(I.error, 'error');
+            else toast({ title: I.error, description: window.TXT_REVISA_CONEXION }, 'error');
         } finally {
             if (mio === pedido) cuerpo.classList.remove('ocupado');
         }
@@ -96,7 +96,7 @@
             cargar();
         } catch (e) {
             btn.disabled = false;
-            toast(I.errorGuardar, 'error');
+            toast({ title: I.errorActivo, description: window.TXT_REVISA_CONEXION }, 'error');
         }
     }
 
@@ -153,7 +153,7 @@
     Object.keys(F).forEach(k => F[k].addEventListener('input', () => { error(k, ''); vistaPrevia(); }));
 
     function abrirForm(d) {
-        if (!CFG.area && !d) { toast(I.sinArea, 'warning'); return; }
+        if (!CFG.area && !d) { toast({ title: I.sinAreaTit, description: I.sinArea }, 'warning'); return; }
         modoForm = d ? 'editar' : 'nuevo';
         idForm = d ? d.id : '';
         F.nomina.value = d ? d.nomina : ''; F.nombre.value = d ? d.nombre : ''; F.apellidos.value = d ? d.apellidos : '';
@@ -205,7 +205,6 @@
             }
             huboCambio = true;
             ff.hidden = true;
-            toast(modoForm === 'editar' ? I.toastGuardado : I.toastCreado);
             toast(d.recuperado ? fmt(I.toastRecuperado, { nombre: d.nombre })
                                : (modoForm === 'editar' ? I.toastGuardado : I.toastCreado));
             cargar();

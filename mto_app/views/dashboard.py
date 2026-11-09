@@ -3,13 +3,16 @@ from datetime import date, timedelta
 from urllib.parse import urlencode
 import json
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _, ngettext
 
-from ..models import Area, PlanMantenimiento, RegistroEjecucion
-from .utils import lunes_de_semana, INTERVALO, _planes_que_tocan, areas_visibles_mto, areas_ids_restringidas
+from login_app.permisos import puede_mto
+from ..models import PlanMantenimiento, RegistroEjecucion
+from .utils import lunes_de_semana, INTERVALO, _planes_que_tocan, areas_visibles_mto, areas_ids_restringidas, puede_ver_plan
 from .backlog import COLORES_AREA
+from menu_app.avisos import aviso
 from django.urls import reverse
 from django.utils.formats import date_format
 
@@ -123,20 +126,29 @@ def _meta_area(n):
 
 @login_required
 def dashboard(request):
-    hoy       = date.today()
-    iso       = hoy.isocalendar()
-    semana_actual = iso[1]
-    anio      = hoy.year
+    # Sin "Ver dashboard": a la primera sección que sí tenga. Plan, Backlog y las demás mandan aquí a quien no
+    # tiene SU permiso, así que no hay ciclo.
+    if not puede_mto(request.user, 'ver_dashboard'):
+        messages.error(request, aviso(_("Sin permiso"), _("No tienes permiso para ver esta sección")))
+        if puede_ver_plan(request):
+            return redirect('mto:lista_plan')
+        if puede_mto(request.user, 'ver_backlog'):
+            return redirect('mto:backlog_seguimientos')
+        return redirect('paros:lista_paros')
 
-    area_id       = request.GET.get('area', '').strip()
-    filtro_semana = int(request.GET.get('semana', semana_actual) or semana_actual)
-    filtro_anio   = int(request.GET.get('anio', anio) or anio)
+    hoy          = date.today()
+    anio, semana_actual, _dia = hoy.isocalendar()   # año ISO: del 29 al 31 dic puede ser el siguiente, del 1 al 3 ene el anterior
+    lunes_actual = hoy - timedelta(days=hoy.weekday())
 
+    area_id = request.GET.get('area', '').strip()
     try:
+        filtro_semana = int(request.GET.get('semana') or semana_actual)
+        filtro_anio   = int(request.GET.get('anio')   or anio)
+        if not 2000 <= filtro_anio <= 2100:
+            raise ValueError
         lunes_filtro = lunes_de_semana(filtro_anio, filtro_semana)
-    except Exception:
-        lunes_filtro  = lunes_de_semana(anio, semana_actual)
-        filtro_semana = semana_actual
+    except ValueError:   # texto, año fuera de rango o semana que ese año no tiene: la semana actual (semana y año juntos)
+        filtro_semana, filtro_anio, lunes_filtro = semana_actual, anio, lunes_actual
 
     areas = areas_visibles_mto(request)
     areas_ids = areas_ids_restringidas(request)
@@ -173,8 +185,6 @@ def dashboard(request):
                          if not (registros_semana.get(p.id) and
                                  registros_semana[p.id].responsable))
 
-    cumplimiento_pct = round(completadas * 100 / total_semana) if total_semana else 0
-
     area_nombre = None
     if area_id:
         area_nombre = next((a.nombre for a in areas if str(a.pk) == area_id), None)
@@ -199,11 +209,13 @@ def dashboard(request):
         })
 
     pks_planes = [p.id for p in planes_list]
+    inicio_anio = lunes_de_semana(filtro_anio, 1)   # la S1 puede empezar en diciembre
+    tope        = min(lunes_filtro, lunes_actual)   # una semana futura no tiene vencidas por adelantado
     registros_existentes = set(
         RegistroEjecucion.objects.filter(
             plan_id__in=pks_planes,
-            semana_inicio__gte=date(filtro_anio, 1, 1),
-            semana_inicio__lt=lunes_filtro,
+            semana_inicio__gte=inicio_anio,
+            semana_inicio__lt=tope,
         ).values_list('plan_id', 'semana_inicio')
     )
 
@@ -215,13 +227,13 @@ def dashboard(request):
             intervalo = INTERVALO.get(plan.frecuencia, 1)
             ref_lunes = lunes_de_semana(plan.anio_inicio, plan.semana_inicio)
             cursor    = ref_lunes
-            while cursor < lunes_filtro:
-                # Desde el 1 de enero del año que se está viendo (antes: el año actual,
-                # así una semana de otro año mostraba vencidas en 0).
-                if cursor >= date(filtro_anio, 1, 1):
+            while cursor < tope:
+                # Desde la S1 del año que se está viendo (antes: el año actual, así una semana de otro año
+                # mostraba vencidas en 0).
+                if cursor >= inicio_anio:
                     if (plan.id, cursor) not in registros_existentes:
                         sem_num = cursor.isocalendar()[1]
-                        sem_atraso = (lunes_filtro - cursor).days // 7
+                        sem_atraso = (tope - cursor).days // 7
                         vencidos.append({
                             'plan':   plan,
                             'semana': sem_num,
@@ -234,9 +246,8 @@ def dashboard(request):
 
     vencidos.sort(key=lambda x: -x['atraso'])
     total_vencidos = len(vencidos)
-    vencidos_todos = vencidos
     # Escritorio: mismo contenido, pero con desempate por código (spec 6.2).
-    vencidos_esc = sorted(vencidos_todos, key=lambda v: (-v['atraso'], v['plan'].locacion, v['plan'].actividad or '', v['plan'].codigo))
+    vencidos_esc = sorted(vencidos, key=lambda v: (-v['atraso'], v['plan'].locacion, v['plan'].actividad or '', v['plan'].codigo))
 
     # "Ver las N vencidas" pide el siguiente bloque (celular: de un área; escritorio: todo).
     if request.GET.get('vencidas') == '1':
@@ -249,16 +260,12 @@ def dashboard(request):
             lista, bloque = vencidos_esc, FILAS_POR_BLOQUE_ESC
         else:
             varea = request.GET.get('varea', '').strip()
-            lista = [v for v in vencidos_todos if not varea or str(v['plan'].area_id) == varea]
+            lista = [v for v in vencidos if not varea or str(v['plan'].area_id) == varea]
             bloque = VENCIDAS_POR_BLOQUE
         return JsonResponse({
             'total': len(lista),
             'items': [_vencida_json(v, es_escritorio) for v in lista[desde:desde + bloque]],
         })
-
-    tipos = {}
-    for p in planes_list:
-        tipos[p.tipo_mto] = tipos.get(p.tipo_mto, 0) + 1
 
     # ── Datos para gráfico de cumplimiento por semana ──
 
@@ -334,8 +341,8 @@ def dashboard(request):
     # Vencidas: primer bloque + conteo por área (chips, solo con "Todas las áreas").
     vencidas_areas = []
     if not area_id:
-        por_area_venc = Counter(v['plan'].area_id for v in vencidos_todos)
-        nombres = {v['plan'].area_id: v['plan'].area.nombre for v in vencidos_todos}
+        por_area_venc = Counter(v['plan'].area_id for v in vencidos)
+        nombres = {v['plan'].area_id: v['plan'].area.nombre for v in vencidos}
         vencidas_areas = [{'id': a, 'nombre': nombres[a], 'n': n} for a, n in por_area_venc.most_common()]
 
     # ── Escritorio ──
@@ -369,7 +376,6 @@ def dashboard(request):
     ]
     desglose = [d for d in desglose if d['n'] > 0]
 
-    url_plan_semana = _url_plan_semana(area_id, filtro_semana, filtro_anio)
     url_asignar     = _url_plan_semana(area_id, filtro_semana, filtro_anio, {'resp': 'ninguno'})
 
     filas_semana   = semana_detalle[:FILAS_POR_BLOQUE_ESC]
@@ -413,7 +419,7 @@ def dashboard(request):
             'anio':      filtro_anio,
             'serie12':   serie_12,
             'serieAnio': serie_anio,
-            'vencidas':  [_vencida_json(v) for v in vencidos_todos[:VENCIDAS_POR_BLOQUE]],
+            'vencidas':  [_vencida_json(v) for v in vencidos[:VENCIDAS_POR_BLOQUE]],
             'totalVencidas': total_vencidos,
             'porBloque': VENCIDAS_POR_BLOQUE,
         },
@@ -425,7 +431,6 @@ def dashboard(request):
         'filtro_area':              area_id,
         'area_nombre':              area_nombre,
         'filtro_semana':            filtro_semana,
-        'semana_actual':            semana_actual,
         'lunes_filtro':             lunes_filtro,
         'domingo_filtro':           lunes_filtro + timedelta(days=6),
         'anio':                     filtro_anio,
@@ -435,10 +440,7 @@ def dashboard(request):
         'pendientes':               pendientes,
         'sin_registro':             sin_registro,
         'sin_responsable':          sin_responsable,
-        'cumplimiento_pct':         cumplimiento_pct,
         'total_vencidos':           total_vencidos,
-        'semana_detalle':           semana_detalle,
-        'tipos':                    tipos,
         'cumplimiento_semanas':     json.dumps(semanas_grafico),
         'cumplimiento_valores':     json.dumps(valores_grafico),
         'cumplimiento_totales':     json.dumps(totales_grafico),
@@ -447,7 +449,6 @@ def dashboard(request):
         'areas_filtro':             areas_filtro,
         'faltan_meta':              faltan_meta,
         'desglose':                 desglose,
-        'url_plan_semana':          url_plan_semana,
         'url_asignar':              url_asignar,
         'filas_semana':             filas_semana,
         'filas_vencidas':           filas_vencidas,

@@ -162,12 +162,13 @@
     const recorte = (t, n) => (t.length > n ? t.slice(0, n).trim() + '…' : t);
 
     function crearCombo(o) {
-        let items = [], activo = -1, tq = null, pedido = 0;
+        let items = [], aviso = '', activo = -1, tq = null, pedido = 0;
         const ul = o.lista, inp = o.input;
         const cerrar = () => { ul.hidden = true; inp.setAttribute('aria-expanded', 'false'); activo = -1; };
         function pintar() {
             const q = inp.value.trim();
-            let h = items.map((it, i) => '<li role="option" data-i="' + i + '"' + (i === activo ? ' class="activa"' : '') + '>' + o.item(it) + '</li>').join('');
+            let h = (aviso ? '<li class="aviso" role="presentation">' + esc(aviso) + '</li>' : '') +
+                items.map((it, i) => '<li role="option" data-i="' + i + '"' + (i === activo ? ' class="activa"' : '') + '>' + o.item(it) + '</li>').join('');
             if (o.libre && q && !items.some(it => it.nombre.toLowerCase() === q.toLowerCase())) {
                 h += '<li role="option" data-libre="1">' + esc(fmt(I.usarTexto, { texto: q })) + '</li>';
             }
@@ -180,8 +181,10 @@
                 const r = await fetch(o.url + '?q=' + encodeURIComponent(inp.value.trim()) + '&area_id=' + encodeURIComponent(F.area.value), { credentials: 'same-origin' });
                 const d = await r.json();
                 if (mio !== pedido) return;
-                items = d; activo = -1; pintar();
-            } catch (e) { items = []; pintar(); }
+                items = Array.isArray(d) ? d : (d.equipos || []);
+                aviso = Array.isArray(d) ? '' : (d.aviso || '');
+                activo = -1; pintar();
+            } catch (e) { items = []; aviso = ''; pintar(); }
         }
         const elegirActivo = () => {
             const q = inp.value.trim();

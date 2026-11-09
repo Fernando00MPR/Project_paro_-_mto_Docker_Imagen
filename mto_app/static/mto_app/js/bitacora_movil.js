@@ -209,7 +209,7 @@
                         btnMas.remove();
                     }
                 })
-                .catch(() => { btnMas.disabled = false; showToast(t('errorCargar'), 'error'); });
+                .catch(() => { btnMas.disabled = false; showToast({ title: t('errorCargar'), description: window.TXT_REVISA_CONEXION }, 'error'); });
         });
     }
 

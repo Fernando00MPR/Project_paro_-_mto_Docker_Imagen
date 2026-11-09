@@ -217,8 +217,9 @@
                     const preview = document.getElementById('preview-imagenes');
 
                     if (input.files.length > disponibles) {
-                        const msgMax = "{% trans 'Este paro ya tiene {existentes} imagen(es). Solo puedes agregar {disponibles} más (máximo 4 en total).' %}";
-                        showToast(msgMax.replace('{existentes}', existentes).replace('{disponibles}', disponibles), 'warning');
+                        const msgMax = "{% trans 'Ya tiene {existentes}; solo puedes agregar {disponibles} más (máximo 4)' %}";
+                        showToast({ title: "{% trans 'Límite de fotos' %}",
+                                    description: msgMax.replace('{existentes}', existentes).replace('{disponibles}', disponibles) }, 'warning');
                         input.value = '';
                         preview.innerHTML = '';
                         document.getElementById('zona-texto').textContent = '{% trans "Haz clic para seleccionar imágenes" %}';

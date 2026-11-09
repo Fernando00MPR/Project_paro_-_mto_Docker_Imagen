@@ -14,6 +14,7 @@ from paros_app.models import Area, ConfiguracionHoraHora
 from mto_app.models import AccesoMto
 from mto_app.models import Area as AreaMto
 from django.utils.translation import gettext as _
+from menu_app.avisos import aviso
 from django.core.paginator import Paginator
 from django.db.models import Q
 
@@ -330,8 +331,8 @@ def crear_usuario(request):
             errores.append(_("Las contraseñas no coinciden."))
  
         if errores:
-            for e in errores:
-                messages.error(request, e)
+            # un solo aviso con todos los errores (antes salía uno por cada campo)
+            messages.error(request, aviso(_("Revisa el formulario"), " · ".join(str(e).rstrip(".") for e in errores)))
             ctx = _ctx_form(None, request.POST, areas)
             ctx.update({'accion': _('Crear'), 'post': request.POST})
             return render(request, 'login_app/form_usuario.html', ctx)
@@ -341,7 +342,7 @@ def crear_usuario(request):
             first_name=first_name, last_name=last_name, email=email
         )
         _guardar_perfil(request, user, areas)
-        messages.success(request, _("Usuario '{username}' creado correctamente.").format(username=username))
+        messages.success(request, aviso(_("Usuario creado"), username))
         return redirect('lista_usuarios')
  
     ctx = _ctx_form(None, None, areas)
@@ -364,14 +365,14 @@ def editar_usuario(request, user_id):
         password2 = request.POST.get('password2', '').strip()
         if password:
             if password != password2:
-                messages.error(request, _("Las contraseñas no coinciden."))
+                messages.error(request, aviso(_("No se guardó el usuario"), _("Las contraseñas no coinciden")))
                 ctx = _ctx_form(perfil, request.POST, areas, usuario)
                 ctx.update({'accion': _('Editar'), 'usuario': usuario, 'perfil': perfil, 'post': request.POST})
                 return render(request, 'login_app/form_usuario.html', ctx)
             usuario.set_password(password)
         usuario.save()
         _guardar_perfil(request, usuario, areas)
-        messages.success(request, _("Usuario '{username}' actualizado.").format(username=usuario.username))
+        messages.success(request, aviso(_("Usuario actualizado"), usuario.username))
         return redirect('lista_usuarios')
  
     ctx = _ctx_form(perfil, None, areas, usuario)
@@ -384,12 +385,12 @@ def editar_usuario(request, user_id):
 def eliminar_usuario(request, user_id):
     usuario = get_object_or_404(User, id=user_id)
     if usuario == request.user:
-        messages.error(request, _("No puedes eliminar tu propio usuario."))
+        messages.error(request, aviso(_("No se eliminó"), _("No puedes eliminar tu propio usuario")))
         return redirect('lista_usuarios')
     if request.method == 'POST':
         nombre = usuario.username
         usuario.delete()
-        messages.success(request, _("Usuario '{nombre}' eliminado.").format(nombre=nombre))
+        messages.success(request, aviso(_("Usuario eliminado"), nombre))
     return redirect('lista_usuarios')
  
  

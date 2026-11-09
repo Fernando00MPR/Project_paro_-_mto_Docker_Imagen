@@ -82,7 +82,7 @@ function cerrarModalBitacora() {
 // mano antes de dejar que el <form> se envíe de verdad.
 document.getElementById('form-bitacora').addEventListener('submit', function (e) {
     if (!getBitFecha()) {
-        showToast(cfg.i18n?.selecFecha || 'Selecciona una fecha.', 'warning');
+        showToast({ title: cfg.i18n?.faltaFecha || 'Falta la fecha', description: cfg.i18n?.selecFecha || 'Selecciona una fecha' }, 'warning');
         e.preventDefault();
     }
 });
@@ -129,7 +129,7 @@ function previsualizarImagenesBitacora(input) {
     const disponibles   = max - _bitImagenesExistentes.length - _bitArchivosSeleccionados.length;
 
     if (nuevos.length > disponibles) {
-        alert(_bitT('maxImagenes', 'Máximo {max} imágenes. Solo puedes agregar {n} más.', { max, n: disponibles }));
+        showToast({ title: _bitT('limiteFotos', 'Límite de fotos'), description: _bitT('maxImagenes', 'Solo puedes agregar {n} más (máximo {max})', { max, n: disponibles }) }, 'warning');
         input.value = '';
         return;
     }
@@ -335,9 +335,13 @@ function _autocomplete(inputId, dropdownId, fetchUrl) {
 
             fetch(`${fetchUrl}?area_id=${encodeURIComponent(areaId)}&q=${encodeURIComponent(q)}`)
                 .then(r => r.json())
-                .then(items => {
-                    if (!items.length) { dropdown.style.display = 'none'; return; }
-                    dropdown.innerHTML = items.map(it => `
+                .then(d => {
+                    const items = Array.isArray(d) ? d : (d.equipos || []);
+                    const aviso = Array.isArray(d) ? '' : (d.aviso || '');
+                    if (!items.length && !aviso) { dropdown.style.display = 'none'; return; }
+                    const escAviso = aviso.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+                    
+                    dropdown.innerHTML = (aviso ? `<div style="padding:8px 12px; font-size:12px; line-height:1.45; color:#8A5A08; background:#FCEFD6;">${escAviso}</div>` : '') + items.map(it => `
                         <div class="bit-ac-item" data-nombre="${it.nombre.replace(/"/g, '&quot;')}"
                              style="padding:8px 12px; cursor:pointer; font-size:13px;
                                     border-bottom:1px solid var(--border);">
@@ -345,6 +349,7 @@ function _autocomplete(inputId, dropdownId, fetchUrl) {
                             ${it.descripcion ? `<div style="font-size:11px; color:var(--text-3);">${it.descripcion}</div>` : ''}
                         </div>
                     `).join('');
+
                     dropdown.querySelectorAll('.bit-ac-item').forEach(item => {
                         item.addEventListener('mousedown', e => {
                             e.preventDefault();
@@ -352,6 +357,7 @@ function _autocomplete(inputId, dropdownId, fetchUrl) {
                             dropdown.style.display = 'none';
                         });
                     });
+                    
                     dropdown.style.display = 'block';
                 })
                 .catch(() => {});

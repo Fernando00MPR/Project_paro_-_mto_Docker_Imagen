@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="{% static 'mto_app/css/seguimientos_escritorio.css' %}">
 <link rel="stylesheet" href="{% static 'mto_app/css/distribucion_ots.css' %}">
 <link rel="stylesheet" href="{% static 'mto_app/css/plan_tarea.css' %}">
+<link rel="stylesheet" href="{% static 'mto_app/css/plan_importar.css' %}">
 <script>
 /* Celular: siempre se trabaja sobre una semana y un estado (Pendientes por defecto). Si faltan en la
    URL se redirige aquí, antes de pintar; antes lo hacía plan_movil.js al final y la página parpadeaba. */
@@ -33,6 +34,7 @@
     if (!q.get('estado')) q.set('estado', 'pend');
     q.delete('page');
     document.documentElement.style.visibility = 'hidden';   // no pintar la página que se va a reemplazar
+    if (window.AVISOS_DJANGO && AVISOS_DJANGO.length) avisarAlCargar(AVISOS_DJANGO);   // los mensajes de Django se muestran en la página nueva
     location.replace(u.toString());
 })();
 </script>
@@ -89,7 +91,7 @@
                 </button>
                 <div class="pe-pop pe-opc-menu" id="pe-opc-menu" role="menu" hidden>
                     {% if puede_editar_plan %}
-                    <a role="menuitem" class="pe-opc-it" href="{% url 'mto:importar_plan' %}">
+                    <a role="menuitem" class="pe-opc-it" href="{% url 'mto:importar_plan' %}" data-abrir-importar>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
                         {% trans "Importar Excel" %}
                     </a>
@@ -986,12 +988,15 @@
 
 <!-- ── Modal confirmar eliminar ── -->
 <div id="modal-eliminar"
+     data-txt-historial="{% trans 'Se borrará también su historial — registros: {r}, fotos: {f}, seguimientos: {s}, fotos de seguimientos: {fs}.' %}"
      style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45);
             z-index:2000; align-items:center; justify-content:center;">
     <div style="background:var(--white); border-radius:14px; padding:28px 32px;
                 min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
         <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">{% trans "Eliminar plan" %}</div>
         <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;">{% trans "Esta accion no se puede deshacer. ¿Confirmas que deseas eliminar este plan?" %}</div>
+        <div id="modal-eliminar-detalle" role="alert" hidden
+            style="margin:-12px 0 20px; padding:10px 12px; border-radius:10px; background:#FCEFD6; color:#8A5A08; font-size:12.5px; line-height:1.45;"></div>
         <div style="display:flex; gap:10px; justify-content:flex-end;">
             <button onclick="cerrarModalEliminar()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
             <form id="form-eliminar" method="post" style="margin:0;">
@@ -1169,7 +1174,7 @@
 </div>
 {% endif %}
 
-{% if puede_editar_plan %}{% include 'mto_app/plan/form.html' %}{% endif %}
+{% if puede_editar_plan %}{% include 'mto_app/plan/form.html' %}{% include 'mto_app/plan/importar.html' %}{% endif %}
 
 {% include 'mto_app/plan/_distribucion_ots.html' %}
 
@@ -1276,15 +1281,6 @@
     </div>
 </div>
 {% endif %}
-
-
-<!-- Toast global -->
-<div id="toast-global"
-     style="display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-            background:#065F46; color:#fff; padding:10px 20px; border-radius:8px;
-            font-size:13px; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.2);
-            align-items:center; gap:8px; z-index:9999; white-space:nowrap;">
-</div>
 
 <!-- Overlay exportar Excel -->
 <div id="overlay-exportar"
@@ -1503,7 +1499,8 @@ window.PSF_I18N = {
     errResp:           "{% trans 'Elige un responsable de la lista' %}",
     guardando:         "{% trans 'Guardando…' %}",
     errorGuardar:      "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
-    errorFotos:        "{% trans 'El seguimiento se guardó, pero no se pudieron subir las imágenes.' %}",
+    errorFotos:        "{% trans 'Fotos sin subir' %}",
+    errorFotosDet:     "{% trans 'El seguimiento se guardó, pero las fotos no' %}",
     errorRed:          "{% trans 'Error de red. Intenta de nuevo.' %}",
     toastGuardado:     "{% trans 'Cambios guardados' %}",
     toastCreado:       "{% trans 'Seguimiento {orden} creado' %}",
@@ -1520,13 +1517,11 @@ window.PE_I18N = {
     semana:        "{% trans 'Semana {n} · {a}' %}",
     semanaCorta:   "{% trans 'Semana {n}' %}",
     exportando:    "{% trans 'Generando archivo…' %}",
-    descargado:    "{% trans 'Se descargó {archivo}' %}",
-    errorArchivo:  "{% trans 'No se pudo generar el archivo.' %}",
-    errorDetalle:  "{% trans 'No se pudo generar el archivo: {motivo}' %}",
+    descargado:    "{% trans 'Archivo descargado' %}",
+    errorArchivo:  "{% trans 'No se pudo generar el archivo' %}",
     errorTiempo:   "{% trans 'La exportación tardó más de 2 minutos.' %}",
-    eliminados:    "{% trans 'Se eliminaron {n} planes' %}",
     responsableOk: "{% trans 'Responsable guardado' %}",
-    errorResp:     "{% trans 'No se pudo guardar el responsable.' %}",
+    errorResp:     "{% trans 'No se pudo guardar el responsable' %}",
     sinAsignar:    "{% trans 'Sin asignar' %}",
     asignar:       "{% trans 'Asignar' %}",
     verDetalle:    "{% trans 'Ver detalle' %}",
@@ -1557,7 +1552,12 @@ window.PE_I18N = {
     anioSig:       "{% trans 'Año siguiente' %}",
     quitarFiltro:  "{% trans 'Quitar filtro de responsable' %}",
     ots1:          "{% trans '1 OT' %}",
-    otsN:          "{% trans '{n} OTs' %}"
+    otsN:          "{% trans '{n} OTs' %}",
+    overlayPasos:  ["{% trans 'Calculando planes...' %}", "{% trans 'Organizando pasos...' %}",
+                     "{% trans 'Generando órdenes...' %}", "{% trans 'Preparando archivo...' %}"],
+    overlayListo:  "{% trans '¡Listo!' %}",
+    errorConexion: "{% trans 'Error de conexión.' %}",
+    errorIniciar:  "{% trans 'Error al iniciar la exportación.' %}"
 };
 window.PE_CFG = {
     csrf:             '{{ csrf_token }}',
@@ -1574,12 +1574,13 @@ window.PE_CFG = {
 <script src="{% static 'mto_app/js/plan_escritorio.js' %}?v=1"></script>
 <script src="{% static 'mto_app/js/distribucion_ots.js' %}"></script>
 <script src="{% static 'mto_app/js/filter_select.js' %}"></script>
+<script src="{% static 'mto_app/js/plan_importar.js' %}"></script>
 {% if puede_ver_historial %}
 <script>
 window.HA_CFG = { url: "{% url 'mto:historial_acciones' %}", area: "{{ filtro_area }}" };
 window.HA_I18N = {
     cargando: "{% trans 'Cargando…' %}",
-    error:    "{% trans 'No se pudo cargar el historial.' %}"
+    error:    "{% trans 'No se pudo cargar el historial' %}"
 };
 </script>
 <script src="{% static 'menu_app/js/date_range_picker.js' %}"></script>
@@ -1607,7 +1608,8 @@ window.RS_CFG = {
 };
 window.RS_I18N = {
     cargando:         "{% trans 'Cargando…' %}",
-    error:            "{% trans 'No se pudo cargar la lista de responsables.' %}",
+    error:            "{% trans 'No se pudo cargar la lista de responsables' %}",
+    errorActivo:      "{% trans 'No se pudo cambiar el estado' %}",
     errorGuardar:     "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
     errNomina:        "{% trans 'Escribe el número de nómina' %}",
     errNombre:        "{% trans 'Escribe el nombre' %}",
@@ -1623,7 +1625,8 @@ window.RS_I18N = {
     sinPuesto:        "{% trans 'Sin puesto' %}",
     activo:           "{% trans 'Activo' %}",
     inactivo:         "{% trans 'Inactivo' %}",
-    sinArea:          "{% trans 'Elige un área para agregar responsables.' %}",
+    sinAreaTit:       "{% trans 'Falta el área' %}",
+    sinArea:          "{% trans 'Elige un área para agregar responsables' %}",
     toastCreado:      "{% trans 'Responsable agregado' %}",
     toastGuardado:    "{% trans 'Cambios guardados' %}",
     toastDesactivado: "{% trans '{nombre} se desactivó' %}",
@@ -1652,8 +1655,9 @@ window.RT_CFG = {
 };
 window.RT_I18N = {
     cargando:       "{% trans 'Cargando…' %}",
-    error:          "{% trans 'No se pudo cargar las rutinas.' %}",
-    sinArea:        "{% trans 'Elige un área para importar rutinas.' %}",
+    error:          "{% trans 'No se pudieron cargar las rutinas' %}",
+    sinAreaTit:     "{% trans 'Falta el área' %}",
+    sinArea:        "{% trans 'Elige un área para importar rutinas' %}",
     eligePlan:      "{% trans 'Elige el número de plan…' %}",
     importar:       "{% trans 'Importar' %}",
     importando:     "{% trans 'Importando…' %}",
@@ -1685,7 +1689,8 @@ window.RT_I18N = {
     errMotivo:         "{% trans 'Escribe el motivo' %}",
     errorGuardar:      "{% trans 'No se pudo importar. Intenta de nuevo.' %}",
     errorEliminar:     "{% trans 'No se pudo eliminar. Intenta de nuevo.' %}",
-    toastImportada:    "{% trans 'Rutina {codigo} importada · {n} pasos' %}",
+    toastImportada:    "{% trans 'Rutina importada' %}",
+    toastImportadaDet: "{% trans '{codigo} · {n} pasos' %}",
     toastEliminada:    "{% trans 'Rutina {codigo} eliminada' %}",
     eliminarTitulo:    "{% trans '¿Eliminar la rutina {codigo}?' %}",
     eliminarTxt:       "{% trans 'Se borran sus {n} pasos. Esta acción no se puede deshacer.' %}",
@@ -1728,9 +1733,11 @@ window.PLAN_MOVIL = {
         carga:            "{% trans '{n} tareas esta semana · {h}' %}",
         quitarResp:       "{% trans 'Quitar responsable' %}",
         asignarA:         "{% trans 'Asignar a {nombre}' %}",
-        respGuardado:     "{% trans '✓ Responsable guardado' %}",
+        respGuardado:     "{% trans 'Responsable guardado' %}",
         errorGuardar:     "{% trans 'No se pudo guardar. Intenta de nuevo.' %}",
         errorCargar:      "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
+        errorGuardarTit:  "{% trans 'No se pudo guardar' %}",
+        errorCargarTit:   "{% trans 'No se pudo cargar' %}",
         cargarN:          "{% trans 'Cargar {n} más · quedan {m}' %}",
         palabraEliminar:  "{% trans 'ELIMINAR' %}",
         programadas:      "{% trans 'Programadas {anio}' %}",
@@ -1745,7 +1752,8 @@ window.PLAN_MOVIL = {
         est_vacio:        "{% trans 'sin generar' %}",
         semanaRango:      "{% trans 'Semana {n} · {rango} {anio}' %}",
         guardarS:         "{% trans 'Guardar S{n}' %}",
-        registroGuardado: "{% trans '✓ S{n} guardada' %}",
+        registroGuardado: "{% trans 'Ejecución guardada' %}",
+        registroSemana:   "{% trans 'Semana {n}' %}",
         unaTarea:         "{% trans '1 tarea' %}",
         nTareas:          "{% trans '{n} tareas' %}",
         pctTotal:         "{% trans '{p}% del total' %}",
@@ -1756,110 +1764,113 @@ window.PLAN_MOVIL = {
 <script>
 /* Textos del detalle del plan en celular (plan_movil.js) */
 window.PLAN_MOVIL_DET = {
-    cargando:         "{% trans 'Cargando…' %}",
-    errorCargar:      "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
-    ariaSemana:       "{% trans 'Semana {n}, {rango}, {estado}' %}",
-    cumLabel:         "{% trans 'Cumplimiento {anio}' %}",
-    cumValor:         "{% trans '{h} de {e} · {p}%' %}",
-    nOcurr1:          "{% trans '1 ocurrencia programada' %}",
-    nOcurrN:          "{% trans '{n} ocurrencias programadas' %}",
-    segResumen1:      "{% trans '1 abierto · {orden}' %}",
-    segResumenN:      "{% trans '{n} abiertos · {orden}' %}",
-    sinSeguimientos:  "{% trans 'Sin seguimientos' %}",
-    abiertos:         "{% trans 'Abiertos · {n}' %}",
-    todos:            "{% trans 'Todos · {n}' %}",
-    sinSegMostrar:    "{% trans 'Sin seguimientos para mostrar.' %}",
-    semanaN:          "{% trans 'Semana {n}' %}",
-    cumplido:         "{% trans 'Cumplido' %}",
-    vencidoN:         "{% trans 'Vencido {n} d' %}",
-    compromisoF:      "{% trans 'Compromiso {f}' %}",
-    editar:           "{% trans 'Editar' %}",
-    hisResumen:       "{% trans '{n} ocurrencias · {v} vencidas sin registro' %}",
-    chTodas:          "{% trans 'Todas · {n}' %}",
-    chCompletadas:    "{% trans 'Completadas · {n}' %}",
-    chPendientes:     "{% trans 'Pendientes · {n}' %}",
-    chCanceladas:     "{% trans 'Canceladas · {n}' %}",
-    chSinReg:         "{% trans 'Sin registro · {n}' %}",
-    chProximas:       "{% trans 'Próximas · {n}' %}",
-    sinAsignar:       "{% trans 'Sin asignar' %}",
-    ejecutadaF:       "{% trans 'Ejecutada {f}' %}",
-    atrasoSem:        "{% trans '{n} sem. de atraso' %}",
-    validado:         "{% trans 'Validado' %}",
-    porValidar:       "{% trans 'Por validar' %}",
-    rechazado:        "{% trans 'Rechazado' %}",
-    rechazadoM:       "{% trans 'Rechazado: {m}' %}",
-    fotosN:           "{% trans 'Fotos ({n})' %}",
-    editarRegistro:   "{% trans 'Editar registro' %}",
-    verSemana:        "{% trans 'Ver semana' %}",
-    registrarEjec:    "{% trans 'Registrar ejecución' %}",
-    completada:       "{% trans 'Completada' %}",
-    pendiente:        "{% trans 'Pendiente' %}",
-    reagendada:       "{% trans 'Reagendada' %}",
-    cancelada:        "{% trans 'Cancelada' %}",
-    sinRegVencida:    "{% trans 'Sin registro · vencida' %}",
-    sinRegistro:      "{% trans 'Sin registro' %}",
-    proxima:          "{% trans 'Próxima' %}",
-    subSemana:        "{% trans 'Semana {n} · {rango} {anio}' %}",
-    editadoPor:       "{% trans 'editado por {u}' %}",
-    guardarS:         "{% trans 'Guardar S{n}' %}",
-    elimReg:          "{% trans 'Eliminar registro de S{n}' %}",
-    elegirResp:       "{% trans 'Elegir responsable' %}",
-    elegirValidador:  "{% trans 'Validado por…' %}",
-    responsable:      "{% trans 'Responsable' %}",
-    validadoPor:      "{% trans 'Validado por' %}",
-    fechaFutura:      "{% trans 'La fecha de ejecución no puede ser futura' %}",
-    atrasoUna:        "{% trans 'Se registrará como <b>ejecutada con {n} semana de atraso</b> (programada en S{y}).' %}",
-    atrasoN:          "{% trans 'Se registrará como <b>ejecutada con {n} semanas de atraso</b> (programada en S{y}).' %}",
-    verFoto:          "{% trans 'Ver foto {n}' %}",
-    quitarFoto:       "{% trans 'Quitar foto' %}",
-    sinEtiqueta:      "{% trans 'Sin etiqueta' %}",
-    antes:            "{% trans 'Antes' %}",
-    despues:          "{% trans 'Después' %}",
-    agregarFoto:      "{% trans 'Agregar foto' %}",
-    agregar:          "{% trans 'Agregar' %}",
-    maxFotos:         "{% trans 'Máximo 4 fotos por registro' %}",
-    soloImagenes:     "{% trans 'Solo se aceptan imágenes de hasta 5 MB' %}",
-    fotosDe:          "{% trans 'Fotos de la S{n}' %}",
-    fotoN:            "{% trans 'Foto {i} de {n}' %}",
-    valHintNo:        "{% trans 'Disponible al marcar como Completada' %}",
-    valHintSi:        "{% trans 'Revisa la evidencia antes de validar' %}",
-    valHintSolo:      "{% trans 'No tienes permiso para validar' %}",
-    hoyF:             "{% trans 'hoy {f}' %}",
-    elegirEstado:     "{% trans 'Elige un estado' %}",
-    errResp:          "{% trans 'Elige un responsable de la lista' %}",
-    pedirResp:        "{% trans 'Esta semana aún no tiene responsable. Pide a un supervisor que lo asigne.' %}",
-    errFecha:         "{% trans 'La fecha de ejecución es obligatoria' %}",
-    errCanc:          "{% trans 'Indica el motivo de la cancelación' %}",
-    errReag:          "{% trans 'Elige la semana a la que se reagenda' %}",
-    errValPor:        "{% trans 'Elige quién valida' %}",
-    errMotivo:        "{% trans 'Indica el motivo del rechazo' %}",
-    guardando:        "{% trans 'Guardando…' %}",
-    eliminarRegistro: "{% trans 'Eliminar registro' %}",
-    elimRegTexto:     "{% trans '¿Eliminar el registro de la S{n}? Se borrarán también sus fotos.' %}",
-    registroEliminado:"{% trans 'Registro de S{n} eliminado' %}",
-    darNoDisponible:  "{% trans 'Disponible cuando la ejecución de la semana está Completada' %}",
-    venceHoy:         "{% trans 'vence hoy' %}",
-    vencida:          "{% trans 'vencida' %}",
-    fechaAnterior:    "{% trans 'La fecha compromiso no puede ser anterior a {f}' %}",
-    segEditar:        "{% trans 'Editar seguimiento' %}",
-    segNuevo:         "{% trans 'Nuevo seguimiento' %}",
-    segSubEditar:     "{% trans 'Creado el {f} por {u}' %}",
-    segSubNuevo:      "{% trans 'Acción correctiva ligada al plan' %}",
-    segGuardar:       "{% trans 'Guardar cambios' %}",
-    segCrear:         "{% trans 'Crear seguimiento' %}",
-    errProblema:      "{% trans 'Describe el problema' %}",
-    errAccion:        "{% trans 'Describe la acción realizada' %}",
-    segGuardado:      "{% trans 'Cambios guardados' %}",
-    segCreado:        "{% trans 'Seguimiento {orden} creado' %}",
-    segEliminar:      "{% trans 'Eliminar seguimiento' %}",
-    segElimTexto:     "{% trans '¿Eliminar el seguimiento {orden}? Esta acción no se puede deshacer.' %}",
-    segEliminado:     "{% trans 'Seguimiento {orden} eliminado' %}",
-    eliminar:         "{% trans 'Eliminar' %}",
-    avisoLectura:     "{% trans 'No tienes permiso para registrar ejecuciones.' %}",
-    avisoYaLlenado:   "{% trans 'Este registro ya fue llenado. Para modificarlo necesitas permiso de edición.' %}",
-    avisoSoloValidar: "{% trans 'Solo puedes cambiar la validación de este registro.' %}",
-    errorFotosSeg:    "{% trans 'El seguimiento se guardó, pero no se pudieron subir las imágenes.' %}",
-    maxFotosSeg:      "{% trans 'Máximo 4 imágenes por seguimiento' %}"
+    cargando:           "{% trans 'Cargando…' %}",
+    errorCargar:        "{% trans 'No se pudo cargar. Revisa tu conexión.' %}",
+    ariaSemana:         "{% trans 'Semana {n}, {rango}, {estado}' %}",
+    cumLabel:           "{% trans 'Cumplimiento {anio}' %}",
+    cumValor:           "{% trans '{h} de {e} · {p}%' %}",
+    nOcurr1:            "{% trans '1 ocurrencia programada' %}",
+    nOcurrN:            "{% trans '{n} ocurrencias programadas' %}",
+    segResumen1:        "{% trans '1 abierto · {orden}' %}",
+    segResumenN:        "{% trans '{n} abiertos · {orden}' %}",
+    sinSeguimientos:    "{% trans 'Sin seguimientos' %}",
+    abiertos:           "{% trans 'Abiertos · {n}' %}",
+    todos:              "{% trans 'Todos · {n}' %}",
+    sinSegMostrar:      "{% trans 'Sin seguimientos para mostrar.' %}",
+    semanaN:            "{% trans 'Semana {n}' %}",
+    cumplido:           "{% trans 'Cumplido' %}",
+    vencidoN:           "{% trans 'Vencido {n} d' %}",
+    compromisoF:        "{% trans 'Compromiso {f}' %}",
+    editar:             "{% trans 'Editar' %}",
+    hisResumen:         "{% trans '{n} ocurrencias · {v} vencidas sin registro' %}",
+    chTodas:            "{% trans 'Todas · {n}' %}",
+    chCompletadas:      "{% trans 'Completadas · {n}' %}",
+    chPendientes:       "{% trans 'Pendientes · {n}' %}",
+    chCanceladas:       "{% trans 'Canceladas · {n}' %}",
+    chSinReg:           "{% trans 'Sin registro · {n}' %}",
+    chProximas:         "{% trans 'Próximas · {n}' %}",
+    sinAsignar:         "{% trans 'Sin asignar' %}",
+    ejecutadaF:         "{% trans 'Ejecutada {f}' %}",
+    atrasoSem:          "{% trans '{n} sem. de atraso' %}",
+    validado:           "{% trans 'Validado' %}",
+    porValidar:         "{% trans 'Por validar' %}",
+    rechazado:          "{% trans 'Rechazado' %}",
+    rechazadoM:         "{% trans 'Rechazado: {m}' %}",
+    fotosN:             "{% trans 'Fotos ({n})' %}",
+    editarRegistro:     "{% trans 'Editar registro' %}",
+    verSemana:          "{% trans 'Ver semana' %}",
+    registrarEjec:      "{% trans 'Registrar ejecución' %}",
+    completada:         "{% trans 'Completada' %}",
+    pendiente:          "{% trans 'Pendiente' %}",
+    reagendada:         "{% trans 'Reagendada' %}",
+    cancelada:          "{% trans 'Cancelada' %}",
+    sinRegVencida:      "{% trans 'Sin registro · vencida' %}",
+    sinRegistro:        "{% trans 'Sin registro' %}",
+    proxima:            "{% trans 'Próxima' %}",
+    subSemana:          "{% trans 'Semana {n} · {rango} {anio}' %}",
+    editadoPor:         "{% trans 'editado por {u}' %}",
+    guardarS:           "{% trans 'Guardar S{n}' %}",
+    elimReg:            "{% trans 'Eliminar registro de S{n}' %}",
+    elegirResp:         "{% trans 'Elegir responsable' %}",
+    elegirValidador:    "{% trans 'Validado por…' %}",
+    responsable:        "{% trans 'Responsable' %}",
+    validadoPor:        "{% trans 'Validado por' %}",
+    fechaFutura:        "{% trans 'La fecha de ejecución no puede ser futura' %}",
+    atrasoUna:          "{% trans 'Se registrará como <b>ejecutada con {n} semana de atraso</b> (programada en S{y}).' %}",
+    atrasoN:            "{% trans 'Se registrará como <b>ejecutada con {n} semanas de atraso</b> (programada en S{y}).' %}",
+    verFoto:            "{% trans 'Ver foto {n}' %}",
+    quitarFoto:         "{% trans 'Quitar foto' %}",
+    sinEtiqueta:        "{% trans 'Sin etiqueta' %}",
+    antes:              "{% trans 'Antes' %}",
+    despues:            "{% trans 'Después' %}",
+    agregarFoto:        "{% trans 'Agregar foto' %}",
+    agregar:            "{% trans 'Agregar' %}",
+    maxFotos:           "{% trans 'Máximo 4 fotos por registro' %}",
+    soloImagenes:       "{% trans 'Solo se aceptan imágenes de hasta 5 MB' %}",
+    fotosDe:            "{% trans 'Fotos de la S{n}' %}",
+    fotoN:              "{% trans 'Foto {i} de {n}' %}",
+    valHintNo:          "{% trans 'Disponible al marcar como Completada' %}",
+    valHintSi:          "{% trans 'Revisa la evidencia antes de validar' %}",
+    valHintSolo:        "{% trans 'No tienes permiso para validar' %}",
+    hoyF:               "{% trans 'hoy {f}' %}",
+    elegirEstado:       "{% trans 'Elige un estado' %}",
+    errResp:            "{% trans 'Elige un responsable de la lista' %}",
+    pedirResp:          "{% trans 'Esta semana aún no tiene responsable. Pide a un supervisor que lo asigne.' %}",
+    errFecha:           "{% trans 'La fecha de ejecución es obligatoria' %}",
+    errCanc:            "{% trans 'Indica el motivo de la cancelación' %}",
+    errReag:            "{% trans 'Elige la semana a la que se reagenda' %}",
+    errValPor:          "{% trans 'Elige quién valida' %}",
+    errMotivo:          "{% trans 'Indica el motivo del rechazo' %}",
+    guardando:          "{% trans 'Guardando…' %}",
+    eliminarRegistro:   "{% trans 'Eliminar registro' %}",
+    elimRegTexto:       "{% trans '¿Eliminar el registro de la S{n}? Se borrarán también sus fotos.' %}",
+    registroEliminado:  "{% trans 'Registro eliminado' %}",
+    registroSemana:     "{% trans 'Semana {n}' %}",
+    darNoDisponibleTit: "{% trans 'Aún no disponible' %}",
+    darNoDisponible:    "{% trans 'Disponible cuando la ejecución de la semana está Completada' %}",
+    venceHoy:           "{% trans 'vence hoy' %}",
+    vencida:            "{% trans 'vencida' %}",
+    fechaAnterior:      "{% trans 'La fecha compromiso no puede ser anterior a {f}' %}",
+    segEditar:          "{% trans 'Editar seguimiento' %}",
+    segNuevo:           "{% trans 'Nuevo seguimiento' %}",
+    segSubEditar:       "{% trans 'Creado el {f} por {u}' %}",
+    segSubNuevo:        "{% trans 'Acción correctiva ligada al plan' %}",
+    segGuardar:         "{% trans 'Guardar cambios' %}",
+    segCrear:           "{% trans 'Crear seguimiento' %}",
+    errProblema:        "{% trans 'Describe el problema' %}",
+    errAccion:          "{% trans 'Describe la acción realizada' %}",
+    segGuardado:        "{% trans 'Cambios guardados' %}",
+    segCreado:          "{% trans 'Seguimiento {orden} creado' %}",
+    segEliminar:        "{% trans 'Eliminar seguimiento' %}",
+    segElimTexto:       "{% trans '¿Eliminar el seguimiento {orden}? Esta acción no se puede deshacer.' %}",
+    segEliminado:       "{% trans 'Seguimiento {orden} eliminado' %}",
+    eliminar:           "{% trans 'Eliminar' %}",
+    avisoLectura:       "{% trans 'No tienes permiso para registrar ejecuciones.' %}",
+    avisoYaLlenado:     "{% trans 'Este registro ya fue llenado. Para modificarlo necesitas permiso de edición.' %}",
+    avisoSoloValidar:   "{% trans 'Solo puedes cambiar la validación de este registro.' %}",
+    errorFotosSeg:      "{% trans 'Fotos sin subir' %}",
+    errorFotosSegDet:   "{% trans 'El seguimiento se guardó, pero las fotos no' %}",
+    maxFotosSeg:        "{% trans 'Máximo 4 imágenes por seguimiento' %}"
 };
 </script>
 
