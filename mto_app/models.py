@@ -525,7 +525,7 @@ def documento_upload_path(instance, filename):
     return f'documentacion/{instance.carpeta_id}/{filename}'
 
 
-MAX_PROFUNDIDAD_CARPETAS = 4  # niveles 0..3 (raíz=0). Cambiar solo esta constante para permitir más/menos.
+MAX_PROFUNDIDAD_CARPETAS = 8  # niveles 0..3 (raíz=0). Cambiar solo esta constante para permitir más/menos.
 
 
 class Carpeta(models.Model):

@@ -370,7 +370,7 @@
             <button onclick="cerrarModalEliminarDoc()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
             <form id="form-eliminar-doc" method="post" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
+                <button type="submit" class="btn btn-peligro">{% trans "Sí, eliminar" %}</button>
             </form>
         </div>
     </div>

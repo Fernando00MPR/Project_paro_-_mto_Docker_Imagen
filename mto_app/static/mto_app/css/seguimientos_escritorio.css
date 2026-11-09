@@ -288,6 +288,7 @@
 .sge-dlg-btns button { height: 38px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--sge-borde); background: var(--sge-fondo); color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; }
 .sge-dlg-btns .seguro { background: var(--indigo); border-color: var(--indigo); color: #fff; font-weight: 600; }
 .sge-dlg-btns .peligro { background: var(--sge-venc-bar); border-color: var(--sge-venc-bar); color: #fff; font-weight: 600; }
+.sge-dlg-btns .peligro:hover { background: var(--sge-venc); border-color: var(--sge-venc); }
 
 @media (max-width: 1000px) { .sge-m-cuerpo { grid-template-columns: 1fr; } }
 

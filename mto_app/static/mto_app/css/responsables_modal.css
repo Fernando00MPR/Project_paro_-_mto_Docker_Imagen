@@ -156,5 +156,5 @@
 .rse-ico { width: 44px; height: 44px; border-radius: 12px; background: var(--rs-mal-bg); color: var(--rs-mal); display: flex; align-items: center; justify-content: center; }
 .rse-cuerpo h2 { margin: 4px 0 0; font-size: 18px; font-weight: 600; }
 .rse-cuerpo p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-2); }
-.rse-btn-del { border: 0; background: #A8322A; color: #fff; font-weight: 600; padding: 0 18px; }
-.rse-btn-del:hover { background: #8C2620; }
+.rse-btn-del { border: 0; background: #D9534F; color: #fff; font-weight: 600; padding: 0 18px; }
+.rse-btn-del:hover { background: #A8322A; }

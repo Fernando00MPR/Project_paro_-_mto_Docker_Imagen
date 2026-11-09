@@ -49,6 +49,10 @@
             --text-3:     #9CA3AF;
             --red:        #EF4444;
             --red-lt:     #FEE2E2;
+            --peligro:        #A8322A;   /* texto de "Eliminar" */
+            --peligro-lt:     #FBE4E2;   /* fondo suave / hover */
+            --peligro-b:      #F0C4C0;   /* borde */
+            --peligro-fuerte: #D9534F;   /* relleno del botón que confirma */
             --green:      #10B981;
             --amber-lt:   #FEF3C7;
             --sidebar-w:  240px;
@@ -72,6 +76,10 @@
             --text-3:     #6B6890;
             --red:        #F87171;
             --red-lt:     #2D1515;
+            --peligro:        #F2A19C;
+            --peligro-lt:     rgba(217,83,79,.22);
+            --peligro-b:      rgba(217,83,79,.45);
+            --peligro-fuerte: #D9534F;
             --green:      #34D399;
             --amber-lt:   #2D2210;
             --shadow:     0 1px 3px rgba(0,0,0,.3);
@@ -440,6 +448,9 @@
         .btn-ghost:hover { background: var(--surface); color: var(--text); }
         .btn-danger { background: transparent; color: var(--red); border-color: #FECACA; padding: 5px 10px; font-size: 12px; }
         .btn-danger:hover { background: var(--red-lt); }
+        /* Botón que confirma un borrado ("Sí, eliminar"): mismo rojo en todo Mantenimiento */
+        .btn-peligro { background: var(--peligro-fuerte); border-color: var(--peligro-fuerte); color: #fff; font-weight: 600; }
+        .btn-peligro:hover { background: var(--peligro); border-color: var(--peligro); color: #fff; }
         .btn-sm { padding: 5px 10px; font-size: 12px; }
         /* Botones "Limpiar" (filtros): mismo acento elegido por el usuario que
            ya usa el resto de estados hover del sitio (sidebar, paginación),

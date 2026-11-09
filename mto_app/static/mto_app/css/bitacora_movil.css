@@ -128,8 +128,8 @@
         width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: var(--indigo-lt); color: var(--indigo-dk);
         display: flex; align-items: center; justify-content: center;
     }
-    .bm-accion.peligro { color: var(--red); }
-    .bm-accion.peligro .bm-accion-icono { background: var(--red-lt); color: var(--red); }
+    .bm-accion.peligro { color: var(--peligro); }
+    .bm-accion.peligro .bm-accion-icono { background: var(--peligro-lt); color: var(--peligro); }
     .bm-accion[hidden] { display: none; }
 
     /* Detalle */
@@ -140,7 +140,7 @@
     .bm-galeria img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .bm-det-pie { display: flex; gap: 8px; margin-top: 4px; position: sticky; bottom: 0; background: var(--white); padding-top: 8px; }
     .bm-det-pie button { height: 50px; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
-    .bm-det-eliminar { padding: 0 18px; border: 1px solid #FCA5A5; background: transparent; color: var(--red); }
+    .bm-det-eliminar { padding: 0 18px; border: 1px solid var(--peligro-b); background: transparent; color: var(--peligro); }
     .bm-det-editar { flex: 1; border: 0; background: var(--indigo); color: #fff; }
     .bm-det-pie button[hidden] { display: none; }
 

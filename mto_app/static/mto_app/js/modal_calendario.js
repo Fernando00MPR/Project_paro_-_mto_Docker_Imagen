@@ -100,16 +100,6 @@
         try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 'px'; } catch (e) { iframe.style.height = '620px'; }
     });
 
-    /*
-    // Tras guardar, la selección pasa a la siguiente ocurrencia que siga pendiente.
-    function siguientePendiente(desde) {
-        const abierta = c => ['', 'pendiente', 'reagendada'].indexOf(c.dataset.estado) !== -1;
-        const i = celdas.findIndex(c => +c.dataset.semana === desde);
-        const hallada = celdas.slice(i + 1).find(abierta) || celdas.slice(0, Math.max(i, 0)).find(abierta);
-        return hallada ? +hallada.dataset.semana : desde;
-    }
-    */
-
     // ── Mensajes: del formulario (iframe) y de la lista (modal de seguimiento) ──
     window.addEventListener('message', e => {
         const d = e.data;
@@ -118,7 +108,6 @@
         if (d.startsWith('registro_guardado:')) {
             // Se avisa a la lista aquí (no al cerrar): el modal se recarga y perdería cualquier marca puesta en su URL.
             aLista('hubo_cambio');
-            //window.location.href = urlModal(siguientePendiente(sel));
             window.location.href = urlModal(sel);   // se queda en la semana que se guardó (ya con su nuevo estado)
         } else if (d.startsWith('resize_iframe:')) {
             iframe.style.height = parseInt(d.split(':')[1], 10) + 'px';

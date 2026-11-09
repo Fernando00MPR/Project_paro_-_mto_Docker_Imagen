@@ -54,8 +54,8 @@
     </div>
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         {% if puede_eliminar %}
-        <button onclick="confirmarEliminarCarpeta(event, {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}', {{ total_documentos_carpeta }})" class="btn btn-ghost" style="color:var(--red); height:44px; padding:0 16px; border-radius:10px; font-size:13.5px;"
-                onmouseover="this.style.background='var(--red-lt)';"
+        <button onclick="confirmarEliminarCarpeta(event, {{ carpeta.pk }}, '{{ carpeta.nombre|escapejs }}', {{ total_documentos_carpeta }})" class="btn btn-ghost" style="color:var(--peligro); height:44px; padding:0 16px; border-radius:10px; font-size:13.5px;"
+                onmouseover="this.style.background='var(--peligro-lt)';"
                 onmouseout="this.style.background='';">
             {% trans "Eliminar esta carpeta" %}
         </button>
@@ -467,7 +467,7 @@
             <button onclick="cerrarModalEliminarDoc()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
             <form id="form-eliminar-doc" method="post" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-primary" style="background:#EF4444; color:#fff; border-color:#EF4444;">{% trans "Sí, eliminar" %}</button>
+                <button type="submit" class="btn btn-peligro">{% trans "Sí, eliminar" %}</button>
             </form>
         </div>
     </div>

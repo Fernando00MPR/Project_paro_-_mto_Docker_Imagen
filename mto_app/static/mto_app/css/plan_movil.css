@@ -244,7 +244,7 @@
     }
     .pm-confirmar-botones { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
     .pm-confirmar-botones button { height: 52px; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
-    .pm-btn-peligro { border: 0; background: #C0392B; color: #fff; }
+    .pm-btn-peligro { border: 0; background: #D9534F; color: #fff; }
     .pm-btn-peligro:disabled { opacity: .45; cursor: default; }
     .pm-btn-sec { border: 1px solid var(--border); background: var(--white); color: var(--text); }
     .pm-btn-azul { border: 0; background: #3D5BD9; color: #fff; }
