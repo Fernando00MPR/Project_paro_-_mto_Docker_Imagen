@@ -84,6 +84,9 @@
     .sg-fechas small { display: block; font-size: 11px; color: var(--text-3); }
     .sg-fechas b { display: block; font-size: 13px; font-weight: 500; color: var(--text); overflow-wrap: anywhere; }
     .sg-fechas .vencido { background: #FBE4E2; }
+    [data-theme="dark"] .sg-fechas .vencido { background: rgba(217,83,79,.18); }
+    [data-theme="dark"] .sg-fechas .vencido small, [data-theme="dark"] .sg-fechas .vencido b,
+    [data-theme="dark"] .sg-fechas .sin-fecha b { color: #F2A19C; }
     .sg-fechas .vencido small, .sg-fechas .vencido b { color: #A8322A; }
     .sg-fechas .vencido b, .sg-fechas .sin-fecha b { font-weight: 600; }
     .sg-fechas .sin-fecha b { color: #A8322A; }
@@ -100,6 +103,9 @@
     .sg-detalle .prob { --tono: #D9534F; --tono-lt: #FBE4E2; --tono-tx: #A8322A; }
     .sg-detalle .acc  { --tono: #3F5BD9; --tono-lt: #EBEFFD; --tono-tx: #2C44A8; }
     .sg-detalle .nota { --tono: #E0A030; --tono-lt: #FCEFD6; --tono-tx: #8A5A08; }
+    [data-theme="dark"] .sg-detalle .prob { --tono-lt: rgba(217,83,79,.18);  --tono-tx: #F2A19C; }
+    [data-theme="dark"] .sg-detalle .acc  { --tono-lt: rgba(63,91,217,.22);  --tono-tx: #A5B4FC; }
+    [data-theme="dark"] .sg-detalle .nota { --tono-lt: rgba(227,162,59,.18); --tono-tx: #F0C27A; }
     .sg-detalle dt { font-size: 12px; font-weight: 600; color: var(--tono-tx); }
     .sg-detalle dd {
         margin: 0; font-size: 13px; line-height: 1.45; color: var(--text); overflow-wrap: anywhere;

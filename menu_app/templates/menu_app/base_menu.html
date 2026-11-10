@@ -958,7 +958,7 @@ window.avisarAlCargar = function (avisos) {
     <!-- ── Sidebar ── -->
     <script>
         // Aplicar collapsed ANTES de pintar para evitar flash
-        if (localStorage.getItem('sidebar_collapsed') === '1') {
+        if (localStorage.getItem('sidebar_collapsed') === '1' && window.matchMedia('(min-width: 1024px)').matches) {
             document.documentElement.classList.add('sidebar-pre-collapsed');
         }
     </script>
@@ -1697,11 +1697,13 @@ document.addEventListener('DOMContentLoaded', function () {
 const sidebar     = document.getElementById('sidebar');
 const btnCollapse = document.getElementById('btn-collapse');
 
-// El estado ya fue aplicado via CSS antes del paint
-// Solo sincronizar la clase collapsed en el aside
-if (localStorage.getItem('sidebar_collapsed') === '1') {
-    sidebar.classList.add('collapsed');
-}
+// El colapsado guardado solo aplica en escritorio; en celular/tableta vertical
+// el menú es un cajón completo. Se reevalúa al girar la tableta.
+const mqEscritorio = window.matchMedia('(min-width: 1024px)');
+const aplicarColapso = () => sidebar.classList.toggle('collapsed',
+    mqEscritorio.matches && localStorage.getItem('sidebar_collapsed') === '1');
+aplicarColapso();
+mqEscritorio.addEventListener('change', aplicarColapso);
 // Quitar clase temporal del html
 document.documentElement.classList.remove('sidebar-pre-collapsed');
 
