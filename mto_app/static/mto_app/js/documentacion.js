@@ -62,13 +62,29 @@ function cerrarModalEditarCarpeta() {
 }
 
 // ── Modal confirmar eliminar (carpeta o documento) ────────────────────────────
-
+// Pide escribir ELIMINAR (como "Eliminar todos" del Plan): cada vez que se abre, el campo se limpia y el botón
+// "Sí, eliminar" queda desactivado hasta que lo escriban.
+function prepararConfirmacionEliminar() {
+    const inp = document.getElementById('doc-elim-in'), ok = document.getElementById('doc-elim-ok');
+    if (!inp || !ok) return;
+    inp.value = '';
+    ok.disabled = true;
+    setTimeout(() => inp.focus(), 150);   // después de la animación de entrada
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const inp = document.getElementById('doc-elim-in'), ok = document.getElementById('doc-elim-ok');
+    const form = document.getElementById('form-eliminar-doc');
+    if (!inp || !ok || !form) return;
+    inp.addEventListener('input', () => { ok.disabled = inp.value.trim() !== 'ELIMINAR'; });
+    form.addEventListener('submit', e => { if (inp.value.trim() !== 'ELIMINAR') e.preventDefault(); });
+});
 function confirmarEliminarCarpeta(event, carpetaId, nombre, totalDocs) {
     document.getElementById('titulo-eliminar-doc').textContent = docI18n.tituloCarpeta;
     document.getElementById('texto-eliminar-doc').textContent = totalDocs > 0
         ? formatearMensajeDoc(docI18n.confirmarCarpetaConDocs, { nombre: nombre, n: totalDocs })
         : formatearMensajeDoc(docI18n.confirmarCarpetaSinDocs, { nombre: nombre });
     document.getElementById('form-eliminar-doc').action = `${docCfg.urlEliminarCarpetaBase}${carpetaId}/eliminar/`;
+    prepararConfirmacionEliminar();
     abrirModalConAnimacion('modal-eliminar-doc', event);
 }
 
@@ -76,6 +92,7 @@ function confirmarEliminarDocumento(event, docId, nombre) {
     document.getElementById('titulo-eliminar-doc').textContent = docI18n.tituloDocumento;
     document.getElementById('texto-eliminar-doc').textContent = formatearMensajeDoc(docI18n.confirmarDocumento, { nombre: nombre });
     document.getElementById('form-eliminar-doc').action = `${docCfg.urlEliminarDocBase}${docId}/eliminar/`;
+    prepararConfirmacionEliminar();
     abrirModalConAnimacion('modal-eliminar-doc', event);
 }
 

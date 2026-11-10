@@ -74,7 +74,7 @@
 .ws-l-act  { width: 12px; height: 12px; border-radius: 3px; border: 2px solid var(--ws-oscuro); }
 
 /* ── Celular: hoja inferior con 7 columnas y pie "Ver {n} órdenes" ── */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .ws { max-width: none; }
     .ws-capa { width: auto; }
     .ws-menu { padding-bottom: 0; }

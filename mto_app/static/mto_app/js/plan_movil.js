@@ -17,7 +17,7 @@
         return s;
     };
     const lang = document.documentElement.lang || 'es';
-    const esMovil = () => window.matchMedia('(max-width: 767px)').matches;
+    const esMovil = () => window.matchMedia('(max-width: 1023px)').matches;
     const csrf = (window.MTO_CONFIG || {}).csrf_token || '';
 
     // ── Semana ISO ──────────────────────────────────────────────────────────

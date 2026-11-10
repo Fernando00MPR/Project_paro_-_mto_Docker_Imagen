@@ -341,7 +341,7 @@
 
     // ── Direcciones /equipos/nuevo/ y /equipos/editar/<pk>/: llegan con #nueva o #editar-<pk> ──
     const m = /^#(nueva|editar-(\d+))$/.exec(window.location.hash);
-    if (m && !window.matchMedia('(max-width: 767px)').matches) {
+    if (m && !window.matchMedia('(max-width: 1023px)').matches) {
         history.replaceState(null, '', window.location.pathname + window.location.search);
         if (m[2]) abrirEditar(m[2]); else abrirNueva();
     }

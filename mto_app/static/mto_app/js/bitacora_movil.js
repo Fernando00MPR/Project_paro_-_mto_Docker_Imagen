@@ -16,7 +16,7 @@
         Object.keys(vars || {}).forEach(v => { s = s.split('{' + v + '}').join(vars[v]); });
         return s;
     };
-    const esMovil = () => window.matchMedia('(max-width: 767px)').matches;
+    const esMovil = () => window.matchMedia('(max-width: 1023px)').matches;
 
     // ── Navegación con filtros (misma lógica de servidor que escritorio) ────
     function irCon(cambios) {

@@ -157,7 +157,7 @@
 
         /* ── Sidebar como cajón (off-canvas) en celular ── */
         .btn-sidebar-mobile, .sidebar-backdrop { display: none; }
-        @media (max-width: 767px) {
+        @media (max-width: 1023px) {
             .sidebar {
                 position: fixed; inset: 0 auto 0 0;
                 width: var(--sidebar-w) !important;   /* gana al .collapsed persistido en localStorage */
@@ -218,7 +218,7 @@
            botones los mueve aquí el script "topbar" del final desde el
            encabezado móvil de cada pestaña; sin él, usa el <title>. */
         .topbar-movil { display: none; }
-        @media (max-width: 767px) {
+        @media (max-width: 1023px) {
             .main { padding-top: 0 !important; }
             .topbar-movil {
                 display: flex; align-items: center; gap: 8px;
@@ -726,7 +726,7 @@
         @keyframes toast-entra  { from { opacity: 0; transform: translateX(8px); }  to { opacity: 1; transform: none; } }
         @keyframes toast-baja   { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
         @keyframes toast-aparece { from { opacity: 0; } to { opacity: 1; } }
-        @media (max-width: 767px) {
+        @media (max-width: 1023px) {
             #toast-container { top: calc(8px + env(safe-area-inset-top)); bottom: auto; left: 16px; right: 16px; width: auto; max-width: none; flex-direction: column; }
             .toast { animation-name: toast-baja; }
         }
@@ -788,7 +788,7 @@
         .as-fondo { position: fixed; inset: 0; z-index: 3999; background: rgba(30,32,51,.45); }
         .as-fondo[hidden] { display: none; }
         @keyframes as-sube { from { transform: translateY(100%); } }
-        @media (max-width: 767px) {
+        @media (max-width: 1023px) {
             /* Celular: la lista pasa a ser una hoja inferior */
             .as-lista { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: auto !important; max-height: 75vh; border-width: 1px 0 0; border-radius: 20px 20px 0 0; padding: 8px 12px calc(16px + env(safe-area-inset-bottom)); animation: as-sube .22s ease-out; }
             .as-lista::before { content: ''; display: block; width: 40px; height: 4px; margin: 4px auto 10px; border-radius: 2px; background: var(--border); }
@@ -801,7 +801,7 @@
         [data-theme="dark"] .as-c2 { background: rgba(217,162,59,.22); color: #F0CF8E; } [data-theme="dark"] .as-c3 { background: rgba(142,91,208,.24); color: #D3B8F2; }
         [data-theme="dark"] .as-c4 { background: rgba(217,83,79,.24); color: #F2A19C; } [data-theme="dark"] .as-c5 { background: var(--surface); color: var(--text-2); }
         /* Menú contraído: solo la sigla (en celular el cajón siempre va completo) */
-        @media (min-width: 768px) {
+        @media (min-width: 1024px) {
             .sidebar.collapsed .as-etq, .sidebar.collapsed .as-txt, .sidebar.collapsed .as-chev,
             .sidebar-pre-collapsed .sidebar .as-etq, .sidebar-pre-collapsed .sidebar .as-txt, .sidebar-pre-collapsed .sidebar .as-chev { display: none; }
             .sidebar.collapsed .as, .sidebar-pre-collapsed .sidebar .as { padding: 10px 0; }
@@ -817,7 +817,7 @@
         .form-actions { display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 
         /* ── Responsive ── */
-        @media (max-width: 767px) {
+        @media (max-width: 1023px) {
             .main { padding: 16px; }
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -1620,7 +1620,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const caja   = () => document.getElementById('toast-container');
     const vivos  = () => [...(caja() || { children: [] }).children].filter(t => !t.dataset.saliendo);
-    const maximo = () => (window.matchMedia('(max-width: 767px)').matches ? 2 : 3);
+    const maximo = () => (window.matchMedia('(max-width: 1023px)').matches ? 2 : 3);
 
     function cerrar(t) {
         if (!t || t.dataset.saliendo) return;
@@ -1734,7 +1734,7 @@ if (btnSidebarMobile && sidebarBackdrop) {
     // salvo los controles que no navegan a otra página (tema, usuario, los
     // botones de módulo que solo cambian qué nav se muestra).
     sidebar.addEventListener('click', (e) => {
-        if (window.innerWidth > 767) return;
+        if (window.innerWidth > 1023) return;
         if (!e.target.closest('a, button')) return;
         if (e.target.closest('#btn-collapse, #btn-theme, .user-menu-btn, #mod-mto, #mod-paros')) return;
         cerrarSidebarMobile();
@@ -1743,7 +1743,7 @@ if (btnSidebarMobile && sidebarBackdrop) {
         if (e.key === 'Escape') cerrarSidebarMobile();
     });
     window.addEventListener('resize', () => {
-        if (window.innerWidth > 767) cerrarSidebarMobile();
+        if (window.innerWidth > 1023) cerrarSidebarMobile();
     });
 }
 
@@ -1956,7 +1956,7 @@ document.addEventListener('DOMContentLoaded', function () {
     fondo.className = 'as-fondo'; fondo.hidden = true;
     document.body.appendChild(fondo);
     fondo.addEventListener('click', () => cerrar(true));
-    const movil = () => window.matchMedia('(max-width: 767px)').matches;
+    const movil = () => window.matchMedia('(max-width: 1023px)').matches;
 
     const actual = () => opciones.find(o => o.id === sel.value) || opciones[0];
 

@@ -6,7 +6,7 @@
    mismo menú se muestra como hoja inferior (role="dialog"). */
 
 (function () {
-    const MOVIL = window.matchMedia('(max-width: 767px)');
+    const MOVIL = window.matchMedia('(max-width: 1023px)');
     const normal = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
     let cerrarAbierto = null;   // solo un menú abierto a la vez
 

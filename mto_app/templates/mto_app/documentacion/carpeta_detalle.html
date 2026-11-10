@@ -457,22 +457,7 @@
     </div>
 </div>
 
-
-<!-- ── Modal confirmar eliminar (esta carpeta, una subcarpeta hija, o un documento) ── -->
-<div id="modal-eliminar-doc" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45); z-index:2100; align-items:center; justify-content:center;">
-    <div class="modal-box" style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left; min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
-        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;" id="titulo-eliminar-doc"></div>
-        <div style="font-size:13px; color:var(--text-2); margin-bottom:24px;" id="texto-eliminar-doc"></div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button onclick="cerrarModalEliminarDoc()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
-            <form id="form-eliminar-doc" method="post" style="margin:0;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-peligro">{% trans "Sí, eliminar" %}</button>
-            </form>
-        </div>
-    </div>
-</div>
-
+{% include "mto_app/documentacion/_modal_eliminar.html" %}
 {% include "mto_app/documentacion/_menu_acciones_fila.html" %}
 {% include "mto_app/documentacion/_modal_mover.html" %}
 

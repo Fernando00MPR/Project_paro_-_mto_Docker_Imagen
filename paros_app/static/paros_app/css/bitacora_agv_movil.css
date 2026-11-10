@@ -4,7 +4,7 @@
    de AGVs: pestañas de área, calendario con dos turnos por día y bloques de
    captura por turno. */
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .agv-desktop-only { display: none !important; }
 
     #agv-movil { padding-bottom: 24px; }

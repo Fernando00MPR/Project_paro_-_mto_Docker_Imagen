@@ -63,7 +63,7 @@ document.addEventListener('animationend', function (e) {
 // hace nada porque el sheet de Filtros aplica todo junto al pulsar "Aplicar
 // filtros" (ver aplicarFiltrosMovil).
 function onCambioExclusion() {
-    if (window.innerWidth <= 767) return;
+    if (window.innerWidth <= 1023) return;
     prepararExclusiones();
 }
 

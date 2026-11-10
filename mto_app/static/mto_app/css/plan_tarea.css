@@ -145,5 +145,5 @@ tr.pt-resaltada td { animation: pt-resalte 2s ease-out; }
     .pt-cuerpo { grid-template-columns: minmax(0, 1fr); }
     .pt-res { border-left: 0; border-top: 1px solid var(--pt-div); }
 }
-@media (max-width: 767px) { .pt-fondo { display: none !important; } }   /* solo escritorio */
+@media (max-width: 1023px) { .pt-fondo { display: none !important; } }   /* solo escritorio */
 @media (prefers-reduced-motion: reduce) { .pt-switch i, .pt-switch i::after { transition: none; } tr.pt-resaltada td { animation: none; } }

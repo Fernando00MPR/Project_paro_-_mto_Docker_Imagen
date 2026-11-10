@@ -518,7 +518,7 @@
 
 <!-- ════════════════════════════════════════════════════════════════════════
      Vista móvil (≤767px) de Análisis de paros.
-     Oculta por defecto; se muestra solo bajo @media (max-width:767px).
+     Oculta por defecto; se muestra solo bajo @media (max-width:1023px).
      No reemplaza ningún dato — reutiliza los mismos context vars / globals
      JS (LABELS_B/MINUTOS_B/NPAROS_B/ORDEN_BARRAS, LABELS_T/MINUTOS_T) y
      funciones existentes (setModoBarras, setOrdenBarras, cambiarAnioSemanas,
@@ -690,11 +690,11 @@
 /* ── Vista móvil (≤767px) de Análisis de paros ── */
 .movil-only { display: none; }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .analisis-desktop-only, #charts-grid, #card-tendencia-diaria { display: none !important; }
     .movil-only { display: block; }
 }
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .movil-only { display: none !important; }
 }
 
@@ -703,7 +703,7 @@
    se reusa el mismo form/paneles ya existentes. ── */
 #filtros-exclusiones-wrap { display: contents; }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     #filtros-exclusiones-wrap {
         display: none; flex-direction: column;
         position: fixed; inset: auto 0 0 0; z-index: 1001;
@@ -783,7 +783,7 @@
 }
 
 /* ── Sheets genéricas ("⋯", Pareto completo) — mismo mecanismo que lista_paros.html ── */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .modal-box.sheet-movil {
         position: fixed; inset: auto 0 0 0; width: 100%; max-width: none;
         margin: 0; border-radius: 16px 16px 0 0; overflow-y: auto;

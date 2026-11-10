@@ -249,8 +249,8 @@ a.pe-pag-b:hover { background: var(--pe-bg); color: var(--pe-t1); }
 .pe-dlg-elim input[type="text"] { width: 100%; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--white); color: var(--text); font-family: inherit; font-size: 14px; letter-spacing: .04em; }
 .pe-dlg-elim input[type="text"]:focus { outline: 2px solid #A8322A; outline-offset: 0; border-color: #A8322A; }
 .pe-dlg-botones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-.pe-dlg .pe-btn-rojo { background: #A8322A; border-color: #A8322A; color: #fff; }
-.pe-dlg .pe-btn-rojo:hover { background: #8C2620; border-color: #8C2620; }
+.pe-dlg .pe-btn-rojo { background: #D9534F; border-color: #D9534F; color: #fff; }   /* confirma un borrado: igual que .btn-peligro */
+.pe-dlg .pe-btn-rojo:hover { background: #A8322A; border-color: #A8322A; }
 .pe-dlg .pe-btn-rojo[disabled] { opacity: .45; pointer-events: none; }
 
 .pe-dlg-t { width: 680px; max-width: 100%; max-height: calc(100vh - 48px); display: flex; flex-direction: column; overflow: hidden; }

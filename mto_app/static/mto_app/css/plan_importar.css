@@ -171,4 +171,4 @@ td.m-err { color: var(--pi-err-t); font-weight: 700; } td.m-warn { color: var(--
 .pi-x:focus-visible, .pi-btn:focus-visible, .pi-drop:focus-visible, .pi-link:focus-visible, .pi-tab:focus-visible, .pi-pag button:focus-visible { outline: 2px solid var(--pi-pri); outline-offset: 2px; }
 
 @media (max-width: 1100px) { .pi-p1 { grid-template-columns: minmax(0, 1fr); } .pi-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 767px) { .pi-fondo { display: none !important; } }   /* solo escritorio */
+@media (max-width: 1023px) { .pi-fondo { display: none !important; } }   /* solo escritorio */

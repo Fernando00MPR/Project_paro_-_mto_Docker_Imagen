@@ -3,9 +3,9 @@
    oculta (.dcm-desktop-only); los modales de escritorio se acomodan como hojas. */
 
 .movil-only { display: none; }
-@media (min-width: 768px) { .movil-only { display: none !important; } }
+@media (min-width: 1024px) { .movil-only { display: none !important; } }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .dcm-desktop-only { display: none !important; }
     .movil-only { display: block; }
     #dcm-movil [hidden], .dcm-hoja [hidden] { display: none !important; }

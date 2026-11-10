@@ -226,7 +226,7 @@
     }, true);
 
     // La dirección /equipos/importar/ llega con #importar
-    if (window.location.hash === '#importar' && !window.matchMedia('(max-width: 767px)').matches) {
+    if (window.location.hash === '#importar' && !window.matchMedia('(max-width: 1023px)').matches) {
         history.replaceState(null, '', window.location.pathname + window.location.search);
         abrir();
     }

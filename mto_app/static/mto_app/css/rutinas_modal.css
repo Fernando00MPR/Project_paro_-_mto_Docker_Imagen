@@ -178,7 +178,7 @@
 .rtd-ancho { width: min(520px, 100%); }
 
 /* ── Celular: solo el aviso de _no_disponible_movil ── */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .rt-fondo { padding: 0; align-items: stretch; }
     .rt-dlg { max-height: none; height: 100%; width: 100%; border-radius: 0; }
     .rt-cab { padding: 14px 16px 10px; }
@@ -186,7 +186,7 @@
     .rt-cuerpo { padding: 12px 16px 24px; }
     .rt-fondo .rt { display: none; }
 }
-@media (max-width: 1100px) and (min-width: 768px) {
+@media (max-width: 1100px) and (min-width: 1024px) {
     .rt-grid { grid-template-columns: 280px minmax(0, 1fr); }
     .rt-datos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .rt-leyenda { grid-template-columns: repeat(2, minmax(0, 1fr)); }

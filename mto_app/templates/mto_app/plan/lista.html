@@ -21,7 +21,7 @@
 /* Celular: siempre se trabaja sobre una semana y un estado (Pendientes por defecto). Si faltan en la
    URL se redirige aquí, antes de pintar; antes lo hacía plan_movil.js al final y la página parpadeaba. */
 (function () {
-    if (!window.matchMedia('(max-width: 767px)').matches) return;
+    if (!window.matchMedia('(max-width: 1023px)').matches) return;
     var u = new URL(location.href), q = u.searchParams;
     if (q.get('semana') && q.get('estado')) return;
     if (!q.get('semana')) {
@@ -477,7 +477,16 @@
         <div class="pm-kpis">
             <div class="pm-kpi pend"><div class="pm-kpi-label">{% trans "Pendientes" %}</div><div class="pm-kpi-num">{{ avance_movil.pendientes }}</div></div>
             <div class="pm-kpi"><div class="pm-kpi-label">{% trans "Tiempo programado" %}</div>
-                <div class="pm-kpi-num">{% if avance_movil.horas %}{{ avance_movil.horas }} h{% if avance_movil.minutos_resto %} {{ avance_movil.minutos_resto }} min{% endif %}{% else %}{{ avance_movil.minutos_resto }} min{% endif %}</div>
+                <div class="pm-kpi-num">
+                    {% if avance_movil.horas %}
+                        {{ avance_movil.horas }} h
+                        {% if avance_movil.minutos_resto %} 
+                            {{ avance_movil.minutos_resto }} min
+                        {% endif %}
+                    {% else %}
+                        {{ avance_movil.minutos_resto }} min
+                    {% endif %}
+                </div>
             </div>
         </div>
     </section>
@@ -498,14 +507,42 @@
                  data-resp-nombre="{{ p.registro_semana.nombre_responsable|default:'' }}">
             <div class="pm-cuerpo" role="button" tabindex="0" aria-label="{% trans 'Ver detalle de' %} {{ p.codigo }}">
                 <div class="pm-fila1">
-                    <span class="pm-codigo">{{ p.codigo }}</span>
-                    <span class="pm-frec" data-frec="{{ p.frecuencia }}">{{ p.get_frecuencia_display }}</span>
-                    <span class="pm-dur">{% if p.duracion_minutos < 60 %}{{ p.duracion_minutos }} min{% else %}{% widthratio p.duracion_minutos 60 1 %} h{% endif %}</span>
-                    <span class="pm-estado" data-estado="{{ est }}"><i></i>{% if est == 'completada' %}{% trans "Completada" %}{% elif est == 'reagendada' %}{% trans "Reagendada" %}{% elif est == 'cancelada' %}{% trans "Cancelada" %}{% else %}{% trans "Pendiente" %}{% endif %}</span>
+                    <span class="pm-codigo">
+                        {{ p.codigo }}
+                    </span>
+                    <span class="pm-frec" data-frec="{{ p.frecuencia }}">
+                        {{ p.get_frecuencia_display }}
+                    </span>
+                    <span class="pm-dur">
+                        {% if p.duracion_minutos < 60 %}
+                            {{ p.duracion_minutos }} min
+                        {% else %}
+                            {% widthratio p.duracion_minutos 60 1 %} h
+                        {% endif %}
+                    </span>
+                    <span class="pm-estado" data-estado="{{ est }}">
+                        <i></i>
+                        {% if est == 'completada' %}
+                            {% trans "Completada" %}
+                        {% elif est == 'reagendada' %}
+                            {% trans "Reagendada" %}
+                        {% elif est == 'cancelada' %}
+                            {% trans "Cancelada" %}
+                        {% else %}
+                            {% trans "Pendiente" %}
+                        {% endif %}
+                    </span>
                 </div>
                 <div>
                     <div class="pm-act">{{ p.actividad|default:"—" }}</div>
-                    <div class="pm-sub">{{ p.rutina }} · {% trans "Plan" %} {{ p.plan_trabajo }}{% if p.proximo %} · {% trans "Próximo" %} S{{ p.proximo.semana }}{% endif %}</div>
+                    {% if p.no_ot %}
+                        <div class="pm-ot">
+                            {% trans "OT" %} {{ p.no_ot }}
+                        </div>
+                    {% endif %}
+                    <div class="pm-sub">
+                        {{ p.rutina }} · {% trans "Plan" %} {{ p.plan_trabajo }}
+                    </div>
                 </div>
             </div>
             <div class="pm-fila3">

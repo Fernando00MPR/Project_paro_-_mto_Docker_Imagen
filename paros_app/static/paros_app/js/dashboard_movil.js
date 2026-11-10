@@ -381,12 +381,12 @@
         renderChips();
         renderTurnos();
         renderTop();
-        if (window.matchMedia('(max-width: 767px)').matches) renderTendencia();
+        if (window.matchMedia('(max-width: 1023px)').matches) renderTendencia();
     });
 
     // Si se gira el celular o se agranda la ventana hasta el modo móvil,
     // la gráfica no existe todavía (canvas oculto al cargar): se crea ahora.
-    window.matchMedia('(max-width: 767px)').addEventListener('change', function (e) {
+    window.matchMedia('(max-width: 1023px)').addEventListener('change', function (e) {
         if (e.matches) renderTendencia();
     });
 

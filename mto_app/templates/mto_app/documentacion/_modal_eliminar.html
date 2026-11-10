@@ -1,0 +1,34 @@
+{% load i18n %}
+{% comment %}
+   Confirmar eliminar UNA carpeta (con su contenido) o UN documento. Pide escribir ELIMINAR, como "Eliminar todos"
+   del Plan; el servidor lo vuelve a revisar (eliminar_carpeta / eliminar_documento). La abren
+   confirmarEliminarCarpeta() y confirmarEliminarDocumento() de documentacion.js (escritorio y celular).
+{% endcomment %}
+<style>
+    #modal-eliminar-doc .doc-elim-ico { width: 44px; height: 44px; border-radius: 12px; background: var(--peligro-lt); color: var(--peligro);
+                                        display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    #modal-eliminar-doc label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    #modal-eliminar-doc input[type="text"] { width: 100%; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border);
+                                             background: var(--white); color: var(--text); font: inherit; font-size: 14px; box-sizing: border-box; }
+    #modal-eliminar-doc input[type="text"]:focus { outline: 2px solid var(--peligro); outline-offset: 0; border-color: var(--peligro); }
+    #modal-eliminar-doc .btn-peligro[disabled] { opacity: .45; pointer-events: none; }
+</style>
+<div id="modal-eliminar-doc" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(30,27,75,.45); z-index:2100; align-items:center; justify-content:center;">
+    <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="titulo-eliminar-doc" aria-describedby="texto-eliminar-doc"
+         style="background:var(--white); border-radius:14px; padding:28px 32px; text-align:left; min-width:320px; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.18);">
+        <div class="doc-elim-ico" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4m0 4h.01"/></svg>
+        </div>
+        <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;" id="titulo-eliminar-doc"></div>
+        <div style="font-size:13px; color:var(--text-2); margin-bottom:18px;" id="texto-eliminar-doc"></div>
+        <form id="form-eliminar-doc" method="post" style="margin:0;">
+            {% csrf_token %}
+            <label for="doc-elim-in">{% trans "Escribe ELIMINAR para confirmar" %}</label>
+            <input type="text" id="doc-elim-in" name="confirmacion" autocomplete="off" spellcheck="false" placeholder="ELIMINAR">
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+                <button type="button" onclick="cerrarModalEliminarDoc()" class="btn btn-ghost">{% trans "Cancelar" %}</button>
+                <button type="submit" id="doc-elim-ok" class="btn btn-peligro" disabled>{% trans "Sí, eliminar" %}</button>
+            </div>
+        </form>
+    </div>
+</div>

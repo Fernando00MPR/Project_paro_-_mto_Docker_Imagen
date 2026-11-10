@@ -186,7 +186,7 @@ a.bd-pag-b:hover { background: var(--surface); color: var(--text); }
 .bdm-btn-mal { border: 0; background: #A8322A; color: #fff; font-weight: 600; padding: 0 18px; }
 .bdm-btn-mal:hover { background: #8C2620; }
 .bdm-x:focus-visible, .bdm-btn:focus-visible, .bdm-add:focus-visible, .bdm-sino button:focus-visible, .bdm-quick button:focus-visible, .bdm-combo-x:focus-visible { outline: 2px solid var(--bd-pri); outline-offset: 2px; }
-@media (max-width: 767px) { .bdm-fondo { display: none !important; } }   /* el celular usa su propio formulario (#modal-bitacora) */
+@media (max-width: 1023px) { .bdm-fondo { display: none !important; } }   /* el celular usa su propio formulario (#modal-bitacora) */
 @media (prefers-reduced-motion: reduce) { .bdm-x { transition: none; } }
 
 /* ── Segundo responsable ── */

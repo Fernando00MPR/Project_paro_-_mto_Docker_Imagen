@@ -7,7 +7,7 @@
    La página puede filtrar los conteos por categoría: el.wsCategoria('ot'). */
 
 (function () {
-    const MOVIL = window.matchMedia('(max-width: 767px)');
+    const MOVIL = window.matchMedia('(max-width: 1023px)');
     const DIA = 864e5;
     let cerrarAbierto = null;
 

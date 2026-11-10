@@ -88,7 +88,7 @@ function mostrarToast(msg, tipo) {
 document.addEventListener('DOMContentLoaded', function () {
     const params = new URLSearchParams(window.location.search);
     const pk = params.get('abrir');
-    if (!pk || window.matchMedia('(max-width: 767px)').matches) return;
+    if (!pk || window.matchMedia('(max-width: 1023px)').matches) return;
     params.delete('abrir');
     history.replaceState(null, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
     abrirModal(pk, params.get('semana') || '', params.get('anio') || '');

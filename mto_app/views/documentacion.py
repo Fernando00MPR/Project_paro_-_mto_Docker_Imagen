@@ -365,6 +365,9 @@ def eliminar_carpeta(request, pk):
     carpeta = get_object_or_404(Carpeta, pk=pk)
     parent_id = carpeta.parent_id
     nombre = carpeta.nombre
+    if request.POST.get('confirmacion', '').strip() != 'ELIMINAR':   # se pide escribirlo, como en el Plan
+        messages.error(request, aviso(_("No se eliminó nada"), _("Escribe ELIMINAR para confirmar")))
+        return redirect('mto:carpeta_detalle', pk=parent_id) if parent_id else redirect('mto:documentos_generales')
     carpeta.delete()
     messages.success(request, aviso(_("Carpeta eliminada"), _("{nombre} y su contenido").format(nombre=nombre)))
     if parent_id:
@@ -433,6 +436,9 @@ def eliminar_documento(request, pk):
 
     documento = get_object_or_404(Documento, pk=pk)
     carpeta_id = documento.carpeta_id
+    if request.POST.get('confirmacion', '').strip() != 'ELIMINAR':   # se pide escribirlo, como en el Plan
+        messages.error(request, aviso(_("No se eliminó nada"), _("Escribe ELIMINAR para confirmar")))
+        return redirect('mto:carpeta_detalle', pk=carpeta_id)
     documento.delete()
     messages.success(request, aviso(_("Documento eliminado")))
     return redirect('mto:carpeta_detalle', pk=carpeta_id)

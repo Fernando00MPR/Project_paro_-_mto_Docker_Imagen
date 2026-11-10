@@ -676,7 +676,7 @@
 
     // Llegada desde Backlog (?abrir=<id>): abre el formulario de ese correctivo.
     (function abrirDesdeUrl() {
-        if (window.matchMedia('(max-width: 767px)').matches) return;     // en celular lo atiende seguimientos_movil.js
+        if (window.matchMedia('(max-width: 1023px)').matches) return;     // en celular lo atiende seguimientos_movil.js
         const url = new URL(window.location.href);
         const id = url.searchParams.get('abrir');
         if (!id) return;

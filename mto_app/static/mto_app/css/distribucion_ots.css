@@ -125,5 +125,5 @@
 .dot-cerrar:hover { background: var(--surface); }
 .dot-x:focus-visible, .dot-anio button:focus-visible, .dot-ir:focus-visible, .dot-cerrar:focus-visible, .dot-no:focus-visible { outline: 2px solid var(--dot-pri); outline-offset: 2px; }
 
-@media (max-width: 767px) { .dot-fondo { display: none !important; } }   /* solo escritorio */
+@media (max-width: 1023px) { .dot-fondo { display: none !important; } }   /* solo escritorio */
 @media (prefers-reduced-motion: reduce) { .dot-cuerpo { transition: none; } }

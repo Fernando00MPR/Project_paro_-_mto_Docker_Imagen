@@ -504,7 +504,7 @@
 
 <!-- ════════════════════════════════════════════════════════════════════════
      Vista móvil (≤767px) — tarjetas + bottom sheets.
-     Oculta por defecto; se muestra solo bajo @media (max-width:767px) más
+     Oculta por defecto; se muestra solo bajo @media (max-width:1023px) más
      abajo. La vista de escritorio arriba no se modifica ni se oculta salvo
      por ese mismo bloque @media. No reemplaza ningún dato — reutiliza los
      mismos context vars / permisos / urls que la tabla de escritorio.
@@ -816,15 +816,15 @@
 /* ── Vista móvil (≤767px) ── */
 .movil-only { display: none; }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .card-header, .filters, .stat-bar, .tabla-paros-card, .pagination-row { display: none !important; }
     .movil-only { display: block; }
 }
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .movil-only { display: none !important; }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     /* Header */
     .movil-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .mh-titulos { flex: 1; min-width: 0; }

@@ -8,7 +8,7 @@
     const I = window.PE_I18N || {}, CFG = window.PE_CFG || {};
     const $ = id => document.getElementById(id);
     const fmt = (t, o) => String(t).replace(/\{(\w+)\}/g, (m, k) => (o && k in o ? o[k] : m));
-    const esMovil = () => window.matchMedia('(max-width: 767px)').matches;
+    const esMovil = () => window.matchMedia('(max-width: 1023px)').matches;
     const hhmm = m => Math.floor(m / 60) + 'h ' + String(m % 60).padStart(2, '0') + 'm';
     const lang = (document.documentElement.lang || 'es').slice(0, 2);
     const mes = d => new Intl.DateTimeFormat(lang, { month: 'short', timeZone: 'UTC' }).format(d).replace('.', '');

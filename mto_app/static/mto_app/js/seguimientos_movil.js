@@ -16,7 +16,7 @@
         Object.keys(vars || {}).forEach(v => { s = s.split('{' + v + '}').join(vars[v]); });
         return s;
     };
-    const esMovil = () => window.matchMedia('(max-width: 767px)').matches;
+    const esMovil = () => window.matchMedia('(max-width: 1023px)').matches;
     let responsables = [];
     try { responsables = JSON.parse(document.getElementById('sg-responsables').textContent) || []; } catch (e) { /* sin datos */ }
 
@@ -552,7 +552,7 @@
 
     // Llegada desde Backlog (?abrir=<id>): abre el formulario de ese correctivo.
     (function abrirDesdeUrl() {
-        if (!window.matchMedia('(max-width: 767px)').matches) return;    // en escritorio lo atiende seguimientos_escritorio.js
+        if (!window.matchMedia('(max-width: 1023px)').matches) return;    // en escritorio lo atiende seguimientos_escritorio.js
         const url = new URL(window.location.href);
         const id = url.searchParams.get('abrir');
         if (!id) return;
