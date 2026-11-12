@@ -1153,6 +1153,16 @@ window.avisarAlCargar = function (avisos) {
                 </svg>
                 <span class="nav-label">{% trans "Gestión de usuarios" %}</span>
             </a>
+            {% if request.user.is_superuser %}
+            <a href="{% url 'lista_respaldos' %}" data-tooltip="{% trans 'Respaldos' %}"
+               class="{% if request.resolver_match.url_name == 'lista_respaldos' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zm0 0v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>
+                </svg>
+                <span class="nav-label">{% trans "Respaldos" %}</span>
+            </a>
+            {% endif %}
             {% endif %}
 
             {% endwith %}
@@ -1353,6 +1363,16 @@ window.avisarAlCargar = function (avisos) {
                 </svg>
                 <span class="nav-label">{% trans "Gestión de usuarios" %}</span>
             </a>
+            {% if request.user.is_superuser %}
+            <a href="{% url 'lista_respaldos' %}" data-tooltip="{% trans 'Respaldos' %}"
+               class="{% if request.resolver_match.url_name == 'lista_respaldos' %}active{% endif %}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zm0 0v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>
+                </svg>
+                <span class="nav-label">{% trans "Respaldos" %}</span>
+            </a>
+            {% endif %}
             {% endif %}
             {% endwith %}
             </div>

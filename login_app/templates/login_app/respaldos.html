@@ -1,0 +1,82 @@
+{% extends 'menu_app/base_menu.html' %}
+{% load i18n %}
+{% block title %}{% trans "Respaldos" %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap">
+{% endblock %}
+{% block content %}
+{% include 'menu_app/_no_disponible_movil.html' %}
+
+<div class="card-header" style="margin-bottom:16px;">
+    <div>
+        <div class="card-title">{% trans "Respaldos de la base de datos" %}</div>
+        <div class="card-subtitle">
+            {% blocktrans count count=respaldos|length %}{{ count }} respaldo guardado{% plural %}{{ count }} respaldos guardados{% endblocktrans %}
+            {% if respaldos %} · {{ total|filesizeformat }}{% endif %}
+        </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+        {% include 'menu_app/_language_selector.html' %}
+    </div>
+</div>
+
+{% if not reciente %}
+<div class="rsp-alerta" role="alert">
+    <strong>{% trans "Sin respaldo reciente" %}</strong>
+    <span>{% trans "No hay un respaldo de las últimas 26 horas. Revisa la tarea programada en Coolify." %}</span>
+</div>
+{% endif %}
+
+<div class="card" style="padding:0; overflow:hidden;">
+    {% if respaldos %}
+    <table class="rsp-tabla">
+        <thead>
+            <tr>
+                <th>{% trans "Archivo" %}</th>
+                <th>{% trans "Fecha" %}</th>
+                <th>{% trans "Tamaño" %}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in respaldos %}
+            <tr>
+                <td class="rsp-nombre">
+                    {{ r.nombre }}
+                    {% if forloop.first %}<span class="rsp-ultimo">{% trans "Más reciente" %}</span>{% endif %}
+                </td>
+                <td class="rsp-num">{{ r.fecha|date:"d/m/Y H:i" }}</td>
+                <td class="rsp-num">{{ r.tamano|filesizeformat }}</td>
+                <td style="text-align:right;">
+                    <a href="{% url 'descargar_respaldo' r.nombre %}" class="btn btn-ghost btn-sm">{% trans "Descargar" %}</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="rsp-vacio">{% trans "Todavía no hay respaldos." %}</div>
+    {% endif %}
+</div>
+
+<p class="rsp-nota">
+    {% trans "Se generan con la tarea programada y se conservan 14 días. Para restaurar uno se usa pg_restore." %}
+</p>
+
+<style>
+    .rsp-alerta { display:flex; flex-direction:column; gap:2px; margin-bottom:16px; padding:12px 16px; border-radius:10px;
+                  background:var(--peligro-lt); border:1px solid var(--peligro-b); color:var(--peligro); font-size:13px; }
+    [data-theme="dark"] .rsp-alerta { background:rgba(217,83,79,.15); border-color:rgba(217,83,79,.35); }
+    .rsp-tabla { width:100%; border-collapse:collapse; font-size:13.5px; }
+    .rsp-tabla th { text-align:left; padding:10px 16px; font-size:11px; font-weight:600; letter-spacing:.06em;
+                    text-transform:uppercase; color:var(--text-3); background:var(--surface); border-bottom:1px solid var(--border); }
+    .rsp-tabla td { padding:10px 16px; border-bottom:1px solid var(--border); color:var(--text); }
+    .rsp-tabla tbody tr:last-child td { border-bottom:0; }
+    .rsp-nombre { font-family:'DM Mono', monospace; font-size:12.5px; }
+    .rsp-num { font-family: 'Inter', 'DM Sans', system-ui, sans-serif; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "zero" 0; white-space: nowrap; }
+    .rsp-ultimo { margin-left:8px; padding:2px 8px; border-radius:10px; font-family:inherit; font-size:11px; font-weight:600;
+                  background:var(--indigo-lt); color:var(--indigo); }
+    .rsp-vacio { text-align:center; padding:48px 20px; color:var(--text-3); font-size:13px; }
+    .rsp-nota { margin-top:12px; font-size:12px; color:var(--text-3); }
+</style>
+{% endblock %}

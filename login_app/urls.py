@@ -2,6 +2,7 @@ from django.conf import settings
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from . import views_respaldos
 
 urlpatterns = [
     path('login/',   auth_views.LoginView.as_view(
@@ -18,4 +19,8 @@ urlpatterns = [
 
     # Autoservicio — cualquier usuario autenticado sobre sí mismo
     path('mi-cuenta/cambiar-password/',       views.cambiar_mi_password, name='cambiar_mi_password'),
+
+    # Respaldos de la BD — solo superusuario
+    path('respaldos/',                        views_respaldos.lista_respaldos,    name='lista_respaldos'),
+    path('respaldos/<str:nombre>/',           views_respaldos.descargar_respaldo, name='descargar_respaldo'),
 ]
