@@ -32,6 +32,7 @@
     <table class="rsp-tabla">
         <thead>
             <tr>
+                <th class="rsp-idx">#</th>
                 <th>{% trans "Archivo" %}</th>
                 <th>{% trans "Fecha" %}</th>
                 <th>{% trans "Tamaño" %}</th>
@@ -41,6 +42,7 @@
         <tbody>
             {% for r in respaldos %}
             <tr>
+                <td class="rsp-idx rsp-num">{{ forloop.counter }}</td>
                 <td class="rsp-nombre">
                     {{ r.nombre }}
                     {% if forloop.first %}<span class="rsp-ultimo">{% trans "Más reciente" %}</span>{% endif %}
@@ -73,6 +75,7 @@
     .rsp-tabla td { padding:10px 16px; border-bottom:1px solid var(--border); color:var(--text); }
     .rsp-tabla tbody tr:last-child td { border-bottom:0; }
     .rsp-nombre { font-family:'DM Mono', monospace; font-size:12.5px; }
+    .rsp-idx { width: 2%; text-align: center; color: var(--text-3); padding-right: 4px !important; }
     .rsp-num { font-family: 'Inter', 'DM Sans', system-ui, sans-serif; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "zero" 0; white-space: nowrap; }
     .rsp-ultimo { margin-left:8px; padding:2px 8px; border-radius:10px; font-family:inherit; font-size:11px; font-weight:600;
                   background:var(--indigo-lt); color:var(--indigo); }
