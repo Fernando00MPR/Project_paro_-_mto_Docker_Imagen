@@ -12,7 +12,9 @@ class AreaAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         # "¿Existe en Paros?" se calcula en la misma consulta de la lista (sin una consulta por fila)
-        pareja = AreaParos.objects.filter(
+        # rewrite(False): sin esto, modeltranslation cambia OuterRef('nombre') por 'nombre_es' (campo que el Área
+        # de Mantenimiento no tiene) y el admin da error 500. Ya se usan los campos reales nombre_es / nombre_en.
+        pareja = AreaParos.objects.rewrite(False).filter(
             Q(nombre_es__iexact=OuterRef('nombre')) | Q(nombre_en__iexact=OuterRef('nombre')))
         return super().get_queryset(request).annotate(tiene_pareja=Exists(pareja))
 
